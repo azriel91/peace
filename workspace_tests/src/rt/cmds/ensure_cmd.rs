@@ -342,7 +342,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -439,7 +439,7 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -557,7 +557,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -654,7 +654,7 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -791,7 +791,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     );
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -890,7 +890,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     );
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -989,7 +989,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     );
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -1088,7 +1088,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     );
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -1187,7 +1187,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     );
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

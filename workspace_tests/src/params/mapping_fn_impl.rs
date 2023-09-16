@@ -4,7 +4,7 @@ use peace::params::MappingFnImpl;
 fn debug() {
     let mapping_fn_impl = MappingFnImpl::from((
         Some(String::from("field_name")),
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &bool| None::<Option<u16>>,
     ));
     assert_eq!(
@@ -18,7 +18,7 @@ fn debug() {
 
     let mapping_fn_impl = MappingFnImpl::from((
         Some(String::from("field_name")),
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u32, _: &u64| None::<Option<u16>>,
     ));
     assert_eq!(
@@ -138,7 +138,7 @@ macro_rules! mapping_tests {
                     &mut value_resolution_ctx,
                 );
                 ({
-                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
                         assert!(
                             matches!(
@@ -197,7 +197,7 @@ macro_rules! mapping_tests {
                 );
 
                 ({
-                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
                         assert!(
                             matches!(

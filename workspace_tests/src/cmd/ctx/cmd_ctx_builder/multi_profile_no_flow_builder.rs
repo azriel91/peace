@@ -379,7 +379,7 @@ async fn list_profile_dirs_invalid_profile_name() -> Result<(), Box<dyn std::err
 
     let profile_other_dir = ProfileDir::from((workspace.dirs().peace_app_dir(), &profile_other));
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

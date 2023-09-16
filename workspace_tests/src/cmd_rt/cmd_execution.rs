@@ -47,7 +47,7 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
     let cmd_outcome = cmd_execution.exec(&mut cmd_ctx).await?;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -103,7 +103,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
     let cmd_outcome = cmd_execution.exec(&mut cmd_ctx).await?;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

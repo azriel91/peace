@@ -91,7 +91,7 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
             .progress_trackers()
             .get(VecCopyItem::ID_DEFAULT)
             .unwrap_or_else(
-                #[cfg_attr(coverage_nightly, no_coverage)]
+                #[cfg_attr(coverage_nightly, coverage(off))]
                 || {
                     panic!(
                         "Expected `progress_tracker` to exist for {}",
@@ -259,7 +259,7 @@ async fn current_returns_error_when_try_state_current_returns_error()
 
     let error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -326,7 +326,7 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
 
     let error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -412,7 +412,7 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
 
     let error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -497,7 +497,7 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
 
     let error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -578,7 +578,7 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
 
     let error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -835,7 +835,7 @@ async fn sub_cmd_current_with_send_progress_tick_instead_of_complete()
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             || {
                 panic!(
                     "Expected `progress_tracker` to exist for {}",
@@ -845,7 +845,7 @@ async fn sub_cmd_current_with_send_progress_tick_instead_of_complete()
         );
     let progress_status = progress_tracker.progress_status();
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -894,7 +894,7 @@ async fn sub_cmd_goal_with_send_progress_tick_instead_of_complete()
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             || {
                 panic!(
                     "Expected `progress_tracker` to exist for {}",
@@ -904,7 +904,7 @@ async fn sub_cmd_goal_with_send_progress_tick_instead_of_complete()
         );
     let progress_status = progress_tracker.progress_status();
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -955,7 +955,7 @@ async fn sub_cmd_current_and_goal_with_send_progress_tick_instead_of_complete()
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             || {
                 panic!(
                     "Expected `progress_tracker` to exist for {}",
@@ -965,7 +965,7 @@ async fn sub_cmd_current_and_goal_with_send_progress_tick_instead_of_complete()
         );
     let progress_status = progress_tracker.progress_status();
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

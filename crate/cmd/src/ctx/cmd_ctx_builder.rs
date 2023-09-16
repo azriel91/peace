@@ -163,7 +163,7 @@ pub(crate) async fn profiles_from_peace_app_dir(
 
     let mut profiles = Vec::new();
     let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |error| {
             peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirRead {
                 peace_app_dir: peace_app_dir.to_path_buf(),
@@ -172,7 +172,7 @@ pub(crate) async fn profiles_from_peace_app_dir(
         },
     )?;
     while let Some(entry) = peace_app_read_dir.next_entry().await.map_err(
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |error| {
             peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirEntryRead {
                 peace_app_dir: peace_app_dir.to_path_buf(),
@@ -181,7 +181,7 @@ pub(crate) async fn profiles_from_peace_app_dir(
         },
     )? {
         let file_type = entry.file_type().await.map_err(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             |error| {
                 peace_rt_model::Error::Native(
                     peace_rt_model::NativeError::PeaceAppDirEntryFileTypeRead {

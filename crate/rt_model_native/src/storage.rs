@@ -165,7 +165,7 @@ impl Storage {
         let file = File::open(file_path).await.map_err(
             // Tests currently don't cover file system failure cases,
             // e.g. disk space limits.
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             |error| {
                 let path = file_path.to_path_buf();
                 Error::Native(NativeError::FileOpen { path, error })
@@ -215,7 +215,7 @@ impl Storage {
         let file = File::create(file_path).await.map_err(
             // Tests currently don't cover file system failure cases,
             // e.g. disk space limits.
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             |error| {
                 let path = file_path.to_path_buf();
                 NativeError::FileCreate { path, error }
@@ -234,7 +234,7 @@ impl Storage {
                     sync_io_bridge.flush().map_err(
                         // Tests currently don't cover file system failure cases,
                         // e.g. disk space limits.
-                        #[cfg_attr(coverage_nightly, no_coverage)]
+                        #[cfg_attr(coverage_nightly, coverage(off))]
                         |error| {
                             let path = file_path.to_path_buf();
                             NativeError::FileWrite { path, error }
