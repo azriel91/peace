@@ -44,8 +44,7 @@ macro_rules! run {
         $flow_cmd::run($output, false, |cmd_ctx| {
             async move {
                 let states_cleaned_outcome =
-                    CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::None)
-                        .await?;
+                    CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::None).await?;
                 let CmdOutcome {
                     value: states_cleaned,
                     errors,

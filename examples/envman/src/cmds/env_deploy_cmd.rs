@@ -43,11 +43,8 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, false, |cmd_ctx| {
             async move {
-                let states_ensured_outcome = EnsureCmd::exec_with(
-                    &mut cmd_ctx.as_standalone(),
-                    ApplyStoredStateSync::Current,
-                )
-                .await?;
+                let states_ensured_outcome =
+                    EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
                 let CmdOutcome {
                     value: states_ensured,
                     errors,
