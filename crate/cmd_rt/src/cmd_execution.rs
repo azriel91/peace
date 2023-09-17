@@ -13,7 +13,12 @@ use crate::{CmdBlockError, CmdBlockRtBox};
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cmd::scopes::SingleProfileSingleFlowViewAndOutput;
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::{
+            ProgressComplete,
+            ProgressStatus,
+            ProgressUpdateAndId,
+        };
+        use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::{self, Sender};
 
         use crate::Progress;
@@ -177,9 +182,35 @@ where
         let (cmd_outcome, ()) = futures::join!(cmd_outcome_task, progress_render_task);
 
         #[cfg(feature = "output_progress")]
-        output.progress_end(cmd_progress_tracker).await;
+        {
+            if let Ok(cmd_outcome) = cmd_outcome.as_ref() {
+                Self::progress_bar_mark_complete_on_ok(cmd_progress_tracker, cmd_outcome);
+            }
+            output.progress_end(cmd_progress_tracker).await;
+        }
 
         cmd_outcome
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_bar_mark_complete_on_ok<T>(
+        cmd_progress_tracker: &mut CmdProgressTracker,
+        cmd_outcome: &CmdOutcome<T, E>,
+    ) {
+        cmd_progress_tracker
+            .progress_trackers_mut()
+            .iter_mut()
+            .filter_map(|(item_id, progress_tracker)| {
+                if cmd_outcome.errors.contains_key(item_id) {
+                    None
+                } else {
+                    Some(progress_tracker)
+                }
+            })
+            .for_each(|progress_tracker| {
+                progress_tracker
+                    .set_progress_status(ProgressStatus::Complete(ProgressComplete::Success))
+            })
     }
 
     // pub fn exec_bg -> CmdExecId
