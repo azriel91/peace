@@ -772,7 +772,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn current_with_send_progress_tick_instead_of_complete()
+async fn current_with_sets_progress_complete_for_successful_items()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -799,7 +799,7 @@ async fn current_with_send_progress_tick_instead_of_complete()
         StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(&mut cmd_ctx, false).await;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
-    let progress_tracker = cmd_progress_tracker
+    let vec_copy_progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
@@ -811,16 +811,16 @@ async fn current_with_send_progress_tick_instead_of_complete()
                 )
             },
         );
-    let progress_status = progress_tracker.progress_status();
+    let vec_copy_progress_status = vec_copy_progress_tracker.progress_status();
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
-                    progress_status,
-                    ProgressStatus::Initialized | ProgressStatus::Running,
+                    vec_copy_progress_status,
+                    ProgressStatus::Complete(ProgressComplete::Success),
                 ),
-                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+                "expected `vec_copy_progress_status` to be `Initialized` or `Pending`, but was {vec_copy_progress_status:?}"
             );
         }
     })();
@@ -830,8 +830,8 @@ async fn current_with_send_progress_tick_instead_of_complete()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn goal_with_send_progress_tick_instead_of_complete() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn goal_with_sets_progress_complete_for_successful_items()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -857,7 +857,7 @@ async fn goal_with_send_progress_tick_instead_of_complete() -> Result<(), Box<dy
         StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(&mut cmd_ctx, false).await?;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
-    let progress_tracker = cmd_progress_tracker
+    let vec_copy_progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
@@ -869,16 +869,16 @@ async fn goal_with_send_progress_tick_instead_of_complete() -> Result<(), Box<dy
                 )
             },
         );
-    let progress_status = progress_tracker.progress_status();
+    let vec_copy_progress_status = vec_copy_progress_tracker.progress_status();
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
-                    progress_status,
-                    ProgressStatus::Initialized | ProgressStatus::Running,
+                    vec_copy_progress_status,
+                    ProgressStatus::Complete(ProgressComplete::Success),
                 ),
-                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+                "expected `vec_copy_progress_status` to be `Initialized` or `Pending`, but was {vec_copy_progress_status:?}"
             );
         }
     })();
@@ -888,7 +888,7 @@ async fn goal_with_send_progress_tick_instead_of_complete() -> Result<(), Box<dy
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn current_and_goal_with_send_progress_tick_instead_of_complete()
+async fn current_and_goal_with_sets_progress_complete_for_successful_items()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -915,7 +915,7 @@ async fn current_and_goal_with_send_progress_tick_instead_of_complete()
         StatesDiscoverCmd::<_, NoOpOutput, _>::current_and_goal_with(&mut cmd_ctx, false).await?;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
-    let progress_tracker = cmd_progress_tracker
+    let vec_copy_progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
         .unwrap_or_else(
@@ -927,16 +927,16 @@ async fn current_and_goal_with_send_progress_tick_instead_of_complete()
                 )
             },
         );
-    let progress_status = progress_tracker.progress_status();
+    let vec_copy_progress_status = vec_copy_progress_tracker.progress_status();
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
-                    progress_status,
-                    ProgressStatus::Initialized | ProgressStatus::Running,
+                    vec_copy_progress_status,
+                    ProgressStatus::Complete(ProgressComplete::Success),
                 ),
-                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+                "expected `vec_copy_progress_status` to be `Initialized` or `Pending`, but was {vec_copy_progress_status:?}"
             );
         }
     })();

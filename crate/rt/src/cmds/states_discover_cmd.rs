@@ -17,6 +17,9 @@ use peace_rt_model::{
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 
+#[cfg(feature = "output_progress")]
+use peace_cfg::progress::{ProgressComplete, ProgressStatus};
+
 pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> Debug for StatesDiscoverCmd<E, O, PKeys> {
@@ -96,6 +99,9 @@ where
             Self::serialize_current(item_graph, resources, states_current).await?;
         }
 
+        #[cfg(feature = "output_progress")]
+        Self::progress_bar_mark_complete_on_ok(cmd_ctx, &cmd_outcome);
+
         Ok(cmd_outcome)
     }
 
@@ -163,6 +169,9 @@ where
         if serialize_to_storage {
             Self::serialize_goal(item_graph, resources, states_goal).await?;
         }
+
+        #[cfg(feature = "output_progress")]
+        Self::progress_bar_mark_complete_on_ok(cmd_ctx, &cmd_outcome);
 
         Ok(cmd_outcome)
     }
@@ -263,6 +272,9 @@ where
             Self::serialize_goal(item_graph, resources, states_goal).await?;
         }
 
+        #[cfg(feature = "output_progress")]
+        Self::progress_bar_mark_complete_on_ok(cmd_ctx, &cmd_outcome);
+
         Ok(cmd_outcome)
     }
 
@@ -308,6 +320,28 @@ where
         resources.insert(states_goal_file);
 
         Ok(())
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_bar_mark_complete_on_ok<T>(
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        cmd_outcome: &CmdOutcome<T, E>,
+    ) {
+        cmd_ctx
+            .cmd_progress_tracker_mut()
+            .progress_trackers_mut()
+            .iter_mut()
+            .filter_map(|(item_id, progress_tracker)| {
+                if cmd_outcome.errors.contains_key(item_id) {
+                    None
+                } else {
+                    Some(progress_tracker)
+                }
+            })
+            .for_each(|progress_tracker| {
+                progress_tracker
+                    .set_progress_status(ProgressStatus::Complete(ProgressComplete::Success))
+            })
     }
 }
 
