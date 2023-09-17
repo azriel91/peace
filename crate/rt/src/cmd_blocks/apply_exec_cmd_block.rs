@@ -514,6 +514,7 @@ pub enum ItemApplyOutcome<E> {
     },
 }
 
+/// Infers the target state, ensure or clean, and dry run, from a `StateTs`.
 pub trait StatesTsApplyExt {
     type TsTarget: Debug + Send + Sync + Unpin + 'static;
 

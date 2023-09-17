@@ -4,7 +4,8 @@
 
 pub use self::{
     apply_exec_cmd_block::ApplyExecCmdBlock,
-    apply_state_sync_check_cmd_block::ApplyStateSyncCheckCmdBlock, diff_cmd_block::DiffCmdBlock,
+    apply_state_sync_check_cmd_block::ApplyStateSyncCheckCmdBlock,
+    diff_cmd_block::{DiffCmdBlock, DiffCmdBlockStatesTsExt},
     states_clean_insertion_cmd_block::StatesCleanInsertionCmdBlock,
     states_current_read_cmd_block::StatesCurrentReadCmdBlock,
     states_discover_cmd_block::StatesDiscoverCmdBlock,

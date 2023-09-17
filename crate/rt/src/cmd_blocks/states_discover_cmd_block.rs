@@ -90,7 +90,6 @@ where
 {
     async fn item_states_discover(
         discover_for: DiscoverFor,
-        #[cfg(feature = "output_progress")] is_sub_cmd: bool,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         params_specs: &&peace_params::ParamsSpecs,
         resources: &&mut Resources<SetUp>,
@@ -137,7 +136,6 @@ where
             &state_current_result,
             &state_goal_result,
             discover_for,
-            is_sub_cmd,
             progress_tx,
             item_id,
         );
@@ -197,7 +195,6 @@ where
         state_current_result: &Option<Result<Option<BoxDtDisplay>, E>>,
         state_goal_result: &Option<Result<Option<BoxDtDisplay>, E>>,
         discover_for: DiscoverFor,
-        is_sub_cmd: bool,
         progress_tx: &Sender<ProgressUpdateAndId>,
         item_id: &ItemId,
     ) {
@@ -206,11 +203,7 @@ where
         let (progress_update, msg_update) = match discover_for {
             DiscoverFor::Current => match state_current_result {
                 Some(Ok(_)) => {
-                    let progress_update = if is_sub_cmd {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    } else {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    };
+                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -222,11 +215,7 @@ where
             },
             DiscoverFor::Goal => match state_goal_result {
                 Some(Ok(_)) => {
-                    let progress_update = if is_sub_cmd {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    } else {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    };
+                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -238,11 +227,7 @@ where
             },
             DiscoverFor::CurrentAndGoal => match state_current_result.zip(state_goal_result) {
                 Some((Ok(_), Ok(_))) => {
-                    let progress_update = if is_sub_cmd {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    } else {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    };
+                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -336,8 +321,6 @@ where
                 Self::item_states_discover(
                     DiscoverFor::Current,
                     #[cfg(feature = "output_progress")]
-                    true,
-                    #[cfg(feature = "output_progress")]
                     progress_tx,
                     params_specs,
                     resources,
@@ -428,8 +411,6 @@ where
             .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                 Self::item_states_discover(
                     DiscoverFor::Goal,
-                    #[cfg(feature = "output_progress")]
-                    true,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                     params_specs,
@@ -532,8 +513,6 @@ where
             .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                 Self::item_states_discover(
                     DiscoverFor::CurrentAndGoal,
-                    #[cfg(feature = "output_progress")]
-                    true,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                     params_specs,

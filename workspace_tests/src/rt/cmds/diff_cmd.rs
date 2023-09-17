@@ -3,9 +3,11 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     params::ParamsSpec,
-    rt::cmds::{
-        DiffCmd, DiffStateSpec, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd,
+    resources::states::{
+        ts::{Current, CurrentStored, Goal, GoalStored},
+        StatesCurrent, StatesGoal,
     },
+    rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome,
         output::{CliOutput, OutputWrite},
@@ -115,15 +117,13 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
     } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
 
     // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff(
-        &mut cmd_ctx,
-        DiffStateSpec::Current,
-        DiffStateSpec::GoalStored,
-    )
-    .await?
-    .value;
+    let state_diffs = DiffCmd::diff::<Current, GoalStored>(&mut cmd_ctx)
+        .await?
+        .value;
 
-    let states_current = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    // Note: discovered `StatesGoal` is not automatically serialized to storage.
+    let resources = &cmd_ctx.view().resources;
+    let states_current = resources.borrow::<StatesCurrent>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -185,15 +185,13 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff(
-        &mut cmd_ctx,
-        DiffStateSpec::CurrentStored,
-        DiffStateSpec::Goal,
-    )
-    .await?
-    .value;
+    let state_diffs = DiffCmd::diff::<CurrentStored, Goal>(&mut cmd_ctx)
+        .await?
+        .value;
 
-    let states_goal = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    // Note: discovered `StatesGoal` is not automatically serialized to storage.
+    let resources = &cmd_ctx.view().resources;
+    let states_goal = resources.borrow::<StatesGoal>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -251,12 +249,13 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
         .await?;
 
     // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff(&mut cmd_ctx, DiffStateSpec::Current, DiffStateSpec::Goal)
-        .await?
-        .value;
+    let state_diffs = DiffCmd::diff::<Current, Goal>(&mut cmd_ctx).await?.value;
 
-    let states_current = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
-    let states_goal = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    // Note: discovered `StatesCurrent` and `StatesGoal` are not automatically
+    // serialized to storage.
+    let resources = &cmd_ctx.view().resources;
+    let states_current = resources.borrow::<StatesCurrent>();
+    let states_goal = resources.borrow::<StatesGoal>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);

@@ -79,7 +79,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
         ))
         .with_cmd_block(CmdBlockWrapper::new(
             DiffCmdBlock::<_, _, Current, Goal>::new(),
-            std::convert::identity,
+            |_state_diffs_ts0_and_ts1| StateDiffs::new(),
         ))
         .build();
 
