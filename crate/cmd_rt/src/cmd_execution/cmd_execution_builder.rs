@@ -20,6 +20,15 @@ where
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
+    /// Whether or not to render progress.
+    ///
+    /// This is intended for `*Cmd`s that do not have meaningful progress to
+    /// render, such as deserializing a single file on disk, and there is no
+    /// benefit to presenting empty progress bars for each item to the user
+    ///
+    /// Defaults to `true`.
+    #[cfg(feature = "output_progress")]
+    progress_render_enabled: bool,
 }
 
 impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
@@ -72,6 +81,8 @@ where
         let CmdExecutionBuilder {
             mut cmd_blocks,
             execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
         } = self;
 
         cmd_blocks.push_back(Box::pin(cmd_block));
@@ -79,6 +90,8 @@ where
         CmdExecutionBuilder {
             cmd_blocks,
             execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
         }
     }
 
@@ -102,12 +115,31 @@ where
         let CmdExecutionBuilder {
             cmd_blocks,
             execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
         } = self;
 
         CmdExecution {
             cmd_blocks,
             execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
         }
+    }
+
+    /// Specifies whether or not to render progress.
+    ///
+    /// This is `true` by default, so usually this would be called with `false`.
+    ///
+    /// This is intended for `*Cmd`s that do not have meaningful progress to
+    /// render, such as deserializing a single file on disk, and there is no
+    /// benefit to presenting empty progress bars for each item to the user.
+    ///
+    /// When this method is called multiple times, the last call wins.
+    #[cfg(feature = "output_progress")]
+    pub fn with_progress_render_enabled(mut self, progress_render_enabled: bool) -> Self {
+        self.progress_render_enabled = progress_render_enabled;
+        self
     }
 }
 
@@ -121,6 +153,8 @@ where
         Self {
             cmd_blocks: VecDeque::new(),
             execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled: true,
         }
     }
 }
