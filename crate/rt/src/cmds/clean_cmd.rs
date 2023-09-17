@@ -175,52 +175,29 @@ where
                             )
                         },
                     ))
+                    // Always discover current states, as we need them to be able to clean up.
+                    .with_cmd_block(CmdBlockWrapper::new(
+                        StatesDiscoverCmdBlock::current(),
+                        |states_current_mut| {
+                            (
+                                StatesPrevious::from(StatesCurrent::from(states_current_mut)),
+                                States::<StatesTs>::new(),
+                            )
+                        },
+                    ))
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCleanInsertionCmdBlock::new(),
                         |_| Default::default(),
                     ));
 
             cmd_execution_builder = match apply_stored_state_sync {
-                ApplyStoredStateSync::None => cmd_execution_builder,
-                ApplyStoredStateSync::Current => cmd_execution_builder
-                    .with_cmd_block(CmdBlockWrapper::new(
-                        StatesDiscoverCmdBlock::current(),
-                        |states_current_mut| {
-                            (
-                                StatesPrevious::from(StatesCurrent::from(states_current_mut)),
-                                States::<StatesTs>::new(),
-                            )
-                        },
-                    ))
-                    .with_cmd_block(CmdBlockWrapper::new(
-                        ApplyStateSyncCheckCmdBlock::current(),
-                        |_| Default::default(),
-                    )),
-
                 // Data modelling doesn't work well here -- for `CleanCmd` we don't check if the
                 // `goal` state is in sync before cleaning, as the target state is `state_clean`
                 // instead of `state_goal`.
-                ApplyStoredStateSync::Goal => cmd_execution_builder.with_cmd_block(
-                    CmdBlockWrapper::new(StatesDiscoverCmdBlock::current(), |states_current_mut| {
-                        (
-                            StatesPrevious::from(StatesCurrent::from(states_current_mut)),
-                            States::<StatesTs>::new(),
-                        )
-                    }),
-                ),
-
+                ApplyStoredStateSync::None | ApplyStoredStateSync::Goal => cmd_execution_builder,
                 // Similar to the above, we only discover `state_current` even if both are requested
                 // to be in sync.
-                ApplyStoredStateSync::Both => cmd_execution_builder
-                    .with_cmd_block(CmdBlockWrapper::new(
-                        StatesDiscoverCmdBlock::current(),
-                        |states_current_mut| {
-                            (
-                                StatesPrevious::from(StatesCurrent::from(states_current_mut)),
-                                States::<StatesTs>::new(),
-                            )
-                        },
-                    ))
+                ApplyStoredStateSync::Current | ApplyStoredStateSync::Both => cmd_execution_builder
                     .with_cmd_block(CmdBlockWrapper::new(
                         ApplyStateSyncCheckCmdBlock::current(),
                         |_| Default::default(),

@@ -38,15 +38,26 @@ const DISCOVER_FOR_CURRENT: isize = 0;
 const DISCOVER_FOR_GOAL: isize = 1;
 const DISCOVER_FOR_CURRENT_AND_GOAL: isize = 2;
 
-pub struct StatesDiscoverCmdBlock<E, PKeys, const DISCOVER_FOR_N: isize>(PhantomData<(E, PKeys)>);
+pub struct StatesDiscoverCmdBlock<E, PKeys, const DISCOVER_FOR_N: isize> {
+    /// Whether or not to mark progress bars complete on success.
+    #[cfg(feature = "output_progress")]
+    progress_complete_on_success: bool,
+    /// Marker.
+    marker: PhantomData<(E, PKeys)>,
+}
 
 impl<E, PKeys, const DISCOVER_FOR_N: isize> Debug
     for StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_N>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("StatesDiscoverCmdBlock")
-            .field(&self.0)
-            .finish()
+        let mut debug_struct = f.debug_struct("StatesDiscoverCmdBlock");
+        #[cfg(feature = "output_progress")]
+        debug_struct.field(
+            "progress_complete_on_success",
+            &self.progress_complete_on_success,
+        );
+
+        debug_struct.field("marker", &self.marker).finish()
     }
 }
 
@@ -57,7 +68,11 @@ where
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
-        Self(PhantomData)
+        Self {
+            #[cfg(feature = "output_progress")]
+            progress_complete_on_success: false,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -68,7 +83,11 @@ where
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
-        Self(PhantomData)
+        Self {
+            #[cfg(feature = "output_progress")]
+            progress_complete_on_success: false,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -79,7 +98,11 @@ where
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
-        Self(PhantomData)
+        Self {
+            #[cfg(feature = "output_progress")]
+            progress_complete_on_success: false,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -88,9 +111,20 @@ where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Indicate that the progress tracker should be marked complete on success.
+    ///
+    /// This should be used only if this is the last `CmdBlock` in a
+    /// `CmdExecution`.
+    #[cfg(feature = "output_progress")]
+    pub fn progress_complete_on_success(mut self) -> Self {
+        self.progress_complete_on_success = true;
+        self
+    }
+
     async fn item_states_discover(
         discover_for: DiscoverFor,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &&peace_params::ParamsSpecs,
         resources: &&mut Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::UnboundedSender<ItemDiscoverOutcome<E>>,
@@ -133,6 +167,7 @@ where
         // Send progress update.
         #[cfg(feature = "output_progress")]
         Self::discover_progress_update(
+            progress_complete_on_success,
             &state_current_result,
             &state_goal_result,
             discover_for,
@@ -192,6 +227,7 @@ where
 
     #[cfg(feature = "output_progress")]
     fn discover_progress_update(
+        progress_complete_on_success: bool,
         state_current_result: &Option<Result<Option<BoxDtDisplay>, E>>,
         state_goal_result: &Option<Result<Option<BoxDtDisplay>, E>>,
         discover_for: DiscoverFor,
@@ -203,7 +239,11 @@ where
         let (progress_update, msg_update) = match discover_for {
             DiscoverFor::Current => match state_current_result {
                 Some(Ok(_)) => {
-                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
+                    let progress_update = if progress_complete_on_success {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    } else {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    };
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -215,7 +255,11 @@ where
             },
             DiscoverFor::Goal => match state_goal_result {
                 Some(Ok(_)) => {
-                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
+                    let progress_update = if progress_complete_on_success {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    } else {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    };
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -227,7 +271,11 @@ where
             },
             DiscoverFor::CurrentAndGoal => match state_current_result.zip(state_goal_result) {
                 Some((Ok(_), Ok(_))) => {
-                    let progress_update = ProgressUpdate::Delta(ProgressDelta::Tick);
+                    let progress_update = if progress_complete_on_success {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    } else {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    };
 
                     (progress_update, ProgressMsgUpdate::Clear)
                 }
@@ -322,6 +370,8 @@ where
                     DiscoverFor::Current,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
+                    #[cfg(feature = "output_progress")]
+                    self.progress_complete_on_success,
                     params_specs,
                     resources,
                     outcomes_tx,
@@ -413,6 +463,8 @@ where
                     DiscoverFor::Goal,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
+                    #[cfg(feature = "output_progress")]
+                    self.progress_complete_on_success,
                     params_specs,
                     resources,
                     outcomes_tx,
@@ -515,6 +567,8 @@ where
                     DiscoverFor::CurrentAndGoal,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
+                    #[cfg(feature = "output_progress")]
+                    self.progress_complete_on_success,
                     params_specs,
                     resources,
                     outcomes_tx,

@@ -75,7 +75,10 @@ where
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
+                #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current(),
+                #[cfg(feature = "output_progress")]
+                StatesDiscoverCmdBlock::current().progress_complete_on_success(),
                 StatesCurrent::from,
             ))
             .build();
@@ -143,7 +146,10 @@ where
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
+                #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::goal(),
+                #[cfg(feature = "output_progress")]
+                StatesDiscoverCmdBlock::goal().progress_complete_on_success(),
                 StatesGoal::from,
             ))
             .build();
@@ -222,7 +228,10 @@ where
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
+                #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current_and_goal(),
+                #[cfg(feature = "output_progress")]
+                StatesDiscoverCmdBlock::current_and_goal().progress_complete_on_success(),
                 |states_current_and_goal_mut| {
                     let (states_current_mut, states_goal_mut) = states_current_and_goal_mut;
 
@@ -266,7 +275,7 @@ where
         Ok(cmd_outcome)
     }
 
-    // TODO: This duplicates a bit of code with `ApplyCmd`.
+    // TODO: This duplicates a bit of code with `EnsureCmd` and `CleanCmd`.
     async fn serialize_current(
         item_graph: &ItemGraph<E>,
         resources: &mut Resources<SetUp>,
