@@ -11,7 +11,6 @@
 pub use self::{
     apply_stored_state_sync::ApplyStoredStateSync,
     clean_cmd::CleanCmd,
-    cmd_base::CmdBase,
     diff_cmd::{DiffCmd, DiffInfoSpec, DiffStateSpec},
     ensure_cmd::EnsureCmd,
     states_current_read_cmd::StatesCurrentReadCmd,
@@ -23,7 +22,6 @@ pub use self::{
 
 mod apply_stored_state_sync;
 mod clean_cmd;
-mod cmd_base;
 mod diff_cmd;
 mod ensure_cmd;
 mod states_current_read_cmd;
