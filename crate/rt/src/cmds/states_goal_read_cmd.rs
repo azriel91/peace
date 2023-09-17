@@ -1,23 +1,12 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::FutureExt;
-use peace_cfg::{FlowId, ItemId};
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-    CmdIndependence,
-};
-use peace_resources::{
-    paths::{FlowDir, StatesGoalFile},
-    resources::ts::SetUp,
-    states::StatesGoalStored,
-    type_reg::untagged::{BoxDtDisplay, TypeReg},
-    Resources,
-};
-use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
+use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
+use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::CmdBase;
+use crate::cmd_blocks::StatesGoalReadCmdBlock;
 
 /// Reads [`StatesGoalStored`]s from storage.
 #[derive(Debug)]
@@ -25,7 +14,7 @@ pub struct StatesGoalReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesGoalReadCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
+    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
@@ -38,65 +27,15 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesGoalStored, E> {
-        let SingleProfileSingleFlowView {
-            states_type_reg,
-            resources,
-            ..
-        } = cmd_ctx.scope_mut().view();
-
-        let states_goal = Self::deserialize_internal(resources, states_type_reg).await?;
-
-        Ok(states_goal)
-    }
-
-    /// Reads [`StatesGoalStored`]s from storage.
-    ///
-    /// See [`Self::exec`] for full documentation.
-    ///
-    /// This function exists so that this command can be executed as sub
-    /// functionality of another command.
-    pub async fn exec_with(
-        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-    ) -> Result<StatesGoalStored, E> {
-        CmdBase::oneshot(cmd_independence, |cmd_view| {
-            async move {
-                let SingleProfileSingleFlowView {
-                    states_type_reg,
-                    resources,
-                    ..
-                } = cmd_view;
-
-                Self::deserialize_internal(resources, states_type_reg).await
-            }
-            .boxed_local()
-        })
-        .await
-    }
-
-    pub(crate) async fn deserialize_internal(
-        resources: &mut Resources<SetUp>,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-    ) -> Result<StatesGoalStored, E> {
-        let flow_id = resources.borrow::<FlowId>();
-        let flow_dir = resources.borrow::<FlowDir>();
-        let storage = resources.borrow::<Storage>();
-        let states_goal_file = StatesGoalFile::from(&*flow_dir);
-
-        let states_goal = StatesSerializer::deserialize_goal(
-            &flow_id,
-            &storage,
-            states_type_reg,
-            &states_goal_file,
-        )
-        .await?;
-
-        drop(storage);
-        drop(flow_dir);
-        drop(flow_id);
-
-        resources.insert(states_goal_file);
-
-        Ok(states_goal)
+        CmdExecution::<StatesGoalStored, _, _>::builder()
+            .with_cmd_block(CmdBlockWrapper::new(
+                StatesGoalReadCmdBlock::new(),
+                std::convert::identity,
+            ))
+            .build()
+            .exec(cmd_ctx)
+            .await
+            .map(|cmd_outcome| cmd_outcome.value)
     }
 }
 

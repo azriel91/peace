@@ -1,11 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{
-        SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
-    },
-};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
@@ -18,7 +13,7 @@ pub struct StatesCurrentStoredDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>
 
 impl<E, O, PKeys> StatesCurrentStoredDisplayCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
+    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
@@ -31,20 +26,8 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrentStored, E> {
-        let SingleProfileSingleFlowViewAndOutput {
-            output,
-            cmd_view:
-                SingleProfileSingleFlowView {
-                    states_type_reg,
-                    resources,
-                    ..
-                },
-            ..
-        } = cmd_ctx.view_and_output();
-
-        let states_current_stored_result =
-            StatesCurrentReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
-                .await;
+        let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
+        let output = cmd_ctx.output_mut();
 
         match states_current_stored_result {
             Ok(states_current_stored) => {
