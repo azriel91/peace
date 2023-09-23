@@ -23,6 +23,7 @@ indicatif = { workspace = true, features = ["tokio"] }
 indexmap = { workspace = true }
 miette = { workspace = true, optional = true, features = ["fancy"] }
 peace_core = { workspace = true }
+peace_cmd_model = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
 peace_resources = { workspace = true }
@@ -37,6 +38,6 @@ base64 = { workspace = true }
 
 [features]
 default = []
-error_reporting = ["dep:miette"]
+error_reporting = ["dep:miette", "peace_cmd_model/error_reporting"]
 output_in_memory = ["indicatif/in_memory"]
 output_progress = ["peace_core/output_progress"]

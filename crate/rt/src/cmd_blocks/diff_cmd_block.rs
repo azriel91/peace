@@ -13,7 +13,7 @@ use peace_resources::{
         StateDiffs, States,
     },
     type_reg::untagged::{BoxDtDisplay, TypeMap},
-    Resources,
+    ResourceFetchError, Resources,
 };
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error, Flow};
 use tokio::sync::mpsc::UnboundedSender;
@@ -107,11 +107,21 @@ where
     type OutcomePartial = Result<(StateDiffs, Self::InputT), E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        let states_ts0 = resources.try_remove::<States<StatesTs0>>().unwrap();
-        let states_ts1 = resources.try_remove::<States<StatesTs1>>().unwrap();
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
+        let states_ts0 = resources.try_remove::<States<StatesTs0>>()?;
+        let states_ts1 = resources.try_remove::<States<StatesTs1>>()?;
 
-        (states_ts0, states_ts1)
+        Ok((states_ts0, states_ts1))
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<States<StatesTs0>>(),
+            tynm::type_name::<States<StatesTs1>>(),
+        ]
     }
 
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
@@ -131,6 +141,14 @@ where
         resources.insert(state_diffs);
         resources.insert(states_ts0);
         resources.insert(states_ts1);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StateDiffs>(),
+            tynm::type_name::<States<StatesTs0>>(),
+            tynm::type_name::<States<StatesTs1>>(),
+        ]
     }
 
     async fn exec(

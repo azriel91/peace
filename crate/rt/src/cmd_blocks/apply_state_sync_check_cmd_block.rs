@@ -5,7 +5,7 @@ use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     resources::ts::SetUp,
     states::{States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored},
-    Resources,
+    ResourceFetchError, Resources,
 };
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
 use peace_rt_model_core::{ApplyCmdError, ItemsStateStoredStale, StateStoredAndDiscovered};
@@ -31,14 +31,16 @@ cfg_if::cfg_if! {
 
 /// Neither stored current states nor stored goal state need to be in sync
 /// with the discovered current states and goal state.
-const APPLY_STORE_STATE_SYNC_NONE: isize = 0;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ApplyStoreStateSyncNone;
 
 /// The stored current states must be in sync with the discovered current
 /// state for the apply to proceed.
 ///
 /// The stored goal state does not need to be in sync with the discovered
 /// goal state.
-const APPLY_STORE_STATE_SYNC_CURRENT: isize = 1;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ApplyStoreStateSyncCurrent;
 
 /// The stored goal state must be in sync with the discovered goal
 /// state for the apply to proceed.
@@ -47,23 +49,25 @@ const APPLY_STORE_STATE_SYNC_CURRENT: isize = 1;
 /// discovered current state.
 ///
 /// For `CleanCmd`, this variant is equivalent to `None`.
-const APPLY_STORE_STATE_SYNC_GOAL: isize = 2;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ApplyStoreStateSyncGoal;
 
 /// Both stored current states and stored goal state must be in sync with
 /// the discovered current states and goal state for the apply to
 /// proceed.
 ///
 /// For `CleanCmd`, this variant is equivalent to `Current`.
-const APPLY_STORE_STATE_SYNC_CURRENT_AND_GOAL: isize = 3;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ApplyStoreStateSyncCurrentAndGoal;
 
 /// Stops a `CmdExecution` if stored states and discovered states are not in
 /// sync.
-pub struct ApplyStateSyncCheckCmdBlock<E, PKeys, const APPLY_STORE_STATE_SYNC_N: isize>(
-    PhantomData<(E, PKeys)>,
+pub struct ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>(
+    PhantomData<(E, PKeys, ApplyStoreStateSync)>,
 );
 
-impl<E, PKeys, const APPLY_STORE_STATE_SYNC_N: isize> Debug
-    for ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_N>
+impl<E, PKeys, ApplyStoreStateSync> Debug
+    for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("ApplyStateSyncCheckCmdBlock")
@@ -72,7 +76,18 @@ impl<E, PKeys, const APPLY_STORE_STATE_SYNC_N: isize> Debug
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_CURRENT>
+impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncNone>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    /// Returns a block that discovers current states.
+    pub fn none() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -83,7 +98,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_GOAL>
+impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -94,7 +109,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_CURRENT_AND_GOAL>
+impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -105,8 +120,7 @@ where
     }
 }
 
-impl<E, PKeys, const APPLY_STORE_STATE_SYNC_N: isize>
-    ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_N>
+impl<E, PKeys, ApplyStoreStateSync> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -207,7 +221,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_NONE>
+impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncNone>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -219,7 +233,13 @@ where
     type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
+        Ok(())
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         None
@@ -228,6 +248,10 @@ where
     fn outcome_from_acc(&self, _outcome_acc: Self::OutcomeAcc) -> Self::Outcome {}
 
     fn outcome_insert(&self, _resources: &mut Resources<SetUp>, _outcome: Self::Outcome) {}
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     async fn exec(
         &self,
@@ -254,7 +278,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_CURRENT>
+impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -266,8 +290,18 @@ where
     type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
         input_fetch_current(resources)
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+        ]
     }
 
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
@@ -282,6 +316,13 @@ where
         let (states_current_stored, states_current) = outcome;
         resources.insert(states_current_stored);
         resources.insert(states_current);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+        ]
     }
 
     async fn exec(
@@ -343,7 +384,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_GOAL>
+impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -355,8 +396,18 @@ where
     type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
         input_fetch_goal(resources)
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
+        ]
     }
 
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
@@ -371,6 +422,13 @@ where
         let (states_goal_stored, states_goal) = outcome;
         resources.insert(states_goal_stored);
         resources.insert(states_goal);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
+        ]
     }
 
     async fn exec(
@@ -432,8 +490,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock
-    for ApplyStateSyncCheckCmdBlock<E, PKeys, APPLY_STORE_STATE_SYNC_CURRENT_AND_GOAL>
+impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -450,16 +507,28 @@ where
     type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        let (states_current_stored, states_current) = input_fetch_current(resources);
-        let (states_goal_stored, states_goal) = input_fetch_goal(resources);
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
+        let (states_current_stored, states_current) = input_fetch_current(resources)?;
+        let (states_goal_stored, states_goal) = input_fetch_goal(resources)?;
 
-        (
+        Ok((
             states_current_stored,
             states_current,
             states_goal_stored,
             states_goal,
-        )
+        ))
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
+        ]
     }
 
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
@@ -476,6 +545,15 @@ where
         resources.insert(states_current);
         resources.insert(states_goal_stored);
         resources.insert(states_goal);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
+        ]
     }
 
     async fn exec(
@@ -604,18 +682,22 @@ enum OutcomeResult<E> {
 
 // Use trampolining to decrease compiled code size..
 
-fn input_fetch_current(resources: &mut Resources<SetUp>) -> (StatesCurrentStored, StatesCurrent) {
-    let states_current_stored = resources.try_remove::<StatesCurrentStored>().unwrap();
-    let states_current = resources.try_remove::<StatesCurrent>().unwrap();
+fn input_fetch_current(
+    resources: &mut Resources<SetUp>,
+) -> Result<(StatesCurrentStored, StatesCurrent), ResourceFetchError> {
+    let states_current_stored = resources.try_remove::<StatesCurrentStored>()?;
+    let states_current = resources.try_remove::<StatesCurrent>()?;
 
-    (states_current_stored, states_current)
+    Ok((states_current_stored, states_current))
 }
 
-fn input_fetch_goal(resources: &mut Resources<SetUp>) -> (StatesGoalStored, StatesGoal) {
-    let states_goal_stored = resources.try_remove::<StatesGoalStored>().unwrap();
-    let states_goal = resources.try_remove::<StatesGoal>().unwrap();
+fn input_fetch_goal(
+    resources: &mut Resources<SetUp>,
+) -> Result<(StatesGoalStored, StatesGoal), ResourceFetchError> {
+    let states_goal_stored = resources.try_remove::<StatesGoalStored>()?;
+    let states_goal = resources.try_remove::<StatesGoal>()?;
 
-    (states_goal_stored, states_goal)
+    Ok((states_goal_stored, states_goal))
 }
 
 fn outcome_collate<E, InputT>(

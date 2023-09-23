@@ -2,6 +2,7 @@
 
 // Re-exports
 pub use async_trait::async_trait;
+pub use tynm;
 
 pub use crate::{
     cmd_block::{CmdBlock, CmdBlockError, CmdBlockRt, CmdBlockRtBox, CmdBlockWrapper},

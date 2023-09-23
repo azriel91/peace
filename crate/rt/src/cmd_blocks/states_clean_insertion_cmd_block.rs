@@ -8,7 +8,7 @@ use peace_resources::{
     internal::StatesMut,
     resources::ts::SetUp,
     states::{ts::Clean, StatesClean},
-    Resources,
+    ResourceFetchError, Resources,
 };
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
 use tokio::sync::mpsc::UnboundedSender;
@@ -57,7 +57,13 @@ where
     type OutcomePartial = Result<StatesClean, E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
+        Ok(())
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesClean::new()

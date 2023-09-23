@@ -20,6 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
+peace_cmd_model = { workspace = true }
 peace_cmd = { workspace = true }
 peace_cmd_rt = { workspace = true }
 peace_data = { workspace = true }
@@ -35,6 +36,7 @@ default = []
 error_reporting = [
     "dep:miette",
     "miette?/fancy",
+    "peace_cmd_model/error_reporting",
     "peace_cmd_rt/error_reporting",
     "peace_params/error_reporting",
     "peace_rt/error_reporting",
@@ -72,6 +74,7 @@ license = "MIT OR Apache-2.0"
 peace = { path = ".", version = "0.0.11", default-features = false }
 
 peace_cfg = { path = "crate/cfg", version = "0.0.11" }
+peace_cmd_model = { path = "crate/cmd_model", version = "0.0.11" }
 peace_cmd = { path = "crate/cmd", version = "0.0.11" }
 peace_cmd_rt = { path = "crate/cmd_rt", version = "0.0.11" }
 peace_code_gen = { path = "crate/code_gen", version = "0.0.11" }

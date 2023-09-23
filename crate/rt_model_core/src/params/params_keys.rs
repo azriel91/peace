@@ -19,6 +19,9 @@ pub trait ParamsKeys: Debug + Unpin {
     type FlowParamsKMaybe: KeyMaybe;
 }
 
+/// Shorter name for `ParamsKeys` without any known keys.
+pub type ParamsKeysUnknown = ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>;
+
 /// Concrete implementation of `ParamsKeys`.
 #[derive(Debug)]
 pub struct ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> {

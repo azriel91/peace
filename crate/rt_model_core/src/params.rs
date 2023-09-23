@@ -28,7 +28,7 @@
 
 pub use self::{
     flow_params::FlowParams,
-    params_keys::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl},
+    params_keys::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsKeysUnknown},
     params_type_regs::ParamsTypeRegs,
     params_type_regs_builder::ParamsTypeRegsBuilder,
     profile_params::ProfileParams,

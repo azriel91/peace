@@ -3,6 +3,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use async_trait::async_trait;
 use peace_cfg::ItemId;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd_model::CmdBlockDesc;
 use peace_resources::{resources::ts::SetUp, Resource};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, IndexMap};
 use tokio::sync::mpsc;
@@ -111,7 +112,7 @@ where
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
     ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
         let cmd_block = &self.cmd_block;
-        let input = cmd_block.input_fetch(cmd_view.resources);
+        let input = cmd_block.input_fetch(cmd_view.resources)?;
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<BlockOutcomePartial>();
         let mut cmd_outcome = {
@@ -177,5 +178,17 @@ where
             let cmd_outcome = cmd_outcome.map(self.fn_error_handler);
             Err(CmdBlockError::Outcome(cmd_outcome))
         }
+    }
+
+    fn cmd_block_desc(&self) -> CmdBlockDesc {
+        let cmd_block_name = tynm::type_name::<CB>();
+        let cmd_block_input_names = self.cmd_block.input_type_names();
+        let cmd_block_outcome_names = self.cmd_block.outcome_type_names();
+
+        CmdBlockDesc::new(
+            cmd_block_name,
+            cmd_block_input_names,
+            cmd_block_outcome_names,
+        )
     }
 }

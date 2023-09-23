@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_resources::{resources::ts::SetUp, Resource, Resources};
+use peace_resources::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -96,8 +96,55 @@ pub trait CmdBlock: Debug {
     ///
     /// The most common use case for overriding this is for unit `()` inputs,
     /// which should provide an empty implementation.
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        resources.try_remove::<Self::InputT>().unwrap()
+    ///
+    /// # Maintainers / Developers
+    ///
+    /// Whenever this method is overridden, `input_type_names` should be
+    /// overridden as well.
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
+        resources.try_remove::<Self::InputT>()
+    }
+
+    /// Returns the short type name(s) of `CmdBlock::InputT`.
+    ///
+    /// If this `CmdBlock::InputT` is a tuple, and each member type is inserted
+    /// separately into `resources`, then this method must return the short type
+    /// name per member type.
+    ///
+    /// # Design
+    ///
+    /// This is a separate method to `input_fetch` as it is invoked separately.
+    /// Though of course we *could* also change `input_fetch` to return a
+    /// closure that returns the input type names.
+    ///
+    /// # Maintainers / Developers
+    ///
+    /// Example implementations are as follows.
+    ///
+    /// Within the `peace` framework:
+    ///
+    /// ```rust,ignore
+    /// // type InputT = (StatesCurrent, StatesGoal);
+    ///
+    /// vec![tynm::type_name::<StatesCurrent>(),
+    /// tynm::type_name::<StatesGoal>()]
+    /// ```
+    ///
+    /// Outside the `peace` framework:
+    ///
+    /// ```rust,ignore
+    /// // type InputT = (StatesCurrent, StatesGoal);
+    ///
+    /// vec![
+    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesGoal>(),
+    /// ]
+    /// ```
+    fn input_type_names(&self) -> Vec<String> {
+        vec![tynm::type_name::<Self::InputT>()]
     }
 
     /// Seed function for `OutcomeAcc`.
@@ -113,8 +160,46 @@ pub trait CmdBlock: Debug {
     ///
     /// The most common use case for overriding this is for unit `()` inputs,
     /// which should provide an empty implementation.
+    ///
+    /// # Maintainers / Developers
+    ///
+    /// Whenever this method is overridden, `outcome_type_names` should be
+    /// overridden as well.
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
         resources.insert(outcome);
+    }
+
+    /// Returns the short type name(s) of `CmdBlock::Outcome`.
+    ///
+    /// If this `CmdBlock::Outcome` is a tuple, and each member type is inserted
+    /// separately into `resources`, then this method must return the short type
+    /// name per member type.
+    ///
+    /// # Maintainers / Developers
+    ///
+    /// Example implementations are as follows.
+    ///
+    /// Within the `peace` framework:
+    ///
+    /// ```rust,ignore
+    /// // type Outcome = (StatesCurrent, StatesGoal);
+    ///
+    /// vec![tynm::type_name::<StatesCurrent>(),
+    /// tynm::type_name::<StatesGoal>()]
+    /// ```
+    ///
+    /// Outside the `peace` framework:
+    ///
+    /// ```rust,ignore
+    /// // type Outcome = (StatesCurrent, StatesGoal);
+    ///
+    /// vec![
+    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesGoal>(),
+    /// ]
+    /// ```
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![tynm::type_name::<Self::Outcome>()]
     }
 
     /// Producer function to process all items.

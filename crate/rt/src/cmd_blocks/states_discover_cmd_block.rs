@@ -11,7 +11,7 @@ use peace_resources::{
         States, StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
-    Resources,
+    ResourceFetchError, Resources,
 };
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error, ItemBoxed};
 use tokio::sync::mpsc::UnboundedSender;
@@ -34,21 +34,28 @@ cfg_if::cfg_if! {
     }
 }
 
-const DISCOVER_FOR_CURRENT: isize = 0;
-const DISCOVER_FOR_GOAL: isize = 1;
-const DISCOVER_FOR_CURRENT_AND_GOAL: isize = 2;
+/// Discovers current states.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DiscoverForCurrent;
 
-pub struct StatesDiscoverCmdBlock<E, PKeys, const DISCOVER_FOR_N: isize> {
+/// Discovers goal states.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DiscoverForGoal;
+
+/// Discovers current and goal states.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DiscoverForCurrentAndGoal;
+
+/// Discovers [`StatesCurrent`] and/or [`StatesGoal`].
+pub struct StatesDiscoverCmdBlock<E, PKeys, DiscoverFor> {
     /// Whether or not to mark progress bars complete on success.
     #[cfg(feature = "output_progress")]
     progress_complete_on_success: bool,
     /// Marker.
-    marker: PhantomData<(E, PKeys)>,
+    marker: PhantomData<(E, PKeys, DiscoverFor)>,
 }
 
-impl<E, PKeys, const DISCOVER_FOR_N: isize> Debug
-    for StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_N>
-{
+impl<E, PKeys, DiscoverFor> Debug for StatesDiscoverCmdBlock<E, PKeys, DiscoverFor> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("StatesDiscoverCmdBlock");
         #[cfg(feature = "output_progress")]
@@ -61,7 +68,7 @@ impl<E, PKeys, const DISCOVER_FOR_N: isize> Debug
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_CURRENT>
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -76,7 +83,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_GOAL>
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -91,7 +98,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_CURRENT_AND_GOAL>
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -106,10 +113,11 @@ where
     }
 }
 
-impl<E, PKeys, const DISCOVER_FOR_N: isize> StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_N>
+impl<E, PKeys, DiscoverFor> StatesDiscoverCmdBlock<E, PKeys, DiscoverFor>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
+    DiscoverFor: Discover,
 {
     /// Indicate that the progress tracker should be marked complete on success.
     ///
@@ -122,11 +130,10 @@ where
     }
 
     async fn item_states_discover(
-        discover_for: DiscoverFor,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
-        params_specs: &&peace_params::ParamsSpecs,
-        resources: &&mut Resources<SetUp>,
+        params_specs: &peace_params::ParamsSpecs,
+        resources: &Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::UnboundedSender<ItemDiscoverOutcome<E>>,
         item: &ItemBoxed<E>,
     ) {
@@ -137,47 +144,22 @@ where
             ProgressSender::new(item_id, progress_tx),
         );
 
-        let (state_current_result, state_goal_result) = match discover_for {
-            DiscoverFor::Current => {
-                let state_current_result = item
-                    .state_current_try_exec(params_specs, resources, fn_ctx)
-                    .await;
-
-                (Some(state_current_result), None)
-            }
-            DiscoverFor::Goal => {
-                let state_goal_result = item
-                    .state_goal_try_exec(params_specs, resources, fn_ctx)
-                    .await;
-
-                (None, Some(state_goal_result))
-            }
-            DiscoverFor::CurrentAndGoal => {
-                let state_current_result = item
-                    .state_current_try_exec(params_specs, resources, fn_ctx)
-                    .await;
-                let state_goal_result = item
-                    .state_goal_try_exec(params_specs, resources, fn_ctx)
-                    .await;
-
-                (Some(state_current_result), Some(state_goal_result))
-            }
-        };
+        let (states_current_result, states_goal_result) =
+            DiscoverFor::discover(item, params_specs, resources, fn_ctx).await;
 
         // Send progress update.
         #[cfg(feature = "output_progress")]
         Self::discover_progress_update(
             progress_complete_on_success,
-            &state_current_result,
-            &state_goal_result,
-            discover_for,
+            states_current_result.as_ref(),
+            states_goal_result.as_ref(),
             progress_tx,
             item_id,
         );
 
         let mut item_error = None;
-        let state_current = if let Some(state_current_result) = state_current_result {
-            match state_current_result {
+        let state_current = if let Some(states_current_result) = states_current_result {
+            match states_current_result {
                 Ok(state_current_opt) => state_current_opt,
                 Err(error) => {
                     item_error = Some(error);
@@ -188,8 +170,8 @@ where
             None
         };
 
-        let state_goal = if let Some(state_goal_result) = state_goal_result {
-            match state_goal_result {
+        let state_goal = if let Some(states_goal_result) = states_goal_result {
+            match states_goal_result {
                 Ok(state_goal_opt) => state_goal_opt,
                 Err(error) => {
                     // It's probably more crucial to store the
@@ -228,73 +210,22 @@ where
     #[cfg(feature = "output_progress")]
     fn discover_progress_update(
         progress_complete_on_success: bool,
-        state_current_result: &Option<Result<Option<BoxDtDisplay>, E>>,
-        state_goal_result: &Option<Result<Option<BoxDtDisplay>, E>>,
-        discover_for: DiscoverFor,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
         progress_tx: &Sender<ProgressUpdateAndId>,
         item_id: &ItemId,
     ) {
-        let state_current_result = state_current_result.as_ref();
-        let state_goal_result = state_goal_result.as_ref();
-        let (progress_update, msg_update) = match discover_for {
-            DiscoverFor::Current => match state_current_result {
-                Some(Ok(_)) => {
-                    let progress_update = if progress_complete_on_success {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    } else {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    };
-
-                    (progress_update, ProgressMsgUpdate::Clear)
-                }
-                Some(Err(error)) => (
-                    ProgressUpdate::Complete(ProgressComplete::Fail),
-                    ProgressMsgUpdate::Set(format!("{error}")),
-                ),
-                None => return,
-            },
-            DiscoverFor::Goal => match state_goal_result {
-                Some(Ok(_)) => {
-                    let progress_update = if progress_complete_on_success {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    } else {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    };
-
-                    (progress_update, ProgressMsgUpdate::Clear)
-                }
-                Some(Err(error)) => (
-                    ProgressUpdate::Complete(ProgressComplete::Fail),
-                    ProgressMsgUpdate::Set(format!("{error}")),
-                ),
-                None => return,
-            },
-            DiscoverFor::CurrentAndGoal => match state_current_result.zip(state_goal_result) {
-                Some((Ok(_), Ok(_))) => {
-                    let progress_update = if progress_complete_on_success {
-                        ProgressUpdate::Complete(ProgressComplete::Success)
-                    } else {
-                        ProgressUpdate::Delta(ProgressDelta::Tick)
-                    };
-
-                    (progress_update, ProgressMsgUpdate::Clear)
-                }
-                Some((Ok(_), Err(error)) | (Err(error), Ok(_))) => (
-                    ProgressUpdate::Complete(ProgressComplete::Fail),
-                    ProgressMsgUpdate::Set(format!("{error}")),
-                ),
-                Some((Err(error_current), Err(error_goal))) => (
-                    ProgressUpdate::Complete(ProgressComplete::Fail),
-                    ProgressMsgUpdate::Set(format!("{error_current}, {error_goal}")),
-                ),
-                None => return,
-            },
-        };
-        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-            item_id: item_id.clone(),
-            progress_update,
-            msg_update,
-        });
+        if let Some((progress_update, msg_update)) = DiscoverFor::progress_update(
+            progress_complete_on_success,
+            states_current_result,
+            states_goal_result,
+        ) {
+            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                item_id: item_id.clone(),
+                progress_update,
+                msg_update,
+            });
+        }
     }
 }
 
@@ -315,19 +246,8 @@ pub enum ItemDiscoverOutcome<E> {
     },
 }
 
-/// Which states to discover.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum DiscoverFor {
-    /// Discover current states of each item.
-    Current = DISCOVER_FOR_CURRENT,
-    /// Discover goal states of each item.
-    Goal = DISCOVER_FOR_GOAL,
-    /// Discover both current and goal states.
-    CurrentAndGoal = DISCOVER_FOR_CURRENT_AND_GOAL,
-}
-
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_CURRENT>
+impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -339,7 +259,13 @@ where
     type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
+        Ok(())
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesMut::<Current>::new()
@@ -367,7 +293,6 @@ where
         flow.graph()
             .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                 Self::item_states_discover(
-                    DiscoverFor::Current,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                     #[cfg(feature = "output_progress")]
@@ -420,7 +345,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_GOAL>
+impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -432,7 +357,13 @@ where
     type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
+        Ok(())
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesMut::<Goal>::new()
@@ -460,7 +391,6 @@ where
         flow.graph()
             .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                 Self::item_states_discover(
-                    DiscoverFor::Goal,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                     #[cfg(feature = "output_progress")]
@@ -513,7 +443,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DISCOVER_FOR_CURRENT_AND_GOAL>
+impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -525,7 +455,13 @@ where
     type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
+        Ok(())
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![]
+    }
 
     fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         let states_current_mut = StatesMut::<Current>::new();
@@ -547,6 +483,13 @@ where
         resources.insert(states_goal);
     }
 
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<StatesGoal>(),
+        ]
+    }
+
     async fn exec(
         &self,
         _input: Self::InputT,
@@ -564,7 +507,6 @@ where
         flow.graph()
             .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                 Self::item_states_discover(
-                    DiscoverFor::CurrentAndGoal,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                     #[cfg(feature = "output_progress")]
@@ -619,5 +561,186 @@ where
         }
 
         Ok(())
+    }
+}
+
+/// Behaviour for each discover variant.
+#[async_trait::async_trait(?Send)]
+pub trait Discover {
+    async fn discover<E>(
+        item: &ItemBoxed<E>,
+        params_specs: &peace_params::ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> (
+        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, E>>,
+    )
+    where
+        E: std::error::Error + From<Error> + Send + 'static;
+
+    #[cfg(feature = "output_progress")]
+    fn progress_update<E>(
+        progress_complete_on_success: bool,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+    ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
+    where
+        E: std::error::Error + From<Error> + Send + 'static;
+}
+
+#[async_trait::async_trait(?Send)]
+impl Discover for DiscoverForCurrent {
+    async fn discover<E>(
+        item: &ItemBoxed<E>,
+        params_specs: &peace_params::ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> (
+        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, E>>,
+    )
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        let states_current_result = item
+            .state_current_try_exec(params_specs, resources, fn_ctx)
+            .await;
+
+        (Some(states_current_result), None)
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_update<E>(
+        progress_complete_on_success: bool,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        _states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+    ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        states_current_result.map(|states_current_result| match states_current_result {
+            Ok(_) => {
+                let progress_update = if progress_complete_on_success {
+                    ProgressUpdate::Complete(ProgressComplete::Success)
+                } else {
+                    ProgressUpdate::Delta(ProgressDelta::Tick)
+                };
+
+                (progress_update, ProgressMsgUpdate::Clear)
+            }
+            Err(error) => (
+                ProgressUpdate::Complete(ProgressComplete::Fail),
+                ProgressMsgUpdate::Set(format!("{error}")),
+            ),
+        })
+    }
+}
+
+#[async_trait::async_trait(?Send)]
+impl Discover for DiscoverForGoal {
+    async fn discover<E>(
+        item: &ItemBoxed<E>,
+        params_specs: &peace_params::ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> (
+        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, E>>,
+    )
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        let states_goal_result = item
+            .state_goal_try_exec(params_specs, resources, fn_ctx)
+            .await;
+
+        (None, Some(states_goal_result))
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_update<E>(
+        progress_complete_on_success: bool,
+        _states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+    ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        states_goal_result.map(|states_goal_result| match states_goal_result {
+            Ok(_) => {
+                let progress_update = if progress_complete_on_success {
+                    ProgressUpdate::Complete(ProgressComplete::Success)
+                } else {
+                    ProgressUpdate::Delta(ProgressDelta::Tick)
+                };
+
+                (progress_update, ProgressMsgUpdate::Clear)
+            }
+            Err(error) => (
+                ProgressUpdate::Complete(ProgressComplete::Fail),
+                ProgressMsgUpdate::Set(format!("{error}")),
+            ),
+        })
+    }
+}
+
+#[async_trait::async_trait(?Send)]
+impl Discover for DiscoverForCurrentAndGoal {
+    async fn discover<E>(
+        item: &ItemBoxed<E>,
+        params_specs: &peace_params::ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> (
+        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, E>>,
+    )
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        let states_current_result = item
+            .state_current_try_exec(params_specs, resources, fn_ctx)
+            .await;
+        let states_goal_result = item
+            .state_goal_try_exec(params_specs, resources, fn_ctx)
+            .await;
+
+        (Some(states_current_result), Some(states_goal_result))
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_update<E>(
+        progress_complete_on_success: bool,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+    ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        states_current_result
+            .zip(states_goal_result)
+            .map(
+                |states_current_and_states_goal_result| match states_current_and_states_goal_result
+                {
+                    (Ok(_), Ok(_)) => {
+                        let progress_update = if progress_complete_on_success {
+                            ProgressUpdate::Complete(ProgressComplete::Success)
+                        } else {
+                            ProgressUpdate::Delta(ProgressDelta::Tick)
+                        };
+
+                        (progress_update, ProgressMsgUpdate::Clear)
+                    }
+                    (Ok(_), Err(error)) | (Err(error), Ok(_)) => (
+                        ProgressUpdate::Complete(ProgressComplete::Fail),
+                        ProgressMsgUpdate::Set(format!("{error}")),
+                    ),
+                    (Err(error_current), Err(error_goal)) => (
+                        ProgressUpdate::Complete(ProgressComplete::Fail),
+                        ProgressMsgUpdate::Set(format!("{error_current}, {error_goal}")),
+                    ),
+                },
+            )
     }
 }

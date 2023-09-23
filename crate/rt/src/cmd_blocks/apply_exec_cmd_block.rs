@@ -11,7 +11,7 @@ use peace_resources::{
         ts::{Clean, Cleaned, CleanedDry, Ensured, EnsuredDry, Goal},
         States, StatesCurrent, StatesPrevious,
     },
-    Resources,
+    ResourceFetchError, Resources,
 };
 use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
@@ -290,14 +290,22 @@ where
     type OutcomePartial = ItemApplyOutcome<E>;
     type PKeys = PKeys;
 
-    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        let states_current = resources.try_remove::<StatesCurrent>().unwrap();
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
+        let states_current = resources.try_remove::<StatesCurrent>()?;
 
-        let states_target = resources
-            .try_remove::<States<StatesTs::TsTarget>>()
-            .unwrap();
+        let states_target = resources.try_remove::<States<StatesTs::TsTarget>>()?;
 
-        (states_current, states_target)
+        Ok((states_current, states_target))
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<States<StatesTs::TsTarget>>(),
+        ]
     }
 
     fn outcome_acc_init(&self, input: &Self::InputT) -> Self::OutcomeAcc {
@@ -326,6 +334,14 @@ where
         resources.insert(states_previous);
         resources.insert(states_applied);
         resources.insert(states_target);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesPrevious>(),
+            tynm::type_name::<States<StatesTs>>(),
+            tynm::type_name::<States<StatesTs::TsTarget>>(),
+        ]
     }
 
     async fn exec(

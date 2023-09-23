@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use peace_cmd_model::CmdExecutionError;
 use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::ParamsSpecsFile;
@@ -36,6 +37,22 @@ pub enum Error {
         #[source]
         #[from]
         ApplyCmdError,
+    ),
+
+    /// Error in `CmdExecution` or `CmdBlock` logic, usually due to incorrect
+    /// `Resource` insertion or removal.
+    #[error(
+        "Error in `CmdExecution` or `CmdBlock` logic, usually due to incorrect `Resource` insertion or removal."
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure that the value is populated by a predecessor."))
+    )]
+    CmdExecution(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        CmdExecutionError,
     ),
 
     /// Failed to serialize error.

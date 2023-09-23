@@ -5,7 +5,8 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_cmd_model::CmdExecutionError;
+use peace_resources::{resources::ts::SetUp, ResourceFetchError, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
 
 use crate::{CmdBlockError, CmdBlockRtBox};
@@ -134,7 +135,7 @@ where
 }
 
 async fn cmd_outcome_task<'view: 'scope, 'scope, ExecutionOutcome, E, PKeys>(
-    cmd_blocks: &'view mut VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: &'view VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     execution_outcome_fetch: &'view mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
     cmd_view: &'view mut SingleProfileSingleFlowView<'scope, E, PKeys, SetUp>,
     #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
@@ -144,10 +145,11 @@ where
     PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
 {
-    let cmd_view_and_progress_result = stream::unfold(cmd_blocks, |cmd_blocks| {
-        let cmd_block_next = cmd_blocks.pop_front();
+    let cmd_view_and_progress_result = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
+        let cmd_block_next = cmd_blocks.next();
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
     })
+    .enumerate()
     .map(Result::<_, CmdViewAndErr<ExecutionOutcome, E, PKeys>>::Ok)
     .try_fold(
         CmdViewAndProgress {
@@ -157,7 +159,7 @@ where
         },
         // `progress_tx` is moved into this closure, and dropped at the very end, so
         // that `progress_render_task` will actually end.
-        |cmd_view_and_progress, cmd_block_rt| async move {
+        |cmd_view_and_progress, (cmd_block_index, cmd_block_rt)| async move {
             let CmdViewAndProgress {
                 cmd_view,
                 #[cfg(feature = "output_progress")]
@@ -183,6 +185,7 @@ where
                 Ok(()) => Ok(cmd_view_and_progress),
                 Err(cmd_block_error) => Err(CmdViewAndErr {
                     cmd_view_and_progress,
+                    cmd_block_index,
                     cmd_block_error,
                 }),
             }
@@ -190,12 +193,16 @@ where
     )
     .await;
 
-    let (cmd_view_and_progress, cmd_block_error) = match cmd_view_and_progress_result {
+    let (cmd_view_and_progress, cmd_block_index_and_error) = match cmd_view_and_progress_result {
         Ok(cmd_view_and_progress) => (cmd_view_and_progress, None),
         Err(CmdViewAndErr {
             cmd_view_and_progress,
+            cmd_block_index,
             cmd_block_error,
-        }) => (cmd_view_and_progress, Some(cmd_block_error)),
+        }) => (
+            cmd_view_and_progress,
+            Some((cmd_block_index, cmd_block_error)),
+        ),
     };
 
     let CmdViewAndProgress {
@@ -207,8 +214,28 @@ where
     #[cfg(feature = "output_progress")]
     drop(progress_tx);
 
-    if let Some(cmd_block_error) = cmd_block_error {
+    if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
+            CmdBlockError::InputFetch(resource_fetch_error) => {
+                let ResourceFetchError {
+                    resource_name_short: input_name_short,
+                    resource_name_full: input_name_full,
+                } = resource_fetch_error;
+
+                let cmd_block_descs = cmd_blocks
+                    .iter()
+                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                    .collect();
+
+                Err(CmdExecutionError::InputFetch {
+                    cmd_block_descs,
+                    cmd_block_index,
+                    input_name_short,
+                    input_name_full,
+                })
+                .map_err(peace_rt_model::Error::from)
+                .map_err(E::from)
+            }
             CmdBlockError::Block(error) => Err(error),
             CmdBlockError::Outcome(cmd_outcome) => Ok(cmd_outcome),
         }
@@ -236,5 +263,6 @@ where
     PKeys: ParamsKeys + 'static,
 {
     cmd_view_and_progress: CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
+    cmd_block_index: usize,
     cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
 }
