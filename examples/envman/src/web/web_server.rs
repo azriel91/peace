@@ -19,7 +19,7 @@ impl WebServer {
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(|| view! {  <Home /> }).await;
+        let routes = leptos_axum::generate_route_list(|| view! {  <Home /> });
 
         let app = Router::new()
             // serve the pkg directory
