@@ -242,14 +242,8 @@ where
                 },
             ))
             .with_execution_outcome_fetch(|resources| {
-                let states_current = resources.remove::<StatesCurrent>().unwrap_or_else(|| {
-                    let states_current = tynm::type_name::<StatesCurrent>();
-                    panic!("Expected `{states_current}` to exist in `Resources`");
-                });
-                let states_goal = resources.remove::<StatesGoal>().unwrap_or_else(|| {
-                    let states_goal = tynm::type_name::<StatesGoal>();
-                    panic!("Expected `{states_goal}` to exist in `Resources`");
-                });
+                let states_current = resources.try_remove::<StatesCurrent>().unwrap();
+                let states_goal = resources.try_remove::<StatesGoal>().unwrap();
 
                 (states_current, states_goal)
             })

@@ -215,16 +215,8 @@ where
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
-                    let states_previous =
-                        resources.remove::<StatesPrevious>().unwrap_or_else(|| {
-                            let states_previous = tynm::type_name::<StatesPrevious>();
-                            panic!("Expected `{states_previous}` to exist in `Resources`");
-                        });
-                    let states_cleaned =
-                        resources.remove::<States<StatesTs>>().unwrap_or_else(|| {
-                            let states_cleaned = tynm::type_name::<States<StatesTs>>();
-                            panic!("Expected `{states_cleaned}` to exist in `Resources`");
-                        });
+                    let states_previous = resources.try_remove::<StatesPrevious>().unwrap();
+                    let states_cleaned = resources.try_remove::<States<StatesTs>>().unwrap();
 
                     (states_previous, states_cleaned)
                 })

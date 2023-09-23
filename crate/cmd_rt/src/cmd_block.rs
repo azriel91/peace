@@ -97,13 +97,7 @@ pub trait CmdBlock: Debug {
     /// The most common use case for overriding this is for unit `()` inputs,
     /// which should provide an empty implementation.
     fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        resources.remove::<Self::InputT>().unwrap_or_else(|| {
-            let input_type_name = tynm::type_name::<Self::InputT>();
-            panic!(
-                "Expected `{input_type_name}` to exist in `Resources`.\n\
-                Make sure a previous `CmdBlock` has that type as its `Outcome`."
-            );
-        })
+        resources.try_remove::<Self::InputT>().unwrap()
     }
 
     /// Seed function for `OutcomeAcc`.

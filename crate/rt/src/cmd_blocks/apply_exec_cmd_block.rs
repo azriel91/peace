@@ -291,23 +291,11 @@ where
     type PKeys = PKeys;
 
     fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        let states_current = resources.remove::<StatesCurrent>().unwrap_or_else(|| {
-            let input_type_name = tynm::type_name::<StatesCurrent>();
-            panic!(
-                "Expected `{input_type_name}` to exist in `Resources`.\n\
-                Make sure a previous `CmdBlock` has that type as its `Outcome`."
-            );
-        });
+        let states_current = resources.try_remove::<StatesCurrent>().unwrap();
 
         let states_target = resources
-            .remove::<States<StatesTs::TsTarget>>()
-            .unwrap_or_else(|| {
-                let input_type_name = tynm::type_name::<States<StatesTs::TsTarget>>();
-                panic!(
-                    "Expected `{input_type_name}` to exist in `Resources`.\n\
-                    Make sure a previous `CmdBlock` has that type as its `Outcome`."
-                );
-            });
+            .try_remove::<States<StatesTs::TsTarget>>()
+            .unwrap();
 
         (states_current, states_target)
     }

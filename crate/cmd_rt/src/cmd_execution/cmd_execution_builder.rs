@@ -163,14 +163,16 @@ fn execution_outcome_fetch<ExecutionOutcome>(resources: &mut Resources<SetUp>) -
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
 {
-    resources.remove::<ExecutionOutcome>().unwrap_or_else(|| {
-        let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
-        panic!(
-            "Expected `{execution_outcome_type_name}` to exist in `Resources`.\n\
+    resources
+        .try_remove::<ExecutionOutcome>()
+        .unwrap_or_else(|_error| {
+            let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
+            panic!(
+                "Expected `{execution_outcome_type_name}` to exist in `Resources`.\n\
             Make sure the final `CmdBlock` has that type as its `Outcome`.\n\
             \n\
             You may wish to call `CmdExecutionBuilder::with_execution_outcome_fetch`\n\
             to specify how to fetch the `ExecutionOutcome`."
-        );
-    })
+            );
+        })
 }

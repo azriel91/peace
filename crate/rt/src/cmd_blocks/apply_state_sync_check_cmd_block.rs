@@ -605,41 +605,15 @@ enum OutcomeResult<E> {
 // Use trampolining to decrease compiled code size..
 
 fn input_fetch_current(resources: &mut Resources<SetUp>) -> (StatesCurrentStored, StatesCurrent) {
-    let states_current_stored = resources
-        .remove::<StatesCurrentStored>()
-        .unwrap_or_else(|| {
-            let input_type_name = tynm::type_name::<StatesCurrentStored>();
-            panic!(
-                "Expected `{input_type_name}` to exist in `Resources`.\n\
-            Make sure a previous `CmdBlock` has that type as its `Outcome`."
-            );
-        });
-    let states_current = resources.remove::<StatesCurrent>().unwrap_or_else(|| {
-        let input_type_name = tynm::type_name::<StatesCurrent>();
-        panic!(
-            "Expected `{input_type_name}` to exist in `Resources`.\n\
-            Make sure a previous `CmdBlock` has that type as its `Outcome`."
-        );
-    });
+    let states_current_stored = resources.try_remove::<StatesCurrentStored>().unwrap();
+    let states_current = resources.try_remove::<StatesCurrent>().unwrap();
 
     (states_current_stored, states_current)
 }
 
 fn input_fetch_goal(resources: &mut Resources<SetUp>) -> (StatesGoalStored, StatesGoal) {
-    let states_goal_stored = resources.remove::<StatesGoalStored>().unwrap_or_else(|| {
-        let input_type_name = tynm::type_name::<StatesGoalStored>();
-        panic!(
-            "Expected `{input_type_name}` to exist in `Resources`.\n\
-            Make sure a previous `CmdBlock` has that type as its `Outcome`."
-        );
-    });
-    let states_goal = resources.remove::<StatesGoal>().unwrap_or_else(|| {
-        let input_type_name = tynm::type_name::<StatesGoal>();
-        panic!(
-            "Expected `{input_type_name}` to exist in `Resources`.\n\
-            Make sure a previous `CmdBlock` has that type as its `Outcome`."
-        );
-    });
+    let states_goal_stored = resources.try_remove::<StatesGoalStored>().unwrap();
+    let states_goal = resources.try_remove::<StatesGoal>().unwrap();
 
     (states_goal_stored, states_goal)
 }

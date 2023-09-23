@@ -108,14 +108,8 @@ where
     type PKeys = PKeys;
 
     fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
-        let states_ts0 = resources.remove::<States<StatesTs0>>().unwrap_or_else(|| {
-            let states_ts0 = tynm::type_name::<States<StatesTs0>>();
-            panic!("Expected `{states_ts0}` to exist in `Resources`");
-        });
-        let states_ts1 = resources.remove::<States<StatesTs1>>().unwrap_or_else(|| {
-            let states_ts1 = tynm::type_name::<States<StatesTs1>>();
-            panic!("Expected `{states_ts1}` to exist in `Resources`");
-        });
+        let states_ts0 = resources.try_remove::<States<StatesTs0>>().unwrap();
+        let states_ts1 = resources.try_remove::<States<StatesTs1>>().unwrap();
 
         (states_ts0, states_ts1)
     }
