@@ -1,7 +1,13 @@
 mod debug {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
+        Clean, Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
+        Previous,
     };
+
+    #[test]
+    fn states_clean() {
+        assert_eq!("Clean", format!("{Clean:?}"))
+    }
 
     #[test]
     fn states_current_stored() {
@@ -42,12 +48,25 @@ mod debug {
     fn states_cleaned_dry() {
         assert_eq!("CleanedDry", format!("{CleanedDry:?}"))
     }
+
+    #[test]
+    fn states_previous() {
+        assert_eq!("Previous", format!("{Previous:?}"))
+    }
 }
 
 mod serde {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
+        Clean, Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
+        Previous,
     };
+
+    #[test]
+    fn clean() {
+        let s = serde_yaml::to_string(&Clean).unwrap();
+
+        assert!(serde_yaml::from_str::<Clean>(&s).is_ok());
+    }
 
     #[test]
     fn current_stored() {
@@ -103,5 +122,12 @@ mod serde {
         let s = serde_yaml::to_string(&CleanedDry).unwrap();
 
         assert!(serde_yaml::from_str::<CleanedDry>(&s).is_ok());
+    }
+
+    #[test]
+    fn previous() {
+        let s = serde_yaml::to_string(&Previous).unwrap();
+
+        assert!(serde_yaml::from_str::<Previous>(&s).is_ok());
     }
 }
