@@ -139,6 +139,8 @@ where
         } = cmd_ctx.view();
         let (item_graph, resources) = (flow.graph(), resources);
 
+        // TODO: We shouldn't serialize current if we returned from an interruption /
+        // error handler.
         Self::serialize_current(item_graph, resources, &states_cleaned).await?;
 
         let cmd_outcome = CmdOutcome {

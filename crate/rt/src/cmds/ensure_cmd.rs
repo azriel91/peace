@@ -125,6 +125,8 @@ where
         } = cmd_ctx.view();
         let (item_graph, resources) = (flow.graph(), resources);
 
+        // TODO: We shouldn't serialize current or goal if we returned from an
+        // interruption / error handler.
         Self::serialize_current(item_graph, resources, &states_applied).await?;
         Self::serialize_goal(item_graph, resources, &states_goal).await?;
 
