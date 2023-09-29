@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_resources::Resources;
 use peace_rt_model::{
     params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
     Workspace,
@@ -23,7 +23,6 @@ use crate::{
         },
         SingleProfileSingleFlow,
     },
-    CmdIndependence,
 };
 
 /// Information needed to execute a command.
@@ -140,16 +139,6 @@ impl CmdCtx<()> {
         >,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
-    }
-}
-
-impl<'scope, E, O, PKeys> CmdCtx<SingleProfileSingleFlow<'scope, E, O, PKeys, SetUp>>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Returns this `CmdCtx` wrapped in `CmdIndependence::Standalone`.
-    pub fn as_standalone(&mut self) -> CmdIndependence<'_, 'scope, '_, E, O, PKeys> {
-        CmdIndependence::Standalone { cmd_ctx: self }
     }
 }
 
