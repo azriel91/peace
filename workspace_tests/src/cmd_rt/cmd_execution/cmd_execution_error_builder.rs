@@ -64,6 +64,8 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
             cmd_execution_src,
             #[cfg(feature = "error_reporting")]
             input_span,
+            #[cfg(feature = "error_reporting")]
+            full_span,
         })) => {
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
@@ -96,6 +98,8 @@ CmdBlocks:
                         "Expected `input_span` to be `Some(SourceSpan::from((154, 15)))`, but was `None`."
                     ),
                 }
+                assert_eq!(0, full_span.offset());
+                assert_eq!(cmd_execution_src.len(), full_span.len());
             }
         }
         _ => panic!("Expected `error` to be a `CmdExecutionError`, but was `{error}`"),
@@ -149,6 +153,8 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
             cmd_execution_src,
             #[cfg(feature = "error_reporting")]
             input_span,
+            #[cfg(feature = "error_reporting")]
+            full_span,
         })) => {
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
@@ -181,6 +187,8 @@ CmdBlocks:
                         "Expected `input_span` to be `Some(SourceSpan::from((174, 12)))`, but was `None`."
                     ),
                 }
+                assert_eq!(0, full_span.offset());
+                assert_eq!(cmd_execution_src.len(), full_span.len());
             }
         }
         _ => panic!("Expected `error` to be a `CmdExecutionError`, but was `{error}`"),

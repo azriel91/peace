@@ -70,6 +70,8 @@ impl CmdExecutionErrorBuilder {
         let (cmd_execution_src, input_span) =
             cmd_execution_src::<ExecutionOutcome, E, PKeys>(&cmd_block_descs, &input_name_short)
                 .expect("Failed to write to `cmd_execution_src` buffer.");
+        #[cfg(feature = "error_reporting")]
+        let full_span = SourceSpan::from((0, cmd_execution_src.len()));
 
         CmdExecutionError::InputFetch {
             cmd_block_descs,
@@ -80,6 +82,8 @@ impl CmdExecutionErrorBuilder {
             cmd_execution_src,
             #[cfg(feature = "error_reporting")]
             input_span,
+            #[cfg(feature = "error_reporting")]
+            full_span,
         }
     }
 }

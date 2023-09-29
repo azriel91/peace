@@ -69,5 +69,9 @@ pub enum CmdExecutionError {
         #[cfg(feature = "error_reporting")]
         #[label("This type is not present in `resources`")]
         input_span: Option<miette::SourceSpan>,
+        /// Full span so that miette renders the whole `cmd_execution_src`.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        full_span: miette::SourceSpan,
     },
 }
