@@ -18,6 +18,8 @@ use crate::{
     VecA, VecCopyItem,
 };
 
+mod cmd_execution_error_builder;
+
 #[tokio::test]
 async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
     let mut cmd_execution = CmdExecution::builder()

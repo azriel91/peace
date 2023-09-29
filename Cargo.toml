@@ -139,7 +139,7 @@ tempfile = "3.8.0"
 thiserror = "1.0.48"
 tokio = "1.32.0"
 tokio-util = "0.7.9"
-tynm = "0.1.8"
+tynm = "0.1.9"
 type_reg = { version = "0.6.2", features = ["debug", "untagged", "ordered"] }
 url = "2.4.1"
 wasm-bindgen = "0.2.87"

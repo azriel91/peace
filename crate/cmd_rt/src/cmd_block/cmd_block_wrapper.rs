@@ -7,6 +7,7 @@ use peace_cmd_model::CmdBlockDesc;
 use peace_resources::{resources::ts::SetUp, Resource};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, IndexMap};
 use tokio::sync::mpsc;
+use tynm::TypeParamsFmtOpts;
 
 use crate::{CmdBlock, CmdBlockError, CmdBlockRt};
 
@@ -181,7 +182,7 @@ where
     }
 
     fn cmd_block_desc(&self) -> CmdBlockDesc {
-        let cmd_block_name = tynm::type_name::<CB>();
+        let cmd_block_name = tynm::type_name_opts::<CB>(TypeParamsFmtOpts::Std);
         let cmd_block_input_names = self.cmd_block.input_type_names();
         let cmd_block_outcome_names = self.cmd_block.outcome_type_names();
 

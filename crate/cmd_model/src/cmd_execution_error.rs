@@ -35,5 +35,39 @@ pub enum CmdExecutionError {
         input_name_short: String,
         /// Full type name of the `CmdBlock::Input` type.
         input_name_full: String,
+        /// Textual representation of the `CmdExecution`.
+        ///
+        /// This includes the `CmdBlock`s and their `InputT` and `Outcome` type
+        /// names.
+        ///
+        /// Approximation of the source for `EnsureCmd`:
+        ///
+        /// ```yaml
+        /// CmdExecution:
+        ///   ExecutionOutcome: (States<Previous>, States<Ensured>, States<Goal>)
+        /// CmdBlocks:
+        ///   - StatesCurrentReadCmdBlock:
+        ///       Input: States<Current>
+        ///       Outcome: States<Goal>
+        ///   - StatesGoalReadCmdBlock:
+        ///       Input: States<Current>
+        ///       Outcome: States<Goal>
+        ///   - StatesDiscoverCmdBlock:
+        ///       Input: ()
+        ///       Outcome: (States<Current>, States<Goal>)
+        ///   - ApplyStateSyncCheckCmdBlock:
+        ///       Input: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
+        ///       Outcome: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
+        ///   - ApplyExecCmdBlock:
+        ///       Input: (States<Current>, States<Goal>)
+        ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
+        /// ```
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        cmd_execution_src: String,
+        /// Span within the source text of the input type.
+        #[cfg(feature = "error_reporting")]
+        #[label("This type is not present in `resources`")]
+        input_span: Option<miette::SourceSpan>,
     },
 }

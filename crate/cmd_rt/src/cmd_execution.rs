@@ -5,8 +5,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_cmd_model::CmdExecutionError;
-use peace_resources::{resources::ts::SetUp, ResourceFetchError, Resources};
+use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
 
 use crate::{CmdBlockError, CmdBlockRtBox};
@@ -23,9 +22,13 @@ cfg_if::cfg_if! {
     }
 }
 
-pub use self::cmd_execution_builder::CmdExecutionBuilder;
+pub use self::{
+    cmd_execution_builder::CmdExecutionBuilder,
+    cmd_execution_error_builder::CmdExecutionErrorBuilder,
+};
 
 mod cmd_execution_builder;
+mod cmd_execution_error_builder;
 
 /// List of [`CmdBlock`]s to run for a `*Cmd`.
 ///
@@ -217,22 +220,11 @@ where
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
             CmdBlockError::InputFetch(resource_fetch_error) => {
-                let ResourceFetchError {
-                    resource_name_short: input_name_short,
-                    resource_name_full: input_name_full,
-                } = resource_fetch_error;
-
-                let cmd_block_descs = cmd_blocks
-                    .iter()
-                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
-                    .collect();
-
-                Err(CmdExecutionError::InputFetch {
-                    cmd_block_descs,
+                Err(CmdExecutionErrorBuilder::build(
+                    cmd_blocks.iter(),
                     cmd_block_index,
-                    input_name_short,
-                    input_name_full,
-                })
+                    resource_fetch_error,
+                ))
                 .map_err(peace_rt_model::Error::from)
                 .map_err(E::from)
             }
