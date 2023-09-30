@@ -18,8 +18,15 @@ cfg_if::cfg_if! {
     }
 }
 
-/// Wraps a [`CmdBlock`] so that the type erased [`CmdBlockRt`] trait can be
-/// implemented on the type within this crate.
+/// Wraps a [`CmdBlock`] and holds a partial execution handler.
+///
+/// The following are the technical reasons for this type's existence:
+///
+/// * Being in the `peace_cmd` crate, the type erased [`CmdBlockRt`] trait can
+///   be implemented on this type within this crate.
+/// * The partial execution handler specifies how a command execution should
+///   finish, if execution is interrupted or there is an error with one item
+///   within the flow.
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
@@ -37,9 +44,9 @@ pub struct CmdBlockWrapper<
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
-    /// Function to run if an item failure happens while executing this
-    /// `CmdBlock`.
-    fn_error_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome,
+    /// Function to run if interruption or an item failure happens while
+    /// executing this `CmdBlock`.
+    fn_partial_exec_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome,
     /// Marker.
     marker: PhantomData<(E, PKeys, BlockOutcome, BlockOutcomePartial, InputT)>,
 }
@@ -64,10 +71,23 @@ where
             InputT = InputT,
         >,
 {
-    pub fn new(cmd_block: CB, fn_error_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome) -> Self {
+    /// Returns a new `CmdBlockWrapper`.
+    ///
+    /// # Parameters
+    ///
+    /// * `cmd_block`: The `CmdBlock` implementation.
+    /// * `fn_partial_exec_handler`: How the `CmdExecution` should end, if
+    ///   execution ends with this `CmdBlock`.
+    ///
+    ///     This could be due to interruption, or a `CmdOutcome` with an item
+    ///     failure.
+    pub fn new(
+        cmd_block: CB,
+        fn_partial_exec_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome,
+    ) -> Self {
         Self {
             cmd_block,
-            fn_error_handler,
+            fn_partial_exec_handler,
             marker: PhantomData,
         }
     }
@@ -176,7 +196,7 @@ where
             // StatesGoalMut)` into `StateDiffs` may or may not be semantically
             // meaningful.
 
-            let cmd_outcome = cmd_outcome.map(self.fn_error_handler);
+            let cmd_outcome = cmd_outcome.map(self.fn_partial_exec_handler);
             Err(CmdBlockError::Outcome(cmd_outcome))
         }
     }
