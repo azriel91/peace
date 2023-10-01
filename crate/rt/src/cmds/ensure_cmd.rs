@@ -81,7 +81,8 @@ where
                 value: Default::default(),
                 errors,
             },
-            EnsureExecChange::Some((states_previous, states_applied_dry, _states_goal)) => {
+            EnsureExecChange::Some(stateses_boxed) => {
+                let (states_previous, states_applied_dry, _states_goal) = *stateses_boxed;
                 cmd_ctx
                     .view()
                     .resources
@@ -153,7 +154,8 @@ where
                 value: Default::default(),
                 errors,
             },
-            EnsureExecChange::Some((states_previous, states_applied, states_goal)) => {
+            EnsureExecChange::Some(stateses_boxed) => {
+                let (states_previous, states_applied, states_goal) = *stateses_boxed;
                 Self::serialize_current(item_graph, resources, &states_applied).await?;
                 Self::serialize_goal(item_graph, resources, &states_goal).await?;
 
@@ -231,11 +233,11 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |(states_previous, states_applied_mut, states_target_mut)| {
-                        EnsureExecChange::Some((
+                        EnsureExecChange::Some(Box::new((
                             states_previous,
                             States::<StatesTs>::from(states_applied_mut),
                             StatesGoal::from(states_target_mut.into_inner()),
-                        ))
+                        )))
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
@@ -243,7 +245,7 @@ where
                     let states_applied = resources.try_remove::<States<StatesTs>>().unwrap();
                     let states_goal = resources.try_remove::<StatesGoal>().unwrap();
 
-                    EnsureExecChange::Some((states_previous, states_applied, states_goal))
+                    EnsureExecChange::Some(Box::new((states_previous, states_applied, states_goal)))
                 })
                 .build()
         };
@@ -319,5 +321,5 @@ enum EnsureExecChange<StatesTs> {
     ///
     /// This variant is used for both partial and complete execution, as long as
     /// some state was altered.
-    Some((StatesPrevious, States<StatesTs>, StatesGoal)),
+    Some(Box<(StatesPrevious, States<StatesTs>, StatesGoal)>),
 }

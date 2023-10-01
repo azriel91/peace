@@ -89,7 +89,8 @@ where
                 value: Default::default(),
                 errors,
             },
-            CleanExecChange::Some((states_previous, states_cleaned)) => {
+            CleanExecChange::Some(states_previous_and_cleaned) => {
+                let (states_previous, states_cleaned) = *states_previous_and_cleaned;
                 cmd_ctx
                     .view()
                     .resources
@@ -169,7 +170,8 @@ where
                 value: Default::default(),
                 errors,
             },
-            CleanExecChange::Some((states_previous, states_cleaned)) => {
+            CleanExecChange::Some(states_previous_and_cleaned) => {
+                let (states_previous, states_cleaned) = *states_previous_and_cleaned;
                 Self::serialize_current(item_graph, resources, &states_cleaned).await?;
 
                 cmd_ctx
@@ -237,17 +239,17 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |(states_previous, states_applied_mut, _states_target_mut)| {
-                        CleanExecChange::Some((
+                        CleanExecChange::Some(Box::new((
                             states_previous,
                             States::<StatesTs>::from(states_applied_mut),
-                        ))
+                        )))
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
                     let states_previous = resources.try_remove::<StatesPrevious>().unwrap();
                     let states_cleaned = resources.try_remove::<States<StatesTs>>().unwrap();
 
-                    CleanExecChange::Some((states_previous, states_cleaned))
+                    CleanExecChange::Some(Box::new((states_previous, states_cleaned)))
                 })
                 .build()
         };
@@ -304,5 +306,5 @@ enum CleanExecChange<StatesTs> {
     ///
     /// This variant is used for both partial and complete execution, as long as
     /// some state was altered.
-    Some((StatesPrevious, States<StatesTs>)),
+    Some(Box<(StatesPrevious, States<StatesTs>)>),
 }
