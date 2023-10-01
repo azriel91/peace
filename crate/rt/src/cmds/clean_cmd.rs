@@ -8,7 +8,7 @@ use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile},
     resources::ts::SetUp,
-    states::{States, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesPrevious},
+    states::{States, StatesCleaned, StatesCleanedDry, StatesPrevious},
     Resources,
 };
 use peace_rt_model::{
@@ -79,7 +79,30 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
-        Self::exec_internal(cmd_ctx, apply_stored_state_sync).await
+        let CmdOutcome {
+            value: clean_exec_change,
+            errors,
+        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+
+        let cmd_outcome = match clean_exec_change {
+            CleanExecChange::None => CmdOutcome {
+                value: Default::default(),
+                errors,
+            },
+            CleanExecChange::Some((states_previous, states_cleaned)) => {
+                cmd_ctx
+                    .view()
+                    .resources
+                    .insert::<StatesPrevious>(states_previous);
+
+                CmdOutcome {
+                    value: states_cleaned,
+                    errors,
+                }
+            }
+        };
+
+        Ok(cmd_outcome)
     }
 
     /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
@@ -130,7 +153,7 @@ where
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         let CmdOutcome {
-            value: states_cleaned,
+            value: clean_exec_change,
             errors,
         } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
@@ -139,14 +162,28 @@ where
         } = cmd_ctx.view();
         let (item_graph, resources) = (flow.graph(), resources);
 
-        // TODO: We shouldn't serialize current if we returned from an interruption /
-        // error handler.
-        Self::serialize_current(item_graph, resources, &states_cleaned).await?;
+        // We shouldn't serialize current if we returned from an interruption / error
+        // handler.
+        let cmd_outcome = match clean_exec_change {
+            CleanExecChange::None => CmdOutcome {
+                value: Default::default(),
+                errors,
+            },
+            CleanExecChange::Some((states_previous, states_cleaned)) => {
+                Self::serialize_current(item_graph, resources, &states_cleaned).await?;
 
-        let cmd_outcome = CmdOutcome {
-            value: states_cleaned,
-            errors,
+                cmd_ctx
+                    .view()
+                    .resources
+                    .insert::<StatesPrevious>(states_previous);
+
+                CmdOutcome {
+                    value: states_cleaned,
+                    errors,
+                }
+            }
         };
+
         Ok(cmd_outcome)
     }
 
@@ -161,35 +198,25 @@ where
     async fn exec_internal<StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
-    ) -> Result<CmdOutcome<States<StatesTs>, E>, E>
+    ) -> Result<CmdOutcome<CleanExecChange<StatesTs>, E>, E>
     where
         StatesTs: StatesTsApplyExt + Debug + Send + Sync + Unpin + 'static,
     {
         let mut cmd_execution = {
             let mut cmd_execution_builder =
-                CmdExecution::<(StatesPrevious, States<StatesTs>), _, _>::builder()
+                CmdExecution::<CleanExecChange<StatesTs>, _, _>::builder()
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCurrentReadCmdBlock::new(),
-                        |states_current_stored| {
-                            (
-                                StatesPrevious::from(states_current_stored.into_inner()),
-                                States::<StatesTs>::new(),
-                            )
-                        },
+                        |_states_current_stored| CleanExecChange::None,
                     ))
                     // Always discover current states, as we need them to be able to clean up.
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesDiscoverCmdBlock::current(),
-                        |states_current_mut| {
-                            (
-                                StatesPrevious::from(StatesCurrent::from(states_current_mut)),
-                                States::<StatesTs>::new(),
-                            )
-                        },
+                        |_states_current_mut| CleanExecChange::None,
                     ))
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCleanInsertionCmdBlock::new(),
-                        |_| Default::default(),
+                        |_states_clean| CleanExecChange::None,
                     ));
 
             cmd_execution_builder = match apply_stored_state_sync {
@@ -202,7 +229,7 @@ where
                 ApplyStoredStateSync::Current | ApplyStoredStateSync::Both => cmd_execution_builder
                     .with_cmd_block(CmdBlockWrapper::new(
                         ApplyStateSyncCheckCmdBlock::current(),
-                        |_| Default::default(),
+                        |_states_current_stored_and_current| CleanExecChange::None,
                     )),
             };
 
@@ -210,17 +237,17 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |(states_previous, states_applied_mut, _states_target_mut)| {
-                        (
+                        CleanExecChange::Some((
                             states_previous,
                             States::<StatesTs>::from(states_applied_mut),
-                        )
+                        ))
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
                     let states_previous = resources.try_remove::<StatesPrevious>().unwrap();
                     let states_cleaned = resources.try_remove::<States<StatesTs>>().unwrap();
 
-                    (states_previous, states_cleaned)
+                    CleanExecChange::Some((states_previous, states_cleaned))
                 })
                 .build()
         };
@@ -237,15 +264,6 @@ where
         //     - in `CleanCmd` comes from `Cleaned`
         // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
         //   run the state current script after the apply exec script.
-
-        let cmd_outcome = cmd_outcome.map(|(states_previous, states_cleaned)| {
-            cmd_ctx
-                .view()
-                .resources
-                .insert::<StatesPrevious>(states_previous);
-
-            states_cleaned
-        });
 
         Ok(cmd_outcome)
     }
@@ -276,4 +294,15 @@ impl<E, O, PKeys> Default for CleanCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }
+}
+
+#[derive(Debug)]
+enum CleanExecChange<StatesTs> {
+    /// Nothing changed, so nothing to serialize.
+    None,
+    /// Some state was changed, so serialization is required.
+    ///
+    /// This variant is used for both partial and complete execution, as long as
+    /// some state was altered.
+    Some((StatesPrevious, States<StatesTs>)),
 }

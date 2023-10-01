@@ -8,7 +8,7 @@ use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
-    states::{States, StatesCurrent, StatesEnsured, StatesEnsuredDry, StatesGoal, StatesPrevious},
+    states::{States, StatesEnsured, StatesEnsuredDry, StatesGoal, StatesPrevious},
     Resources,
 };
 use peace_rt_model::{
@@ -71,9 +71,30 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
-        Self::exec_internal(cmd_ctx, apply_stored_state_sync)
-            .await
-            .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_goal)| states_applied))
+        let CmdOutcome {
+            value: ensure_exec_change,
+            errors,
+        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+
+        let cmd_outcome = match ensure_exec_change {
+            EnsureExecChange::None => CmdOutcome {
+                value: Default::default(),
+                errors,
+            },
+            EnsureExecChange::Some((states_previous, states_applied_dry, _states_goal)) => {
+                cmd_ctx
+                    .view()
+                    .resources
+                    .insert::<StatesPrevious>(states_previous);
+
+                CmdOutcome {
+                    value: states_applied_dry,
+                    errors,
+                }
+            }
+        };
+
+        Ok(cmd_outcome)
     }
 
     /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
@@ -116,7 +137,7 @@ where
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         let CmdOutcome {
-            value: (states_applied, states_goal),
+            value: ensure_exec_change,
             errors,
         } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
@@ -125,15 +146,29 @@ where
         } = cmd_ctx.view();
         let (item_graph, resources) = (flow.graph(), resources);
 
-        // TODO: We shouldn't serialize current or goal if we returned from an
-        // interruption / error handler.
-        Self::serialize_current(item_graph, resources, &states_applied).await?;
-        Self::serialize_goal(item_graph, resources, &states_goal).await?;
+        // We shouldn't serialize current or goal if we returned from an interruption /
+        // error handler.
+        let cmd_outcome = match ensure_exec_change {
+            EnsureExecChange::None => CmdOutcome {
+                value: Default::default(),
+                errors,
+            },
+            EnsureExecChange::Some((states_previous, states_applied, states_goal)) => {
+                Self::serialize_current(item_graph, resources, &states_applied).await?;
+                Self::serialize_goal(item_graph, resources, &states_goal).await?;
 
-        let cmd_outcome = CmdOutcome {
-            value: states_applied,
-            errors,
+                cmd_ctx
+                    .view()
+                    .resources
+                    .insert::<StatesPrevious>(states_previous);
+
+                CmdOutcome {
+                    value: states_applied,
+                    errors,
+                }
+            }
         };
+
         Ok(cmd_outcome)
     }
 
@@ -148,32 +183,20 @@ where
     async fn exec_internal<StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
-    ) -> Result<CmdOutcome<(States<StatesTs>, StatesGoal), E>, E>
+    ) -> Result<CmdOutcome<EnsureExecChange<StatesTs>, E>, E>
     where
         StatesTs: StatesTsApplyExt + Debug + Send + Sync + Unpin + 'static,
     {
         let mut cmd_execution = {
             let mut cmd_execution_builder =
-                CmdExecution::<(StatesPrevious, States<StatesTs>, StatesGoal), _, _>::builder()
+                CmdExecution::<EnsureExecChange<StatesTs>, _, _>::builder()
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCurrentReadCmdBlock::new(),
-                        |states_current_stored| {
-                            (
-                                StatesPrevious::from(states_current_stored.into_inner()),
-                                States::<StatesTs>::new(),
-                                StatesGoal::new(),
-                            )
-                        },
+                        |_states_current_stored| EnsureExecChange::None,
                     ))
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesGoalReadCmdBlock::new(),
-                        |states_goal_stored| {
-                            (
-                                StatesPrevious::new(),
-                                States::<StatesTs>::new(),
-                                StatesGoal::from(states_goal_stored.into_inner()),
-                            )
-                        },
+                        |_states_goal_stored| EnsureExecChange::None,
                     ))
                     // Always discover current and goal states, because they are read whether or not
                     // we are checking for state sync.
@@ -182,32 +205,24 @@ where
                     // since we have to discover the new current state after every apply.
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesDiscoverCmdBlock::current_and_goal(),
-                        |states_current_and_goal_mut| {
-                            let (states_current_mut, states_goal_mut) = states_current_and_goal_mut;
-
-                            (
-                                StatesPrevious::from(StatesCurrent::from(states_current_mut)),
-                                States::<StatesTs>::new(),
-                                StatesGoal::from(states_goal_mut),
-                            )
-                        },
+                        |_states_current_and_goal_mut| EnsureExecChange::None,
                     ));
 
             cmd_execution_builder = match apply_stored_state_sync {
                 ApplyStoredStateSync::None => cmd_execution_builder,
                 ApplyStoredStateSync::Current => cmd_execution_builder.with_cmd_block(
                     CmdBlockWrapper::new(ApplyStateSyncCheckCmdBlock::current(), |_| {
-                        Default::default()
+                        EnsureExecChange::None
                     }),
                 ),
                 ApplyStoredStateSync::Goal => cmd_execution_builder.with_cmd_block(
                     CmdBlockWrapper::new(ApplyStateSyncCheckCmdBlock::goal(), |_| {
-                        Default::default()
+                        EnsureExecChange::None
                     }),
                 ),
                 ApplyStoredStateSync::Both => cmd_execution_builder.with_cmd_block(
                     CmdBlockWrapper::new(ApplyStateSyncCheckCmdBlock::current_and_goal(), |_| {
-                        Default::default()
+                        EnsureExecChange::None
                     }),
                 ),
             };
@@ -216,11 +231,11 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |(states_previous, states_applied_mut, states_target_mut)| {
-                        (
+                        EnsureExecChange::Some((
                             states_previous,
                             States::<StatesTs>::from(states_applied_mut),
                             StatesGoal::from(states_target_mut.into_inner()),
-                        )
+                        ))
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
@@ -228,12 +243,12 @@ where
                     let states_applied = resources.try_remove::<States<StatesTs>>().unwrap();
                     let states_goal = resources.try_remove::<StatesGoal>().unwrap();
 
-                    (states_previous, states_applied, states_goal)
+                    EnsureExecChange::Some((states_previous, states_applied, states_goal))
                 })
                 .build()
         };
 
-        let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
+        let ensure_exec_change = cmd_execution.exec(cmd_ctx).await?;
 
         // TODO: Should we run `StatesCurrentFn` again?
         //
@@ -246,16 +261,7 @@ where
         // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
         //   run the state current script after the apply exec script.
 
-        let cmd_outcome = cmd_outcome.map(|(states_previous, states_applied, states_goal)| {
-            cmd_ctx
-                .view()
-                .resources
-                .insert::<StatesPrevious>(states_previous);
-
-            (states_applied, states_goal)
-        });
-
-        Ok(cmd_outcome)
+        Ok(ensure_exec_change)
     }
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
@@ -303,4 +309,15 @@ impl<E, O, PKeys> Default for EnsureCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }
+}
+
+#[derive(Debug)]
+enum EnsureExecChange<StatesTs> {
+    /// Nothing changed, so nothing to serialize.
+    None,
+    /// Some state was changed, so serialization is required.
+    ///
+    /// This variant is used for both partial and complete execution, as long as
+    /// some state was altered.
+    Some((StatesPrevious, States<StatesTs>, StatesGoal)),
 }

@@ -1,7 +1,10 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    resources::type_reg::untagged::BoxDataTypeDowncast,
+    resources::{
+        paths::{StatesCurrentFile, StatesGoalFile},
+        type_reg::untagged::BoxDataTypeDowncast,
+    },
     rt::cmds::{ApplyStoredStateSync, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome, ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder,
@@ -1201,6 +1204,250 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
             );
         }
     })();
+
+    Ok(())
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[tokio::test]
+#[ignore = "Pending `StatesCurrentReadCmdBlock` being interrupted or erring."]
+async fn states_current_not_serialized_on_states_current_read_cmd_block_interrupt()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Note: Write invalid states current file to disk.
+    // StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let flow_dir = cmd_ctx.flow_dir();
+    let states_current_file = StatesCurrentFile::from(flow_dir);
+    tokio::fs::write(states_current_file, b"vec_copy: ~").await?;
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(0)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    assert!(errors.is_empty());
+
+    Ok(())
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[tokio::test]
+#[ignore = "Pending `StatesGoalReadCmdBlock` being interrupted or erring."]
+async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Note: Write invalid states goal file to disk.
+    StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let flow_dir = cmd_ctx.flow_dir();
+    let states_goal_file = StatesGoalFile::from(flow_dir);
+    tokio::fs::write(states_goal_file, b"vec_copy: ~").await?;
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(0)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    assert!(errors.is_empty());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Note: Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    // Note: Change `MockItem` to fail on `state_current`.
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_state_current(|_, _, _| {
+                    Err(MockItemError::Synthetic(String::from("state_current_err")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(0)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        || {
+            assert!(
+                matches!(
+                    mock_error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "state_current_err"
+                ),
+                "Expected `mock_error` to be \
+                `Err(.. {{ MockItemError::Synthetic {{ \"state_current_err\" }} }})`,\n\
+                but was `{mock_error:?}`",
+            );
+        }
+    })();
+
+    Ok(())
+}
+
+#[cfg_attr(coverage_nightly, coverage(off))]
+#[tokio::test]
+#[ignore = "Pending a way to interrupt the `CmdExecution` in a controlled manner."]
+async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_interrupt()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    // TODO: Interrupt `CmdExecution` during `ApplyStateSyncCheckCmdBlock`.
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(0)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    assert!(errors.is_empty());
 
     Ok(())
 }

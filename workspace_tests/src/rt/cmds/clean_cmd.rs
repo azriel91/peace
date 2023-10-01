@@ -13,7 +13,7 @@ use peace::{
 };
 
 use crate::{
-    mock_item::{MockItem, MockSrc, MockState},
+    mock_item::{MockItem, MockItemError, MockSrc, MockState},
     vec_copy_item::VecB,
     NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
 };
@@ -651,6 +651,207 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         Some(VecCopyState::new()).as_ref(),
         states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_state_clean(|_, _| {
+                    Err(MockItemError::Synthetic(String::from("state_clean_err")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+
+    let CmdOutcome {
+        value: states_cleaned,
+        errors,
+    } = CleanCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_current_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        || {
+            assert!(
+                matches!(
+                    mock_error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "state_clean_err"
+                ),
+                "Expected `mock_error` to be \
+                `Err(.. {{ MockItemError::Synthetic {{ \"state_clean_err\" }} }})`,\n\
+                but was `{mock_error:?}`",
+            );
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+
+    // Reinitialize graph with failing discover.
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_current(|_, _, _| {
+                    Err(MockItemError::Synthetic(String::from(
+                        "try_state_current_err",
+                    )))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
+
+    let CmdOutcome {
+        value: states_cleaned,
+        errors,
+    } = CleanCmd::exec(&mut cmd_ctx).await?;
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_current_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        || {
+            assert!(
+                matches!(
+                    mock_error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "try_state_current_err"
+                ),
+                "Expected `mock_error` to be \
+                `Err(.. {{ MockItemError::Synthetic {{ \"try_state_current_err\" }} }})`,\n\
+                but was `{mock_error:?}`",
+            );
+        }
+    })();
 
     Ok(())
 }

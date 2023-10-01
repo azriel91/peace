@@ -38,6 +38,9 @@ type FnTryState<Id> = fn(
     MockData<'_, Id>,
 ) -> Result<Option<MockState>, MockItemError>;
 
+type FnStateClean<Id> =
+    fn(&<MockSrc as Params>::Partial, MockData<'_, Id>) -> Result<MockState, MockItemError>;
+
 type FnState<Id> = fn(FnCtx<'_>, &MockSrc, MockData<'_, Id>) -> Result<MockState, MockItemError>;
 
 type FnApplyCheck<Id> = fn(
@@ -63,6 +66,8 @@ pub struct MockFns<Id>
 where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
+    /// Override for `state_clean` function.
+    state_clean: Option<FnStateClean<Id>>,
     /// Override for `try_state_current` function.
     try_state_current: Option<FnTryState<Id>>,
     /// Override for `state_current` function.
@@ -92,6 +97,11 @@ where
             id,
             mock_fns: MockFns::<Id>::default(),
         }
+    }
+
+    pub fn with_state_clean(mut self, f: FnStateClean<Id>) -> Self {
+        self.mock_fns.state_clean = Some(f);
+        self
     }
 
     pub fn with_try_state_current(mut self, f: FnTryState<Id>) -> Self {
@@ -191,6 +201,17 @@ where
         &self.id
     }
 
+    async fn state_clean(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, MockItemError> {
+        if let Some(state_clean) = data.mock_fns().state_clean.as_ref() {
+            state_clean(params_partial, data)
+        } else {
+            Ok(MockState::new())
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -248,13 +269,6 @@ where
         state_goal: &MockState,
     ) -> Result<Self::StateDiff, MockItemError> {
         Ok(i16::from(state_goal.0) - i16::from(state_current.0)).map(MockDiff)
-    }
-
-    async fn state_clean(
-        _params_partial: &<Self::Params<'_> as Params>::Partial,
-        _data: Self::Data<'_>,
-    ) -> Result<Self::State, MockItemError> {
-        Ok(MockState::new())
     }
 
     async fn apply_check(
@@ -567,6 +581,7 @@ mod tests {
             "MockItem { \
                 id: ItemId(\"mock\"), \
                 mock_fns: MockFns { \
+                    state_clean: None, \
                     try_state_current: None, \
                     state_current: None, \
                     try_state_goal: None, \
