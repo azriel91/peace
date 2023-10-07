@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use interruptible::InterruptSignal;
 use peace_resources::ResourceFetchError;
 use peace_rt_model::outcomes::CmdOutcome;
 
@@ -39,4 +40,17 @@ where
     /// is mapped to the `ExecutionOutcome`.
     #[error("`CmdBlock` item logic failed.")]
     Outcome(CmdOutcome<T, E>),
+    /// An interrupt signal was received while the `CmdBlock` was executing.
+    #[error("`CmdBlock` item logic failed.")]
+    Interrupt,
+}
+
+impl<T, E> From<((), InterruptSignal)> for CmdBlockError<T, E>
+where
+    T: Debug,
+    E: Debug,
+{
+    fn from(((), InterruptSignal): ((), InterruptSignal)) -> Self {
+        CmdBlockError::Interrupt
+    }
 }

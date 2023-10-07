@@ -6,7 +6,7 @@ pub use tynm;
 
 pub use crate::{
     cmd_block::{CmdBlock, CmdBlockError, CmdBlockRt, CmdBlockRtBox, CmdBlockWrapper},
-    cmd_execution::{CmdExecution, CmdExecutionBuilder},
+    cmd_execution::{CmdExecution, CmdExecutionBuilder, Interruptible, NonInterruptible},
 };
 
 mod cmd_block;

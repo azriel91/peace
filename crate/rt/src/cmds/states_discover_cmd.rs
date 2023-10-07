@@ -73,7 +73,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
+        let mut cmd_execution = CmdExecution::<StatesCurrent, _, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current(),
@@ -144,7 +144,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
+        let mut cmd_execution = CmdExecution::<StatesGoal, _, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::goal(),
@@ -226,7 +226,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
-        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()
+        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current_and_goal(),
