@@ -191,7 +191,7 @@ where
     {
         let mut cmd_execution = {
             let mut cmd_execution_builder =
-                CmdExecution::<EnsureExecChange<StatesTs>, _, _, _>::builder()
+                CmdExecution::<EnsureExecChange<StatesTs>, _, _>::builder()
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCurrentReadCmdBlock::new(),
                         |_states_current_stored| EnsureExecChange::None,

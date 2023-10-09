@@ -27,7 +27,7 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesGoalStored, E> {
-        CmdExecution::<StatesGoalStored, _, _, _>::builder()
+        CmdExecution::<StatesGoalStored, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 StatesGoalReadCmdBlock::new(),
                 std::convert::identity,

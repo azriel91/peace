@@ -145,3 +145,6 @@ type_reg = { version = "0.6.2", features = ["debug", "untagged", "ordered"] }
 url = "2.4.1"
 wasm-bindgen = "0.2.87"
 web-sys = "0.3.64"
+
+[patch.crates-io]
+interruptible = { path = "/mnt/data/work/github/azriel91/interruptible" }

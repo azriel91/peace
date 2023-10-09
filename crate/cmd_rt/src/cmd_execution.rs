@@ -8,7 +8,7 @@ use peace_cmd::{
 };
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
-use tokio::sync::oneshot;
+use tokio::sync::mpsc;
 
 use crate::{CmdBlockError, CmdBlockRt, CmdBlockRtBox};
 
@@ -19,7 +19,7 @@ cfg_if::cfg_if! {
             ProgressUpdateAndId,
         };
         use peace_rt_model::CmdProgressTracker;
-        use tokio::sync::mpsc::{self, Sender};
+        use tokio::sync::mpsc::Sender;
 
         use crate::Progress;
     }
@@ -48,7 +48,7 @@ mod interruptibility;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<ExecutionOutcome, E, PKeys, Interruptibility>
+pub struct CmdExecution<ExecutionOutcome, E, PKeys>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
@@ -57,34 +57,26 @@ where
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
-    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    interruptibility: Interruptibility,
     /// Whether or not to render progress.
     #[cfg(feature = "output_progress")]
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys, NonInterruptible>
+impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
 where
-    ExecutionOutcome: Debug + Send + Sync + 'static,
+    ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
 {
-    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys, NonInterruptible> {
+    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys> {
         CmdExecutionBuilder::new()
     }
-}
 
-impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys, NonInterruptible>
-where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-{
     /// Returns the result of executing the command.
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        interrupt_rx: Option<&mut mpsc::Receiver<InterruptSignal>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
@@ -92,7 +84,6 @@ where
         let Self {
             cmd_blocks,
             execution_outcome_fetch,
-            interruptibility: NonInterruptible,
             #[cfg(feature = "output_progress")]
             progress_render_enabled,
         } = self;
@@ -115,93 +106,50 @@ where
             }
         }
 
-        let cmd_outcome_task = cmd_outcome_task(
-            cmd_blocks,
-            execution_outcome_fetch,
-            &mut cmd_view,
-            #[cfg(feature = "output_progress")]
-            progress_tx,
-        );
+        if let Some(interrupt_rx) = interrupt_rx {
+            let cmd_outcome_task = cmd_outcome_task_interruptible(
+                cmd_blocks,
+                execution_outcome_fetch,
+                &mut cmd_view,
+                interrupt_rx,
+                #[cfg(feature = "output_progress")]
+                progress_tx,
+            );
 
-        exec_internal(
-            cmd_outcome_task,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            #[cfg(feature = "output_progress")]
-            progress_rx,
-        )
-        .await
-    }
+            exec_internal(
+                cmd_outcome_task,
+                #[cfg(feature = "output_progress")]
+                progress_render_enabled,
+                #[cfg(feature = "output_progress")]
+                output,
+                #[cfg(feature = "output_progress")]
+                cmd_progress_tracker,
+                #[cfg(feature = "output_progress")]
+                progress_rx,
+            )
+            .await
+        } else {
+            let cmd_outcome_task = cmd_outcome_task(
+                cmd_blocks,
+                execution_outcome_fetch,
+                &mut cmd_view,
+                #[cfg(feature = "output_progress")]
+                progress_tx,
+            );
 
-    // pub fn exec_bg -> CmdExecId
-}
-
-impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys, Interruptible>
-where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdBlockError<ExecutionOutcome, E>: From<((), InterruptSignal)>,
-{
-    /// Returns the result of executing the command.
-    pub async fn exec<O>(
-        &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
-    where
-        O: OutputWrite<E>,
-    {
-        let Self {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility: Interruptible(interrupt_rx),
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        } = self;
-        #[cfg(feature = "output_progress")]
-        let progress_render_enabled = *progress_render_enabled;
-
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                let SingleProfileSingleFlowViewAndOutput {
-                    output,
-                    cmd_progress_tracker,
-                    mut cmd_view,
-                    ..
-                } = cmd_ctx.view_and_output();
-
-                let (progress_tx, progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
-            } else {
-                let mut cmd_view = cmd_ctx.view();
-            }
+            exec_internal(
+                cmd_outcome_task,
+                #[cfg(feature = "output_progress")]
+                progress_render_enabled,
+                #[cfg(feature = "output_progress")]
+                output,
+                #[cfg(feature = "output_progress")]
+                cmd_progress_tracker,
+                #[cfg(feature = "output_progress")]
+                progress_rx,
+            )
+            .await
         }
-
-        let cmd_outcome_task = cmd_outcome_task_interruptible(
-            cmd_blocks,
-            execution_outcome_fetch,
-            &mut cmd_view,
-            interrupt_rx,
-            #[cfg(feature = "output_progress")]
-            progress_tx,
-        );
-
-        exec_internal(
-            cmd_outcome_task,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            #[cfg(feature = "output_progress")]
-            progress_rx,
-        )
-        .await
     }
 
     // pub fn exec_bg -> CmdExecId
@@ -309,7 +257,7 @@ where
     )
     .await;
 
-    outcome_extract::<ExecutionOutcome, E, PKeys, NonInterruptible>(
+    outcome_extract::<ExecutionOutcome, E, PKeys>(
         cmd_view_and_progress_result,
         cmd_blocks,
         execution_outcome_fetch,
@@ -320,7 +268,7 @@ async fn cmd_outcome_task_interruptible<'view: 'scope, 'scope, ExecutionOutcome,
     cmd_blocks: &'view VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     execution_outcome_fetch: &'view mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
     cmd_view: &'view mut SingleProfileSingleFlowView<'scope, E, PKeys, SetUp>,
-    interrupt_rx: &'scope mut oneshot::Receiver<InterruptSignal>,
+    interrupt_rx: &'scope mut mpsc::Receiver<InterruptSignal>,
     #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -388,7 +336,7 @@ where
         .map(CmdViewAndProgress::from)
         .map_err(CmdViewAndErr::from);
 
-    outcome_extract::<ExecutionOutcome, E, PKeys, Interruptible>(
+    outcome_extract::<ExecutionOutcome, E, PKeys>(
         cmd_view_and_progress_result,
         cmd_blocks,
         execution_outcome_fetch,
@@ -405,7 +353,7 @@ where
 /// * `cmd_blocks`: `CmdBlock`s in this execution, used to build a useful error
 ///   message if needed.
 /// * `execution_outcome_fetch`: Logic to extract the `ExecutionOutcome` type.
-fn outcome_extract<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys, Interruptibility>(
+fn outcome_extract<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>(
     cmd_view_and_progress_result: Result<
         CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
         CmdViewAndErr<'view_ref, 'view, ExecutionOutcome, E, PKeys>,
@@ -444,14 +392,10 @@ where
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
             CmdBlockError::InputFetch(resource_fetch_error) => {
-                Err(CmdExecutionErrorBuilder::build::<
-                    _,
-                    _,
-                    _,
-                    Interruptibility,
-                    _,
-                >(
-                    cmd_blocks.iter(), cmd_block_index, resource_fetch_error
+                Err(CmdExecutionErrorBuilder::build::<_, _, _, _>(
+                    cmd_blocks.iter(),
+                    cmd_block_index,
+                    resource_fetch_error,
                 ))
                 .map_err(peace_rt_model::Error::from)
                 .map_err(E::from)
@@ -487,7 +431,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    interrupt_rx: &'view_ref mut oneshot::Receiver<InterruptSignal>,
+    interrupt_rx: &'view_ref mut mpsc::Receiver<InterruptSignal>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
 }

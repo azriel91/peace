@@ -206,7 +206,7 @@ where
     {
         let mut cmd_execution = {
             let mut cmd_execution_builder =
-                CmdExecution::<CleanExecChange<StatesTs>, _, _, _>::builder()
+                CmdExecution::<CleanExecChange<StatesTs>, _, _>::builder()
                     .with_cmd_block(CmdBlockWrapper::new(
                         StatesCurrentReadCmdBlock::new(),
                         |_states_current_stored| CleanExecChange::None,

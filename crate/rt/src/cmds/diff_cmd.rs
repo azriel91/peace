@@ -6,7 +6,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
 };
-use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder, NonInterruptible};
+use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StateDiffsMut,
@@ -84,7 +84,7 @@ where
         StatesTs0: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
         StatesTs1: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
     {
-        let mut cmd_execution_builder = CmdExecution::<StateDiffs, _, _, _>::builder();
+        let mut cmd_execution_builder = CmdExecution::<StateDiffs, _, _>::builder();
         cmd_execution_builder = Self::states_fetch_cmd_block_append(
             cmd_execution_builder,
             StatesTs0::diff_state_spec(),
@@ -105,9 +105,9 @@ where
     }
 
     fn states_fetch_cmd_block_append(
-        cmd_execution_builder: CmdExecutionBuilder<StateDiffs, E, PKeys, NonInterruptible>,
+        cmd_execution_builder: CmdExecutionBuilder<StateDiffs, E, PKeys>,
         diff_state_spec: DiffStateSpec,
-    ) -> CmdExecutionBuilder<StateDiffs, E, PKeys, NonInterruptible> {
+    ) -> CmdExecutionBuilder<StateDiffs, E, PKeys> {
         match diff_state_spec {
             DiffStateSpec::Current => cmd_execution_builder.with_cmd_block(CmdBlockWrapper::new(
                 StatesDiscoverCmdBlock::current(),

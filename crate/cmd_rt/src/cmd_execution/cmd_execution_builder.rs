@@ -1,21 +1,16 @@
 use std::{collections::VecDeque, fmt::Debug};
 
-use interruptible::InterruptSignal;
 use peace_resources::{resources::ts::SetUp, Resource, Resources};
 use peace_rt_model::params::ParamsKeys;
-use tokio::sync::oneshot;
 
-use crate::{
-    cmd_execution::{Interruptible, InterruptibleT, NonInterruptible},
-    CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution,
-};
+use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 
 /// Collects the [`CmdBlock`]s to run in a `*Cmd` to build a [`CmdExecution`].
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 /// [`CmdExecution`]: crate::CmdExecution
 #[derive(Debug)]
-pub struct CmdExecutionBuilder<ExecutionOutcome, E, PKeys, Interruptibility>
+pub struct CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: 'static,
@@ -25,10 +20,6 @@ where
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
-    /// Whether the `CmdExecution` is interruptible.
-    ///
-    /// If it is, this holds the interrupt channel receiver.
-    interruptibility: Interruptibility,
     /// Whether or not to render progress.
     ///
     /// This is intended for `*Cmd`s that do not have meaningful progress to
@@ -40,7 +31,7 @@ where
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys, NonInterruptible>
+impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
@@ -50,95 +41,6 @@ where
         Self::default()
     }
 
-    /// Enables interruptibility for this CmdExecution.
-    ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// let (interrupt_tx, interrupt_rx) = oneshot::channel::<InterruptSignal>();
-    ///
-    /// let cmd_execution = CmdExecutionBuilder::new()
-    ///     .interruptible(interrupt_rx)
-    ///     .build();
-    ///
-    /// interrupt_tx
-    ///     .send(InterruptSignal).expect("Expected to send `InterruptSignal`.");;
-    /// ```
-    pub fn interruptible(
-        self,
-        interrupt_rx: oneshot::Receiver<InterruptSignal>,
-    ) -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys, Interruptible> {
-        let Self {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility: NonInterruptible,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        } = self;
-
-        CmdExecutionBuilder {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility: Interruptible(interrupt_rx),
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        }
-    }
-
-    /// Returns the `CmdExecution` to execute.
-    pub fn build(self) -> CmdExecution<ExecutionOutcome, E, PKeys, NonInterruptible> {
-        let CmdExecutionBuilder {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        } = self;
-
-        CmdExecution {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        }
-    }
-}
-
-impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys, Interruptible>
-where
-    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    ExecutionOutcome: Debug + Resource + Unpin + 'static,
-{
-    /// Returns the `CmdExecution` to execute.
-    pub fn build(self) -> CmdExecution<ExecutionOutcome, E, PKeys, Interruptible> {
-        let CmdExecutionBuilder {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        } = self;
-
-        CmdExecution {
-            cmd_blocks,
-            execution_outcome_fetch,
-            interruptibility,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-        }
-    }
-}
-
-impl<ExecutionOutcome, E, PKeys, Interruptibility>
-    CmdExecutionBuilder<ExecutionOutcome, E, PKeys, Interruptibility>
-where
-    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    ExecutionOutcome: Debug + Resource + Unpin + 'static,
-    Interruptibility: InterruptibleT,
-{
     /// Adds a `CmdBlock` to this execution.
     pub fn with_cmd_block<CB, BlockOutcomeNext, BlockOutcomeAcc, BlockOutcomePartial, InputT>(
         self,
@@ -152,7 +54,7 @@ where
             BlockOutcomePartial,
             InputT,
         >,
-    ) -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys, Interruptibility>
+    ) -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
     where
         CB: CmdBlock<
                 Error = E,
@@ -172,7 +74,6 @@ where
         let CmdExecutionBuilder {
             mut cmd_blocks,
             execution_outcome_fetch,
-            interruptibility,
             #[cfg(feature = "output_progress")]
             progress_render_enabled,
         } = self;
@@ -182,7 +83,6 @@ where
         CmdExecutionBuilder {
             cmd_blocks,
             execution_outcome_fetch,
-            interruptibility,
             #[cfg(feature = "output_progress")]
             progress_render_enabled,
         }
@@ -217,10 +117,26 @@ where
         self.progress_render_enabled = progress_render_enabled;
         self
     }
+
+    /// Returns the `CmdExecution` to execute.
+    pub fn build(self) -> CmdExecution<ExecutionOutcome, E, PKeys> {
+        let CmdExecutionBuilder {
+            cmd_blocks,
+            execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
+        } = self;
+
+        CmdExecution {
+            cmd_blocks,
+            execution_outcome_fetch,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
+        }
+    }
 }
 
-impl<ExecutionOutcome, E, PKeys> Default
-    for CmdExecutionBuilder<ExecutionOutcome, E, PKeys, NonInterruptible>
+impl<ExecutionOutcome, E, PKeys> Default for CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
@@ -230,7 +146,6 @@ where
         Self {
             cmd_blocks: VecDeque::new(),
             execution_outcome_fetch,
-            interruptibility: NonInterruptible,
             #[cfg(feature = "output_progress")]
             progress_render_enabled: true,
         }
