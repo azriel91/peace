@@ -409,6 +409,7 @@ fn impl_build_for(
 
                 // let crate::ctx::CmdCtxBuilder {
                 //     output,
+                //     interrupt_rx,
                 //     workspace,
                 //     scope_builder:
                 //         #scope_builder_name {
@@ -858,6 +859,7 @@ fn scope_builder_deconstruct(
     quote! {
         let crate::ctx::CmdCtxBuilder {
             output,
+            interrupt_rx,
             workspace,
             scope_builder: #scope_builder_name {
                 // profile_selection: ProfileSelected(profile),

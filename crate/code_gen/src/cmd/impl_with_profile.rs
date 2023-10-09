@@ -79,6 +79,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             > {
                 let Self {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -108,6 +109,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder,
                 }
@@ -253,6 +255,7 @@ pub fn impl_with_profile_from_workspace_param(
             > {
                 let Self {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -282,6 +285,7 @@ pub fn impl_with_profile_from_workspace_param(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder,
                 }

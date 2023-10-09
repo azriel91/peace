@@ -20,6 +20,7 @@ test = false
 cfg-if = { workspace = true }
 futures = { workspace = true }
 indicatif = { workspace = true, optional = true, features = ["tokio"] }
+interruptible = { workspace = true }
 peace_cfg = { workspace = true }
 peace_code_gen = { workspace = true }
 peace_core = { workspace = true }

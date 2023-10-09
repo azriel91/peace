@@ -36,6 +36,16 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
             }
+
+            /// Sets the interrupt channel receiver so `CmdExecution`s can be interrupted.
+            pub fn with_interrupt_rx(
+                mut self,
+                interrupt_rx: &'ctx mut tokio::sync::mpsc::Receiver<interruptible::InterruptSignal>,
+            ) -> Self
+            {
+                self.interrupt_rx = Some(interrupt_rx);
+                self
+            }
         }
     } else {
         proc_macro2::TokenStream::new()

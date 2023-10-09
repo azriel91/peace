@@ -111,6 +111,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             > {
                 let Self {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -140,6 +141,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder,
                 }

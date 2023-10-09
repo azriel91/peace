@@ -192,6 +192,7 @@ fn impl_with_param_key_unknown(
             {
                 let Self {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -236,6 +237,7 @@ fn impl_with_param_key_unknown(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder,
                 }
@@ -375,6 +377,7 @@ fn impl_with_param_key_known(
             {
                 let Self {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -415,6 +418,7 @@ fn impl_with_param_key_known(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interrupt_rx,
                     workspace,
                     scope_builder,
                 }
