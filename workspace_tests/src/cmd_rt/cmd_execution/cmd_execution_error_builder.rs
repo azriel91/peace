@@ -21,7 +21,7 @@ use crate::{
 
 #[tokio::test]
 async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _, _, _>::builder()
+    let mut cmd_execution = CmdExecution::<StateDiffs, _, _>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             // Note: deliberately don't discover `Current`, so error will occur in `DiffCmdBlock`.
             StatesDiscoverCmdBlock::goal(),
@@ -110,7 +110,7 @@ CmdBlocks:
 
 #[tokio::test]
 async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _, _, _>::builder()
+    let mut cmd_execution = CmdExecution::<StateDiffs, _, _>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             // Note: deliberately don't discover `Goal`, so error will occur in `DiffCmdBlock`.
             StatesDiscoverCmdBlock::current(),

@@ -4,7 +4,9 @@ use futures::{future, stream, Future, StreamExt, TryStreamExt};
 use interruptible::{InterruptSignal, InterruptibleFutureExt};
 use peace_cmd::{
     ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    scopes::{
+        SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
+    },
 };
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
@@ -14,7 +16,6 @@ use crate::{CmdBlockError, CmdBlockRt, CmdBlockRtBox};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cmd::scopes::SingleProfileSingleFlowViewAndOutput;
         use peace_cfg::progress::{
             ProgressUpdateAndId,
         };
@@ -76,7 +77,6 @@ where
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        interrupt_rx: Option<&mut mpsc::Receiver<InterruptSignal>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
@@ -94,6 +94,7 @@ where
             if #[cfg(feature = "output_progress")] {
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
+                    interrupt_rx,
                     cmd_progress_tracker,
                     mut cmd_view,
                     ..
@@ -102,7 +103,11 @@ where
                 let (progress_tx, progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
             } else {
-                let mut cmd_view = cmd_ctx.view();
+                let SingleProfileSingleFlowViewAndOutput {
+                    interrupt_rx,
+                    mut cmd_view,
+                    ..
+                } = cmd_ctx.view_and_output();
             }
         }
 
