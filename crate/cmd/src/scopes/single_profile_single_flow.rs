@@ -1,5 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
+use interruptible::InterruptSignal;
 use peace_core::Profile;
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -15,6 +16,7 @@ use peace_rt_model::{
     Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use tokio::sync::mpsc;
 
 /// A command that works with one profile and one flow.
 ///
@@ -61,6 +63,8 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
+    interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Tracks progress of each function execution.
@@ -213,6 +217,8 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: &'view mut O,
+    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
+    pub interrupt_rx: Option<&'view mut mpsc::Receiver<InterruptSignal>>,
     /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
@@ -228,6 +234,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
+        interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
@@ -247,6 +254,7 @@ where
     ) -> Self {
         Self {
             output,
+            interrupt_rx,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -277,6 +285,7 @@ where
     pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
         let Self {
             output: _,
+            interrupt_rx: _,
             workspace,
             #[cfg(feature = "output_progress")]
                 cmd_progress_tracker: _,
@@ -319,6 +328,7 @@ where
     pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, E, O, PKeys, TS> {
         let Self {
             output,
+            interrupt_rx,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -339,6 +349,7 @@ where
 
         SingleProfileSingleFlowViewAndOutput {
             output,
+            interrupt_rx: interrupt_rx.as_deref_mut(),
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             cmd_view: SingleProfileSingleFlowView {
@@ -368,6 +379,16 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
+    }
+
+    /// Returns a reference to the interrupt signal receiver.
+    pub fn interrupt_rx(&self) -> Option<&mpsc::Receiver<InterruptSignal>> {
+        self.interrupt_rx.as_deref()
+    }
+
+    /// Returns a mutable reference to the interrupt signal receiver.
+    pub fn interrupt_rx_mut(&mut self) -> Option<&mut mpsc::Receiver<InterruptSignal>> {
+        self.interrupt_rx.as_deref_mut()
     }
 
     /// Returns the workspace that the `peace` tool runs in.
@@ -486,6 +507,7 @@ where
     {
         let SingleProfileSingleFlow {
             output,
+            interrupt_rx,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -508,6 +530,7 @@ where
 
         SingleProfileSingleFlow {
             output,
+            interrupt_rx,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,

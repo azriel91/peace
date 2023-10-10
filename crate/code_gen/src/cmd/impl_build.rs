@@ -680,6 +680,7 @@ fn impl_build_for(
 
                 let scope = #scope_type_path::new(
                     // output,
+                    // interrupt_rx,
                     // workspace,
 
                     // === SingleProfileSingleFlow === //
@@ -1390,6 +1391,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
 
     scope_fields.push(parse_quote!(output));
+    scope_fields.push(parse_quote!(interrupt_rx));
     scope_fields.push(parse_quote!(workspace));
 
     // progress tracker
