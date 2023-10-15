@@ -1,6 +1,5 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use interruptible::InterruptSignal;
 use peace_core::Profile;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 use peace_rt_model::{
@@ -11,7 +10,6 @@ use peace_rt_model::{
     Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::sync::mpsc;
 
 /// A command that works with a single profile, without any items.
 ///
@@ -53,8 +51,6 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
-    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profile this command operates on.
@@ -118,8 +114,6 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: &'view mut O,
-    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    pub interrupt_rx: Option<&'view mut mpsc::Receiver<InterruptSignal>>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -149,7 +143,6 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
-        interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,
@@ -160,7 +153,6 @@ where
     ) -> Self {
         Self {
             output,
-            interrupt_rx,
             workspace,
             profile,
             profile_dir,
@@ -176,7 +168,6 @@ where
     pub fn view(&mut self) -> SingleProfileNoFlowView<'_, O, PKeys> {
         let Self {
             output,
-            interrupt_rx,
             workspace,
             profile,
             profile_dir,
@@ -189,7 +180,6 @@ where
 
         SingleProfileNoFlowView {
             output,
-            interrupt_rx: interrupt_rx.as_deref_mut(),
             workspace,
             profile,
             profile_dir,
@@ -208,16 +198,6 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
-    }
-
-    /// Returns a reference to the interrupt signal receiver.
-    pub fn interrupt_rx(&self) -> Option<&mpsc::Receiver<InterruptSignal>> {
-        self.interrupt_rx.as_deref()
-    }
-
-    /// Returns a mutable reference to the interrupt signal receiver.
-    pub fn interrupt_rx_mut(&mut self) -> Option<&mut mpsc::Receiver<InterruptSignal>> {
-        self.interrupt_rx.as_deref_mut()
     }
 
     /// Returns the workspace that the `peace` tool runs in.

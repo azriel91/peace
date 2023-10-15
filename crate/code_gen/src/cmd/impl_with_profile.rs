@@ -36,6 +36,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             'ctx,
             E,
             O,
+            Interruptibility,
             // FlowSelection,
             // PKeys,
             // WorkspaceParamsSelection,
@@ -46,6 +47,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -66,6 +68,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileSelected,
@@ -79,7 +82,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             > {
                 let Self {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -109,7 +112,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
 
                 crate::ctx::CmdCtxBuilder {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }
@@ -199,6 +202,7 @@ pub fn impl_with_profile_from_workspace_param(
             'ctx,
             E,
             O,
+            Interruptibility,
             // FlowSelection,
             // ProfileParamsSelection,
             // FlowParamsSelection,
@@ -210,6 +214,7 @@ pub fn impl_with_profile_from_workspace_param(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -238,6 +243,7 @@ pub fn impl_with_profile_from_workspace_param(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
@@ -255,7 +261,7 @@ pub fn impl_with_profile_from_workspace_param(
             > {
                 let Self {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -285,7 +291,7 @@ pub fn impl_with_profile_from_workspace_param(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }

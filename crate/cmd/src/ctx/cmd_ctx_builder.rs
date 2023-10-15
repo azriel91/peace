@@ -3,7 +3,6 @@
 use std::{fmt::Debug, hash::Hash};
 
 use futures::stream::{StreamExt, TryStreamExt};
-use interruptible::InterruptSignal;
 use peace_cfg::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -19,7 +18,6 @@ use peace_rt_model::{
     Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::sync::mpsc;
 
 pub use self::{
     multi_profile_no_flow_builder::MultiProfileNoFlowBuilder,
@@ -37,7 +35,7 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
+pub struct CmdCtxBuilder<'ctx, O, Interruptibility, ScopeBuilder> {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
@@ -46,7 +44,7 @@ pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
+    interruptibility: Interruptibility,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Data held while building `CmdCtx`.

@@ -131,6 +131,7 @@ fn impl_params_merge_for(
             'key,
             E,
             O,
+            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // PKeys,
@@ -141,6 +142,7 @@ fn impl_params_merge_for(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,

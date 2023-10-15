@@ -118,6 +118,7 @@ fn impl_with_param_key_unknown(
             'ctx,
             E,
             O,
+            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -129,6 +130,7 @@ fn impl_with_param_key_unknown(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -169,6 +171,7 @@ fn impl_with_param_key_unknown(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -192,7 +195,7 @@ fn impl_with_param_key_unknown(
             {
                 let Self {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -237,7 +240,7 @@ fn impl_with_param_key_unknown(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }
@@ -301,6 +304,7 @@ fn impl_with_param_key_known(
             'ctx,
             E,
             O,
+            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -313,6 +317,7 @@ fn impl_with_param_key_known(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -356,6 +361,7 @@ fn impl_with_param_key_known(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -377,7 +383,7 @@ fn impl_with_param_key_known(
             {
                 let Self {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -418,7 +424,7 @@ fn impl_with_param_key_known(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }

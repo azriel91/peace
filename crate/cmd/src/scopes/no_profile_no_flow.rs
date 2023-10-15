@@ -1,13 +1,11 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use interruptible::InterruptSignal;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
 use peace_rt_model::{
     params::{KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, WorkspaceParams},
     Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::sync::mpsc;
 
 /// A command that only works with workspace parameters.
 ///
@@ -43,8 +41,6 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
-    /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -66,14 +62,12 @@ where
 {
     pub(crate) fn new(
         output: &'ctx mut O,
-        interrupt_rx: Option<&'ctx mut mpsc::Receiver<InterruptSignal>>,
         workspace: &'ctx Workspace,
         params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self {
             output,
-            interrupt_rx,
             workspace,
             params_type_regs,
             workspace_params,
@@ -89,16 +83,6 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
-    }
-
-    /// Returns a reference to the interrupt signal receiver.
-    pub fn interrupt_rx(&self) -> Option<&mpsc::Receiver<InterruptSignal>> {
-        self.interrupt_rx.as_deref()
-    }
-
-    /// Returns a mutable reference to the interrupt signal receiver.
-    pub fn interrupt_rx_mut(&mut self) -> Option<&mut mpsc::Receiver<InterruptSignal>> {
-        self.interrupt_rx.as_deref_mut()
     }
 
     /// Returns the workspace that the `peace` tool runs in.

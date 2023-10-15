@@ -2,6 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
+use interruptible::interruptibility::NonInterruptible;
 use peace_resources::Resources;
 use peace_rt_model::{
     params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
@@ -56,6 +57,7 @@ impl CmdCtx<()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
+        NonInterruptible,
         NoProfileNoFlowBuilder<
             E,
             ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
@@ -72,6 +74,7 @@ impl CmdCtx<()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
+        NonInterruptible,
         MultiProfileNoFlowBuilder<
             E,
             ProfileNotSelected,
@@ -90,6 +93,7 @@ impl CmdCtx<()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
+        NonInterruptible,
         MultiProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
@@ -110,6 +114,7 @@ impl CmdCtx<()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
+        NonInterruptible,
         SingleProfileNoFlowBuilder<
             E,
             ProfileNotSelected,
@@ -128,6 +133,7 @@ impl CmdCtx<()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
+        NonInterruptible,
         SingleProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,

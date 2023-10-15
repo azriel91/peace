@@ -38,13 +38,46 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             }
 
             /// Sets the interrupt channel receiver so `CmdExecution`s can be interrupted.
-            pub fn with_interrupt_rx(
+            pub fn with_interruptibility<IS>(
                 mut self,
                 interrupt_rx: &'ctx mut tokio::sync::mpsc::Receiver<interruptible::InterruptSignal>,
-            ) -> Self
+                interrupt_strategy: IS,
+            ) -> crate::ctx::CmdCtxBuilder<
+                'ctx,
+                O,
+                interruptible::interruptibility::Interruptible<IS>,
+                #scope_builder_name<
+                    E,
+                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                    // FlowSelected<'ctx, E>,
+                    // PKeys,
+                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+                    // FlowParamsNone,
+                    #scope_builder_type_params
+                >,
+            >
+            where
+                IS: interruptible::InterruptStrategyT,
             {
-                self.interrupt_rx = Some(interrupt_rx);
-                self
+                let crate::ctx::CmdCtxBuilder {
+                    output,
+                    interruptibility: _,
+                    workspace,
+                    scope_builder,
+                } = self;
+
+                let interruptibility = interruptible::interruptibility::Interruptible {
+                    interrupt_rx,
+                    interrupt_strategy,
+                };
+
+                crate::ctx::CmdCtxBuilder {
+                    output,
+                    interruptibility,
+                    workspace,
+                    scope_builder,
+                }
             }
         }
     } else {
@@ -52,7 +85,11 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     };
 
     quote! {
-        impl<'ctx, E, O,
+        impl<
+            'ctx,
+            E,
+            O,
+            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // PKeys,
@@ -64,6 +101,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 // SingleProfileSingleFlowBuilder<
                 #scope_builder_name<
                     E,
@@ -78,6 +116,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
+            Interruptibility: 'ctx,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             #common_fns

@@ -40,6 +40,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                interruptible::interruptibility::NonInterruptible,
                 // SingleProfileSingleFlowBuilder<
                 #scope_builder_name<
                     E,
@@ -85,7 +86,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 
                 Self {
                     output,
-                    interrupt_rx: None,
+                    interruptibility: interruptible::interruptibility::NonInterruptible,
                     workspace,
                     scope_builder,
                 }

@@ -68,6 +68,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             'ctx,
             E,
             O,
+            Interruptibility,
             // ProfileSelection,
             // PKeys,
             // WorkspaceParamsSelection,
@@ -78,6 +79,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -98,6 +100,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -111,7 +114,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             > {
                 let Self {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -141,7 +144,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
                 crate::ctx::CmdCtxBuilder {
                     output,
-                    interrupt_rx,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }

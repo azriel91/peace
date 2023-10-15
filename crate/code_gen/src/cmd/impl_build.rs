@@ -189,10 +189,11 @@ fn impl_build_for(
     );
 
     quote! {
-        impl<'ctx, 'key, E, O, PKeys>
+        impl<'ctx, 'key, E, O, Interruptibility, PKeys>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -206,6 +207,7 @@ fn impl_build_for(
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
+            Interruptibility: 'ctx,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Builds the command context.
@@ -409,7 +411,7 @@ fn impl_build_for(
 
                 // let crate::ctx::CmdCtxBuilder {
                 //     output,
-                //     interrupt_rx,
+                //     interruptibility,
                 //     workspace,
                 //     scope_builder:
                 //         #scope_builder_name {
@@ -680,7 +682,6 @@ fn impl_build_for(
 
                 let scope = #scope_type_path::new(
                     // output,
-                    // interrupt_rx,
                     // workspace,
 
                     // === SingleProfileSingleFlow === //
@@ -736,10 +737,11 @@ fn impl_build_for(
             }
         }
 
-        impl<'ctx, 'key: 'ctx, E, O, PKeys> std::future::IntoFuture
+        impl<'ctx, 'key: 'ctx, E, O, Interruptibility, PKeys> std::future::IntoFuture
         for crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
+                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -753,6 +755,7 @@ fn impl_build_for(
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
+            Interruptibility: 'ctx,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Future that returns the `CmdCtx`.
@@ -860,7 +863,7 @@ fn scope_builder_deconstruct(
     quote! {
         let crate::ctx::CmdCtxBuilder {
             output,
-            interrupt_rx,
+            interruptibility,
             workspace,
             scope_builder: #scope_builder_name {
                 // profile_selection: ProfileSelected(profile),
@@ -1391,7 +1394,6 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
 
     scope_fields.push(parse_quote!(output));
-    scope_fields.push(parse_quote!(interrupt_rx));
     scope_fields.push(parse_quote!(workspace));
 
     // progress tracker
