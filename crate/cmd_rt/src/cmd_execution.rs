@@ -74,9 +74,9 @@ where
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<O>(
+    pub async fn exec<O, Interruptibility>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<Interruptibility, SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,

@@ -218,6 +218,7 @@ fn impl_build_for(
                 mut self,
             ) -> Result<
                 crate::ctx::CmdCtx<
+                    Interruptibility,
                     #scope_type_path<
                         'ctx,
                         E,
@@ -732,6 +733,7 @@ fn impl_build_for(
                 );
 
                 Ok(crate::ctx::CmdCtx {
+                    interruptibility,
                     scope,
                 })
             }
@@ -768,6 +770,7 @@ fn impl_build_for(
                     dyn std::future::Future<
                         Output = Result<
                             crate::ctx::CmdCtx<
+                                Interruptibility,
                                 #scope_type_path<
                                     'ctx,
                                     E,
