@@ -25,8 +25,8 @@ where
     ///
     /// [`StatesCurrentStoredDiscoverCmd`]: crate::StatesCurrentStoredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrentStored, E> {
         CmdExecution::<StatesCurrentStored, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(

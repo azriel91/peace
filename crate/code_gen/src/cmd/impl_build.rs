@@ -189,11 +189,10 @@ fn impl_build_for(
     );
 
     quote! {
-        impl<'ctx, 'key, E, O, Interruptibility, PKeys>
+        impl<'ctx, 'key, E, O, PKeys>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -207,7 +206,6 @@ fn impl_build_for(
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            Interruptibility: 'ctx,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Builds the command context.
@@ -218,7 +216,7 @@ fn impl_build_for(
                 mut self,
             ) -> Result<
                 crate::ctx::CmdCtx<
-                    Interruptibility,
+                    'ctx,
                     #scope_type_path<
                         'ctx,
                         E,
@@ -739,11 +737,10 @@ fn impl_build_for(
             }
         }
 
-        impl<'ctx, 'key: 'ctx, E, O, Interruptibility, PKeys> std::future::IntoFuture
+        impl<'ctx, 'key: 'ctx, E, O, PKeys> std::future::IntoFuture
         for crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -757,7 +754,6 @@ fn impl_build_for(
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            Interruptibility: 'ctx,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Future that returns the `CmdCtx`.
@@ -770,7 +766,7 @@ fn impl_build_for(
                     dyn std::future::Future<
                         Output = Result<
                             crate::ctx::CmdCtx<
-                                Interruptibility,
+                                'ctx,
                                 #scope_type_path<
                                     'ctx,
                                     E,

@@ -59,8 +59,8 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
-    pub async fn diff_stored(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn diff_stored<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<StateDiffs, E> {
         Self::diff::<CurrentStored, GoalStored>(cmd_ctx)
             .await
@@ -77,8 +77,8 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
-    pub async fn diff<StatesTs0, StatesTs1>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn diff<'ctx, StatesTs0, StatesTs1>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StateDiffs, E>, E>
     where
         StatesTs0: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
@@ -144,8 +144,8 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
-    pub async fn diff_current_stored(
-        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn diff_current_stored<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, MultiProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         profile_a: &Profile,
         profile_b: &Profile,
     ) -> Result<StateDiffs, E> {

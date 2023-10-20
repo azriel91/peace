@@ -55,8 +55,8 @@ where
     /// [`Item::apply_check`]: peace_cfg::Item::apply_check
     /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
     /// [`Item`]: peace_cfg::Item
-    pub async fn exec_dry(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec_dry<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -67,8 +67,8 @@ where
     ///
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
-    pub async fn exec_dry_with(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec_dry_with<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         let CmdOutcome {
@@ -121,8 +121,8 @@ where
     /// [`Item::apply_check`]: peace_cfg::Item::apply_check
     /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
     /// [`Item`]: peace_cfg::Item
-    pub async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -133,8 +133,8 @@ where
     ///
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
-    pub async fn exec_with(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec_with<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         let CmdOutcome {
@@ -182,8 +182,8 @@ where
     /// [`exec`]: peace_cfg::ApplyFns::exec
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
-    async fn exec_internal<StatesTs>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    async fn exec_internal<'ctx, StatesTs>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<EnsureExecChange<StatesTs>, E>, E>
     where

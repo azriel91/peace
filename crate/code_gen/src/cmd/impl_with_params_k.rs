@@ -114,7 +114,6 @@ fn impl_with_params_k_key_unknown(
             'ctx,
             E,
             O,
-            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -126,7 +125,6 @@ fn impl_with_params_k_key_unknown(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -158,7 +156,6 @@ fn impl_with_params_k_key_unknown(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -282,7 +279,6 @@ fn impl_with_param_key_known(
             'ctx,
             E,
             O,
-            Interruptibility,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -295,7 +291,6 @@ fn impl_with_param_key_known(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -334,7 +329,6 @@ fn impl_with_param_key_known(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,

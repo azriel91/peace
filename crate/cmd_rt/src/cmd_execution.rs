@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fmt::Debug, pin::Pin};
 
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
-use interruptible::{InterruptSignal, InterruptibleFutureExt};
+use interruptible::{interruptibility::Interruptibility, InterruptSignal, InterruptStrategy};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{
@@ -74,9 +74,9 @@ where
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<O, Interruptibility>(
+    pub async fn exec<'ctx, O>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<Interruptibility, SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
@@ -90,70 +90,77 @@ where
         #[cfg(feature = "output_progress")]
         let progress_render_enabled = *progress_render_enabled;
 
+        let (interruptibility, scope) = cmd_ctx.endpoint_and_scope();
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
-                    interrupt_rx,
                     cmd_progress_tracker,
                     mut cmd_view,
                     ..
-                } = cmd_ctx.view_and_output();
+                } = scope.view_and_output();
 
                 let (progress_tx, progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
             } else {
                 let SingleProfileSingleFlowViewAndOutput {
-                    interrupt_rx,
                     mut cmd_view,
                     ..
-                } = cmd_ctx.view_and_output();
+                } = scope.view_and_output();
             }
         }
 
-        if let Some(interrupt_rx) = interrupt_rx {
-            let cmd_outcome_task = cmd_outcome_task_interruptible(
-                cmd_blocks,
-                execution_outcome_fetch,
-                &mut cmd_view,
+        match interruptibility {
+            Interruptibility::NonInterruptible => {
+                let cmd_outcome_task = cmd_outcome_task(
+                    cmd_blocks,
+                    execution_outcome_fetch,
+                    &mut cmd_view,
+                    #[cfg(feature = "output_progress")]
+                    progress_tx,
+                );
+
+                exec_internal(
+                    cmd_outcome_task,
+                    #[cfg(feature = "output_progress")]
+                    progress_render_enabled,
+                    #[cfg(feature = "output_progress")]
+                    output,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
+                    #[cfg(feature = "output_progress")]
+                    progress_rx,
+                )
+                .await
+            }
+            Interruptibility::Interruptible {
                 interrupt_rx,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-            );
+                interrupt_strategy,
+            } => {
+                let cmd_outcome_task = cmd_outcome_task_interruptible(
+                    cmd_blocks,
+                    execution_outcome_fetch,
+                    &mut cmd_view,
+                    interrupt_rx,
+                    *interrupt_strategy,
+                    #[cfg(feature = "output_progress")]
+                    progress_tx,
+                );
 
-            exec_internal(
-                cmd_outcome_task,
-                #[cfg(feature = "output_progress")]
-                progress_render_enabled,
-                #[cfg(feature = "output_progress")]
-                output,
-                #[cfg(feature = "output_progress")]
-                cmd_progress_tracker,
-                #[cfg(feature = "output_progress")]
-                progress_rx,
-            )
-            .await
-        } else {
-            let cmd_outcome_task = cmd_outcome_task(
-                cmd_blocks,
-                execution_outcome_fetch,
-                &mut cmd_view,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-            );
-
-            exec_internal(
-                cmd_outcome_task,
-                #[cfg(feature = "output_progress")]
-                progress_render_enabled,
-                #[cfg(feature = "output_progress")]
-                output,
-                #[cfg(feature = "output_progress")]
-                cmd_progress_tracker,
-                #[cfg(feature = "output_progress")]
-                progress_rx,
-            )
-            .await
+                exec_internal(
+                    cmd_outcome_task,
+                    #[cfg(feature = "output_progress")]
+                    progress_render_enabled,
+                    #[cfg(feature = "output_progress")]
+                    output,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
+                    #[cfg(feature = "output_progress")]
+                    progress_rx,
+                )
+                .await
+            }
         }
     }
 
@@ -274,6 +281,7 @@ async fn cmd_outcome_task_interruptible<'view: 'scope, 'scope, ExecutionOutcome,
     execution_outcome_fetch: &'view mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
     cmd_view: &'view mut SingleProfileSingleFlowView<'scope, E, PKeys, SetUp>,
     interrupt_rx: &'scope mut mpsc::Receiver<InterruptSignal>,
+    _interrupt_strategy: InterruptStrategy,
     #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -314,7 +322,6 @@ where
                     #[cfg(feature = "output_progress")]
                     progress_tx.clone(),
                 )
-                .interruptible_result(interrupt_rx)
                 .await;
 
             // `CmdBlock` block logic errors are propagated.

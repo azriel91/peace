@@ -34,7 +34,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
             'ctx,
             E,
             O,
-            Interruptibility,
             // FlowSelection,
             // PKeys,
             // WorkspaceParamsSelection,
@@ -45,7 +44,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -66,7 +64,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
-                Interruptibility,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileFilterFn<'ctx>,

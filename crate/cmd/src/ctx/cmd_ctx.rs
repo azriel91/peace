@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use interruptible::interruptibility::{Interruptible, NonInterruptible};
+use interruptible::interruptibility::Interruptibility;
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{
     params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
@@ -32,16 +32,16 @@ use crate::{
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtx<Interruptibility, Scope> {
+pub struct CmdCtx<'ctx, Scope> {
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    pub(crate) interruptibility: Interruptibility,
+    pub(crate) interruptibility: Interruptibility<'ctx>,
     /// Scope of the command.
     pub(crate) scope: Scope,
 }
 
-impl<Interruptibility, Scope> CmdCtx<Interruptibility, Scope> {
+impl<'ctx, Scope> CmdCtx<'ctx, Scope> {
     /// Returns the scope of the command.
     pub fn scope(&self) -> &Scope {
         &self.scope
@@ -53,15 +53,14 @@ impl<Interruptibility, Scope> CmdCtx<Interruptibility, Scope> {
     }
 }
 
-impl CmdCtx<NonInterruptible, ()> {
+impl<'ctx> CmdCtx<'ctx, ()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<'ctx, E, O>(
+    pub fn builder_no_profile_no_flow<E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        NonInterruptible,
         NoProfileNoFlowBuilder<
             E,
             ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
@@ -72,13 +71,12 @@ impl CmdCtx<NonInterruptible, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<'ctx, E, O>(
+    pub fn builder_multi_profile_no_flow<E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        NonInterruptible,
         MultiProfileNoFlowBuilder<
             E,
             ProfileNotSelected,
@@ -91,13 +89,12 @@ impl CmdCtx<NonInterruptible, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<'ctx, E, O>(
+    pub fn builder_multi_profile_single_flow<E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        NonInterruptible,
         MultiProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
@@ -112,13 +109,12 @@ impl CmdCtx<NonInterruptible, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<'ctx, E, O>(
+    pub fn builder_single_profile_no_flow<E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        NonInterruptible,
         SingleProfileNoFlowBuilder<
             E,
             ProfileNotSelected,
@@ -131,13 +127,12 @@ impl CmdCtx<NonInterruptible, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow<'ctx, E, O>(
+    pub fn builder_single_profile_single_flow<E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        NonInterruptible,
         SingleProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
@@ -152,8 +147,7 @@ impl CmdCtx<NonInterruptible, ()> {
     }
 }
 
-impl<'scope, 'rx, E, O, PKeys, IS>
-    CmdCtx<Interruptible<'rx, IS>, SingleProfileSingleFlow<'scope, E, O, PKeys, SetUp>>
+impl<'ctx, E, O, PKeys> CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -162,8 +156,8 @@ where
     pub fn endpoint_and_scope(
         &mut self,
     ) -> (
-        &mut Interruptible<'rx, IS>,
-        &mut SingleProfileSingleFlow<'scope, E, O, PKeys, SetUp>,
+        &mut Interruptibility<'ctx>,
+        &mut SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>,
     ) {
         let CmdCtx {
             interruptibility,
@@ -174,8 +168,7 @@ where
     }
 }
 
-impl<'scope, E, O, Interruptibility, PKeys, ResTs0>
-    CmdCtx<Interruptibility, SingleProfileSingleFlow<'scope, E, O, PKeys, ResTs0>>
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -184,7 +177,7 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<Interruptibility, SingleProfileSingleFlow<'scope, E, O, PKeys, ResTs1>>
+    ) -> CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {
@@ -202,7 +195,7 @@ where
     }
 }
 
-impl<Interruptibility, Scope> Deref for CmdCtx<Interruptibility, Scope> {
+impl<'ctx, Scope> Deref for CmdCtx<'ctx, Scope> {
     type Target = Scope;
 
     fn deref(&self) -> &Self::Target {
@@ -210,7 +203,7 @@ impl<Interruptibility, Scope> Deref for CmdCtx<Interruptibility, Scope> {
     }
 }
 
-impl<Interruptibility, Scope> DerefMut for CmdCtx<Interruptibility, Scope> {
+impl<'ctx, Scope> DerefMut for CmdCtx<'ctx, Scope> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.scope
     }

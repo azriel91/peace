@@ -23,8 +23,8 @@ where
     /// state.
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec<'ctx>(
+        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrentStored, E> {
         let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
