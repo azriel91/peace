@@ -64,7 +64,7 @@ where
     /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -76,7 +76,7 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_dry_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         let CmdOutcome {
@@ -138,7 +138,7 @@ where
     /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
     /// [`Item`]: peace_cfg::Item
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -149,8 +149,8 @@ where
     ///
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
-    pub async fn exec_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    pub async fn exec_with<'ctx, 'ctx_ref>(
+        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         let CmdOutcome {
@@ -197,8 +197,8 @@ where
     /// [`exec`]: peace_cfg::ApplyFns::exec
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
-    async fn exec_internal<'ctx, StatesTs>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    async fn exec_internal<'ctx, 'ctx_ref, StatesTs>(
+        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<CleanExecChange<StatesTs>, E>, E>
     where

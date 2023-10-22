@@ -1,5 +1,6 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
+use interruptible::interruptibility::Interruptibility;
 use peace_core::Profile;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 use peace_rt_model::{
@@ -51,6 +52,10 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    interruptibility: Interruptibility<'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profile this command operates on.
@@ -114,6 +119,10 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: &'view mut O,
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    pub interruptibility: Interruptibility<'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -143,6 +152,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
+        interruptibility: Interruptibility<'ctx>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,
@@ -153,6 +163,7 @@ where
     ) -> Self {
         Self {
             output,
+            interruptibility,
             workspace,
             profile,
             profile_dir,
@@ -168,6 +179,7 @@ where
     pub fn view(&mut self) -> SingleProfileNoFlowView<'_, O, PKeys> {
         let Self {
             output,
+            interruptibility,
             workspace,
             profile,
             profile_dir,
@@ -178,8 +190,11 @@ where
             marker: PhantomData,
         } = self;
 
+        let interruptibility = interruptibility.reborrow();
+
         SingleProfileNoFlowView {
             output,
+            interruptibility,
             workspace,
             profile,
             profile_dir,
@@ -198,6 +213,11 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
+    }
+
+    /// Returns the interruptibility capability.
+    pub fn interruptibility(&mut self) -> Interruptibility<'_> {
+        self.interruptibility.reborrow()
     }
 
     /// Returns the workspace that the `peace` tool runs in.

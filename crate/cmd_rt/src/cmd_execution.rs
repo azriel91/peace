@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fmt::Debug, pin::Pin};
 
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
-use interruptible::{interruptibility::Interruptibility, InterruptSignal, InterruptStrategy};
+use interruptible::InterruptSignal;
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{
@@ -10,7 +10,6 @@ use peace_cmd::{
 };
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
-use tokio::sync::mpsc;
 
 use crate::{CmdBlockError, CmdBlockRt, CmdBlockRtBox};
 
@@ -20,7 +19,7 @@ cfg_if::cfg_if! {
             ProgressUpdateAndId,
         };
         use peace_rt_model::CmdProgressTracker;
-        use tokio::sync::mpsc::Sender;
+        use tokio::sync::mpsc::{self, Sender};
 
         use crate::Progress;
     }
@@ -76,7 +75,7 @@ where
     /// Returns the result of executing the command.
     pub async fn exec<'ctx, O>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
@@ -90,8 +89,6 @@ where
         #[cfg(feature = "output_progress")]
         let progress_render_enabled = *progress_render_enabled;
 
-        let (interruptibility, scope) = cmd_ctx.endpoint_and_scope();
-
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
                 let SingleProfileSingleFlowViewAndOutput {
@@ -99,7 +96,7 @@ where
                     cmd_progress_tracker,
                     mut cmd_view,
                     ..
-                } = scope.view_and_output();
+                } = cmd_ctx.view_and_output();
 
                 let (progress_tx, progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
@@ -107,61 +104,30 @@ where
                 let SingleProfileSingleFlowViewAndOutput {
                     mut cmd_view,
                     ..
-                } = scope.view_and_output();
+                } = cmd_ctx.view_and_output();
             }
         }
 
-        match interruptibility {
-            Interruptibility::NonInterruptible => {
-                let cmd_outcome_task = cmd_outcome_task(
-                    cmd_blocks,
-                    execution_outcome_fetch,
-                    &mut cmd_view,
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                );
+        let cmd_outcome_task = cmd_outcome_task_interruptible(
+            cmd_blocks,
+            execution_outcome_fetch,
+            &mut cmd_view,
+            #[cfg(feature = "output_progress")]
+            progress_tx,
+        );
 
-                exec_internal(
-                    cmd_outcome_task,
-                    #[cfg(feature = "output_progress")]
-                    progress_render_enabled,
-                    #[cfg(feature = "output_progress")]
-                    output,
-                    #[cfg(feature = "output_progress")]
-                    cmd_progress_tracker,
-                    #[cfg(feature = "output_progress")]
-                    progress_rx,
-                )
-                .await
-            }
-            Interruptibility::Interruptible {
-                interrupt_rx,
-                interrupt_strategy,
-            } => {
-                let cmd_outcome_task = cmd_outcome_task_interruptible(
-                    cmd_blocks,
-                    execution_outcome_fetch,
-                    &mut cmd_view,
-                    interrupt_rx,
-                    *interrupt_strategy,
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                );
-
-                exec_internal(
-                    cmd_outcome_task,
-                    #[cfg(feature = "output_progress")]
-                    progress_render_enabled,
-                    #[cfg(feature = "output_progress")]
-                    output,
-                    #[cfg(feature = "output_progress")]
-                    cmd_progress_tracker,
-                    #[cfg(feature = "output_progress")]
-                    progress_rx,
-                )
-                .await
-            }
-        }
+        exec_internal(
+            cmd_outcome_task,
+            #[cfg(feature = "output_progress")]
+            progress_render_enabled,
+            #[cfg(feature = "output_progress")]
+            output,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            #[cfg(feature = "output_progress")]
+            progress_rx,
+        )
+        .await
     }
 
     // pub fn exec_bg -> CmdExecId
@@ -210,18 +176,22 @@ where
     }
 }
 
-async fn cmd_outcome_task<'view: 'scope, 'scope, ExecutionOutcome, E, PKeys>(
-    cmd_blocks: &'view VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
-    execution_outcome_fetch: &'view mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
-    cmd_view: &'view mut SingleProfileSingleFlowView<'scope, E, PKeys, SetUp>,
+async fn cmd_outcome_task_interruptible<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
+    cmd_blocks: &VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
+    cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
     #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdBlockError<ExecutionOutcome, E>: From<((), InterruptSignal)>,
 {
-    let cmd_view_and_progress_result = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
+    let cmd_view_and_progress_result: Result<
+        CmdViewAndProgress<'_, '_, _, _>,
+        CmdViewAndErr<'_, '_, _, _, _>,
+    > = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
         let cmd_block_next = cmd_blocks.next();
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
     })
@@ -276,85 +246,6 @@ where
     )
 }
 
-async fn cmd_outcome_task_interruptible<'view: 'scope, 'scope, ExecutionOutcome, E, PKeys>(
-    cmd_blocks: &'view VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
-    execution_outcome_fetch: &'view mut fn(&mut Resources<SetUp>) -> ExecutionOutcome,
-    cmd_view: &'view mut SingleProfileSingleFlowView<'scope, E, PKeys, SetUp>,
-    interrupt_rx: &'scope mut mpsc::Receiver<InterruptSignal>,
-    _interrupt_strategy: InterruptStrategy,
-    #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
-) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
-where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdBlockError<ExecutionOutcome, E>: From<((), InterruptSignal)>,
-{
-    let cmd_view_and_progress_interruptible_result: Result<
-        CmdViewAndProgressInterruptible<'_, '_, _, _>,
-        CmdViewAndErrInterruptible<'_, '_, _, _, _>,
-    > = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
-        let cmd_block_next = cmd_blocks.next();
-        future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
-    })
-    .enumerate()
-    .map(Result::<_, CmdViewAndErrInterruptible<ExecutionOutcome, E, PKeys>>::Ok)
-    .try_fold(
-        CmdViewAndProgressInterruptible {
-            cmd_view,
-            interrupt_rx,
-            #[cfg(feature = "output_progress")]
-            progress_tx,
-        },
-        // `progress_tx` is moved into this closure, and dropped at the very end, so
-        // that `progress_render_task` will actually end.
-        |cmd_view_and_progress_interruptible, (cmd_block_index, cmd_block_rt)| async move {
-            let CmdViewAndProgressInterruptible {
-                cmd_view,
-                interrupt_rx,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-            } = cmd_view_and_progress_interruptible;
-
-            let block_cmd_outcome_result = cmd_block_rt
-                .exec(
-                    cmd_view,
-                    #[cfg(feature = "output_progress")]
-                    progress_tx.clone(),
-                )
-                .await;
-
-            // `CmdBlock` block logic errors are propagated.
-            let cmd_view_and_progress_interruptible = CmdViewAndProgressInterruptible {
-                cmd_view,
-                interrupt_rx,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-            };
-
-            match block_cmd_outcome_result {
-                Ok(()) => Ok(cmd_view_and_progress_interruptible),
-                Err(cmd_block_error) => Err(CmdViewAndErrInterruptible {
-                    cmd_view_and_progress_interruptible,
-                    cmd_block_index,
-                    cmd_block_error,
-                }),
-            }
-        },
-    )
-    .await;
-
-    let cmd_view_and_progress_result = cmd_view_and_progress_interruptible_result
-        .map(CmdViewAndProgress::from)
-        .map_err(CmdViewAndErr::from);
-
-    outcome_extract::<ExecutionOutcome, E, PKeys>(
-        cmd_view_and_progress_result,
-        cmd_blocks,
-        execution_outcome_fetch,
-    )
-}
-
 /// Extracts the `ExecutionOutcome` from the intermediate outcome collating
 /// types.
 ///
@@ -365,10 +256,10 @@ where
 /// * `cmd_blocks`: `CmdBlock`s in this execution, used to build a useful error
 ///   message if needed.
 /// * `execution_outcome_fetch`: Logic to extract the `ExecutionOutcome` type.
-fn outcome_extract<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>(
+fn outcome_extract<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
     cmd_view_and_progress_result: Result<
-        CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
-        CmdViewAndErr<'view_ref, 'view, ExecutionOutcome, E, PKeys>,
+        CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+        CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
     >,
     cmd_blocks: &'view_ref VecDeque<
         Pin<Box<dyn CmdBlockRt<Error = E, PKeys = PKeys, ExecutionOutcome = ExecutionOutcome>>>,
@@ -427,7 +318,7 @@ where
     }
 }
 
-struct CmdViewAndProgress<'view_ref: 'view, 'view, E, PKeys>
+struct CmdViewAndProgress<'view, 'view_ref, E, PKeys>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
@@ -437,99 +328,13 @@ where
     progress_tx: Sender<ProgressUpdateAndId>,
 }
 
-struct CmdViewAndProgressInterruptible<'view_ref: 'view, 'view, E, PKeys>
-where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
-{
-    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    interrupt_rx: &'view_ref mut mpsc::Receiver<InterruptSignal>,
-    #[cfg(feature = "output_progress")]
-    progress_tx: Sender<ProgressUpdateAndId>,
-}
-
-impl<'view_ref: 'view, 'view, E, PKeys>
-    From<CmdViewAndProgressInterruptible<'view_ref, 'view, E, PKeys>>
-    for CmdViewAndProgress<'view_ref, 'view, E, PKeys>
-where
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
-{
-    fn from(
-        cmd_view_and_progress_interruptible: CmdViewAndProgressInterruptible<
-            'view_ref,
-            'view,
-            E,
-            PKeys,
-        >,
-    ) -> Self {
-        let CmdViewAndProgressInterruptible {
-            cmd_view,
-            interrupt_rx: _,
-            #[cfg(feature = "output_progress")]
-            progress_tx,
-        } = cmd_view_and_progress_interruptible;
-
-        CmdViewAndProgress {
-            cmd_view,
-            #[cfg(feature = "output_progress")]
-            progress_tx,
-        }
-    }
-}
-
-struct CmdViewAndErr<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>
+struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug,
     E: Debug + 'static,
     PKeys: ParamsKeys + 'static,
 {
-    cmd_view_and_progress: CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
+    cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
     cmd_block_index: usize,
     cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
-}
-
-struct CmdViewAndErrInterruptible<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>
-where
-    ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
-{
-    cmd_view_and_progress_interruptible:
-        CmdViewAndProgressInterruptible<'view_ref, 'view, E, PKeys>,
-    cmd_block_index: usize,
-    cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
-}
-
-impl<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>
-    From<CmdViewAndErrInterruptible<'view_ref, 'view, ExecutionOutcome, E, PKeys>>
-    for CmdViewAndErr<'view_ref, 'view, ExecutionOutcome, E, PKeys>
-where
-    ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
-{
-    fn from(
-        cmd_view_and_err_interruptible: CmdViewAndErrInterruptible<
-            'view_ref,
-            'view,
-            ExecutionOutcome,
-            E,
-            PKeys,
-        >,
-    ) -> Self {
-        let CmdViewAndErrInterruptible {
-            cmd_view_and_progress_interruptible,
-            cmd_block_index,
-            cmd_block_error,
-        } = cmd_view_and_err_interruptible;
-
-        let cmd_view_and_progress = CmdViewAndProgress::from(cmd_view_and_progress_interruptible);
-
-        CmdViewAndErr {
-            cmd_view_and_progress,
-            cmd_block_index,
-            cmd_block_error,
-        }
-    }
 }

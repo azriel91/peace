@@ -50,7 +50,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         Self::current_with(cmd_ctx, true).await
     }
@@ -70,7 +70,7 @@ where
     ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
@@ -121,7 +121,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
         Self::goal_with(cmd_ctx, true).await
     }
@@ -141,7 +141,7 @@ where
     ///
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
@@ -201,7 +201,7 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         Self::current_and_goal_with(cmd_ctx, true).await
     }
@@ -223,7 +223,7 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()

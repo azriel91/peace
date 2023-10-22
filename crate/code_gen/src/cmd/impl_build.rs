@@ -216,7 +216,6 @@ fn impl_build_for(
                 mut self,
             ) -> Result<
                 crate::ctx::CmdCtx<
-                    'ctx,
                     #scope_type_path<
                         'ctx,
                         E,
@@ -681,6 +680,7 @@ fn impl_build_for(
 
                 let scope = #scope_type_path::new(
                     // output,
+                    // interruptibility,
                     // workspace,
 
                     // === SingleProfileSingleFlow === //
@@ -731,7 +731,6 @@ fn impl_build_for(
                 );
 
                 Ok(crate::ctx::CmdCtx {
-                    interruptibility,
                     scope,
                 })
             }
@@ -766,7 +765,6 @@ fn impl_build_for(
                     dyn std::future::Future<
                         Output = Result<
                             crate::ctx::CmdCtx<
-                                'ctx,
                                 #scope_type_path<
                                     'ctx,
                                     E,
@@ -1393,6 +1391,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
 
     scope_fields.push(parse_quote!(output));
+    scope_fields.push(parse_quote!(interruptibility));
     scope_fields.push(parse_quote!(workspace));
 
     // progress tracker

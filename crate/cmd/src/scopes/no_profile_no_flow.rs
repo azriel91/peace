@@ -1,5 +1,6 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
+use interruptible::interruptibility::Interruptibility;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
 use peace_rt_model::{
     params::{KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, WorkspaceParams},
@@ -41,6 +42,10 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    interruptibility: Interruptibility<'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -62,12 +67,14 @@ where
 {
     pub(crate) fn new(
         output: &'ctx mut O,
+        interruptibility: Interruptibility<'ctx>,
         workspace: &'ctx Workspace,
         params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self {
             output,
+            interruptibility,
             workspace,
             params_type_regs,
             workspace_params,
@@ -83,6 +90,11 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
+    }
+
+    //// Returns the interruptibility capability.
+    pub fn interruptibility(&mut self) -> Interruptibility<'_> {
+        self.interruptibility.reborrow()
     }
 
     /// Returns the workspace that the `peace` tool runs in.

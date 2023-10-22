@@ -1,5 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
+use interruptible::interruptibility::Interruptibility;
 use peace_core::Profile;
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -61,6 +62,10 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    interruptibility: Interruptibility<'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Tracks progress of each function execution.
@@ -148,6 +153,10 @@ where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    pub interruptibility: Interruptibility<'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -228,6 +237,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
+        interruptibility: Interruptibility<'ctx>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
@@ -247,6 +257,7 @@ where
     ) -> Self {
         Self {
             output,
+            interruptibility,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -277,6 +288,7 @@ where
     pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
         let Self {
             output: _,
+            interruptibility,
             workspace,
             #[cfg(feature = "output_progress")]
                 cmd_progress_tracker: _,
@@ -295,8 +307,11 @@ where
             resources,
         } = self;
 
+        let interruptibility = interruptibility.reborrow();
+
         SingleProfileSingleFlowView {
             workspace,
+            interruptibility,
             profile,
             profile_dir,
             profile_history_dir,
@@ -319,6 +334,7 @@ where
     pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, E, O, PKeys, TS> {
         let Self {
             output,
+            interruptibility,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -337,11 +353,23 @@ where
             resources,
         } = self;
 
+        let interruptibility = match interruptibility {
+            Interruptibility::NonInterruptible => Interruptibility::NonInterruptible,
+            Interruptibility::Interruptible {
+                interrupt_rx,
+                interrupt_strategy,
+            } => Interruptibility::Interruptible {
+                interrupt_rx,
+                interrupt_strategy: *interrupt_strategy,
+            },
+        };
+
         SingleProfileSingleFlowViewAndOutput {
             output,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             cmd_view: SingleProfileSingleFlowView {
+                interruptibility,
                 workspace,
                 profile,
                 profile_dir,
@@ -368,6 +396,11 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
+    }
+
+    /// Returns the interruptibility capability.
+    pub fn interruptibility(&mut self) -> Interruptibility<'_> {
+        self.interruptibility.reborrow()
     }
 
     /// Returns the workspace that the `peace` tool runs in.
@@ -486,6 +519,7 @@ where
     {
         let SingleProfileSingleFlow {
             output,
+            interruptibility,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -508,6 +542,7 @@ where
 
         SingleProfileSingleFlow {
             output,
+            interruptibility,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
