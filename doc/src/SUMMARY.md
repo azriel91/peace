@@ -40,6 +40,7 @@
             - [Single Profile Single Flow](technical_concepts/commands/scopes/single_profile_single_flow.md)
             - [Multi Profile No Flow](technical_concepts/commands/scopes/multi_profile_no_flow.md)
             - [Multi Profile Single Flow](technical_concepts/commands/scopes/multi_profile_single_flow.md)
+            * [Reborrowing](technical_concepts/commands/scopes/reborrowing.md)
         - [Use Cases](technical_concepts/commands/use_cases.md)
             - [Workspace Initialization](technical_concepts/commands/use_cases/workspace_initialization.md)
             - [Profile List](technical_concepts/commands/use_cases/profile_list.md)
