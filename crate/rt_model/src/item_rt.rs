@@ -139,7 +139,17 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Returns the diff between the previous and goal [`State`]s.
+    /// Returns the diff between the given [`State`]s.
+    ///
+    /// Given `states_a` and `states_b` represent current states and goal
+    /// states, then this method returns `None` in the following cases:
+    ///
+    /// * The current state cannot be retrieved, due to a predecessor's state
+    ///   not existing.
+    /// * The goal state cannot be retrieved, due to a predecessor's state not
+    ///   existing.
+    /// * A bug exists, e.g. the state is stored against the wrong type
+    ///   parameter.
     ///
     /// [`State`]: peace_cfg::State
     async fn state_diff_exec(

@@ -10,7 +10,10 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error, StatesSerializer, Storage};
+use peace_rt_model::{
+    fn_graph::StreamOutcome, outcomes::CmdOutcome, params::ParamsKeys, Error, StatesSerializer,
+    Storage,
+};
 use tokio::sync::mpsc::UnboundedSender;
 
 cfg_if::cfg_if! {
@@ -108,7 +111,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
             states_type_reg,
             resources,
@@ -120,6 +123,8 @@ where
         outcomes_tx
             .send(states_goal_stored)
             .expect("Failed to send `states_goal_stored`.");
+
+        None
     }
 
     fn outcome_collate(

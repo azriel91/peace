@@ -1,9 +1,15 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::{StreamExt, TryStreamExt};
+use futures::FutureExt;
 use peace_cfg::ItemId;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_cmd::{
+    interruptible::interruptibility::Interruptibility, scopes::SingleProfileSingleFlowView,
+};
+use peace_cmd_rt::{
+    async_trait,
+    fn_graph::{StreamOpts, StreamOutcome},
+    CmdBlock,
+};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StateDiffsMut,
@@ -58,31 +64,38 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
+        interruptibility: Interruptibility<'_>,
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
-    ) -> Result<StateDiffs, E> {
-        let state_diffs = {
-            let state_diffs_mut = flow
-                .graph()
-                .stream()
-                .map(Result::<_, E>::Ok)
-                .try_filter_map(|item| async move {
-                    let state_diff_opt = item
-                        .state_diff_exec(params_specs, resources, states_a, states_b)
-                        .await?;
+    ) -> Result<StreamOutcome<StateDiffs>, E> {
+        let stream_outcome_result = flow
+            .graph()
+            .try_fold_async_with(
+                StateDiffsMut::with_capacity(states_a.len()),
+                StreamOpts::new().interruptibility(interruptibility),
+                |mut state_diffs_mut, item| {
+                    async move {
+                        let _params_specs = &params_specs;
 
-                    Ok(state_diff_opt.map(|state_diff| (item.id().clone(), state_diff)))
-                })
-                .try_collect::<StateDiffsMut>()
-                .await?;
+                        let state_diff_opt = item
+                            .state_diff_exec(params_specs, resources, states_a, states_b)
+                            .await?;
 
-            StateDiffs::from(state_diffs_mut)
-        };
+                        if let Some(state_diff) = state_diff_opt {
+                            state_diffs_mut.insert_raw(item.id().clone(), state_diff);
+                        }
 
-        Ok(state_diffs)
+                        Result::<_, E>::Ok(state_diffs_mut)
+                    }
+                    .boxed_local()
+                },
+            )
+            .await;
+
+        stream_outcome_result.map(|stream_outcome| stream_outcome.map(StateDiffs::from))
     }
 }
 
@@ -157,8 +170,9 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
@@ -167,13 +181,36 @@ where
 
         let (states_ts0, states_ts1) = input;
 
-        let state_diffs_ts0_ts1 =
-            Self::diff_any(flow, params_specs, resources, &states_ts0, &states_ts1)
-                .await
-                .map(|state_diffs| (state_diffs, (states_ts0, states_ts1)));
-        outcomes_tx
-            .send(state_diffs_ts0_ts1)
-            .expect("Failed to send `state_diffs`.");
+        let state_diffs_ts0_ts1_result = Self::diff_any(
+            interruptibility.reborrow(),
+            flow,
+            params_specs,
+            resources,
+            &states_ts0,
+            &states_ts1,
+        )
+        .await;
+
+        match state_diffs_ts0_ts1_result {
+            Ok(stream_outcome) => {
+                let stream_outcome = stream_outcome.map(move |state_diffs| {
+                    let state_diffs_ts0_ts1 = (state_diffs, (states_ts0, states_ts1));
+
+                    outcomes_tx
+                        .send(Ok(state_diffs_ts0_ts1))
+                        .expect("Failed to send `state_diffs`.");
+                });
+
+                Some(stream_outcome)
+            }
+            Err(error) => {
+                outcomes_tx
+                    .send(Err(error))
+                    .expect("Failed to send `state_diffs`.");
+
+                None
+            }
+        }
     }
 
     fn outcome_collate(

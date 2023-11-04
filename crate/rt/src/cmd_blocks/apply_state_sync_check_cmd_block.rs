@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_cmd_rt::{async_trait, fn_graph::StreamOutcome, CmdBlock};
 use peace_resources::{
     resources::ts::SetUp,
     states::{States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored},
@@ -259,13 +259,15 @@ where
         _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         outcomes_tx
             .send(ApplyStateSyncCheckCmdBlockExecOutcome {
                 states_stored_and_discovered: input,
                 outcome_result: OutcomeResult::Ok,
             })
             .expect("Failed to send `apply_state_sync_check_cmd_block_exec_outcome`.");
+
+        None
     }
 
     fn outcome_collate(
@@ -331,7 +333,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let (states_current_stored, states_current) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -352,7 +354,7 @@ where
                             },
                         })
                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return;
+                    return None;
                 }
             }
             Err(error) => {
@@ -362,7 +364,7 @@ where
                         outcome_result: OutcomeResult::StatesDowncastError { error },
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return;
+                return None;
             }
         };
 
@@ -372,6 +374,8 @@ where
                 outcome_result: OutcomeResult::Ok,
             })
             .expect("unreachable: `outcomes_rx` is in a sibling task.");
+
+        None
     }
 
     fn outcome_collate(
@@ -437,7 +441,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let (states_goal_stored, states_goal) = &mut input;
 
         let state_goal_stale_result = Self::items_state_stored_stale(
@@ -458,7 +462,7 @@ where
                             },
                         })
                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return;
+                    return None;
                 }
             }
             Err(error) => {
@@ -468,7 +472,7 @@ where
                         outcome_result: OutcomeResult::StatesDowncastError { error },
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return;
+                return None;
             }
         };
 
@@ -478,6 +482,8 @@ where
                 outcome_result: OutcomeResult::Ok,
             })
             .expect("unreachable: `outcomes_rx` is in a sibling task.");
+
+        None
     }
 
     fn outcome_collate(
@@ -562,7 +568,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -583,7 +589,7 @@ where
                             },
                         })
                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return;
+                    return None;
                 }
             }
             Err(error) => {
@@ -593,7 +599,7 @@ where
                         outcome_result: OutcomeResult::StatesDowncastError { error },
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return;
+                return None;
             }
         };
 
@@ -615,7 +621,7 @@ where
                             },
                         })
                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return;
+                    return None;
                 }
             }
             Err(error) => {
@@ -625,7 +631,7 @@ where
                         outcome_result: OutcomeResult::StatesDowncastError { error },
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return;
+                return None;
             }
         };
 
@@ -635,6 +641,8 @@ where
                 outcome_result: OutcomeResult::Ok,
             })
             .expect("unreachable: `outcomes_rx` is in a sibling task.");
+
+        None
     }
 
     fn outcome_collate(

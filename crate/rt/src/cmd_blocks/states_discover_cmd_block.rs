@@ -13,7 +13,12 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error, ItemBoxed};
+use peace_rt_model::{
+    fn_graph::{StreamOpts, StreamOutcome},
+    outcomes::CmdOutcome,
+    params::ParamsKeys,
+    Error, ItemBoxed,
+};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::BUFFERED_FUTURES_MAX;
@@ -282,28 +287,36 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
             ..
-        } = &*cmd_view;
+        } = cmd_view;
 
-        flow.graph()
-            .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                Self::item_states_discover(
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                    #[cfg(feature = "output_progress")]
-                    self.progress_complete_on_success,
-                    params_specs,
-                    resources,
-                    outcomes_tx,
-                    item,
-                )
-            })
+        let stream_outcome = flow
+            .graph()
+            .for_each_concurrent_with(
+                BUFFERED_FUTURES_MAX,
+                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                |item| {
+                    Self::item_states_discover(
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        #[cfg(feature = "output_progress")]
+                        self.progress_complete_on_success,
+                        params_specs,
+                        resources,
+                        outcomes_tx,
+                        item,
+                    )
+                },
+            )
             .await;
+
+        Some(stream_outcome)
     }
 
     fn outcome_collate(
@@ -380,28 +393,36 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
             ..
-        } = &*cmd_view;
+        } = cmd_view;
 
-        flow.graph()
-            .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                Self::item_states_discover(
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                    #[cfg(feature = "output_progress")]
-                    self.progress_complete_on_success,
-                    params_specs,
-                    resources,
-                    outcomes_tx,
-                    item,
-                )
-            })
+        let stream_outcome = flow
+            .graph()
+            .for_each_concurrent_with(
+                BUFFERED_FUTURES_MAX,
+                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                |item| {
+                    Self::item_states_discover(
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        #[cfg(feature = "output_progress")]
+                        self.progress_complete_on_success,
+                        params_specs,
+                        resources,
+                        outcomes_tx,
+                        item,
+                    )
+                },
+            )
             .await;
+
+        Some(stream_outcome)
     }
 
     fn outcome_collate(
@@ -496,28 +517,36 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
             ..
-        } = &*cmd_view;
+        } = cmd_view;
 
-        flow.graph()
-            .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                Self::item_states_discover(
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                    #[cfg(feature = "output_progress")]
-                    self.progress_complete_on_success,
-                    params_specs,
-                    resources,
-                    outcomes_tx,
-                    item,
-                )
-            })
+        let stream_outcome = flow
+            .graph()
+            .for_each_concurrent_with(
+                BUFFERED_FUTURES_MAX,
+                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                |item| {
+                    Self::item_states_discover(
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        #[cfg(feature = "output_progress")]
+                        self.progress_complete_on_success,
+                        params_specs,
+                        resources,
+                        outcomes_tx,
+                        item,
+                    )
+                },
+            )
             .await;
+
+        Some(stream_outcome)
     }
 
     fn outcome_collate(

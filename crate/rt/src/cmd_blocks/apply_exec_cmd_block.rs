@@ -2,7 +2,11 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{ApplyCheck, FnCtx, ItemId};
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_cmd_rt::{
+    async_trait,
+    fn_graph::{StreamOpts, StreamOutcome},
+    CmdBlock,
+};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StatesMut,
@@ -133,13 +137,18 @@ where
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_apply_exec(
-        params_specs: &ParamsSpecs,
-        resources: &Resources<SetUp>,
-        apply_for_internal: &ApplyForInternal,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-        outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
+        item_apply_exec_ctx: ItemApplyExecCtx<'_, E>,
         item: &ItemBoxed<E>,
     ) -> Result<(), ()> {
+        let ItemApplyExecCtx {
+            params_specs,
+            resources,
+            apply_for_internal,
+            #[cfg(feature = "output_progress")]
+            progress_tx,
+            outcomes_tx,
+        } = item_apply_exec_ctx;
+
         let apply_fn = if StatesTs::dry_run() {
             ItemRt::apply_exec_dry
         } else {
@@ -350,10 +359,11 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let (states_current, _states_target) = input;
 
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
@@ -367,38 +377,53 @@ where
             ApplyFor::Ensure => ApplyForInternal::Ensure,
             ApplyFor::Clean => ApplyForInternal::Clean { states_current },
         };
+
         match apply_for {
             ApplyFor::Ensure => {
-                let (Ok(()) | Err(())) = item_graph
-                    .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                        Self::item_apply_exec(
-                            params_specs,
-                            resources_ref,
-                            &apply_for_internal,
-                            #[cfg(feature = "output_progress")]
-                            progress_tx,
-                            outcomes_tx,
-                            item,
-                        )
-                    })
+                let (Ok(stream_outcome) | Err((stream_outcome, ()))) = item_graph
+                    .try_for_each_concurrent_with(
+                        BUFFERED_FUTURES_MAX,
+                        StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                        |item| {
+                            let item_apply_exec_ctx = ItemApplyExecCtx {
+                                params_specs,
+                                resources: resources_ref,
+                                apply_for_internal: &apply_for_internal,
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                outcomes_tx,
+                            };
+                            Self::item_apply_exec(item_apply_exec_ctx, item)
+                        },
+                    )
                     .await
-                    .map_err(|_vec_units: Vec<()>| ());
+                    .map_err(|(outcome, _vec_units): (StreamOutcome<()>, Vec<()>)| (outcome, ()));
+
+                Some(stream_outcome)
             }
             ApplyFor::Clean => {
-                let (Ok(()) | Err(())) = item_graph
-                    .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item| {
-                        Self::item_apply_exec(
-                            params_specs,
-                            resources_ref,
-                            &apply_for_internal,
-                            #[cfg(feature = "output_progress")]
-                            progress_tx,
-                            outcomes_tx,
-                            item,
-                        )
-                    })
+                let (Ok(stream_outcome) | Err((stream_outcome, ()))) = item_graph
+                    .try_for_each_concurrent_with(
+                        BUFFERED_FUTURES_MAX,
+                        StreamOpts::new()
+                            .rev()
+                            .interruptibility(interruptibility.reborrow()),
+                        |item| {
+                            let item_apply_exec_ctx = ItemApplyExecCtx {
+                                params_specs,
+                                resources: resources_ref,
+                                apply_for_internal: &apply_for_internal,
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                outcomes_tx,
+                            };
+                            Self::item_apply_exec(item_apply_exec_ctx, item)
+                        },
+                    )
                     .await
-                    .map_err(|_vec_units: Vec<()>| ());
+                    .map_err(|(outcome, _vec_units): (StreamOutcome<()>, Vec<()>)| (outcome, ()));
+
+                Some(stream_outcome)
             }
         }
     }
@@ -490,10 +515,24 @@ pub enum ApplyFor {
     Clean,
 }
 
+/// Whether the `ApplyCmd` is for `Ensure` or `Clean`.
 #[derive(Debug)]
 enum ApplyForInternal {
     Ensure,
     Clean { states_current: StatesCurrent },
+}
+
+struct ItemApplyExecCtx<'f, E> {
+    /// Map of item ID to its params' specs.
+    params_specs: &'f ParamsSpecs,
+    /// Map of all types at runtime.
+    resources: &'f Resources<SetUp>,
+    /// Whether the `ApplyCmd` is for `Ensure` or `Clean`.
+    apply_for_internal: &'f ApplyForInternal,
+    /// Channel sender for `CmdBlock` item outcomes.
+    #[cfg(feature = "output_progress")]
+    progress_tx: &'f Sender<ProgressUpdateAndId>,
+    outcomes_tx: &'f UnboundedSender<ItemApplyOutcome<E>>,
 }
 
 #[derive(Debug)]

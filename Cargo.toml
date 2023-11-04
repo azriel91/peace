@@ -118,7 +118,7 @@ downcast-rs = "1.2.0"
 dyn-clone = "1.0.14"
 enser = "0.1.4"
 erased-serde = "0.3.31"
-fn_graph = { version = "0.8.6", features = ["resman"] }
+fn_graph = { version = "0.8.6", features = ["async", "interruptible", "resman"] }
 futures = "0.3.28"
 heck = "0.4.1"
 indexmap = "2.0.0"
@@ -148,3 +148,4 @@ web-sys = "0.3.64"
 
 [patch.crates-io]
 interruptible = { path = "/mnt/data/work/github/azriel91/interruptible" }
+fn_graph = { path = "/mnt/data/work/github/azriel91/fn_graph" }

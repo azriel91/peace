@@ -1,7 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::{stream, StreamExt};
-
+use futures::FutureExt;
 use peace_cfg::ItemId;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
 use peace_cmd_rt::{async_trait, CmdBlock};
@@ -12,7 +11,12 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
+use peace_rt_model::{
+    fn_graph::{StreamOpts, StreamOutcome},
+    outcomes::CmdOutcome,
+    params::ParamsKeys,
+    Error,
+};
 use tokio::sync::mpsc::UnboundedSender;
 
 cfg_if::cfg_if! {
@@ -81,8 +85,9 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
+    ) -> Option<StreamOutcome<()>> {
         let SingleProfileSingleFlowView {
+            interruptibility,
             flow,
             params_specs,
             resources,
@@ -91,15 +96,26 @@ where
 
         let params_specs = &*params_specs;
         let resources = &*resources;
-        stream::iter(flow.graph().iter_insertion())
-            .for_each(|item_rt| async move {
-                let item_id = item_rt.id().clone();
-                let state_clean_boxed_result = item_rt.state_clean(params_specs, resources).await;
-                outcomes_tx
-                    .send((item_id, state_clean_boxed_result))
-                    .expect("Failed to send `states_clean`.");
-            })
+        let stream_outcome = flow
+            .graph()
+            .fold_async_with(
+                (),
+                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                |(), item_rt| {
+                    async move {
+                        let item_id = item_rt.id().clone();
+                        let state_clean_boxed_result =
+                            item_rt.state_clean(params_specs, resources).await;
+                        outcomes_tx
+                            .send((item_id, state_clean_boxed_result))
+                            .expect("Failed to send `states_clean`.");
+                    }
+                    .boxed_local()
+                },
+            )
             .await;
+
+        Some(stream_outcome)
     }
 
     fn outcome_collate(

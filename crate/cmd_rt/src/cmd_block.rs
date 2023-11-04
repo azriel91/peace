@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use async_trait::async_trait;
-
+use fn_graph::StreamOutcome;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
 use peace_resources::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
@@ -208,13 +208,21 @@ pub trait CmdBlock: Debug {
     /// This is infallible because errors are expected to be returned associated
     /// with an item. This may change if there are errors that are related to
     /// the block that are not associated with a specific item.
+    ///
+    /// # Implementors
+    ///
+    /// `StreamOutcome<()>` should be returned if the `CmdBlock` streams the
+    /// items, as this captures whether or not the block execution was
+    /// interrupted.
+    ///
+    /// If the block does not stream items, `None` should be returned.
     async fn exec(
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    );
+    ) -> Option<StreamOutcome<()>>;
 
     /// Collects item outcomes into a command outcome.
     ///

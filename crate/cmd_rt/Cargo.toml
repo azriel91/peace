@@ -19,6 +19,7 @@ test = false
 [dependencies]
 async-trait = { workspace = true }
 cfg-if = { workspace = true }
+fn_graph = { workspace = true }
 futures = { workspace = true }
 interruptible = { workspace = true }
 miette = { workspace = true, optional = true, features = ["fancy"] }
