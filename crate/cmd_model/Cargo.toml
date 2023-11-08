@@ -17,7 +17,10 @@ doctest = false
 test = false
 
 [dependencies]
+fn_graph = { workspace = true }
 miette = { workspace = true, optional = true, features = ["fancy"] }
+indexmap = { workspace = true }
+peace_cfg = { workspace = true }
 thiserror = { workspace = true }
 tynm = { workspace = true }
 

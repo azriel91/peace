@@ -42,33 +42,16 @@ where
     }
 
     /// Adds a `CmdBlock` to this execution.
-    pub fn with_cmd_block<CB, BlockOutcomeNext, BlockOutcomeAcc, BlockOutcomePartial, InputT>(
+    pub fn with_cmd_block<CB, BlockOutcomeNext, InputT>(
         self,
-        cmd_block: CmdBlockWrapper<
-            CB,
-            E,
-            PKeys,
-            ExecutionOutcome,
-            BlockOutcomeNext,
-            BlockOutcomeAcc,
-            BlockOutcomePartial,
-            InputT,
-        >,
+        cmd_block: CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcomeNext, InputT>,
     ) -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
     where
-        CB: CmdBlock<
-                Error = E,
-                PKeys = PKeys,
-                Outcome = BlockOutcomeNext,
-                OutcomeAcc = BlockOutcomeAcc,
-                OutcomePartial = BlockOutcomePartial,
-                InputT = InputT,
-            > + Unpin
+        CB: CmdBlock<Error = E, PKeys = PKeys, Outcome = BlockOutcomeNext, InputT = InputT>
+            + Unpin
             + 'static,
         ExecutionOutcome: Debug + Resource + Unpin + 'static,
         BlockOutcomeNext: Debug + Resource + Unpin + 'static,
-        BlockOutcomeAcc: Debug + Resource + Unpin + 'static,
-        BlockOutcomePartial: Debug + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
     {
         let CmdExecutionBuilder {

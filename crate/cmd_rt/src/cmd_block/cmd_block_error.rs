@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use interruptible::InterruptSignal;
 use peace_resources::ResourceFetchError;
 use peace_rt_model::outcomes::CmdOutcome;
 
@@ -31,26 +30,16 @@ where
         #[from]
         ResourceFetchError,
     ),
-    /// Error originated from `CmdBlock` exec/collate code.
+    /// Error originated from `CmdBlock` exec code.
     #[error("`CmdBlock` block execution or collation logic failed.")]
-    Block(E),
+    Exec(E),
     /// Error originated from at least one item.
     ///
-    /// The `CmdBlock::OutcomeAcc` is not returned in this variant, but
-    /// is mapped to the `ExecutionOutcome`.
+    /// The `CmdBlock::Outcome` is mapped to the `ExecutionOutcome` using
+    /// `fn_partial_exec_handler`.
     #[error("`CmdBlock` item logic failed.")]
-    Outcome(CmdOutcome<T, E>),
+    ItemError(CmdOutcome<T, E>),
     /// An interrupt signal was received while the `CmdBlock` was executing.
     #[error("`CmdBlock` item logic failed.")]
-    Interrupt,
-}
-
-impl<T, E> From<((), InterruptSignal)> for CmdBlockError<T, E>
-where
-    T: Debug,
-    E: Debug,
-{
-    fn from(((), InterruptSignal): ((), InterruptSignal)) -> Self {
-        CmdBlockError::Interrupt
-    }
+    Interrupt(CmdOutcome<T, E>),
 }

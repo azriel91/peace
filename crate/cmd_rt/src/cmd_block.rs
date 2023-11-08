@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
 use async_trait::async_trait;
-use fn_graph::StreamOutcome;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd_model::CmdBlockOutcome;
 use peace_resources::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model::params::ParamsKeys;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -52,41 +51,6 @@ pub trait CmdBlock: Debug {
     type PKeys: ParamsKeys + 'static;
     /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
     type Outcome: Debug + Send + Sync + 'static;
-    /// Intermediate working type of the command block, e.g.
-    /// `StatesMut<Ensured>`.
-    type OutcomeAcc: Resource + 'static;
-    /// Type to represent information collected during execution, e.g.
-    /// `ItemDiscoverOutcome<E>`.
-    ///
-    /// This can be:
-    ///
-    /// * the initialization of the block outcome.
-    /// * the result of running an item's `apply` function.
-    ///
-    /// An example of this is an enum with variants for the successful and
-    /// failed results for each item.
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// #[derive(Debug)]
-    /// enum ItemDiscoverOutcome<E> {
-    ///     /// Discover succeeded.
-    ///     Success {
-    ///         item_id: ItemId,
-    ///         state_current: Option<BoxDtDisplay>,
-    ///         state_goal: Option<BoxDtDisplay>,
-    ///     },
-    ///     /// Discover failed.
-    ///     Fail {
-    ///         item_id: ItemId,
-    ///         state_current: Option<BoxDtDisplay>,
-    ///         state_goal: Option<BoxDtDisplay>,
-    ///         error: E,
-    ///     },
-    /// }
-    /// ```
-    type OutcomePartial: Send + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
 
@@ -147,12 +111,6 @@ pub trait CmdBlock: Debug {
     fn input_type_names(&self) -> Vec<String> {
         vec![tynm::type_name::<Self::InputT>()]
     }
-
-    /// Seed function for `OutcomeAcc`.
-    fn outcome_acc_init(&self, input: &Self::InputT) -> Self::OutcomeAcc;
-
-    /// Maps the `outcome_acc` into `outcome`.
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;
 
     /// Inserts the `CmdBlock::Outcome` into `Resources`.
     ///
@@ -220,22 +178,6 @@ pub trait CmdBlock: Debug {
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>>;
-
-    /// Collects item outcomes into a command outcome.
-    ///
-    /// This is not async because at the time of writing, this is expected to
-    /// write into an in-memory map. This may change in the future if there is
-    /// work that could benefit from being asynchronous.
-    ///
-    /// This is infallible because errors are expected to be collected and
-    /// associated with an item. This may change if there are errors that are
-    /// related to the framework that cannot be associated with an item.
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error>;
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error>;
 }

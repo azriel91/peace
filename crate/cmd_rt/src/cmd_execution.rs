@@ -1,7 +1,6 @@
 use std::{collections::VecDeque, fmt::Debug, pin::Pin};
 
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
-use interruptible::InterruptSignal;
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{
@@ -186,7 +185,6 @@ where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdBlockError<ExecutionOutcome, E>: From<((), InterruptSignal)>,
 {
     let cmd_view_and_progress_result: Result<
         CmdViewAndProgress<'_, '_, _, _>,
@@ -211,6 +209,9 @@ where
                 #[cfg(feature = "output_progress")]
                 progress_tx,
             } = cmd_view_and_progress;
+
+            // TODO: check if we are interrupted, and
+            // return`CmdOutcome::ExecutionInterrupted`
 
             let block_cmd_outcome_result = cmd_block_rt
                 .exec(
@@ -303,17 +304,16 @@ where
                 .map_err(peace_rt_model::Error::from)
                 .map_err(E::from)
             }
-            CmdBlockError::Block(error) => Err(error),
-            CmdBlockError::Outcome(cmd_outcome) => Ok(cmd_outcome),
-            CmdBlockError::Interrupt => {
-                let execution_outcome = execution_outcome_fetch(cmd_view.resources);
-                let cmd_outcome = CmdOutcome::new(execution_outcome);
+            CmdBlockError::Exec(error) => Err(error),
+            CmdBlockError::ItemError(cmd_outcome) | CmdBlockError::Interrupt(cmd_outcome) => {
                 Ok(cmd_outcome)
             }
         }
     } else {
         let execution_outcome = execution_outcome_fetch(cmd_view.resources);
-        let cmd_outcome = CmdOutcome::new(execution_outcome);
+        let cmd_outcome = CmdOutcome::Complete {
+            value: execution_outcome,
+        };
         Ok(cmd_outcome)
     }
 }
