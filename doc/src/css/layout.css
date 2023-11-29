@@ -32,7 +32,7 @@ hr {
 
 /* === highlightjs code === */
 code.hljs.language-undefined {
-    --inline-code-color: #eeeeee;
+    background-color: #e0e0e0;
 }
 
 /* === highlightjs-line-numbers === */

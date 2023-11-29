@@ -1,0 +1,14 @@
+# Summary
+
+<iframe
+    src="http://localhost:7890/?src=hierarchy%3A%0A%20%20params%3A%0A%20%20tool%3A%0A%20%20process%3A%0A%20%20%20%20server%3A%0A%20%20%20%20upload%3A%0A%20%20%20%20config%3A%0A%20%20%20%20start%3A%0Anode_infos%3A%0A%20%20params%3A%20%20%7B%20emoji%3A%20%F0%9F%93%9D%2C%20name%3A%20%22Parameters%3Cbr%20%2F%3E%22%20%7D%0A%20%20tool%3A%20%20%20%20%7B%20emoji%3A%20%E2%9A%99%EF%B8%8F%2C%20name%3A%20%22Automation%3Cbr%20%2F%3ESoftware%22%20%7D%0A%20%20process%3A%20%7B%20name%3A%20%22%22%20%7D%0A%20%20server%3A%20%20%7B%20emoji%3A%20%F0%9F%96%A5%EF%B8%8F%2C%20name%3A%20%22Server%3Cbr%20%2F%3ELaunch%22%20%7D%0A%20%20upload%3A%20%20%7B%20emoji%3A%20%F0%9F%93%A4%2C%20name%3A%20%22App%3Cbr%20%2F%3EUpload%22%20%20%20%20%7D%0A%20%20config%3A%20%20%7B%20emoji%3A%20%F0%9F%9B%A0%EF%B8%8F%2C%20name%3A%20%22App%3Cbr%20%2F%3EConfigure%22%20%7D%0A%20%20start%3A%20%20%20%7B%20emoji%3A%20%F0%9F%94%81%2C%20name%3A%20%22App%3Cbr%20%2F%3EStart%22%20%20%20%7D%0Aedges%3A%0A%20%20upload__params%3A%20%5Bupload%2C%20params%5D%0A%20%20params__upload%3A%20%5Bparams%2C%20upload%5D%0A%20%20params__tool%3A%20%5Bparams%2C%20tool%5D%0A%20%20tool__params%3A%20%5Btool%2C%20params%5D%0A%20%20tool__server%3A%20%5Btool%2C%20server%5D%0A%20%20server__tool%3A%20%5Bserver%2C%20tool%5D%0A%20%20tool__upload%3A%20%5Btool%2C%20upload%5D%0A%20%20tool__config%3A%20%5Btool%2C%20config%5D%0A%20%20tool__start%3A%20%20%5Btool%2C%20start%5D%0A%20%20server__upload%3A%20%5Bserver%2C%20upload%5D%0A%20%20upload__config%3A%20%5Bupload%2C%20config%5D%0A%20%20config__start%3A%20%20%5Bconfig%2C%20start%5D%0Atailwind_classes%3A%0A%20%20upload__params%3A%20hidden%0A%20%20params__upload%3A%20hidden%0A%20%20server__tool%3A%20hidden%0A%20%20tool__params%3A%20hidden%0A%20%20process%3A%20%3E-%0A%20%20%20%20%5B%26%3E%2A%5D%3Ahidden%0A%20%20tool__server%3A%20%26dashed%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-2%0A%20%20%20%20%5B%26%3Epath%5D%3A%5Bstroke-dasharray%3A2%5D%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afill-blue-400%0A%20%20%20%20%5B%26%3E%2A%5D%3Astroke-blue-500%0A%20%20%20%20%5B%26%3E%2A%5D%3Afocus%3Astroke-emerald-400%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3A%5Bstroke-dasharray%3A4%5D%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afocus%3Afill-emerald-300%0A%20%20%20%20%5B%26%3E%2A%5D%3Ahover%3Astroke-emerald-300%0A%20%20%20%20%5B%26%3Epolygon%5D%3Ahover%3Afill-emerald-200%0A%20%20%20%20cursor-pointer%0A%20%20tool__upload%3A%20%2Adashed%0A%20%20tool__config%3A%20%2Adashed%0A%20%20tool__start%3A%20%20%2Adashed%0A&diagram_only=true"
+    width="600" height="220"
+    style="border: 0; transform-origin: top left; scale: 1.4;">
+</iframe>
+
+1. Software should enhance, and not subtract from, the human experience.
+2. When we shifted from manual execution, to automatic execution, we gained speed, but we lost control.
+3. Interruptibility is re-introducing what we took away.
+4. So in summary,
+5. In a world where everyone is building fast cars, design the brakes.
+6. Thank you!
