@@ -157,6 +157,7 @@ async fn handle_request(request: Request) -> Response {
 
 ```
 
+<!--
 1. Automation software can be implemented for use on the command line, through a web interface, and as a desktop application.
 2. This is significant because to support all three, you need to remember:
 3. Command line tools tend to execute tasks on the main thread.
@@ -166,3 +167,4 @@ async fn handle_request(request: Request) -> Response {
 7. If you want to support all these interfaces, don't use the operating system's interrupt signal as *the* interrupt signal.
 8. What you should do is have an application level `InterruptSignal`.
 9. And depending on how the automation logic is surfaced to the user, we translate between that usage and your interrupt signal.
+-->

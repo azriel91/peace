@@ -4,7 +4,7 @@
 
 ## 🚏 Stopping Point
 
-## 🔀 Simultaneity
+## 🔀 Parallelism
 
 ## 📃 Reporting
 

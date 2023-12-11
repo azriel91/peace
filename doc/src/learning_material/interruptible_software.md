@@ -1,25 +1,22 @@
 # Interruptible Software
 
 <div style="margin-bottom: 30px;">
-<span style="font-size: 60px;">▶️</span> <iframe
-    src="http://localhost:7890/?src=hierarchy%3A%0A%20%20a%3A%20%7B%7D%0A%20%20b%3A%20%7B%7D%0A%20%20c%3A%20%7B%7D%0A%20%20d%3A%20%7B%7D%0Aedges%3A%0A%20%20ab%3A%20%5Ba%2C%20b%5D%0A%20%20bc%3A%20%5Bb%2C%20c%5D%0A%20%20cd%3A%20%5Bc%2C%20d%5D%0Anode_infos%3A%0A%20%20a%3A%20%7B%20name%3A%20A%20%7D%0A%20%20b%3A%20%7B%20name%3A%20B%20%7D%0A%20%20c%3A%20%7B%20name%3A%20C%20%7D%0A%20%20d%3A%20%7B%20name%3A%20D%20%7D%0Atailwind_classes%3A%0A%20%20a%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Afill-green-300%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Afill-green-200%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20b%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Afill-blue-300%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-blue-600%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Afill-blue-200%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Astroke-blue-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20ab%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afill-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A&diagram_only=true"
-    width="300" height="65"
-    style="border: 0; transform-origin: top left; scale: 2.0;">
-</iframe>
+<span style="font-size: 60px;">▶️</span> <object
+    type="image/svg+xml"
+    data="interruptible_software/interruptible_software_01.svg"
+    style="margin-left: 50px; width: 250; height: 65px; transform-origin: top left; scale: 1.6;"></object>
 </div>
 
 <div style="margin-bottom: 30px;">
-<span style="font-size: 60px;">⏸️</span> <iframe
-    src="http://localhost:7890/?src=hierarchy%3A%0A%20%20a%3A%20%7B%7D%0A%20%20b%3A%20%7B%7D%0A%20%20c%3A%20%7B%7D%0A%20%20d%3A%20%7B%7D%0Aedges%3A%0A%20%20ab%3A%20%5Ba%2C%20b%5D%0A%20%20bc%3A%20%5Bb%2C%20c%5D%0A%20%20cd%3A%20%5Bc%2C%20d%5D%0Anode_infos%3A%0A%20%20a%3A%20%7B%20name%3A%20A%20%7D%0A%20%20b%3A%20%7B%20name%3A%20B%20%7D%0A%20%20c%3A%20%7B%20name%3A%20C%20%7D%0A%20%20d%3A%20%7B%20name%3A%20D%20%7D%0Atailwind_classes%3A%0A%20%20a%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Afill-green-300%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Afill-green-200%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20b%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Afill-blue-300%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-blue-600%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Afill-blue-200%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Astroke-blue-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20ab%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afill-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20bc%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3A%5Bstroke-dasharray%3A2%5D%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-yellow-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afill-yellow-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-yellow-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A&diagram_only=true"
-    width="300" height="65"
-    style="border: 0; transform-origin: top left; scale: 2.0;">
-</iframe>
+<span style="font-size: 60px;">⏸️</span> <object
+    type="image/svg+xml"
+    data="interruptible_software/interruptible_software_02.svg"
+    style="margin-left: 50px; width: 250; height: 65px; transform-origin: top left; scale: 1.6;"></object>
 </div>
 
 <div style="margin-bottom: 30px;">
-<span style="font-size: 60px;">⏹️</span> <iframe
-    src="http://localhost:7890/?src=hierarchy%3A%0A%20%20a%3A%20%7B%7D%0A%20%20b%3A%20%7B%7D%0A%20%20c%3A%20%7B%7D%0A%20%20d%3A%20%7B%7D%0Aedges%3A%0A%20%20ab%3A%20%5Ba%2C%20b%5D%0A%20%20bc%3A%20%5Bb%2C%20c%5D%0A%20%20cd%3A%20%5Bc%2C%20d%5D%0Anode_infos%3A%0A%20%20a%3A%20%7B%20name%3A%20A%20%7D%0A%20%20b%3A%20%7B%20name%3A%20B%20%7D%0A%20%20c%3A%20%7B%20name%3A%20C%20%7D%0A%20%20d%3A%20%7B%20name%3A%20D%20%7D%0Atailwind_classes%3A%0A%20%20a%3A%20%26green%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Afill-green-300%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Afill-green-200%0A%20%20%20%20%5B%26%3Epath%5D%3Ahover%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20b%3A%20%2Agreen%0A%20%20ab%3A%20%3E-%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epath%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Afill-green-600%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-1%0A%20%20%20%20%5B%26%3Epolygon%5D%3Astroke-green-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-1%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-lime-600%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Aoutline-dashed%0A%20%20%20%20%5B%26%3Epath%5D%3Afocus%3Arounded-xl%0A%20%20%20%20cursor-pointer%0A%20%20bc%3A%20hidden%0A&diagram_only=true"
-    width="300" height="65"
-    style="border: 0; transform-origin: top left; scale: 2.0;">
-</iframe>
+<span style="font-size: 60px;">⏹️</span> <object
+    type="image/svg+xml"
+    data="interruptible_software/interruptible_software_03.svg"
+    style="margin-left: 50px; width: 250; height: 65px; transform-origin: top left; scale: 1.6;"></object>
 </div>

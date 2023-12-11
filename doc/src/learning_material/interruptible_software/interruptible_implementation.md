@@ -1,9 +1,8 @@
-# Implementation
+# Interruptible Implementation
 
 ## No Interruptibility
 
 ```rust ,ignore
-# use std::marker;
 fn execute(
     params: Params,
 ) -> Outcome {
@@ -62,7 +61,7 @@ fn execute<T>(
 
 ## Real Code
 
-[Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=fc67ea9dd630b41858b6bca9a18bd412)
+[Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=7746f25a2b7b00dad4b523f44570740b)
 
 ```rust
 # use std::any::Any;
@@ -74,6 +73,23 @@ fn main() {
         Ok(value) => println!("main: {}", value),
         Err(InterruptSignal) => println!("main: interrupted!"),
     }
+}
+
+fn execute<T, I>(
+    mut interrupt_rx: Receiver<InterruptSignal>,
+    params: I,
+) -> Result<T, InterruptSignal>
+where
+    T: 'static,
+    I: 'static,
+{
+    [step(step_1), step(step_2), step(step_3)]
+        .into_iter()
+        .try_fold(Box::new(params) as Box<dyn Any>, |last_param, step| {
+            interruptibility_check(&mut interrupt_rx)?;
+            Ok(step.exec(last_param))
+        })
+        .map(|boxed_any| *boxed_any.downcast().unwrap())
 }
 
 fn step_1(takes_bool: bool) -> u32 {
@@ -92,23 +108,6 @@ fn step_3(takes_f64: f64) -> String {
     let string = String::from("magic");
     println!("step_3 ({takes_f64}: f64) -> {string}");
     string
-}
-
-fn execute<T, I>(
-    mut interrupt_rx: Receiver<InterruptSignal>,
-    params: I,
-) -> Result<T, InterruptSignal>
-where
-    T: 'static,
-    I: 'static,
-{
-    [step(step_1), step(step_2), step(step_3)]
-        .into_iter()
-        .try_fold(Box::new(params) as Box<dyn Any>, |last_param, step| {
-            interruptibility_check(&mut interrupt_rx)?;
-            Ok(step.exec(last_param))
-        })
-        .map(|boxed_any| *boxed_any.downcast().unwrap())
 }
 #
 # fn step<F, I, O>(f: F) -> Box<dyn StepErased>
@@ -182,9 +181,11 @@ where
 # }
 ```
 
+<!--
 1. To implement interruptibility, we start with the non-interruptible logic.
 2. And we saw earlier we could sprinkle interruptibility checks before each step.
 3. But we've lost clarity.
 4. Can we do "better"?
 5. Yes we can.
 6. We can implement interruptibility, without sacrificing maintainability.
+-->

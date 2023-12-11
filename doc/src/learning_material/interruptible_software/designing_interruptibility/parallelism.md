@@ -1,72 +1,108 @@
-# 🗺️ Strategy
+# 🔀 Parallelism
+
+> Parallelism and concurrency
 
 <object
-    id="diagram_in_progress"
+    id="diagram_in_progress_1"
     type="image/svg+xml"
-    data="strategy/diagram_in_progress.svg"
+    data="parallelism/diagram_in_progress_1.svg"
     style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: block;"></object>
+
+<object
+    id="diagram_in_progress_2"
+    type="image/svg+xml"
+    data="parallelism/diagram_in_progress_2.svg"
+    style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: none;"></object>
+
+<object
+    id="diagram_in_progress_3"
+    type="image/svg+xml"
+    data="parallelism/diagram_in_progress_3.svg"
+    style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: none;"></object>
 
 <object
     id="diagram_done_1"
     type="image/svg+xml"
-    data="strategy/diagram_done_1.svg"
+    data="parallelism/diagram_done_1.svg"
     style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: none;"></object>
 
 <object
     id="diagram_done_2"
     type="image/svg+xml"
-    data="strategy/diagram_done_2.svg"
+    data="parallelism/diagram_done_2.svg"
     style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: none;"></object>
 
 <object
     id="diagram_done_3"
     type="image/svg+xml"
-    data="strategy/diagram_done_3.svg"
+    data="parallelism/diagram_done_3.svg"
     style="margin-left: 48px; transform-origin: top left; scale: 1.2; margin-bottom: -162px; display: none;"></object>
 
 <script type="text/javascript">
 const RESET = 0;
-const INTERRUPT = 1;
-const STOP_1 = 2;
-const STOP_2 = 3;
-const STOP_3 = 4;
+const INTERRUPT_1 = 1;
+const INTERRUPT_2 = 2;
+const INTERRUPT_3 = 3;
+const STOP_1 = 4;
+const STOP_2 = 5;
+const STOP_3 = 6;
 function visibility_update(variant) {
-    let diagram_in_progress = 'none';
+    let diagram_in_progress_1 = 'none';
+    let diagram_in_progress_2 = 'none';
+    let diagram_in_progress_3 = 'none';
     let diagram_done_1 = 'none';
     let diagram_done_2 = 'none';
     let diagram_done_3 = 'none';
-    let interruption_point = '0';
+    let interruption_point_1 = '0';
+    let interruption_point_2 = '0';
+    let interruption_point_3 = '0';
     let stopping_point_1 = '0';
     let stopping_point_2 = '0';
     let stopping_point_3 = '0';
     switch (variant) {
         case RESET:
-            diagram_in_progress = 'block';
+            diagram_in_progress_1 = 'block';
             break;
-        case INTERRUPT:
-            diagram_in_progress = 'block';
-            interruption_point = '1.0';
+        case INTERRUPT_1:
+            diagram_in_progress_1 = 'block';
+            interruption_point_1 = '1.0';
+            break;
+        case INTERRUPT_2:
+            diagram_in_progress_2 = 'block';
+            interruption_point_2 = '1.0';
+            break;
+        case INTERRUPT_3:
+            diagram_in_progress_3 = 'block';
+            interruption_point_3 = '1.0';
             break;
         case STOP_1:
             diagram_done_1 = 'block';
-            interruption_point = '1.0';
+            interruption_point_1 = '1.0';
             stopping_point_1 = '1.0';
             break;
         case STOP_2:
             diagram_done_2 = 'block';
-            interruption_point = '1.0';
+            interruption_point_2 = '1.0';
             stopping_point_2 = '1.0';
             break;
         case STOP_3:
             diagram_done_3 = 'block';
-            interruption_point = '1.0';
+            interruption_point_3 = '1.0';
             stopping_point_3 = '1.0';
             break;
     }
     document
-        .getElementById('diagram_in_progress')
+        .getElementById('diagram_in_progress_1')
         .style
-        .setProperty('display', diagram_in_progress);
+        .setProperty('display', diagram_in_progress_1);
+    document
+        .getElementById('diagram_in_progress_2')
+        .style
+        .setProperty('display', diagram_in_progress_2);
+    document
+        .getElementById('diagram_in_progress_3')
+        .style
+        .setProperty('display', diagram_in_progress_3);
     document
         .getElementById('diagram_done_1')
         .style
@@ -80,9 +116,17 @@ function visibility_update(variant) {
         .style
         .setProperty('display', diagram_done_3);
     document
-        .getElementById('interruption_point')
+        .getElementById('interruption_point_1')
         .style
-        .setProperty('opacity', interruption_point);
+        .setProperty('opacity', interruption_point_1);
+    document
+        .getElementById('interruption_point_2')
+        .style
+        .setProperty('opacity', interruption_point_2);
+    document
+        .getElementById('interruption_point_3')
+        .style
+        .setProperty('opacity', interruption_point_3);
     document
         .getElementById('stopping_point_1')
         .style
@@ -102,9 +146,55 @@ function visibility_update(variant) {
     width: 100%;
 " inert>
     <!-- Interruption points -->
-    <div id="interruption_point" style="
+    <div id="interruption_point_1" style="
         position: relative;
         left: 77px;
+        top: -50px;
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+    ">
+        <div style="
+            display: inline-block;
+            height: 210px;
+            border-left-color: #f59e0b;
+            border-left-style: dashed;
+            border-left-width: 3px;
+        "></div>
+        <div style="
+            display: inline-block;
+            font-weight: bold;
+            font-size: 20px;
+            margin-left: -50%;
+        ">🛑 Interrupt</div>
+    </div>
+    <div id="interruption_point_2" style="
+        position: relative;
+        left: 163px;
+        top: -50px;
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+    ">
+        <div style="
+            display: inline-block;
+            height: 210px;
+            border-left-color: #f59e0b;
+            border-left-style: dashed;
+            border-left-width: 3px;
+        "></div>
+        <div style="
+            display: inline-block;
+            font-weight: bold;
+            font-size: 20px;
+            margin-left: -50%;
+        ">🛑 Interrupt</div>
+    </div>
+    <div id="interruption_point_3" style="
+        position: relative;
+        left: 208px;
         top: -50px;
         display: inline-flex;
         flex-direction: column;
@@ -128,7 +218,7 @@ function visibility_update(variant) {
     <!-- Stopping points -->
     <div id="stopping_point_1" style="
         position: relative;
-        left: 72px;
+        left: -174px;
         display: inline-flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -151,7 +241,7 @@ function visibility_update(variant) {
     </div>
     <div id="stopping_point_2" style="
         position: relative;
-        left: 137px;
+        left: -105px;
         display: inline-flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -174,7 +264,7 @@ function visibility_update(variant) {
     </div>
     <div id="stopping_point_3" style="
         position: relative;
-        left: 253px;
+        left: 7px;
         display: inline-flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -201,7 +291,7 @@ function visibility_update(variant) {
     <input
         type="button"
         value="Interrupt 1"
-        onclick="visibility_update(INTERRUPT);"
+        onclick="visibility_update(INTERRUPT_1);"
     ></input>
     <input
         type="button"
@@ -210,8 +300,18 @@ function visibility_update(variant) {
     ></input>
     <input
         type="button"
+        value="Interrupt 2"
+        onclick="visibility_update(INTERRUPT_2);"
+    ></input>
+    <input
+        type="button"
         value="Finish 2"
         onclick="visibility_update(STOP_2);"
+    ></input>
+    <input
+        type="button"
+        value="Interrupt 3"
+        onclick="visibility_update(INTERRUPT_3);"
     ></input>
     <input
         type="button"
@@ -225,27 +325,21 @@ function visibility_update(variant) {
     ></input>
 </div>
 
-```rust ,ignore
-/// How to poll an underlying stream when an interruption is received.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum InterruptStrategy {
-    /// On interrupt, keep going.
-    IgnoreInterruptions,
-    /// On interrupt, wait for the current future's to complete and yield its
-    /// output, but do not poll the underlying stream for any more futures.
-    FinishCurrent,
-    /// On interrupt, continue polling the stream for the next `n` futures.
-    ///
-    /// `n` is an upper bound, so fewer than `n` futures may be yielded if the
-    /// underlying stream ends early.
-    PollNextN(u64),
-}
-```
+## Safe Interruption Rules
 
-<!--
-1. Think back to the bus example.
-2. What if, we want to press the stop button, but we want the bus to stop not at the immediate next stop, but a number of stops down the line.
-3. Like before you get on the bus, you schedule that you want the bus to stop 8 stops away -- because that's where your workplace is.
-4. That way, you don't have to be alert to press the stop button just before your stop.
-5. When writing complex automation with hundreds of steps, this is what we want to for testing.
--->
+1. 🔵 Finish everything in progress.
+2. ⚫ Don't start anything new.
+
+<details>
+<summary>See <code>fn_graph</code> on Github.</summary>
+
+* [Queuer](https://github.com/azriel91/fn_graph/blob/1ef048a6f3827d64fd4eca5dd90a871798bf25ea/src/fn_graph.rs#L1529-L1536):
+    - Sends IDs of steps that can be executed.
+    - Receives IDs of steps that are complete.
+    - Checks for interruption.
+* [Scheduler](https://github.com/azriel91/fn_graph/blob/1ef048a6f3827d64fd4eca5dd90a871798bf25ea/src/fn_graph.rs#L1550-L1575)
+    - Receives IDs of steps that can be executed.
+    - Sends IDs of steps that are complete.
+
+</details>
+
