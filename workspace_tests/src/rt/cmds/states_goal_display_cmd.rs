@@ -35,10 +35,12 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_goal_from_discover,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =
@@ -50,7 +52,12 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
-    let states_goal_from_read = StatesGoalDisplayCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_goal_from_read,
+    } = StatesGoalDisplayCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalDisplayCmd::exec` to complete successfully.");
+    };
     let fn_tracker_output = cmd_ctx.output();
 
     let vec_copy_state_from_discover =

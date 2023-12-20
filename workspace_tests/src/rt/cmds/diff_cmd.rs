@@ -49,13 +49,18 @@ async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn s
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -111,15 +116,17 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let CmdOutcome {
-        value: states_goal,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
 
     // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff::<Current, GoalStored>(&mut cmd_ctx)
-        .await?
-        .value;
+    let CmdOutcome::Complete { value: state_diffs } =
+        DiffCmd::diff::<Current, GoalStored>(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff` to complete successfully.");
+    };
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
     let resources = &cmd_ctx.view().resources;
@@ -179,15 +186,19 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
 
-    // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff::<CurrentStored, Goal>(&mut cmd_ctx)
-        .await?
-        .value;
+    // Diff current stored and goal states.
+    let CmdOutcome::Complete { value: state_diffs } =
+        DiffCmd::diff::<CurrentStored, Goal>(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff` to complete successfully.");
+    };
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
     let resources = &cmd_ctx.view().resources;
@@ -248,8 +259,12 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
-    // Diff current and stored goal states.
-    let state_diffs = DiffCmd::diff::<Current, Goal>(&mut cmd_ctx).await?.value;
+    // Diff current and goal states.
+    let CmdOutcome::Complete { value: state_diffs } =
+        DiffCmd::diff::<Current, Goal>(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff` to complete successfully.");
+    };
 
     // Note: discovered `StatesCurrent` and `StatesGoal` are not automatically
     // serialized to storage.
@@ -314,10 +329,12 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
         .await?;
     let resources = cmd_ctx_0.resources_mut();
     resources.insert(MockDest(1));
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current_0,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -333,10 +350,12 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     resources.insert(MockDest(3));
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current_1,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -631,13 +650,18 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);

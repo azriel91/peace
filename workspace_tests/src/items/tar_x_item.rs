@@ -64,10 +64,12 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         )
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -107,10 +109,12 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         )
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -151,10 +155,10 @@ async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std:
         )
         .await?;
 
-    let CmdOutcome {
-        value: states_goal,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
     let state_goal = states_goal.get::<FileMetadatas, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -196,7 +200,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -248,7 +255,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -302,7 +312,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -355,7 +368,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -413,7 +429,10 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -465,7 +484,10 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(&TarXStateDiff::ExtractionInSync, state_diff);
@@ -500,15 +522,20 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
 
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
     let state_goal = states_goal.get::<FileMetadatas, _>(TarXTest::ID).unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
@@ -567,10 +594,12 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -624,10 +653,12 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Overwrite changed files and remove extra files
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -642,10 +673,12 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     );
 
     // Execute again to check idempotence
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -686,10 +719,12 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned,
-        errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx).await?;
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete successfully.");
+    };
 
     let state_cleaned = states_cleaned
         .get::<FileMetadatas, _>(TarXTest::ID)

@@ -54,12 +54,10 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
             assert!(
                 matches!(
                     &cmd_outcome,
-                    CmdOutcome {
+                    CmdOutcome::Complete {
                         value: states_current,
-                        errors,
                     }
                     if states_current.len() == 2
-                    && errors.is_empty()
                 ),
                 "Expected states_current to have 2 items,\n\
                 but cmd_outcome was: {cmd_outcome:?}"
@@ -110,12 +108,10 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
             assert!(
                 matches!(
                     &cmd_outcome,
-                    CmdOutcome {
+                    CmdOutcome::Complete {
                         value: state_diffs,
-                        errors,
                     }
                     if state_diffs.len() == 2
-                    && errors.is_empty()
                 ),
                 "Expected state_diffs to have 2 items,\n\
                 but cmd_outcome was: {cmd_outcome:?}"

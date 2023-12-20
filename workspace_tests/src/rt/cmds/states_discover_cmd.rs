@@ -45,12 +45,24 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
-    let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
+        value: states_goal_stored,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_stored_state =
@@ -125,11 +137,18 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
         )
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_stored_state =
@@ -193,7 +212,12 @@ async fn current_inserts_states_current_stored_from_states_current_file()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_current_state =
         states_current_stored_from_cmd_ctx.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -238,13 +262,22 @@ async fn current_returns_error_when_try_state_current_returns_error()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
         .await?;
 
-    let CmdOutcome {
-        value: states_current,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete with item error.");
+    };
+    let states_current = stream_outcome.value();
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
     assert_eq!(
         states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
@@ -302,13 +335,22 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
         .await?;
 
-    let CmdOutcome {
-        value: states_goal,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete with item error.");
+    };
+    let states_goal = stream_outcome.value();
 
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_state
@@ -369,13 +411,22 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
         .await?;
 
-    let CmdOutcome {
-        value: (states_current, states_goal),
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
+    };
+    let (states_current, states_goal) = stream_outcome.value();
 
     // States current assertions
-    let states_on_disk = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
@@ -385,7 +436,12 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
     );
 
     // States goal assertions
-    let states_on_disk = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
@@ -455,13 +511,22 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
         .await?;
 
-    let CmdOutcome {
-        value: (states_current, states_goal),
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
+    };
+    let (states_current, states_goal) = stream_outcome.value();
 
     // States current assertions
-    let states_on_disk = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
@@ -479,7 +544,12 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
 
     // States goal assertions
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_state
@@ -543,13 +613,22 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
         .await?;
 
-    let CmdOutcome {
-        value: (states_current, states_goal),
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
+    };
+    let (states_current, states_goal) = stream_outcome.value();
 
     // States current assertions
-    let states_on_disk = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
@@ -560,7 +639,12 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
 
     // States goal assertions
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_on_disk,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_state
@@ -612,10 +696,10 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
         )
         .await?;
 
-    let CmdOutcome {
-        value: states_goal,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
     let resources = cmd_ctx.resources();
 
     let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -666,12 +750,14 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         .await?;
 
     // Write to disk first.
-    assert!(
-        StatesDiscoverCmd::current_and_goal(&mut cmd_ctx)
-            .await?
-            .is_ok()
-    );
-    assert!(EnsureCmd::exec(&mut cmd_ctx).await?.is_ok());
+    assert!(matches!(
+        StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?,
+        CmdOutcome::Complete { .. }
+    ));
+    assert!(matches!(
+        EnsureCmd::exec(&mut cmd_ctx).await?,
+        CmdOutcome::Complete { .. }
+    ));
 
     // Discover without serializing to storage.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -683,13 +769,20 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         .resources_mut()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(&mut cmd_ctx, false).await?;
+    } = StatesDiscoverCmd::current_with(&mut cmd_ctx, false).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_with` to complete successfully.");
+    };
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_state
@@ -731,11 +824,10 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         .await?;
 
     // Write to disk first.
-    assert!(
-        StatesDiscoverCmd::current_and_goal(&mut cmd_ctx)
-            .await?
-            .is_ok()
-    );
+    assert!(matches!(
+        StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?,
+        CmdOutcome::Complete { .. }
+    ));
 
     // Discover without serializing to storage.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -747,13 +839,19 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         )
         .await?;
 
-    let CmdOutcome {
-        value: states_goal,
-        errors: _,
-    } = StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(&mut cmd_ctx, false).await?;
+    let CmdOutcome::Complete { value: states_goal } =
+        StatesDiscoverCmd::goal_with(&mut cmd_ctx, false).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal_with` to complete successfully.");
+    };
 
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_goal_stored,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_state

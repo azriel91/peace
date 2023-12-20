@@ -1,6 +1,9 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::{
+        ctx::CmdCtx,
+        interruptible::{InterruptSignal, InterruptStrategy, Interruptibility},
+    },
     resources::{
         paths::{StatesCurrentFile, StatesGoalFile},
         type_reg::untagged::BoxDataTypeDowncast,
@@ -11,6 +14,7 @@ use peace::{
         StateStoredAndDiscovered, Workspace, WorkspaceSpec,
     },
 };
+use tokio::sync::mpsc;
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
@@ -49,10 +53,12 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // Dry-ensured states.
     // The returned states are currently the same as `StatesCurrentStored`, but it
     // would be useful to return simulated ensured states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured_dry,
-        errors: _,
-    } = EnsureCmd::exec_dry(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec_dry(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry` to complete successfully.");
+    };
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -119,10 +125,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -130,7 +138,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -200,10 +213,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Dry ensure states.
     let mut output = NoOpOutput;
@@ -218,10 +233,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         .await?;
     // Changing params changes VecCopyItem state_goal
     StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured_dry,
-        errors: _,
-    } = EnsureCmd::exec_dry(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec_dry(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry` to complete successfully.");
+    };
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -234,7 +251,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -312,10 +334,12 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -414,10 +438,12 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -528,10 +554,12 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -629,10 +657,12 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -743,10 +773,12 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Create new `cmd_ctx` with failing state current discovery.
     let mut output = NoOpOutput;
@@ -774,10 +806,14 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
         .await?;
 
     // Dry ensure states.
-    let CmdOutcome {
-        value: states_ensured_dry,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
+    };
+    let states_ensured_dry = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -842,10 +878,12 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Create new `cmd_ctx` with failing state current discovery.
     let mut output = NoOpOutput;
@@ -873,10 +911,14 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
         .await?;
 
     // Dry ensure states.
-    let CmdOutcome {
-        value: states_ensured_dry,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
+    };
+    let states_ensured_dry = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -941,10 +983,12 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Create new `cmd_ctx` with failing state current discovery.
     let mut output = NoOpOutput;
@@ -972,10 +1016,14 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
         .await?;
 
     // Dry ensure states.
-    let CmdOutcome {
-        value: states_ensured_dry,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
+    };
+    let states_ensured_dry = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1040,10 +1088,12 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Create new `cmd_ctx` with failing state current discovery.
     let mut output = NoOpOutput;
@@ -1071,10 +1121,14 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
         .await?;
 
     // Dry ensure states.
-    let CmdOutcome {
-        value: states_ensured_dry,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
+    };
+    let states_ensured_dry = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1139,10 +1193,12 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Create new `cmd_ctx` with failing state current discovery.
     let mut output = NoOpOutput;
@@ -1170,10 +1226,14 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
         .await?;
 
     // Ensure states again.
-    let CmdOutcome {
-        value: states_ensured_again,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_with` to complete with item error.");
+    };
+    let states_ensured_again = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1210,7 +1270,6 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
-#[ignore = "Pending `StatesCurrentReadCmdBlock` being interrupted or erring."]
 async fn states_current_not_serialized_on_states_current_read_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
@@ -1227,7 +1286,13 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
+    let (interrupt_tx, interrupt_rx) = mpsc::channel::<InterruptSignal>(16);
+
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_interruptibility(Interruptibility::new(
+            interrupt_rx.into(),
+            InterruptStrategy::FinishCurrent,
+        ))
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -1237,16 +1302,21 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
+    StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
     // Note: Write invalid states current file to disk.
-    // StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let flow_dir = cmd_ctx.flow_dir();
     let states_current_file = StatesCurrentFile::from(flow_dir);
     tokio::fs::write(states_current_file, b"vec_copy: ~").await?;
 
-    let CmdOutcome {
-        value: states_ensured,
+    interrupt_tx.send(InterruptSignal).await?;
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::None).await?
+    else {
+        panic!("Expected `EnsureCmd::exec_with` to complete with item error.");
+    };
+    let states_ensured = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -1297,10 +1367,14 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
     let states_goal_file = StatesGoalFile::from(flow_dir);
     tokio::fs::write(states_goal_file, b"vec_copy: ~").await?;
 
-    let CmdOutcome {
-        value: states_ensured,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete with item error.");
+    };
+    let states_ensured = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -1365,10 +1439,14 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         .with_flow(&flow)
         .await?;
 
-    let CmdOutcome {
-        value: states_ensured,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete with item error.");
+    };
+    let states_ensured = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -1433,10 +1511,14 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
 
     // TODO: Interrupt `CmdExecution` during `ApplyStateSyncCheckCmdBlock`.
 
-    let CmdOutcome {
-        value: states_ensured,
+    let CmdOutcome::ItemError {
+        stream_outcome,
         errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete with item error.");
+    };
+    let states_ensured = stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
