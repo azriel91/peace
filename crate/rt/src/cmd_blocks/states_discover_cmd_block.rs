@@ -286,27 +286,35 @@ where
 
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
-        let outcomes_tx = &outcomes_tx;
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
 
-            let item_states_discover_task = flow.graph().for_each_concurrent_with(
-                BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
-                |item| {
-                    Self::item_states_discover(
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        #[cfg(feature = "output_progress")]
-                        self.progress_complete_on_success,
-                        params_specs,
-                        resources,
-                        outcomes_tx,
-                        item,
+            let item_states_discover_task = async move {
+                let stream_outcome = flow
+                    .graph()
+                    .for_each_concurrent_with(
+                        BUFFERED_FUTURES_MAX,
+                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        |item| {
+                            Self::item_states_discover(
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                #[cfg(feature = "output_progress")]
+                                self.progress_complete_on_success,
+                                params_specs,
+                                resources,
+                                &outcomes_tx,
+                                item,
+                            )
+                        },
                     )
-                },
-            );
+                    .await;
+
+                drop(outcomes_tx);
+
+                stream_outcome
+            };
 
             let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_current_mut);
 
@@ -410,27 +418,35 @@ where
 
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
-        let outcomes_tx = &outcomes_tx;
 
         let (stream_outcome, outcome_collate) = {
             let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
 
-            let item_states_discover_task = flow.graph().for_each_concurrent_with(
-                BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
-                |item| {
-                    Self::item_states_discover(
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        #[cfg(feature = "output_progress")]
-                        self.progress_complete_on_success,
-                        params_specs,
-                        resources,
-                        outcomes_tx,
-                        item,
+            let item_states_discover_task = async move {
+                let stream_outcome = flow
+                    .graph()
+                    .for_each_concurrent_with(
+                        BUFFERED_FUTURES_MAX,
+                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        |item| {
+                            Self::item_states_discover(
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                #[cfg(feature = "output_progress")]
+                                self.progress_complete_on_success,
+                                params_specs,
+                                resources,
+                                &outcomes_tx,
+                                item,
+                            )
+                        },
                     )
-                },
-            );
+                    .await;
+
+                drop(outcomes_tx);
+
+                stream_outcome
+            };
 
             let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_goal_mut);
 
@@ -547,28 +563,36 @@ where
 
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
-        let outcomes_tx = &outcomes_tx;
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
             let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
 
-            let item_states_discover_task = flow.graph().for_each_concurrent_with(
-                BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
-                |item| {
-                    Self::item_states_discover(
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        #[cfg(feature = "output_progress")]
-                        self.progress_complete_on_success,
-                        params_specs,
-                        resources,
-                        outcomes_tx,
-                        item,
+            let item_states_discover_task = async move {
+                let stream_outcome = flow
+                    .graph()
+                    .for_each_concurrent_with(
+                        BUFFERED_FUTURES_MAX,
+                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        |item| {
+                            Self::item_states_discover(
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                #[cfg(feature = "output_progress")]
+                                self.progress_complete_on_success,
+                                params_specs,
+                                resources,
+                                &outcomes_tx,
+                                item,
+                            )
+                        },
                     )
-                },
-            );
+                    .await;
+
+                drop(outcomes_tx);
+
+                stream_outcome
+            };
 
             let outcome_collate_task =
                 Self::outcome_collate_task(outcomes_rx, states_current_mut, states_goal_mut);

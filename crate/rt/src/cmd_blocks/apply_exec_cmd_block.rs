@@ -468,7 +468,6 @@ where
 
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemApplyOutcome<E>>(item_graph.node_count());
-        let outcomes_tx = &outcomes_tx;
 
         let stream_opts = match apply_for {
             ApplyFor::Ensure => {
@@ -480,21 +479,25 @@ where
         };
 
         let (stream_outcome_result, outcome_collate) = {
-            let item_apply_exec_task = item_graph.try_for_each_concurrent_with(
-                BUFFERED_FUTURES_MAX,
-                stream_opts,
-                |item| {
-                    let item_apply_exec_ctx = ItemApplyExecCtx {
-                        params_specs,
-                        resources: resources_ref,
-                        apply_for_internal: &apply_for_internal,
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        outcomes_tx,
-                    };
-                    Self::item_apply_exec(item_apply_exec_ctx, item)
-                },
-            );
+            let item_apply_exec_task = async move {
+                let stream_outcome = item_graph
+                    .try_for_each_concurrent_with(BUFFERED_FUTURES_MAX, stream_opts, |item| {
+                        let item_apply_exec_ctx = ItemApplyExecCtx {
+                            params_specs,
+                            resources: resources_ref,
+                            apply_for_internal: &apply_for_internal,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                            outcomes_tx: &outcomes_tx,
+                        };
+                        Self::item_apply_exec(item_apply_exec_ctx, item)
+                    })
+                    .await;
+
+                drop(outcomes_tx);
+
+                stream_outcome
+            };
             let outcome_collate_task =
                 Self::outcome_collate_task(outcomes_rx, states_applied_mut, states_target_mut);
 
