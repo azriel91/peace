@@ -1,23 +1,17 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::FutureExt;
-use peace_cfg::ItemId;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     internal::StatesMut,
     resources::ts::SetUp,
     states::{ts::Clean, StatesClean},
-    type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{
-    fn_graph::{StreamOpts, StreamOutcome},
-    outcomes::CmdOutcome,
-    params::ParamsKeys,
-    Error,
-};
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model::{fn_graph::StreamOpts, params::ParamsKeys, Error};
+use peace_rt_model_core::IndexMap;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -59,8 +53,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = StatesClean;
-    type OutcomeAcc = StatesMut<Clean>;
-    type OutcomePartial = (ItemId, Result<BoxDtDisplay, E>);
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -71,23 +63,14 @@ where
         vec![]
     }
 
-    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
-        StatesMut::<Clean>::new()
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        StatesClean::from(outcome_acc)
-    }
-
     async fn exec(
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
-            interruptibility,
+            interruptibility_state,
             flow,
             params_specs,
             resources,
@@ -96,48 +79,39 @@ where
 
         let params_specs = &*params_specs;
         let resources = &*resources;
-        let stream_outcome = flow
+        let (stream_outcome, errors) = flow
             .graph()
             .fold_async_with(
-                (),
-                StreamOpts::new().interruptibility(interruptibility.reborrow()),
-                |(), item_rt| {
+                (StatesMut::<Clean>::new(), IndexMap::new()),
+                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                |(mut states_clean_mut, mut errors), item_rt| {
                     async move {
                         let item_id = item_rt.id().clone();
                         let state_clean_boxed_result =
                             item_rt.state_clean(params_specs, resources).await;
-                        outcomes_tx
-                            .send((item_id, state_clean_boxed_result))
-                            .expect("Failed to send `states_clean`.");
+
+                        match state_clean_boxed_result {
+                            Ok(state_clean_boxed) => {
+                                states_clean_mut.insert_raw(item_id, state_clean_boxed);
+                            }
+                            Err(error) => {
+                                errors.insert(item_id, error);
+                            }
+                        }
+
+                        (states_clean_mut, errors)
                     }
                     .boxed_local()
                 },
             )
-            .await;
+            .await
+            .replace_with(std::convert::identity);
 
-        Some(stream_outcome)
-    }
+        let stream_outcome = stream_outcome.map(StatesClean::from);
 
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: states_clean_mut,
+        Ok(CmdBlockOutcome::ItemWise {
+            stream_outcome,
             errors,
-        } = block_outcome;
-
-        let (item_id, state_clean_boxed_result) = outcome_partial;
-
-        match state_clean_boxed_result {
-            Ok(state_clean_boxed) => {
-                states_clean_mut.insert_raw(item_id, state_clean_boxed);
-            }
-            Err(error) => {
-                errors.insert(item_id, error);
-            }
-        }
-        Ok(())
+        })
     }
 }

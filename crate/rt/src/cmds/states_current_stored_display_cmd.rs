@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
-use peace_rt_model::{params::ParamsKeys, Error};
+use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::StatesCurrentReadCmd;
@@ -25,14 +25,16 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesCurrentStored, E> {
+    ) -> Result<CmdOutcome<StatesCurrentStored, E>, E> {
         let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
 
         match states_current_stored_result {
-            Ok(states_current_stored) => {
-                output.present(&states_current_stored).await?;
-                Ok(states_current_stored)
+            Ok(states_current_cmd_outcome) => {
+                if let Some(states_current_stored) = states_current_cmd_outcome.value() {
+                    output.present(&states_current_stored).await?;
+                }
+                Ok(states_current_cmd_outcome)
             }
             Err(e) => {
                 output.write_err(&e).await?;

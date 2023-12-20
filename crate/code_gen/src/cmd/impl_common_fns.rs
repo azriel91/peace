@@ -21,10 +21,9 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
     let mut common_fns = quote! {
         /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.
-        pub fn with_interruptible(
+        pub fn with_interruptibility(
             mut self,
-            interrupt_rx: &'ctx mut tokio::sync::mpsc::Receiver<interruptible::InterruptSignal>,
-            interrupt_strategy: interruptible::InterruptStrategy,
+            interruptibility: interruptible::Interruptibility<'ctx>,
         ) -> crate::ctx::CmdCtxBuilder<
             'ctx,
             O,
@@ -45,12 +44,6 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 workspace,
                 scope_builder,
             } = self;
-
-            let interruptibility =
-                interruptible::interruptibility::Interruptibility::Interruptible {
-                    interrupt_rx,
-                    interrupt_strategy,
-                };
 
             crate::ctx::CmdCtxBuilder {
                 output,

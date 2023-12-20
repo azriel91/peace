@@ -79,16 +79,10 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
-        let CmdOutcome {
-            value: clean_exec_change,
-            errors,
-        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+        let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
-        let cmd_outcome = match clean_exec_change {
-            CleanExecChange::None => CmdOutcome {
-                value: Default::default(),
-                errors,
-            },
+        let cmd_outcome = cmd_outcome.map(|clean_exec_change| match clean_exec_change {
+            CleanExecChange::None => Default::default(),
             CleanExecChange::Some(states_previous_and_cleaned) => {
                 let (states_previous, states_cleaned) = *states_previous_and_cleaned;
                 cmd_ctx
@@ -96,12 +90,9 @@ where
                     .resources
                     .insert::<StatesPrevious>(states_previous);
 
-                CmdOutcome {
-                    value: states_cleaned,
-                    errors,
-                }
+                states_cleaned
             }
-        };
+        });
 
         Ok(cmd_outcome)
     }
@@ -153,10 +144,7 @@ where
         cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        let CmdOutcome {
-            value: clean_exec_change,
-            errors,
-        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+        let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
         let SingleProfileSingleFlowView {
             flow, resources, ..
@@ -165,28 +153,23 @@ where
 
         // We shouldn't serialize current if we returned from an interruption / error
         // handler.
-        let cmd_outcome = match clean_exec_change {
-            CleanExecChange::None => CmdOutcome {
-                value: Default::default(),
-                errors,
-            },
-            CleanExecChange::Some(states_previous_and_cleaned) => {
-                let (states_previous, states_cleaned) = *states_previous_and_cleaned;
-                Self::serialize_current(item_graph, resources, &states_cleaned).await?;
+        let cmd_outcome = cmd_outcome
+            .map_async(|clean_exec_change| async move {
+                match clean_exec_change {
+                    CleanExecChange::None => Ok(Default::default()),
+                    CleanExecChange::Some(states_previous_and_cleaned) => {
+                        let (states_previous, states_cleaned) = *states_previous_and_cleaned;
+                        Self::serialize_current(item_graph, resources, &states_cleaned).await?;
 
-                cmd_ctx
-                    .view()
-                    .resources
-                    .insert::<StatesPrevious>(states_previous);
+                        resources.insert::<StatesPrevious>(states_previous);
 
-                CmdOutcome {
-                    value: states_cleaned,
-                    errors,
+                        Ok(states_cleaned)
+                    }
                 }
-            }
-        };
+            })
+            .await;
 
-        Ok(cmd_outcome)
+        cmd_outcome.transpose()
     }
 
     /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
@@ -298,6 +281,7 @@ impl<E, O, PKeys> Default for CleanCmd<E, O, PKeys> {
     }
 }
 
+/// Whether
 #[derive(Debug)]
 enum CleanExecChange<StatesTs> {
     /// Nothing changed, so nothing to serialize.

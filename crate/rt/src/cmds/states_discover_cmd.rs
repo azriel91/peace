@@ -85,18 +85,18 @@ where
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        let CmdOutcome {
+        if let CmdOutcome::Complete {
             value: states_current,
-            errors: _,
-        } = &cmd_outcome;
+        } = &cmd_outcome
+        {
+            let SingleProfileSingleFlowView {
+                flow, resources, ..
+            } = cmd_ctx.view();
+            let (item_graph, resources) = (flow.graph(), resources);
 
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
-
-        if serialize_to_storage {
-            Self::serialize_current(item_graph, resources, states_current).await?;
+            if serialize_to_storage {
+                Self::serialize_current(item_graph, resources, states_current).await?;
+            }
         }
 
         Ok(cmd_outcome)
@@ -156,18 +156,15 @@ where
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        let CmdOutcome {
-            value: states_goal,
-            errors: _,
-        } = &cmd_outcome;
+        if let CmdOutcome::Complete { value: states_goal } = &cmd_outcome {
+            let SingleProfileSingleFlowView {
+                flow, resources, ..
+            } = cmd_ctx.view();
+            let (item_graph, resources) = (flow.graph(), resources);
 
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
-
-        if serialize_to_storage {
-            Self::serialize_goal(item_graph, resources, states_goal).await?;
+            if serialize_to_storage {
+                Self::serialize_goal(item_graph, resources, states_goal).await?;
+            }
         }
 
         Ok(cmd_outcome)
@@ -251,19 +248,19 @@ where
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        let CmdOutcome {
+        if let CmdOutcome::Complete {
             value: (states_current, states_goal),
-            errors: _,
-        } = &cmd_outcome;
+        } = &cmd_outcome
+        {
+            let SingleProfileSingleFlowView {
+                flow, resources, ..
+            } = cmd_ctx.view();
+            let (item_graph, resources) = (flow.graph(), resources);
 
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
-
-        if serialize_to_storage {
-            Self::serialize_current(item_graph, resources, states_current).await?;
-            Self::serialize_goal(item_graph, resources, states_goal).await?;
+            if serialize_to_storage {
+                Self::serialize_current(item_graph, resources, states_current).await?;
+                Self::serialize_goal(item_graph, resources, states_goal).await?;
+            }
         }
 
         Ok(cmd_outcome)

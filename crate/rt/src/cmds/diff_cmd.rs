@@ -61,10 +61,8 @@ where
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff_stored<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<StateDiffs, E> {
-        Self::diff::<CurrentStored, GoalStored>(cmd_ctx)
-            .await
-            .map(|cmd_outcome| cmd_outcome.value)
+    ) -> Result<CmdOutcome<StateDiffs, E>, E> {
+        Self::diff::<CurrentStored, GoalStored>(cmd_ctx).await
     }
 
     /// Returns the [`state_diff`]`s between two states.

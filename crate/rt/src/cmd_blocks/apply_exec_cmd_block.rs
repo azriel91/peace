@@ -1,12 +1,11 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use fn_graph::{StreamOpts, StreamOutcome};
+use futures::join;
 use peace_cfg::{ApplyCheck, FnCtx, ItemId};
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_rt::{
-    async_trait,
-    fn_graph::{StreamOpts, StreamOutcome},
-    CmdBlock,
-};
+use peace_cmd_model::CmdBlockOutcome;
+use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StatesMut,
@@ -18,12 +17,14 @@ use peace_resources::{
     ResourceFetchError, Resources,
 };
 use peace_rt_model::{
-    outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
+    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
     params::ParamsKeys,
     Error, ItemBoxed, ItemRt,
 };
+use tokio::sync::mpsc::{self, Receiver};
 
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model_core::IndexMap;
+use tokio::sync::mpsc::Sender;
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -38,7 +39,6 @@ cfg_if::cfg_if! {
                 ProgressSender,
             },
         };
-        use tokio::sync::mpsc::Sender;
     }
 }
 
@@ -128,7 +128,7 @@ where
     /// ```rust,ignore
     /// async fn item_apply_exec<F, Fut>(
     ///     resources: &Resources<SetUp>,
-    ///     outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
+    ///     outcomes_tx: &Sender<ItemApplyOutcome<E>>,
     ///     item: FnRef<'_, ItemBoxed<E>>,
     ///     f: F,
     /// ) -> bool
@@ -200,6 +200,7 @@ where
                                 item_id: item.id().clone(),
                                 item_apply,
                             })
+                            .await
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         // short-circuit
@@ -222,6 +223,7 @@ where
                                 item_id: item.id().clone(),
                                 item_apply,
                             })
+                            .await
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         Ok(())
@@ -247,6 +249,7 @@ where
                                 item_apply,
                                 error,
                             })
+                            .await
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         // we should stop processing.
@@ -273,171 +276,48 @@ where
                         item_apply_partial,
                         error,
                     })
+                    .await
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                 Err(())
             }
         }
     }
-}
 
-#[async_trait(?Send)]
-impl<E, PKeys, StatesTs> CmdBlock for ApplyExecCmdBlock<E, PKeys, StatesTs>
-where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
-    StatesTs: StatesTsApplyExt + Debug + Send + Sync + 'static,
-{
-    type Error = E;
-    type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
-    type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
-    type OutcomeAcc = (
-        StatesPrevious,
-        StatesMut<StatesTs>,
-        StatesMut<StatesTs::TsTarget>,
-    );
-    type OutcomePartial = ItemApplyOutcome<E>;
-    type PKeys = PKeys;
-
-    fn input_fetch(
-        &self,
-        resources: &mut Resources<SetUp>,
-    ) -> Result<Self::InputT, ResourceFetchError> {
-        let states_current = resources.try_remove::<StatesCurrent>()?;
-
-        let states_target = resources.try_remove::<States<StatesTs::TsTarget>>()?;
-
-        Ok((states_current, states_target))
-    }
-
-    fn input_type_names(&self) -> Vec<String> {
-        vec![
-            tynm::type_name::<StatesCurrent>(),
-            tynm::type_name::<States<StatesTs::TsTarget>>(),
-        ]
-    }
-
-    fn outcome_acc_init(&self, input: &Self::InputT) -> Self::OutcomeAcc {
-        let (states_current, states_target) = input;
+    async fn outcome_collate_task(
+        mut outcomes_rx: Receiver<ItemApplyOutcome<E>>,
+        mut states_applied_mut: StatesMut<StatesTs>,
+        mut states_target_mut: StatesMut<StatesTs::TsTarget>,
+    ) -> Result<
         (
-            StatesPrevious::from(states_current.clone()),
-            // `Ensured`, `EnsuredDry`, `Cleaned`, `CleanedDry` states start as the current state,
-            // and are altered.
-            StatesMut::<StatesTs>::from(states_current.clone().into_inner()),
-            StatesMut::<StatesTs::TsTarget>::from(states_target.clone().into_inner()),
-        )
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let (states_previous, states_applied_mut, states_target_mut) = outcome_acc;
-
-        (
-            states_previous,
-            States::<StatesTs>::from(states_applied_mut),
-            States::<StatesTs::TsTarget>::from(states_target_mut),
-        )
-    }
-
-    fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
-        let (states_previous, states_applied, states_target) = outcome;
-        resources.insert(states_previous);
-        resources.insert(states_applied);
-        resources.insert(states_target);
-    }
-
-    fn outcome_type_names(&self) -> Vec<String> {
-        vec![
-            tynm::type_name::<StatesPrevious>(),
-            tynm::type_name::<States<StatesTs>>(),
-            tynm::type_name::<States<StatesTs::TsTarget>>(),
-        ]
-    }
-
-    async fn exec(
-        &self,
-        input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
-        let (states_current, _states_target) = input;
-
-        let SingleProfileSingleFlowView {
-            interruptibility,
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_view;
-
-        let item_graph = flow.graph();
-        let resources_ref = &*resources;
-        let apply_for = StatesTs::apply_for();
-        let apply_for_internal = match apply_for {
-            ApplyFor::Ensure => ApplyForInternal::Ensure,
-            ApplyFor::Clean => ApplyForInternal::Clean { states_current },
-        };
-
-        match apply_for {
-            ApplyFor::Ensure => {
-                let (Ok(stream_outcome) | Err((stream_outcome, ()))) = item_graph
-                    .try_for_each_concurrent_with(
-                        BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility(interruptibility.reborrow()),
-                        |item| {
-                            let item_apply_exec_ctx = ItemApplyExecCtx {
-                                params_specs,
-                                resources: resources_ref,
-                                apply_for_internal: &apply_for_internal,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                            };
-                            Self::item_apply_exec(item_apply_exec_ctx, item)
-                        },
-                    )
-                    .await
-                    .map_err(|(outcome, _vec_units): (StreamOutcome<()>, Vec<()>)| (outcome, ()));
-
-                Some(stream_outcome)
-            }
-            ApplyFor::Clean => {
-                let (Ok(stream_outcome) | Err((stream_outcome, ()))) = item_graph
-                    .try_for_each_concurrent_with(
-                        BUFFERED_FUTURES_MAX,
-                        StreamOpts::new()
-                            .rev()
-                            .interruptibility(interruptibility.reborrow()),
-                        |item| {
-                            let item_apply_exec_ctx = ItemApplyExecCtx {
-                                params_specs,
-                                resources: resources_ref,
-                                apply_for_internal: &apply_for_internal,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                            };
-                            Self::item_apply_exec(item_apply_exec_ctx, item)
-                        },
-                    )
-                    .await
-                    .map_err(|(outcome, _vec_units): (StreamOutcome<()>, Vec<()>)| (outcome, ()));
-
-                Some(stream_outcome)
-            }
+            States<StatesTs>,
+            States<StatesTs::TsTarget>,
+            IndexMap<ItemId, E>,
+        ),
+        E,
+    > {
+        let mut errors = IndexMap::new();
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(
+                &mut states_applied_mut,
+                &mut states_target_mut,
+                &mut errors,
+                item_outcome,
+            )?;
         }
+
+        let states_applied = States::<StatesTs>::from(states_applied_mut);
+        let states_target = States::<StatesTs::TsTarget>::from(states_target_mut);
+
+        Ok((states_applied, states_target, errors))
     }
 
     fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: (_states_previous, states_applied_mut, states_target_mut),
-            errors,
-        } = block_outcome;
-
+        states_applied_mut: &mut StatesMut<StatesTs>,
+        states_target_mut: &mut StatesMut<StatesTs::TsTarget>,
+        errors: &mut IndexMap<ItemId, E>,
+        outcome_partial: ItemApplyOutcome<E>,
+    ) -> Result<(), E> {
         let apply_for = StatesTs::apply_for();
 
         match outcome_partial {
@@ -506,6 +386,137 @@ where
     }
 }
 
+#[async_trait(?Send)]
+impl<E, PKeys, StatesTs> CmdBlock for ApplyExecCmdBlock<E, PKeys, StatesTs>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    PKeys: ParamsKeys + 'static,
+    StatesTs: StatesTsApplyExt + Debug + Send + Sync + 'static,
+{
+    type Error = E;
+    type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
+    type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
+    type PKeys = PKeys;
+
+    fn input_fetch(
+        &self,
+        resources: &mut Resources<SetUp>,
+    ) -> Result<Self::InputT, ResourceFetchError> {
+        let states_current = resources.try_remove::<StatesCurrent>()?;
+
+        let states_target = resources.try_remove::<States<StatesTs::TsTarget>>()?;
+
+        Ok((states_current, states_target))
+    }
+
+    fn input_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<States<StatesTs::TsTarget>>(),
+        ]
+    }
+
+    fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
+        let (states_previous, states_applied, states_target) = outcome;
+        resources.insert(states_previous);
+        resources.insert(states_applied);
+        resources.insert(states_target);
+    }
+
+    fn outcome_type_names(&self) -> Vec<String> {
+        vec![
+            tynm::type_name::<StatesPrevious>(),
+            tynm::type_name::<States<StatesTs>>(),
+            tynm::type_name::<States<StatesTs::TsTarget>>(),
+        ]
+    }
+
+    async fn exec(
+        &self,
+        input: Self::InputT,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+        let (states_current, states_target) = input;
+        let (states_previous, states_applied_mut, states_target_mut) = {
+            let states_previous = StatesPrevious::from(states_current.clone());
+            // `Ensured`, `EnsuredDry`, `Cleaned`, `CleanedDry` states start as the current
+            // state, and are altered.
+            let states_applied_mut =
+                StatesMut::<StatesTs>::from(states_current.clone().into_inner());
+            let states_target_mut =
+                StatesMut::<StatesTs::TsTarget>::from(states_target.clone().into_inner());
+
+            (states_previous, states_applied_mut, states_target_mut)
+        };
+
+        let SingleProfileSingleFlowView {
+            interruptibility_state,
+            flow,
+            params_specs,
+            resources,
+            ..
+        } = cmd_view;
+
+        let item_graph = flow.graph();
+        let resources_ref = &*resources;
+        let apply_for = StatesTs::apply_for();
+        let apply_for_internal = match apply_for {
+            ApplyFor::Ensure => ApplyForInternal::Ensure,
+            ApplyFor::Clean => ApplyForInternal::Clean { states_current },
+        };
+
+        let (outcomes_tx, outcomes_rx) =
+            mpsc::channel::<ItemApplyOutcome<E>>(item_graph.node_count());
+        let outcomes_tx = &outcomes_tx;
+
+        let stream_opts = match apply_for {
+            ApplyFor::Ensure => {
+                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow())
+            }
+            ApplyFor::Clean => StreamOpts::new()
+                .rev()
+                .interruptibility_state(interruptibility_state.reborrow()),
+        };
+
+        let (stream_outcome_result, outcome_collate) = {
+            let item_apply_exec_task = item_graph.try_for_each_concurrent_with(
+                BUFFERED_FUTURES_MAX,
+                stream_opts,
+                |item| {
+                    let item_apply_exec_ctx = ItemApplyExecCtx {
+                        params_specs,
+                        resources: resources_ref,
+                        apply_for_internal: &apply_for_internal,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        outcomes_tx,
+                    };
+                    Self::item_apply_exec(item_apply_exec_ctx, item)
+                },
+            );
+            let outcome_collate_task =
+                Self::outcome_collate_task(outcomes_rx, states_applied_mut, states_target_mut);
+
+            join!(item_apply_exec_task, outcome_collate_task)
+        };
+        let (states_applied, states_target, errors) = outcome_collate?;
+
+        let stream_outcome = {
+            let (Ok(stream_outcome) | Err((stream_outcome, ()))) = stream_outcome_result.map_err(
+                |(stream_outcome, _vec_unit): (StreamOutcome<()>, Vec<()>)| (stream_outcome, ()),
+            );
+
+            stream_outcome.map(|()| (states_previous, states_applied, states_target))
+        };
+
+        Ok(CmdBlockOutcome::ItemWise {
+            stream_outcome,
+            errors,
+        })
+    }
+}
+
 /// Whether the `ApplyCmd` is for `Ensure` or `Clean`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ApplyFor {
@@ -532,7 +543,7 @@ struct ItemApplyExecCtx<'f, E> {
     /// Channel sender for `CmdBlock` item outcomes.
     #[cfg(feature = "output_progress")]
     progress_tx: &'f Sender<ProgressUpdateAndId>,
-    outcomes_tx: &'f UnboundedSender<ItemApplyOutcome<E>>,
+    outcomes_tx: &'f Sender<ItemApplyOutcome<E>>,
 }
 
 #[derive(Debug)]

@@ -3,7 +3,7 @@
 use std::{fmt::Debug, hash::Hash};
 
 use futures::stream::{StreamExt, TryStreamExt};
-use interruptible::interruptibility::Interruptibility;
+use interruptible::Interruptibility;
 use peace_cfg::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resources::{

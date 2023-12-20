@@ -1,7 +1,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use futures::join;
 use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     internal::StatesMut,
@@ -13,13 +15,9 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{
-    fn_graph::{StreamOpts, StreamOutcome},
-    outcomes::CmdOutcome,
-    params::ParamsKeys,
-    Error, ItemBoxed,
-};
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model::{fn_graph::StreamOpts, params::ParamsKeys, Error, ItemBoxed};
+use peace_rt_model_core::IndexMap;
+use tokio::sync::mpsc::{self, Receiver};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -139,7 +137,7 @@ where
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
-        outcomes_tx: &tokio::sync::mpsc::UnboundedSender<ItemDiscoverOutcome<E>>,
+        outcomes_tx: &tokio::sync::mpsc::Sender<ItemDiscoverOutcome<E>>,
         item: &ItemBoxed<E>,
     ) {
         let item_id = item.id();
@@ -200,6 +198,7 @@ where
                     state_goal,
                     error,
                 })
+                .await
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
         } else {
             outcomes_tx
@@ -208,6 +207,7 @@ where
                     state_current,
                     state_goal,
                 })
+                .await
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
         }
     }
@@ -260,8 +260,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = States<Current>;
-    type OutcomeAcc = StatesMut<Current>;
-    type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -272,35 +270,30 @@ where
         vec![]
     }
 
-    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
-        StatesMut::<Current>::new()
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let states_current_mut = outcome_acc;
-        StatesCurrent::from(states_current_mut)
-    }
-
     async fn exec(
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
-            interruptibility,
+            interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
         } = cmd_view;
 
-        let stream_outcome = flow
-            .graph()
-            .for_each_concurrent_with(
+        let (outcomes_tx, outcomes_rx) =
+            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let outcomes_tx = &outcomes_tx;
+
+        let (stream_outcome, outcome_collate) = {
+            let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
+
+            let item_states_discover_task = flow.graph().for_each_concurrent_with(
                 BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
                 |item| {
                     Self::item_states_discover(
                         #[cfg(feature = "output_progress")]
@@ -313,22 +306,47 @@ where
                         item,
                     )
                 },
-            )
-            .await;
+            );
 
-        Some(stream_outcome)
+            let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_current_mut);
+
+            join!(item_states_discover_task, outcome_collate_task)
+        };
+
+        outcome_collate.map(|(states_current, errors)| {
+            let (stream_outcome, ()) = stream_outcome.replace(states_current);
+            CmdBlockOutcome::ItemWise {
+                stream_outcome,
+                errors,
+            }
+        })
+    }
+}
+
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    async fn outcome_collate_task(
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut states_current_mut: StatesMut<Current>,
+    ) -> Result<(States<Current>, IndexMap<ItemId, E>), E> {
+        let mut errors = IndexMap::new();
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(&mut states_current_mut, &mut errors, item_outcome)?;
+        }
+
+        let states_current = States::<Current>::from(states_current_mut);
+
+        Ok((states_current, errors))
     }
 
     fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: states_current_mut,
-            errors,
-        } = block_outcome;
-
+        states_current_mut: &mut StatesMut<Current>,
+        errors: &mut IndexMap<ItemId, E>,
+        outcome_partial: ItemDiscoverOutcome<E>,
+    ) -> Result<(), E> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -366,8 +384,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = States<Goal>;
-    type OutcomeAcc = StatesMut<Goal>;
-    type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -378,35 +394,30 @@ where
         vec![]
     }
 
-    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
-        StatesMut::<Goal>::new()
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let states_goal_mut = outcome_acc;
-        StatesGoal::from(states_goal_mut)
-    }
-
     async fn exec(
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
-            interruptibility,
+            interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
         } = cmd_view;
 
-        let stream_outcome = flow
-            .graph()
-            .for_each_concurrent_with(
+        let (outcomes_tx, outcomes_rx) =
+            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let outcomes_tx = &outcomes_tx;
+
+        let (stream_outcome, outcome_collate) = {
+            let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
+
+            let item_states_discover_task = flow.graph().for_each_concurrent_with(
                 BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
                 |item| {
                     Self::item_states_discover(
                         #[cfg(feature = "output_progress")]
@@ -419,22 +430,47 @@ where
                         item,
                     )
                 },
-            )
-            .await;
+            );
 
-        Some(stream_outcome)
+            let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_goal_mut);
+
+            join!(item_states_discover_task, outcome_collate_task)
+        };
+
+        outcome_collate.map(|(states_goal, errors)| {
+            let (stream_outcome, ()) = stream_outcome.replace(states_goal);
+            CmdBlockOutcome::ItemWise {
+                stream_outcome,
+                errors,
+            }
+        })
+    }
+}
+
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    async fn outcome_collate_task(
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut states_goal_mut: StatesMut<Goal>,
+    ) -> Result<(States<Goal>, IndexMap<ItemId, E>), E> {
+        let mut errors = IndexMap::new();
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(&mut states_goal_mut, &mut errors, item_outcome)?;
+        }
+
+        let states_goal = States::<Goal>::from(states_goal_mut);
+
+        Ok((states_goal, errors))
     }
 
     fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: states_goal_mut,
-            errors,
-        } = block_outcome;
-
+        states_goal_mut: &mut StatesMut<Goal>,
+        errors: &mut IndexMap<ItemId, E>,
+        outcome_partial: ItemDiscoverOutcome<E>,
+    ) -> Result<(), E> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -472,8 +508,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = (States<Current>, States<Goal>);
-    type OutcomeAcc = (StatesMut<Current>, StatesMut<Goal>);
-    type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -482,20 +516,6 @@ where
 
     fn input_type_names(&self) -> Vec<String> {
         vec![]
-    }
-
-    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
-        let states_current_mut = StatesMut::<Current>::new();
-        let states_goal_mut = StatesMut::<Goal>::new();
-        (states_current_mut, states_goal_mut)
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let (states_current_mut, states_goal_mut) = outcome_acc;
-        (
-            StatesCurrent::from(states_current_mut),
-            StatesGoal::from(states_goal_mut),
-        )
     }
 
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
@@ -515,22 +535,27 @@ where
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
-            interruptibility,
+            interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
         } = cmd_view;
 
-        let stream_outcome = flow
-            .graph()
-            .for_each_concurrent_with(
+        let (outcomes_tx, outcomes_rx) =
+            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let outcomes_tx = &outcomes_tx;
+
+        let (stream_outcome, outcome_collate) = {
+            let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
+            let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
+
+            let item_states_discover_task = flow.graph().for_each_concurrent_with(
                 BUFFERED_FUTURES_MAX,
-                StreamOpts::new().interruptibility(interruptibility.reborrow()),
+                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
                 |item| {
                     Self::item_states_discover(
                         #[cfg(feature = "output_progress")]
@@ -543,22 +568,56 @@ where
                         item,
                     )
                 },
-            )
-            .await;
+            );
 
-        Some(stream_outcome)
+            let outcome_collate_task =
+                Self::outcome_collate_task(outcomes_rx, states_current_mut, states_goal_mut);
+
+            join!(item_states_discover_task, outcome_collate_task)
+        };
+
+        outcome_collate.map(|(states_current, states_goal, errors)| {
+            let (stream_outcome, ()) = stream_outcome.replace((states_current, states_goal));
+            CmdBlockOutcome::ItemWise {
+                stream_outcome,
+                errors,
+            }
+        })
+    }
+}
+
+impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    async fn outcome_collate_task(
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut states_current_mut: StatesMut<Current>,
+        mut states_goal_mut: StatesMut<Goal>,
+    ) -> Result<(States<Current>, States<Goal>, IndexMap<ItemId, E>), E> {
+        let mut errors = IndexMap::new();
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(
+                &mut states_current_mut,
+                &mut states_goal_mut,
+                &mut errors,
+                item_outcome,
+            )?;
+        }
+
+        let states_current = States::<Current>::from(states_current_mut);
+        let states_goal = States::<Goal>::from(states_goal_mut);
+
+        Ok((states_current, states_goal, errors))
     }
 
     fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: (states_current_mut, states_goal_mut),
-            errors,
-        } = block_outcome;
-
+        states_current_mut: &mut StatesMut<Current>,
+        states_goal_mut: &mut StatesMut<Goal>,
+        errors: &mut IndexMap<ItemId, E>,
+        outcome_partial: ItemDiscoverOutcome<E>,
+    ) -> Result<(), E> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,

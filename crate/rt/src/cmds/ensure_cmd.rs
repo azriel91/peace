@@ -71,16 +71,10 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
-        let CmdOutcome {
-            value: ensure_exec_change,
-            errors,
-        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+        let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
-        let cmd_outcome = match ensure_exec_change {
-            EnsureExecChange::None => CmdOutcome {
-                value: Default::default(),
-                errors,
-            },
+        let cmd_outcome = cmd_outcome.map(|ensure_exec_change| match ensure_exec_change {
+            EnsureExecChange::None => Default::default(),
             EnsureExecChange::Some(stateses_boxed) => {
                 let (states_previous, states_applied_dry, _states_goal) = *stateses_boxed;
                 cmd_ctx
@@ -88,12 +82,9 @@ where
                     .resources
                     .insert::<StatesPrevious>(states_previous);
 
-                CmdOutcome {
-                    value: states_applied_dry,
-                    errors,
-                }
+                states_applied_dry
             }
-        };
+        });
 
         Ok(cmd_outcome)
     }
@@ -137,10 +128,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
-        let CmdOutcome {
-            value: ensure_exec_change,
-            errors,
-        } = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
+        let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
         let SingleProfileSingleFlowView {
             flow, resources, ..
@@ -149,29 +137,24 @@ where
 
         // We shouldn't serialize current or goal if we returned from an interruption /
         // error handler.
-        let cmd_outcome = match ensure_exec_change {
-            EnsureExecChange::None => CmdOutcome {
-                value: Default::default(),
-                errors,
-            },
-            EnsureExecChange::Some(stateses_boxed) => {
-                let (states_previous, states_applied, states_goal) = *stateses_boxed;
-                Self::serialize_current(item_graph, resources, &states_applied).await?;
-                Self::serialize_goal(item_graph, resources, &states_goal).await?;
+        let cmd_outcome = cmd_outcome
+            .map_async(|ensure_exec_change| async move {
+                match ensure_exec_change {
+                    EnsureExecChange::None => Ok(Default::default()),
+                    EnsureExecChange::Some(stateses_boxed) => {
+                        let (states_previous, states_applied, states_goal) = *stateses_boxed;
+                        Self::serialize_current(item_graph, resources, &states_applied).await?;
+                        Self::serialize_goal(item_graph, resources, &states_goal).await?;
 
-                cmd_ctx
-                    .view()
-                    .resources
-                    .insert::<StatesPrevious>(states_previous);
+                        resources.insert::<StatesPrevious>(states_previous);
 
-                CmdOutcome {
-                    value: states_applied,
-                    errors,
+                        Ok(states_applied)
+                    }
                 }
-            }
-        };
+            })
+            .await;
 
-        Ok(cmd_outcome)
+        cmd_outcome.transpose()
     }
 
     /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
@@ -232,11 +215,15 @@ where
             cmd_execution_builder
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
-                    |(states_previous, states_applied_mut, states_target_mut)| {
+                    |(states_previous, states_applied, states_target): (
+                        StatesPrevious,
+                        States<StatesTs>,
+                        States<StatesTs::TsTarget>,
+                    )| {
                         EnsureExecChange::Some(Box::new((
                             states_previous,
-                            States::<StatesTs>::from(states_applied_mut),
-                            StatesGoal::from(states_target_mut.into_inner()),
+                            states_applied,
+                            StatesGoal::from(states_target.into_inner()),
                         )))
                     },
                 ))

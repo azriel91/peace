@@ -2,6 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{FlowId, ItemId};
 use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     paths::{FlowDir, StatesGoalFile},
@@ -10,11 +11,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{
-    fn_graph::StreamOutcome, outcomes::CmdOutcome, params::ParamsKeys, Error, StatesSerializer,
-    Storage,
-};
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -85,8 +82,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = StatesGoalStored;
-    type OutcomeAcc = StatesGoalStored;
-    type OutcomePartial = Result<StatesGoalStored, E>;
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -97,43 +92,20 @@ where
         vec![]
     }
 
-    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
-        StatesGoalStored::new()
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc
-    }
-
     async fn exec(
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             states_type_reg,
             resources,
             ..
         } = cmd_view;
 
-        let states_goal_stored = Self::deserialize_internal(resources, states_type_reg).await;
-
-        outcomes_tx
-            .send(states_goal_stored)
-            .expect("Failed to send `states_goal_stored`.");
-
-        None
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let states_goal_stored = outcome_partial?;
-        block_outcome.value = states_goal_stored;
-        Ok(())
+        Self::deserialize_internal(resources, states_type_reg)
+            .await
+            .map(CmdBlockOutcome::Single)
     }
 }

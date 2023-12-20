@@ -1,15 +1,11 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use fn_graph::{StreamOpts, StreamOutcome};
 use futures::FutureExt;
 use peace_cfg::ItemId;
-use peace_cmd::{
-    interruptible::interruptibility::Interruptibility, scopes::SingleProfileSingleFlowView,
-};
-use peace_cmd_rt::{
-    async_trait,
-    fn_graph::{StreamOpts, StreamOutcome},
-    CmdBlock,
-};
+use peace_cmd::{interruptible::InterruptibilityState, scopes::SingleProfileSingleFlowView};
+use peace_cmd_model::CmdBlockOutcome;
+use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StateDiffsMut,
@@ -21,8 +17,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error, Flow};
-use tokio::sync::mpsc::UnboundedSender;
+use peace_rt_model::{params::ParamsKeys, Error, Flow};
 
 use crate::cmds::DiffStateSpec;
 
@@ -64,7 +59,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
-        interruptibility: Interruptibility<'_>,
+        interruptibility_state: InterruptibilityState<'_, '_>,
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -75,7 +70,7 @@ where
             .graph()
             .try_fold_async_with(
                 StateDiffsMut::with_capacity(states_a.len()),
-                StreamOpts::new().interruptibility(interruptibility),
+                StreamOpts::new().interruptibility_state(interruptibility_state),
                 |mut state_diffs_mut, item| {
                     async move {
                         let _params_specs = &params_specs;
@@ -116,8 +111,6 @@ where
     type Error = E;
     type InputT = (States<StatesTs0>, States<StatesTs1>);
     type Outcome = (StateDiffs, Self::InputT);
-    type OutcomeAcc = Option<(StateDiffs, Self::InputT)>;
-    type OutcomePartial = Result<(StateDiffs, Self::InputT), E>;
     type PKeys = PKeys;
 
     fn input_fetch(
@@ -135,18 +128,6 @@ where
             tynm::type_name::<States<StatesTs0>>(),
             tynm::type_name::<States<StatesTs1>>(),
         ]
-    }
-
-    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
-        None
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc.unwrap_or_else(|| {
-            panic!(
-                "Expected `state_diffs_ts0_and_ts1` for diffing to be sent in `DiffCmdBlock::exec`."
-            );
-        })
     }
 
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
@@ -168,11 +149,10 @@ where
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
-            interruptibility,
+            interruptibility_state,
             flow,
             params_specs,
             resources,
@@ -181,46 +161,18 @@ where
 
         let (states_ts0, states_ts1) = input;
 
-        let state_diffs_ts0_ts1_result = Self::diff_any(
-            interruptibility.reborrow(),
+        let stream_outcome = Self::diff_any(
+            interruptibility_state.reborrow(),
             flow,
             params_specs,
             resources,
             &states_ts0,
             &states_ts1,
         )
-        .await;
+        .await?
+        .map(move |state_diffs| (state_diffs, (states_ts0, states_ts1)));
 
-        match state_diffs_ts0_ts1_result {
-            Ok(stream_outcome) => {
-                let stream_outcome = stream_outcome.map(move |state_diffs| {
-                    let state_diffs_ts0_ts1 = (state_diffs, (states_ts0, states_ts1));
-
-                    outcomes_tx
-                        .send(Ok(state_diffs_ts0_ts1))
-                        .expect("Failed to send `state_diffs`.");
-                });
-
-                Some(stream_outcome)
-            }
-            Err(error) => {
-                outcomes_tx
-                    .send(Err(error))
-                    .expect("Failed to send `state_diffs`.");
-
-                None
-            }
-        }
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let state_diffs_and_ts0_ts1 = outcome_partial?;
-        block_outcome.value = Some(state_diffs_and_ts0_ts1);
-        Ok(())
+        Ok(CmdBlockOutcome::new_item_wise(stream_outcome))
     }
 }
 

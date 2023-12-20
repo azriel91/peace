@@ -1,15 +1,15 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_rt::{async_trait, fn_graph::StreamOutcome, CmdBlock};
+use peace_cmd_model::CmdBlockOutcome;
+use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     resources::ts::SetUp,
     states::{States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
+use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::{ApplyCmdError, ItemsStateStoredStale, StateStoredAndDiscovered};
-use tokio::sync::mpsc::UnboundedSender;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -229,8 +229,6 @@ where
     type Error = E;
     type InputT = ();
     type Outcome = Self::InputT;
-    type OutcomeAcc = Option<Self::InputT>;
-    type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
@@ -240,12 +238,6 @@ where
     fn input_type_names(&self) -> Vec<String> {
         vec![]
     }
-
-    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
-        None
-    }
-
-    fn outcome_from_acc(&self, _outcome_acc: Self::OutcomeAcc) -> Self::Outcome {}
 
     fn outcome_insert(&self, _resources: &mut Resources<SetUp>, _outcome: Self::Outcome) {}
 
@@ -257,25 +249,9 @@ where
         &self,
         input: Self::InputT,
         _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
-        outcomes_tx
-            .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                states_stored_and_discovered: input,
-                outcome_result: OutcomeResult::Ok,
-            })
-            .expect("Failed to send `apply_state_sync_check_cmd_block_exec_outcome`.");
-
-        None
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        outcome_collate(block_outcome, outcome_partial)
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+        outcome_collate(input, OutcomeResult::Ok)
     }
 }
 
@@ -288,8 +264,6 @@ where
     type Error = E;
     type InputT = (StatesCurrentStored, StatesCurrent);
     type Outcome = Self::InputT;
-    type OutcomeAcc = Option<Self::InputT>;
-    type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
     fn input_fetch(
@@ -304,14 +278,6 @@ where
             tynm::type_name::<StatesCurrentStored>(),
             tynm::type_name::<StatesCurrent>(),
         ]
-    }
-
-    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
-        None
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc.expect("Expected `outcome_acc` to be set in `exec`.")
     }
 
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
@@ -331,9 +297,8 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_current_stored, states_current) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -346,44 +311,20 @@ where
         match state_current_stale_result {
             Ok(items_state_stored_stale) => {
                 if items_state_stored_stale.stale() {
-                    outcomes_tx
-                        .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                            states_stored_and_discovered: input,
-                            outcome_result: OutcomeResult::StatesCurrentOutOfSync {
-                                items_state_stored_stale,
-                            },
-                        })
-                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return None;
+                    return outcome_collate(
+                        input,
+                        OutcomeResult::StatesCurrentOutOfSync {
+                            items_state_stored_stale,
+                        },
+                    );
                 }
             }
             Err(error) => {
-                outcomes_tx
-                    .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                        states_stored_and_discovered: input,
-                        outcome_result: OutcomeResult::StatesDowncastError { error },
-                    })
-                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return None;
+                return outcome_collate(input, OutcomeResult::StatesDowncastError { error });
             }
         };
 
-        outcomes_tx
-            .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                states_stored_and_discovered: input,
-                outcome_result: OutcomeResult::Ok,
-            })
-            .expect("unreachable: `outcomes_rx` is in a sibling task.");
-
-        None
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        outcome_collate(block_outcome, outcome_partial)
+        outcome_collate(input, OutcomeResult::Ok)
     }
 }
 
@@ -396,8 +337,6 @@ where
     type Error = E;
     type InputT = (StatesGoalStored, StatesGoal);
     type Outcome = Self::InputT;
-    type OutcomeAcc = Option<Self::InputT>;
-    type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
     fn input_fetch(
@@ -412,14 +351,6 @@ where
             tynm::type_name::<StatesGoalStored>(),
             tynm::type_name::<StatesGoal>(),
         ]
-    }
-
-    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
-        None
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc.expect("Expected `outcome_acc` to be set in `exec`.")
     }
 
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
@@ -439,9 +370,8 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_goal_stored, states_goal) = &mut input;
 
         let state_goal_stale_result = Self::items_state_stored_stale(
@@ -454,44 +384,20 @@ where
         match state_goal_stale_result {
             Ok(items_state_stored_stale) => {
                 if items_state_stored_stale.stale() {
-                    outcomes_tx
-                        .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                            states_stored_and_discovered: input,
-                            outcome_result: OutcomeResult::StatesGoalOutOfSync {
-                                items_state_stored_stale,
-                            },
-                        })
-                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return None;
+                    return outcome_collate(
+                        input,
+                        OutcomeResult::StatesGoalOutOfSync {
+                            items_state_stored_stale,
+                        },
+                    );
                 }
             }
             Err(error) => {
-                outcomes_tx
-                    .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                        states_stored_and_discovered: input,
-                        outcome_result: OutcomeResult::StatesDowncastError { error },
-                    })
-                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return None;
+                return outcome_collate(input, OutcomeResult::StatesDowncastError { error });
             }
         };
 
-        outcomes_tx
-            .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                states_stored_and_discovered: input,
-                outcome_result: OutcomeResult::Ok,
-            })
-            .expect("unreachable: `outcomes_rx` is in a sibling task.");
-
-        None
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        outcome_collate(block_outcome, outcome_partial)
+        outcome_collate(input, OutcomeResult::Ok)
     }
 }
 
@@ -509,8 +415,6 @@ where
         StatesGoal,
     );
     type Outcome = Self::InputT;
-    type OutcomeAcc = Option<Self::InputT>;
-    type OutcomePartial = ApplyStateSyncCheckCmdBlockExecOutcome<E, Self::InputT>;
     type PKeys = PKeys;
 
     fn input_fetch(
@@ -537,14 +441,6 @@ where
         ]
     }
 
-    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
-        None
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc.expect("Expected `outcome_acc` to be set in `exec`.")
-    }
-
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = outcome;
         resources.insert(states_current_stored);
@@ -566,9 +462,8 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) -> Option<StreamOutcome<()>> {
+    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -581,25 +476,16 @@ where
         match state_current_stale_result {
             Ok(items_state_stored_stale) => {
                 if items_state_stored_stale.stale() {
-                    outcomes_tx
-                        .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                            states_stored_and_discovered: input,
-                            outcome_result: OutcomeResult::StatesCurrentOutOfSync {
-                                items_state_stored_stale,
-                            },
-                        })
-                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return None;
+                    return outcome_collate(
+                        input,
+                        OutcomeResult::StatesCurrentOutOfSync {
+                            items_state_stored_stale,
+                        },
+                    );
                 }
             }
             Err(error) => {
-                outcomes_tx
-                    .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                        states_stored_and_discovered: input,
-                        outcome_result: OutcomeResult::StatesDowncastError { error },
-                    })
-                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return None;
+                return outcome_collate(input, OutcomeResult::StatesDowncastError { error });
             }
         };
 
@@ -613,56 +499,21 @@ where
         match state_goal_stale_result {
             Ok(items_state_stored_stale) => {
                 if items_state_stored_stale.stale() {
-                    outcomes_tx
-                        .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                            states_stored_and_discovered: input,
-                            outcome_result: OutcomeResult::StatesGoalOutOfSync {
-                                items_state_stored_stale,
-                            },
-                        })
-                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                    return None;
+                    return outcome_collate(
+                        input,
+                        OutcomeResult::StatesGoalOutOfSync {
+                            items_state_stored_stale,
+                        },
+                    );
                 }
             }
             Err(error) => {
-                outcomes_tx
-                    .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                        states_stored_and_discovered: input,
-                        outcome_result: OutcomeResult::StatesDowncastError { error },
-                    })
-                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                return None;
+                return outcome_collate(input, OutcomeResult::StatesDowncastError { error });
             }
-        };
+        }
 
-        outcomes_tx
-            .send(ApplyStateSyncCheckCmdBlockExecOutcome {
-                states_stored_and_discovered: input,
-                outcome_result: OutcomeResult::Ok,
-            })
-            .expect("unreachable: `outcomes_rx` is in a sibling task.");
-
-        None
+        outcome_collate(input, OutcomeResult::Ok)
     }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        outcome_collate(block_outcome, outcome_partial)
-    }
-}
-
-/// Outcome of apply state sync check execution.
-#[derive(Debug)]
-pub struct ApplyStateSyncCheckCmdBlockExecOutcome<E, Stateses> {
-    /// States compared during the state sync check.
-    ///
-    /// These will be inserted back into `Resources`.
-    states_stored_and_discovered: Stateses,
-    /// The actual result to use.
-    outcome_result: OutcomeResult<E>,
 }
 
 #[derive(Debug)]
@@ -709,21 +560,14 @@ fn input_fetch_goal(
 }
 
 fn outcome_collate<E, InputT>(
-    block_outcome: &mut CmdOutcome<Option<InputT>, E>,
-    outcome_partial: ApplyStateSyncCheckCmdBlockExecOutcome<E, InputT>,
-) -> Result<(), E>
+    states_stored_and_discovered: InputT,
+    outcome_result: OutcomeResult<E>,
+) -> Result<CmdBlockOutcome<InputT, E>, E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
 {
-    let ApplyStateSyncCheckCmdBlockExecOutcome {
-        states_stored_and_discovered,
-        outcome_result,
-    } = outcome_partial;
-
-    block_outcome.value = Some(states_stored_and_discovered);
-
     match outcome_result {
-        OutcomeResult::Ok => Ok(()),
+        OutcomeResult::Ok => Ok(CmdBlockOutcome::Single(states_stored_and_discovered)),
         OutcomeResult::StatesCurrentOutOfSync {
             items_state_stored_stale,
         } => Err(E::from(Error::ApplyCmdError(

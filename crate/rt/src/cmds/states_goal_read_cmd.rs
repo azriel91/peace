@@ -3,7 +3,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
-use peace_rt_model::{params::ParamsKeys, Error};
+use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmd_blocks::StatesGoalReadCmdBlock;
@@ -26,7 +26,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesGoalStored, E> {
+    ) -> Result<CmdOutcome<StatesGoalStored, E>, E> {
         CmdExecution::<StatesGoalStored, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 StatesGoalReadCmdBlock::new(),
@@ -35,7 +35,6 @@ where
             .build()
             .exec(cmd_ctx)
             .await
-            .map(|cmd_outcome| cmd_outcome.value)
     }
 }
 

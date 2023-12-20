@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, fmt::Debug, pin::Pin};
 
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
+use interruptible::InterruptSignal;
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{
@@ -27,12 +28,10 @@ cfg_if::cfg_if! {
 pub use self::{
     cmd_execution_builder::CmdExecutionBuilder,
     cmd_execution_error_builder::CmdExecutionErrorBuilder,
-    interruptibility::{Interruptible, InterruptibleT, NonInterruptible},
 };
 
 mod cmd_execution_builder;
 mod cmd_execution_error_builder;
-mod interruptibility;
 
 /// List of [`CmdBlock`]s to run for a `*Cmd`.
 ///
@@ -188,13 +187,13 @@ where
 {
     let cmd_view_and_progress_result: Result<
         CmdViewAndProgress<'_, '_, _, _>,
-        CmdViewAndErr<'_, '_, _, _, _>,
+        CmdBlockStreamBreak<'_, '_, _, _, _>,
     > = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
         let cmd_block_next = cmd_blocks.next();
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
     })
     .enumerate()
-    .map(Result::<_, CmdViewAndErr<ExecutionOutcome, E, PKeys>>::Ok)
+    .map(Result::<_, CmdBlockStreamBreak<'_, '_, ExecutionOutcome, E, PKeys>>::Ok)
     .try_fold(
         CmdViewAndProgress {
             cmd_view,
@@ -210,8 +209,20 @@ where
                 progress_tx,
             } = cmd_view_and_progress;
 
-            // TODO: check if we are interrupted, and
-            // return`CmdOutcome::ExecutionInterrupted`
+            // Check if we are interrupted between `CmdBlock`s
+            if let Some(interrupt_signal) =
+                cmd_view.interruptibility_state.item_interrupt_poll(true)
+            {
+                let cmd_view_and_progress = CmdViewAndProgress {
+                    cmd_view,
+                    #[cfg(feature = "output_progress")]
+                    progress_tx,
+                };
+                return Err(CmdBlockStreamBreak::Interrupt {
+                    cmd_view_and_progress,
+                    interrupt_signal,
+                });
+            }
 
             let block_cmd_outcome_result = cmd_block_rt
                 .exec(
@@ -230,11 +241,11 @@ where
 
             match block_cmd_outcome_result {
                 Ok(()) => Ok(cmd_view_and_progress),
-                Err(cmd_block_error) => Err(CmdViewAndErr {
+                Err(cmd_block_error) => Err(CmdBlockStreamBreak::BlockErr(CmdViewAndErr {
                     cmd_view_and_progress,
                     cmd_block_index,
                     cmd_block_error,
-                }),
+                })),
             }
         },
     )
@@ -260,7 +271,7 @@ where
 fn outcome_extract<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
     cmd_view_and_progress_result: Result<
         CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
-        CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
+        CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
     >,
     cmd_blocks: &'view_ref VecDeque<
         Pin<Box<dyn CmdBlockRt<Error = E, PKeys = PKeys, ExecutionOutcome = ExecutionOutcome>>>,
@@ -274,14 +285,20 @@ where
 {
     let (cmd_view_and_progress, cmd_block_index_and_error) = match cmd_view_and_progress_result {
         Ok(cmd_view_and_progress) => (cmd_view_and_progress, None),
-        Err(CmdViewAndErr {
-            cmd_view_and_progress,
-            cmd_block_index,
-            cmd_block_error,
-        }) => (
-            cmd_view_and_progress,
-            Some((cmd_block_index, cmd_block_error)),
-        ),
+        Err(cmd_block_stream_break) => match cmd_block_stream_break {
+            CmdBlockStreamBreak::Interrupt {
+                cmd_view_and_progress,
+                interrupt_signal: InterruptSignal,
+            } => (cmd_view_and_progress, None),
+            CmdBlockStreamBreak::BlockErr(CmdViewAndErr {
+                cmd_view_and_progress,
+                cmd_block_index,
+                cmd_block_error,
+            }) => (
+                cmd_view_and_progress,
+                Some((cmd_block_index, cmd_block_error)),
+            ),
+        },
     };
 
     let CmdViewAndProgress {
@@ -326,6 +343,22 @@ where
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
+}
+
+/// Reasons to stop processing `CmdBlock`s.
+enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>
+where
+    ExecutionOutcome: Debug,
+    E: Debug + 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    /// An interruption happened between `CmdBlock` executions.
+    Interrupt {
+        cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+        interrupt_signal: InterruptSignal,
+    },
+    /// A `CmdBlockError` was returned from `CmdBlockRt::exec`.
+    BlockErr(CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>),
 }
 
 struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>

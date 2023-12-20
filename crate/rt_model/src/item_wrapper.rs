@@ -67,7 +67,6 @@ where
         + 'static,
     for<'params> <I as Item>::Params<'params>:
         TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
-
     for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
 {
     async fn state_clean(

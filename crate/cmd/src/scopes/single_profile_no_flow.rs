@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use interruptible::interruptibility::Interruptibility;
+use interruptible::InterruptibilityState;
 use peace_core::Profile;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 use peace_rt_model::{
@@ -55,7 +55,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility: Interruptibility<'ctx>,
+    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profile this command operates on.
@@ -122,7 +122,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    pub interruptibility: Interruptibility<'view>,
+    pub interruptibility_state: InterruptibilityState<'view, 'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -152,7 +152,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
-        interruptibility: Interruptibility<'ctx>,
+        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,
@@ -163,7 +163,7 @@ where
     ) -> Self {
         Self {
             output,
-            interruptibility,
+            interruptibility_state,
             workspace,
             profile,
             profile_dir,
@@ -179,7 +179,7 @@ where
     pub fn view(&mut self) -> SingleProfileNoFlowView<'_, O, PKeys> {
         let Self {
             output,
-            interruptibility,
+            interruptibility_state,
             workspace,
             profile,
             profile_dir,
@@ -190,11 +190,11 @@ where
             marker: PhantomData,
         } = self;
 
-        let interruptibility = interruptibility.reborrow();
+        let interruptibility_state = interruptibility_state.reborrow();
 
         SingleProfileNoFlowView {
             output,
-            interruptibility,
+            interruptibility_state,
             workspace,
             profile,
             profile_dir,
@@ -216,8 +216,8 @@ where
     }
 
     /// Returns the interruptibility capability.
-    pub fn interruptibility(&mut self) -> Interruptibility<'_> {
-        self.interruptibility.reborrow()
+    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
+        self.interruptibility_state.reborrow()
     }
 
     /// Returns the workspace that the `peace` tool runs in.

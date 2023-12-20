@@ -1,3 +1,4 @@
+use futures::Future;
 use peace_cfg::ItemId;
 use peace_data::fn_graph::StreamOutcome;
 use peace_rt_model_core::IndexMap;
@@ -17,7 +18,7 @@ pub enum CmdOutcome<T, E> {
     /// Execution ended due to an interruption between command blocks.
     ExecutionInterrupted {
         /// The outcome value.
-        value: T,
+        value: Option<T>,
     },
     /// Execution ended due to one or more item errors.
     ///
@@ -32,6 +33,18 @@ pub enum CmdOutcome<T, E> {
 }
 
 impl<T, E> CmdOutcome<T, E> {
+    pub fn value(&self) -> Option<&T> {
+        match self {
+            CmdOutcome::Complete { value } => Some(value),
+            CmdOutcome::BlockInterrupted { stream_outcome } => Some(stream_outcome.value()),
+            CmdOutcome::ExecutionInterrupted { value } => value.as_ref(),
+            CmdOutcome::ItemError {
+                stream_outcome,
+                errors: _,
+            } => Some(stream_outcome.value()),
+        }
+    }
+
     /// Returns whether the command completed successfully.
     pub fn is_complete(&self) -> bool {
         matches!(self, Self::Complete { .. })
@@ -50,6 +63,7 @@ impl<T, E> CmdOutcome<T, E> {
         matches!(self, Self::ItemError { .. })
     }
 
+    /// Maps the inner value to another, maintaining any collected errors.
     pub fn map<F, U>(self, f: F) -> CmdOutcome<U, E>
     where
         F: FnOnce(T) -> U,
@@ -64,7 +78,7 @@ impl<T, E> CmdOutcome<T, E> {
                 CmdOutcome::BlockInterrupted { stream_outcome }
             }
             Self::ExecutionInterrupted { value: t } => {
-                let u = f(t);
+                let u = t.map(f);
                 CmdOutcome::ExecutionInterrupted { value: u }
             }
             Self::ItemError {
@@ -75,6 +89,89 @@ impl<T, E> CmdOutcome<T, E> {
                 CmdOutcome::ItemError {
                     stream_outcome,
                     errors,
+                }
+            }
+        }
+    }
+
+    /// Maps the inner value to another asynchronously, maintaining any
+    /// collected errors.
+    pub async fn map_async<'f, F, Fut, U>(self, f: F) -> CmdOutcome<U, E>
+    where
+        F: FnOnce(T) -> Fut,
+        Fut: Future<Output = U> + 'f,
+    {
+        match self {
+            Self::Complete { value: t } => {
+                let u = f(t).await;
+                CmdOutcome::Complete { value: u }
+            }
+            Self::BlockInterrupted { stream_outcome } => {
+                let (stream_outcome, value) = stream_outcome.replace(());
+                let value = f(value).await;
+                let (stream_outcome, ()) = stream_outcome.replace(value);
+                CmdOutcome::BlockInterrupted { stream_outcome }
+            }
+            Self::ExecutionInterrupted { value: t } => {
+                let u = match t {
+                    Some(t) => Some(f(t).await),
+                    None => None,
+                };
+                CmdOutcome::ExecutionInterrupted { value: u }
+            }
+            Self::ItemError {
+                stream_outcome,
+                errors,
+            } => {
+                let (stream_outcome, value) = stream_outcome.replace(());
+                let value = f(value).await;
+                let (stream_outcome, ()) = stream_outcome.replace(value);
+                CmdOutcome::ItemError {
+                    stream_outcome,
+                    errors,
+                }
+            }
+        }
+    }
+}
+
+impl<T, E> CmdOutcome<Result<T, E>, E> {
+    /// Transposes a `CmdOutcome<Result<T, E>, E>` to a `Result<CmdOutcome<T,
+    /// E>, E>`.
+    pub fn transpose(self) -> Result<CmdOutcome<T, E>, E> {
+        match self {
+            Self::Complete { value } => match value {
+                Ok(value) => Ok(CmdOutcome::Complete { value }),
+                Err(e) => Err(e),
+            },
+            Self::BlockInterrupted { stream_outcome } => {
+                let (stream_outcome, value) = stream_outcome.replace(());
+                match value {
+                    Ok(value) => {
+                        let (stream_outcome, ()) = stream_outcome.replace(value);
+                        Ok(CmdOutcome::BlockInterrupted { stream_outcome })
+                    }
+                    Err(e) => Err(e),
+                }
+            }
+            Self::ExecutionInterrupted { value } => match value.transpose() {
+                Ok(value) => Ok(CmdOutcome::ExecutionInterrupted { value }),
+                Err(e) => Err(e),
+            },
+            Self::ItemError {
+                stream_outcome,
+                errors,
+            } => {
+                let (stream_outcome, value) = stream_outcome.replace(());
+                match value {
+                    Ok(value) => {
+                        let (stream_outcome, ()) = stream_outcome.replace(value);
+                        Ok(CmdOutcome::ItemError {
+                            stream_outcome,
+                            errors,
+                        })
+                    }
+                    Err(e) => Err(e),
                 }
             }
         }

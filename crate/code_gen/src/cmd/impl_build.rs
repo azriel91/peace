@@ -430,6 +430,7 @@ fn impl_build_for(
                 //     },
                 // } = self;
                 #scope_builder_deconstruct
+                let interruptibility_state = interruptibility.into();
 
                 // Serialize params to `PeaceAppDir`.
 
@@ -680,7 +681,7 @@ fn impl_build_for(
 
                 let scope = #scope_type_path::new(
                     // output,
-                    // interruptibility,
+                    // interruptibility_state,
                     // workspace,
 
                     // === SingleProfileSingleFlow === //
@@ -1391,7 +1392,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
 
     scope_fields.push(parse_quote!(output));
-    scope_fields.push(parse_quote!(interruptibility));
+    scope_fields.push(parse_quote!(interruptibility_state));
     scope_fields.push(parse_quote!(workspace));
 
     // progress tracker
