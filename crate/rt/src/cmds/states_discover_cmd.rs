@@ -85,10 +85,7 @@ where
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        if let CmdOutcome::Complete {
-            value: states_current,
-        } = &cmd_outcome
-        {
+        if let Some(states_current) = cmd_outcome.value() {
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
@@ -156,7 +153,7 @@ where
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        if let CmdOutcome::Complete { value: states_goal } = &cmd_outcome {
+        if let Some(states_goal) = cmd_outcome.value() {
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
@@ -239,19 +236,16 @@ where
                 },
             ))
             .with_execution_outcome_fetch(|resources| {
-                let states_current = resources.try_remove::<StatesCurrent>().unwrap();
-                let states_goal = resources.try_remove::<StatesGoal>().unwrap();
+                let states_current = resources.try_remove::<StatesCurrent>();
+                let states_goal = resources.try_remove::<StatesGoal>();
 
-                (states_current, states_goal)
+                states_current.ok().zip(states_goal.ok())
             })
             .build();
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
-        if let CmdOutcome::Complete {
-            value: (states_current, states_goal),
-        } = &cmd_outcome
-        {
+        if let Some((states_current, states_goal)) = cmd_outcome.value() {
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
