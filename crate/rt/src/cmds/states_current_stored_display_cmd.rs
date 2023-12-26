@@ -1,8 +1,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd_model::CmdOutcome;
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, Error};
+use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::StatesCurrentReadCmd;

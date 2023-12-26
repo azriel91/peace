@@ -1,14 +1,15 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{
         ApplyStoredStateSync, CleanCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd,
         StatesGoalReadCmd,
     },
     rt_model::{
-        outcomes::CmdOutcome, ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder,
-        StateStoredAndDiscovered, Workspace, WorkspaceSpec,
+        ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder, StateStoredAndDiscovered,
+        Workspace, WorkspaceSpec,
     },
 };
 

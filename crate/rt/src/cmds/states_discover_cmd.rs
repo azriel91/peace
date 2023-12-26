@@ -4,6 +4,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
+use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
@@ -11,9 +12,7 @@ use peace_resources::{
     states::{StatesCurrent, StatesGoal},
     Resources,
 };
-use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage,
-};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage};
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 

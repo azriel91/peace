@@ -1,11 +1,10 @@
 use peace::{
     cfg::{app_name, item_id, profile, AppName, FlowId, ItemId, Profile, State},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     data::marker::Clean,
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{
-        outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
     ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff,

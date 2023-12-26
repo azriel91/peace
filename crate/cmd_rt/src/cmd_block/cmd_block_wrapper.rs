@@ -2,9 +2,9 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_model::{fn_graph::StreamOutcomeState, CmdBlockDesc, CmdBlockOutcome};
+use peace_cmd_model::{fn_graph::StreamOutcomeState, CmdBlockDesc, CmdBlockOutcome, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resource};
-use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
+use peace_rt_model::params::ParamsKeys;
 use tynm::TypeParamsFmtOpts;
 
 use crate::{CmdBlock, CmdBlockError, CmdBlockRt};

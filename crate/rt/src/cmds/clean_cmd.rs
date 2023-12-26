@@ -4,6 +4,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
+use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile},
@@ -11,9 +12,7 @@ use peace_resources::{
     states::{States, StatesCleaned, StatesCleanedDry, StatesPrevious},
     Resources,
 };
-use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage,
-};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage};
 
 use crate::{
     cmd_blocks::{
@@ -229,10 +228,14 @@ where
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
-                    let states_previous = resources.try_remove::<StatesPrevious>().unwrap();
-                    let states_cleaned = resources.try_remove::<States<StatesTs>>().unwrap();
+                    let states_previous = resources.try_remove::<StatesPrevious>();
+                    let states_cleaned = resources.try_remove::<States<StatesTs>>();
 
-                    CleanExecChange::Some(Box::new((states_previous, states_cleaned)))
+                    states_previous.ok().zip(states_cleaned.ok()).map(
+                        |(states_previous, states_cleaned)| {
+                            CleanExecChange::Some(Box::new((states_previous, states_cleaned)))
+                        },
+                    )
                 })
                 .build()
         };

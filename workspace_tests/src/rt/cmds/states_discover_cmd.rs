@@ -1,13 +1,14 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     resources::{
         paths::StatesGoalFile,
         states::{StatesCurrentStored, StatesGoal},
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::{EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd},
-    rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{

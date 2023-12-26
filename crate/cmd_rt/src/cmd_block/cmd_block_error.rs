@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
+use peace_cmd_model::CmdOutcome;
 use peace_resources::ResourceFetchError;
-use peace_rt_model::outcomes::CmdOutcome;
 
 /// Error while executing a `CmdBlock`.
 ///

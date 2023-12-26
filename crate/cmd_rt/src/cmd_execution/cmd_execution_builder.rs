@@ -19,7 +19,7 @@ where
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
-    execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
+    execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
     ///
     /// This is intended for `*Cmd`s that do not have meaningful progress to
@@ -80,7 +80,7 @@ where
     /// as the `ExecutionOutcome`.
     pub fn with_execution_outcome_fetch(
         mut self,
-        execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
+        execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     ) -> Self {
         self.execution_outcome_fetch = execution_outcome_fetch;
         self
@@ -135,20 +135,11 @@ where
     }
 }
 
-fn execution_outcome_fetch<ExecutionOutcome>(resources: &mut Resources<SetUp>) -> ExecutionOutcome
+fn execution_outcome_fetch<ExecutionOutcome>(
+    resources: &mut Resources<SetUp>,
+) -> Option<ExecutionOutcome>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
 {
-    resources
-        .try_remove::<ExecutionOutcome>()
-        .unwrap_or_else(|_error| {
-            let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
-            panic!(
-                "Expected `{execution_outcome_type_name}` to exist in `Resources`.\n\
-            Make sure the final `CmdBlock` has that type as its `Outcome`.\n\
-            \n\
-            You may wish to call `CmdExecutionBuilder::with_execution_outcome_fetch`\n\
-            to specify how to fetch the `ExecutionOutcome`."
-            );
-        })
+    resources.try_remove::<ExecutionOutcome>().ok()
 }

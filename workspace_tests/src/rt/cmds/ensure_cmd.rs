@@ -4,14 +4,15 @@ use peace::{
         ctx::CmdCtx,
         interruptible::{InterruptSignal, InterruptStrategy, Interruptibility},
     },
+    cmd_model::{CmdBlockDesc, CmdOutcome},
     resources::{
         paths::{StatesCurrentFile, StatesGoalFile},
         type_reg::untagged::BoxDataTypeDowncast,
     },
     rt::cmds::{ApplyStoredStateSync, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{
-        outcomes::CmdOutcome, ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder,
-        StateStoredAndDiscovered, Workspace, WorkspaceSpec,
+        ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder, StateStoredAndDiscovered,
+        Workspace, WorkspaceSpec,
     },
 };
 use tokio::sync::mpsc;
@@ -1303,38 +1304,60 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
         .await?;
 
     StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
-    // Note: Write invalid states current file to disk.
+    // Note: Write custom states current file to disk.
     let flow_dir = cmd_ctx.flow_dir();
+    let states_current_content = "\
+        vec_copy: [0, 1, 2, 3]\n\
+        mock: 123\n\
+    ";
     let states_current_file = StatesCurrentFile::from(flow_dir);
-    tokio::fs::write(states_current_file, b"vec_copy: ~").await?;
+    tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
 
     interrupt_tx.send(InterruptSignal).await?;
-    let CmdOutcome::ItemError {
-        stream_outcome,
-        errors,
-    } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::None).await?
+    let cmd_outcome = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::None).await?;
+    let CmdOutcome::ExecutionInterrupted {
+        value,
+        cmd_blocks_processed,
+        cmd_blocks_not_processed,
+    } = cmd_outcome
     else {
-        panic!("Expected `EnsureCmd::exec_with` to complete with item error.");
+        panic!(
+            "Expected `EnsureCmd::exec_with` to complete with interruption,\n\
+            but was:\n\
+            \n\
+            ```ron\n\
+            {cmd_outcome:#?}\n\
+            ```\n\
+            "
+        );
     };
-    let states_ensured = stream_outcome.value();
+    let states_ensured =
+        value.expect("Expected `states_ensured` to be returned despite interruption.");
 
+    // Early interruption returns empty `states_ensured`.
+    assert!(states_ensured.is_empty());
+    assert!(cmd_blocks_processed.is_empty());
     assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        &[
+            "StatesCurrentReadCmdBlock",
+            "StatesGoalReadCmdBlock",
+            "StatesDiscoverCmdBlock",
+            "ApplyExecCmdBlock",
+        ],
+        cmd_blocks_not_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
     );
-    assert_eq!(
-        Some(MockState(0)).as_ref(),
-        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
-    );
-
-    assert!(errors.is_empty());
+    let states_current_content_after_exec = tokio::fs::read_to_string(&states_current_file).await?;
+    assert_eq!(states_current_content, states_current_content_after_exec);
 
     Ok(())
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
-#[ignore = "Pending `StatesGoalReadCmdBlock` being interrupted or erring."]
 async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
@@ -1351,7 +1374,13 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
+    let (interrupt_tx, interrupt_rx) = mpsc::channel::<InterruptSignal>(16);
+
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_interruptibility(Interruptibility::new(
+            interrupt_rx.into(),
+            InterruptStrategy::PollNextN(3),
+        ))
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -1361,31 +1390,57 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
-    // Note: Write invalid states goal file to disk.
-    StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    // Note: Write custom states current file to disk.
     let flow_dir = cmd_ctx.flow_dir();
-    let states_goal_file = StatesGoalFile::from(flow_dir);
-    tokio::fs::write(states_goal_file, b"vec_copy: ~").await?;
+    let states_current_content = "\
+        vec_copy: [0, 1, 2, 3]\n\
+        mock: 123\n\
+    ";
+    let states_current_file = StatesCurrentFile::from(flow_dir);
+    tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
 
-    let CmdOutcome::ItemError {
-        stream_outcome,
-        errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    interrupt_tx.send(InterruptSignal).await?;
+    let cmd_outcome = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::None).await?;
+    let CmdOutcome::ExecutionInterrupted {
+        value,
+        cmd_blocks_processed,
+        cmd_blocks_not_processed,
+    } = cmd_outcome
     else {
-        panic!("Expected `EnsureCmd::exec` to complete with item error.");
+        panic!(
+            "Expected `EnsureCmd::exec_with` to complete with interruption,\n\
+            but was:\n\
+            \n\
+            ```ron\n\
+            {cmd_outcome:#?}\n\
+            ```\n\
+            "
+        );
     };
-    let states_ensured = stream_outcome.value();
+    let states_ensured =
+        value.expect("Expected `states_ensured` to be returned despite interruption.");
 
+    // Early interruption returns empty `states_ensured`.
+    assert!(states_ensured.is_empty());
     assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        &["StatesCurrentReadCmdBlock", "StatesGoalReadCmdBlock",],
+        cmd_blocks_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
     );
     assert_eq!(
-        Some(MockState(0)).as_ref(),
-        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+        &["StatesDiscoverCmdBlock", "ApplyExecCmdBlock",],
+        cmd_blocks_not_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
     );
-
-    assert!(errors.is_empty());
+    let states_current_content_after_exec = tokio::fs::read_to_string(&states_current_file).await?;
+    assert_eq!(states_current_content, states_current_content_after_exec);
 
     Ok(())
 }
@@ -1479,7 +1534,6 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
-#[ignore = "Pending a way to interrupt the `CmdExecution` in a controlled manner."]
 async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
@@ -1496,7 +1550,13 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
+    let (interrupt_tx, interrupt_rx) = mpsc::channel::<InterruptSignal>(16);
+
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_interruptibility(Interruptibility::new(
+            interrupt_rx.into(),
+            InterruptStrategy::PollNextN(8),
+        ))
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -1506,30 +1566,69 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
-    // Write current and goal states to disk.
-    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    // Note: Write custom states current and states goal files to disk.
+    let flow_dir = cmd_ctx.flow_dir();
+    let states_current_content = "\
+        vec_copy: []\n\
+        mock: 0\n\
+    ";
+    let states_goal_content = "\
+        vec_copy: [0, 1, 2, 3, 4, 5, 6, 7]\n\
+        mock: 1\n\
+    ";
+    let states_current_file = StatesCurrentFile::from(flow_dir);
+    tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
+    let states_goal_file = StatesGoalFile::from(flow_dir);
+    tokio::fs::write(&states_goal_file, states_goal_content.as_bytes()).await?;
 
-    // TODO: Interrupt `CmdExecution` during `ApplyStateSyncCheckCmdBlock`.
-
-    let CmdOutcome::ItemError {
-        stream_outcome,
-        errors,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    interrupt_tx.send(InterruptSignal).await?;
+    let cmd_outcome = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Both).await?;
+    let CmdOutcome::ExecutionInterrupted {
+        value,
+        cmd_blocks_processed,
+        cmd_blocks_not_processed,
+    } = cmd_outcome
     else {
-        panic!("Expected `EnsureCmd::exec` to complete with item error.");
+        panic!(
+            "Expected `EnsureCmd::exec_with` to complete with interruption,\n\
+            but was:\n\
+            \n\
+            ```ron\n\
+            {cmd_outcome:#?}\n\
+            ```\n\
+            "
+        );
     };
-    let states_ensured = stream_outcome.value();
+    let states_ensured =
+        value.expect("Expected `states_ensured` to be returned despite interruption.");
 
+    // Early interruption returns empty `states_ensured`.
+    assert!(states_ensured.is_empty());
     assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        &[
+            "StatesCurrentReadCmdBlock",
+            "StatesGoalReadCmdBlock",
+            "StatesDiscoverCmdBlock",
+            "ApplyStateSyncCheckCmdBlock",
+        ],
+        cmd_blocks_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
     );
     assert_eq!(
-        Some(MockState(0)).as_ref(),
-        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+        &["ApplyExecCmdBlock",],
+        cmd_blocks_not_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
     );
-
-    assert!(errors.is_empty());
+    let states_current_content_after_exec = tokio::fs::read_to_string(&states_current_file).await?;
+    assert_eq!(states_current_content, states_current_content_after_exec);
+    let states_goal_content_after_exec = tokio::fs::read_to_string(&states_goal_file).await?;
+    assert_eq!(states_goal_content, states_goal_content_after_exec);
 
     Ok(())
 }

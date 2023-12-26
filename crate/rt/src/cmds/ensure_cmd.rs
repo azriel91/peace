@@ -4,6 +4,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
+use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
@@ -11,9 +12,7 @@ use peace_resources::{
     states::{States, StatesEnsured, StatesEnsuredDry, StatesGoal, StatesPrevious},
     Resources,
 };
-use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage,
-};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage};
 
 use crate::{
     cmd_blocks::{
@@ -228,11 +227,23 @@ where
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
-                    let states_previous = resources.try_remove::<StatesPrevious>().unwrap();
-                    let states_applied = resources.try_remove::<States<StatesTs>>().unwrap();
-                    let states_goal = resources.try_remove::<StatesGoal>().unwrap();
+                    let states_previous = resources.try_remove::<StatesPrevious>();
+                    let states_applied = resources.try_remove::<States<StatesTs>>();
+                    let states_goal = resources.try_remove::<StatesGoal>();
 
-                    EnsureExecChange::Some(Box::new((states_previous, states_applied, states_goal)))
+                    if let Some(((states_previous, states_applied), states_goal)) = states_previous
+                        .ok()
+                        .zip(states_applied.ok())
+                        .zip(states_goal.ok())
+                    {
+                        Some(EnsureExecChange::Some(Box::new((
+                            states_previous,
+                            states_applied,
+                            states_goal,
+                        ))))
+                    } else {
+                        Some(EnsureExecChange::None)
+                    }
                 })
                 .build()
         };

@@ -2,6 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     params::ParamsSpec,
     resources::states::{
         ts::{Current, CurrentStored, Goal, GoalStored},
@@ -9,7 +10,6 @@ use peace::{
     },
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
-        outcomes::CmdOutcome,
         output::{CliOutput, OutputWrite},
         Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
     },

@@ -3,8 +3,9 @@ use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::{ApplyStoredStateSync, CleanCmd},
-    rt_model::{outcomes::CmdOutcome, output::OutputWrite},
+    rt_model::output::OutputWrite,
 };
+use peace_cmd_model::CmdOutcome;
 
 use crate::{
     cmds::{

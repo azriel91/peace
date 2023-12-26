@@ -6,6 +6,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
 };
+use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -18,7 +19,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
-use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Flow};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
 
 use crate::cmd_blocks::{
     DiffCmdBlock, DiffCmdBlockStatesTsExt, StatesCurrentReadCmdBlock, StatesDiscoverCmdBlock,

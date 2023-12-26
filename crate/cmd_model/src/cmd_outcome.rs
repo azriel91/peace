@@ -1,7 +1,9 @@
+use fn_graph::StreamOutcome;
 use futures::Future;
+use indexmap::IndexMap;
 use peace_cfg::ItemId;
-use peace_data::fn_graph::StreamOutcome;
-use peace_rt_model_core::IndexMap;
+
+use crate::CmdBlockDesc;
 
 #[derive(Clone, Debug)]
 pub enum CmdOutcome<T, E> {
@@ -19,6 +21,10 @@ pub enum CmdOutcome<T, E> {
     ExecutionInterrupted {
         /// The outcome value.
         value: Option<T>,
+        /// Descriptors of the `CmdBlock`s that were processed.
+        cmd_blocks_processed: Vec<CmdBlockDesc>,
+        /// Descriptors of the `CmdBlock`s that were not processed.
+        cmd_blocks_not_processed: Vec<CmdBlockDesc>,
     },
     /// Execution ended due to one or more item errors.
     ///
@@ -37,7 +43,7 @@ impl<T, E> CmdOutcome<T, E> {
         match self {
             CmdOutcome::Complete { value } => Some(value),
             CmdOutcome::BlockInterrupted { stream_outcome } => Some(stream_outcome.value()),
-            CmdOutcome::ExecutionInterrupted { value } => value.as_ref(),
+            CmdOutcome::ExecutionInterrupted { value, .. } => value.as_ref(),
             CmdOutcome::ItemError {
                 stream_outcome,
                 errors: _,
@@ -77,9 +83,17 @@ impl<T, E> CmdOutcome<T, E> {
                 let stream_outcome = stream_outcome.map(f);
                 CmdOutcome::BlockInterrupted { stream_outcome }
             }
-            Self::ExecutionInterrupted { value: t } => {
+            Self::ExecutionInterrupted {
+                value: t,
+                cmd_blocks_processed,
+                cmd_blocks_not_processed,
+            } => {
                 let u = t.map(f);
-                CmdOutcome::ExecutionInterrupted { value: u }
+                CmdOutcome::ExecutionInterrupted {
+                    value: u,
+                    cmd_blocks_processed,
+                    cmd_blocks_not_processed,
+                }
             }
             Self::ItemError {
                 stream_outcome,
@@ -112,12 +126,20 @@ impl<T, E> CmdOutcome<T, E> {
                 let (stream_outcome, ()) = stream_outcome.replace(value);
                 CmdOutcome::BlockInterrupted { stream_outcome }
             }
-            Self::ExecutionInterrupted { value: t } => {
+            Self::ExecutionInterrupted {
+                value: t,
+                cmd_blocks_processed,
+                cmd_blocks_not_processed,
+            } => {
                 let u = match t {
                     Some(t) => Some(f(t).await),
                     None => None,
                 };
-                CmdOutcome::ExecutionInterrupted { value: u }
+                CmdOutcome::ExecutionInterrupted {
+                    value: u,
+                    cmd_blocks_processed,
+                    cmd_blocks_not_processed,
+                }
             }
             Self::ItemError {
                 stream_outcome,
@@ -154,8 +176,16 @@ impl<T, E> CmdOutcome<Result<T, E>, E> {
                     Err(e) => Err(e),
                 }
             }
-            Self::ExecutionInterrupted { value } => match value.transpose() {
-                Ok(value) => Ok(CmdOutcome::ExecutionInterrupted { value }),
+            Self::ExecutionInterrupted {
+                value,
+                cmd_blocks_processed,
+                cmd_blocks_not_processed,
+            } => match value.transpose() {
+                Ok(value) => Ok(CmdOutcome::ExecutionInterrupted {
+                    value,
+                    cmd_blocks_processed,
+                    cmd_blocks_not_processed,
+                }),
                 Err(e) => Err(e),
             },
             Self::ItemError {

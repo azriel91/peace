@@ -18,6 +18,7 @@ test = false
 
 [dependencies]
 fn_graph = { workspace = true }
+futures = { workspace = true }
 miette = { workspace = true, optional = true, features = ["fancy"] }
 indexmap = { workspace = true }
 peace_cfg = { workspace = true }
