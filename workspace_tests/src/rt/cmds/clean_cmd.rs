@@ -48,6 +48,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         .await?;
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.")
@@ -56,6 +57,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     // Dry-clean states
     let CmdOutcome::Complete {
         value: states_cleaned_dry,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec_dry(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec_dry` to complete successfully.")
@@ -113,6 +115,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     // Ensure states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -121,6 +124,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     // Dry-clean states.
     let CmdOutcome::Complete {
         value: states_clean_dry,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec_dry(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec_dry` to complete successfully.");
@@ -129,12 +133,14 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     // Re-read states from disk.
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
     };
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -209,6 +215,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
     // Clean states.
     let CmdOutcome::Complete {
         value: states_cleaned,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec` to complete successfully.");
@@ -217,6 +224,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
     // Re-read states from disk.
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -266,6 +274,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
     // Ensure states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -274,6 +283,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
     // Clean states.
     let CmdOutcome::Complete {
         value: states_cleaned,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec` to complete successfully.");
@@ -282,6 +292,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
     // Re-read states from disk.
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -335,6 +346,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -441,6 +453,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -460,6 +473,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Dry-clean states.
     let CmdOutcome::Complete {
         value: states_cleaned_dry,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?
     else {
         panic!("Expected `CleanCmd::exec_dry_with` to complete successfully.");
@@ -468,18 +482,21 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Re-read states from disk.
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
     };
     let CmdOutcome::Complete {
         value: states_goal_stored,
+        cmd_blocks_processed: _,
     } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
     };
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
@@ -545,6 +562,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -650,6 +668,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -669,6 +688,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Clean states.
     let CmdOutcome::Complete {
         value: states_cleaned,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?
     else {
         panic!("Expected `CleanCmd::exec_with` to complete successfully.");
@@ -677,18 +697,21 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
     // Re-read states from disk.
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
     };
     let CmdOutcome::Complete {
         value: states_goal_stored,
+        cmd_blocks_processed: _,
     } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
     };
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
@@ -760,6 +783,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
 
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -767,6 +791,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
 
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -774,6 +799,8 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
 
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {
@@ -858,6 +885,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -865,6 +893,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -893,6 +922,8 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {

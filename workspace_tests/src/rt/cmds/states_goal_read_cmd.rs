@@ -34,6 +34,7 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
         .await?;
     let CmdOutcome::Complete {
         value: states_goal_from_discover,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
@@ -51,6 +52,7 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
         .await?;
     let CmdOutcome::Complete {
         value: states_goal_from_read,
+        cmd_blocks_processed: _,
     } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");

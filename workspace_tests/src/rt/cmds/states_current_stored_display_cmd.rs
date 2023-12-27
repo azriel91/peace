@@ -39,6 +39,7 @@ async fn reads_states_current_stored_from_disk_when_present()
         .await?;
     let CmdOutcome::Complete {
         value: states_current_stored_from_discover,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -56,6 +57,7 @@ async fn reads_states_current_stored_from_disk_when_present()
             .await?;
     let CmdOutcome::Complete {
         value: states_current_stored_from_read,
+        cmd_blocks_processed: _,
     } = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentStoredDisplayCmd::exec` to complete successfully.");

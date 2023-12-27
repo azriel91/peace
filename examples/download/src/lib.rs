@@ -113,6 +113,7 @@ where
 {
     let CmdOutcome::Complete {
         value: (_states_current, _states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");

@@ -64,6 +64,7 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
 
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -109,6 +110,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
 
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -153,7 +155,10 @@ async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std:
         )
         .await?;
 
-    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: states_goal,
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
     };
@@ -198,7 +203,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -253,7 +261,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -310,7 +321,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -366,7 +380,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -427,7 +444,10 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -482,7 +502,10 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -522,6 +545,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .await?;
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
@@ -530,7 +554,10 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
 
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -594,6 +621,7 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
 
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -653,6 +681,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     // Overwrite changed files and remove extra files
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -673,6 +702,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     // Execute again to check idempotence
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -719,6 +749,7 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
 
     let CmdOutcome::Complete {
         value: states_cleaned,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec` to complete successfully.");

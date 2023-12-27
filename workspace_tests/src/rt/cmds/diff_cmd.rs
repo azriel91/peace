@@ -51,13 +51,17 @@ async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn s
         .await?;
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
     };
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -116,14 +120,19 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: states_goal,
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
     };
 
     // Diff current and stored goal states.
-    let CmdOutcome::Complete { value: state_diffs } =
-        DiffCmd::diff::<Current, GoalStored>(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff::<Current, GoalStored>(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff` to complete successfully.");
     };
@@ -188,14 +197,17 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
         .await?;
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
     };
 
     // Diff current stored and goal states.
-    let CmdOutcome::Complete { value: state_diffs } =
-        DiffCmd::diff::<CurrentStored, Goal>(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff::<CurrentStored, Goal>(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff` to complete successfully.");
     };
@@ -260,8 +272,10 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
         .await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } =
-        DiffCmd::diff::<Current, Goal>(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff::<Current, Goal>(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff` to complete successfully.");
     };
@@ -331,6 +345,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     resources.insert(MockDest(1));
     let CmdOutcome::Complete {
         value: states_current_0,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -352,6 +367,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     resources.insert(MockDest(3));
     let CmdOutcome::Complete {
         value: states_current_1,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -652,13 +668,17 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
     };
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };

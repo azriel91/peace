@@ -198,6 +198,7 @@ async fn state_current_returns_shell_command_current_state()
 
     let CmdOutcome::Complete {
         value: states_current,
+        cmd_blocks_processed: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
@@ -245,7 +246,10 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
         )
         .await?;
 
-    let CmdOutcome::Complete { value: states_goal } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: states_goal,
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
     };
@@ -296,7 +300,10 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -340,6 +347,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     // Create the file
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -394,7 +402,10 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     EnsureCmd::exec(&mut cmd_ctx).await?;
 
     // Diff state after creation
-    let CmdOutcome::Complete { value: state_diffs } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
@@ -408,6 +419,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     // Run again, for idempotence check
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -470,6 +482,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     // Run again, for idempotence check
     let CmdOutcome::Complete {
         value: states_cleaned,
+        cmd_blocks_processed: _,
     } = CleanCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `CleanCmd::exec` to complete successfully.");

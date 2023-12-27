@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
-    cmd_rt::{CmdBlockWrapper, CmdExecution},
+    cmd_rt::{CmdBlockRt, CmdBlockWrapper, CmdExecution},
     resources::states::{
         ts::{Current, Goal},
         StateDiffs, StatesCurrent,
@@ -23,11 +23,12 @@ mod cmd_execution_error_builder;
 
 #[tokio::test]
 async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
+    let states_discover_cmd_block =
+        CmdBlockWrapper::new(StatesDiscoverCmdBlock::current(), StatesCurrent::from);
+    let states_discover_cmd_block_desc = states_discover_cmd_block.cmd_block_desc();
+
     let mut cmd_execution = CmdExecution::builder()
-        .with_cmd_block(CmdBlockWrapper::new(
-            StatesDiscoverCmdBlock::current(),
-            StatesCurrent::from,
-        ))
+        .with_cmd_block(states_discover_cmd_block)
         .build();
 
     let TestCtx {
@@ -57,8 +58,11 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                     &cmd_outcome,
                     CmdOutcome::Complete {
                         value: states_current,
+                        cmd_blocks_processed,
                     }
                     if states_current.len() == 2
+                    && cmd_blocks_processed.len() == 1
+                    && cmd_blocks_processed[0] == states_discover_cmd_block_desc
                 ),
                 "Expected states_current to have 2 items,\n\
                 but cmd_outcome was: {cmd_outcome:?}"
@@ -111,6 +115,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                     &cmd_outcome,
                     CmdOutcome::Complete {
                         value: state_diffs,
+                        cmd_blocks_processed: _,
                     }
                     if state_diffs.len() == 2
                 ),

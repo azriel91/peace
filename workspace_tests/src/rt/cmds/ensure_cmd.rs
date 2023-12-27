@@ -56,6 +56,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // would be useful to return simulated ensured states.
     let CmdOutcome::Complete {
         value: states_ensured_dry,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec_dry(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec_dry` to complete successfully.");
@@ -128,6 +129,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         .await?;
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -141,6 +143,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         .await?;
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -216,6 +219,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -236,6 +240,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
     let CmdOutcome::Complete {
         value: states_ensured_dry,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec_dry(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec_dry` to complete successfully.");
@@ -254,6 +259,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         .await?;
     let CmdOutcome::Complete {
         value: states_current_stored,
+        cmd_blocks_processed: _,
     } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
@@ -337,6 +343,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -441,6 +448,7 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -557,6 +565,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -660,6 +669,7 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -776,6 +786,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -809,6 +820,8 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     // Dry ensure states.
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
     else {
@@ -881,6 +894,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -914,6 +928,8 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     // Dry ensure states.
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
     else {
@@ -986,6 +1002,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -1019,6 +1036,8 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     // Dry ensure states.
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
     else {
@@ -1091,6 +1110,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -1124,6 +1144,8 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     // Dry ensure states.
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
     else {
@@ -1196,6 +1218,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     // Alter states.
     let CmdOutcome::Complete {
         value: states_ensured,
+        cmd_blocks_processed: _,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
@@ -1229,6 +1252,8 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     // Ensure states again.
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?
     else {
@@ -1496,6 +1521,8 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
     let CmdOutcome::ItemError {
         stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
         errors,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {

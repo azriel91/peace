@@ -149,7 +149,10 @@ impl ProfileInitCmd {
         let SingleProfileSingleFlowViewAndOutput { output, .. } = cmd_ctx.view_and_output();
 
         match states_discover_outcome {
-            CmdOutcome::Complete { value: _ } => {
+            CmdOutcome::Complete {
+                value: _,
+                cmd_blocks_processed: _,
+            } => {
                 presentln!(
                     output,
                     [
@@ -177,6 +180,8 @@ impl ProfileInitCmd {
             }
             CmdOutcome::ItemError {
                 stream_outcome: _,
+                cmd_blocks_processed: _,
+                cmd_blocks_not_processed: _,
                 errors,
             } => crate::output::item_errors_present(output, &errors).await?,
         }
