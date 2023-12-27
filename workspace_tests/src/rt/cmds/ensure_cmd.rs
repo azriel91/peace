@@ -1497,20 +1497,31 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
-    // Note: Write current and goal states to disk.
-    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    // Note: Write goal states to disk.
+    StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    // Note: Write custom states current file to disk.
+    let flow_dir = cmd_ctx.flow_dir();
+    let states_current_content = "\
+        vec_copy: [0, 1, 2, 3]\n\
+        mock: 123\n\
+    ";
+    let states_current_file = StatesCurrentFile::from(flow_dir);
+    tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
 
-    // Note: Change `MockItem` to fail on `state_current`.
+    // Note: Change `MockItem` to fail on `try_state_current`.
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItem::default().into());
-        graph_builder.add_fn(
+        let vec_copy_fn_id = graph_builder.add_fn(VecCopyItem::default().into());
+        let mock_fn_id = graph_builder.add_fn(
             MockItem::<()>::default()
-                .with_state_current(|_, _, _| {
-                    Err(MockItemError::Synthetic(String::from("state_current_err")))
+                .with_try_state_current(|_, _, _| {
+                    Err(MockItemError::Synthetic(String::from(
+                        "try_state_current_err",
+                    )))
                 })
                 .into(),
         );
+        graph_builder.add_edge(vec_copy_fn_id, mock_fn_id)?;
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -1521,8 +1532,8 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
     let CmdOutcome::ItemError {
         stream_outcome,
-        cmd_blocks_processed: _,
-        cmd_blocks_not_processed: _,
+        cmd_blocks_processed,
+        cmd_blocks_not_processed,
         errors,
     } = EnsureCmd::exec(&mut cmd_ctx).await?
     else {
@@ -1531,13 +1542,36 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     let states_ensured = stream_outcome.value();
 
     assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        None,
         states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
-        Some(MockState(0)).as_ref(),
+        None,
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
+    assert_eq!(
+        &["StatesCurrentReadCmdBlock", "StatesGoalReadCmdBlock",],
+        cmd_blocks_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
+    );
+    assert_eq!(
+        &[
+            "StatesDiscoverCmdBlock",
+            "ApplyStateSyncCheckCmdBlock",
+            "ApplyExecCmdBlock",
+        ],
+        cmd_blocks_not_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
+    );
+
+    let states_current_content_after_exec = tokio::fs::read_to_string(&states_current_file).await?;
+    assert_eq!(states_current_content, states_current_content_after_exec);
 
     let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
     ({
@@ -1547,10 +1581,10 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
                 matches!(
                     mock_error,
                     Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
-                    if s == "state_current_err"
+                    if s == "try_state_current_err"
                 ),
                 "Expected `mock_error` to be \
-                `Err(.. {{ MockItemError::Synthetic {{ \"state_current_err\" }} }})`,\n\
+                `Err(.. {{ MockItemError::Synthetic {{ \"try_state_current_err\" }} }})`,\n\
                 but was `{mock_error:?}`",
             );
         }

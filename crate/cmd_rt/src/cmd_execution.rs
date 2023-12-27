@@ -107,7 +107,7 @@ where
             }
         }
 
-        let cmd_outcome_task = cmd_outcome_task_interruptible(
+        let cmd_outcome_task = cmd_outcome_task(
             cmd_blocks,
             execution_outcome_fetch,
             &mut cmd_view,
@@ -175,7 +175,7 @@ where
     }
 }
 
-async fn cmd_outcome_task_interruptible<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
+async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
     cmd_blocks: &VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
