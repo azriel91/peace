@@ -1,13 +1,13 @@
 use peace::{
     cfg::{app_name, item_id, AppName, FlowId, ItemId, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
+    cmd_model::CmdOutcome,
     resources::resources::ts::SetUp,
     rt::cmds::{
         CleanCmd, DiffCmd, EnsureCmd, StatesCurrentStoredDisplayCmd, StatesDiscoverCmd,
         StatesGoalDisplayCmd,
     },
     rt_model::{
-        outcomes::CmdOutcome,
         output::OutputWrite,
         params::{KeyUnknown, ParamsKeysImpl},
         Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
@@ -111,10 +111,12 @@ pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: (_states_current, _states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?
+    else {
+        panic!("Expeted `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
     Ok(())
 }
 
@@ -140,8 +142,11 @@ pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_diff = DiffCmd::diff_stored(cmd_ctx).await?;
-    cmd_ctx.output_mut().present(&states_diff).await?;
+    let cmd_outcome = DiffCmd::diff_stored(cmd_ctx).await?;
+    let states_diff = cmd_outcome
+        .value()
+        .expect("Expected `states_diff` to exist.");
+    cmd_ctx.output_mut().present(states_diff).await?;
     Ok(())
 }
 
@@ -150,7 +155,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx).await?;
-    let states_ensured_dry = &states_ensured_dry_outcome.value;
+    let states_ensured_dry = states_ensured_dry_outcome
+        .value()
+        .expect("Expected `states_ensured_dry` to exist.");
     cmd_ctx.output_mut().present(states_ensured_dry).await?;
     Ok(())
 }
@@ -160,7 +167,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_ensured_outcome = EnsureCmd::exec(cmd_ctx).await?;
-    let states_ensured = &states_ensured_outcome.value;
+    let states_ensured = states_ensured_outcome
+        .value()
+        .expect("Expected `states_ensured` to exist.");
     cmd_ctx.output_mut().present(states_ensured).await?;
     Ok(())
 }
@@ -170,7 +179,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx).await?;
-    let states_cleaned_dry = &states_cleaned_dry_outcome.value;
+    let states_cleaned_dry = states_cleaned_dry_outcome
+        .value()
+        .expect("Expected `states_cleaned_dry` to exist.");
     cmd_ctx.output_mut().present(states_cleaned_dry).await?;
     Ok(())
 }
@@ -180,7 +191,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_cleaned_outcome = CleanCmd::exec(cmd_ctx).await?;
-    let states_cleaned = &states_cleaned_outcome.value;
+    let states_cleaned = states_cleaned_outcome
+        .value()
+        .expect("Expected `states_cleaned` to exist.");
     cmd_ctx.output_mut().present(states_cleaned).await?;
     Ok(())
 }

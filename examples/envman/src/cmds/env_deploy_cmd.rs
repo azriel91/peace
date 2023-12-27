@@ -2,10 +2,10 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    resources::resources::ts::SetUp,
     rt::cmds::{ApplyStoredStateSync, EnsureCmd},
     rt_model::output::OutputWrite,
 };
-use peace_cmd_model::CmdOutcome;
 
 use crate::{
     cmds::{
@@ -13,6 +13,7 @@ use crate::{
         AppUploadCmd, EnvCmd,
     },
     model::{EnvManError, EnvManFlow},
+    rt_model::EnvManCmdCtx,
 };
 
 /// Deploys or updates the environment.
@@ -43,65 +44,64 @@ impl EnvDeployCmd {
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, false, |cmd_ctx| {
-            async move {
-                let states_ensured_outcome =
-                    EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
-                let CmdOutcome {
-                    value: states_ensured,
-                    errors,
-                } = &states_ensured_outcome;
-                let SingleProfileSingleFlowViewAndOutput {
-                    output,
-                    cmd_view:
-                        SingleProfileSingleFlowView {
-                            flow, resources, ..
-                        },
-                    ..
-                } = cmd_ctx.view_and_output();
-
-                if states_ensured_outcome.is_ok() {
-                    let states_ensured_raw_map = &***states_ensured;
-
-                    let states_ensured_presentables = {
-                        let states_ensured_presentables = flow
-                            .graph()
-                            .iter_insertion()
-                            .map(|item| {
-                                let item_id = item.id();
-                                // Hack: for alignment
-                                let padding = " ".repeat(
-                                    $padding.saturating_sub(format!("{item_id}").len() + 2),
-                                );
-                                match states_ensured_raw_map.get(item_id) {
-                                    Some(state_ensured) => {
-                                        (item_id, format!("{padding}: {state_ensured}"))
-                                    }
-                                    None => (item_id, format!("{padding}: <unknown>")),
-                                }
-                            })
-                            .collect::<Vec<_>>();
-
-                        ListNumbered::new(states_ensured_presentables)
-                    };
-
-                    output
-                        .present(&(
-                            Heading::new(HeadingLevel::Level1, "States Ensured"),
-                            states_ensured_presentables,
-                            "\n",
-                        ))
-                        .await?;
-                } else {
-                    crate::output::item_errors_present(output, errors).await?;
-                    let _ = tokio::fs::write("resources.ron", format!("{resources:#?}")).await;
-                }
-
-                Ok(())
-            }
-            .boxed_local()
+            run_with_ctx(cmd_ctx, $padding).boxed_local()
         })
         .await?;
     }};
+}
+
+async fn run_with_ctx<O>(
+    cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
+    padding_count: usize,
+) -> Result<(), EnvManError>
+where
+    O: OutputWrite<EnvManError>,
+{
+    let states_ensured_outcome =
+        EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
+    let SingleProfileSingleFlowViewAndOutput {
+        output,
+        cmd_view: SingleProfileSingleFlowView {
+            flow, resources, ..
+        },
+        ..
+    } = cmd_ctx.view_and_output();
+
+    if let Some(states_ensured) = states_ensured_outcome.value() {
+        let states_ensured_raw_map = &***states_ensured;
+
+        let states_ensured_presentables = {
+            let states_ensured_presentables = flow
+                .graph()
+                .iter_insertion()
+                .map(|item| {
+                    let item_id = item.id();
+                    // Hack: for alignment
+                    let padding =
+                        " ".repeat(padding_count.saturating_sub(format!("{item_id}").len() + 2));
+                    match states_ensured_raw_map.get(item_id) {
+                        Some(state_ensured) => (item_id, format!("{padding}: {state_ensured}")),
+                        None => (item_id, format!("{padding}: <unknown>")),
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            ListNumbered::new(states_ensured_presentables)
+        };
+
+        output
+            .present(&(
+                Heading::new(HeadingLevel::Level1, "States Ensured"),
+                states_ensured_presentables,
+                "\n",
+            ))
+            .await?;
+    }
+
+    crate::output::cmd_outcome_completion_present(output, flow, resources, states_ensured_outcome)
+        .await?;
+
+    Ok(())
 }
 
 use run;

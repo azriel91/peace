@@ -128,14 +128,17 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, true, |ctx| {
             async {
-                let state_diffs = DiffCmd::diff_stored(ctx).await?;
+                let state_diffs_outcome = DiffCmd::diff_stored(ctx).await?;
 
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
                     cmd_view: SingleProfileSingleFlowView { flow, .. },
                     ..
                 } = ctx.view_and_output();
-                Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+
+                if let Some(state_diffs) = state_diffs_outcome.value() {
+                    Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+                }
 
                 Ok(())
             }

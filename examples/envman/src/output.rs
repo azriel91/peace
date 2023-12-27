@@ -1,7 +1,12 @@
 use peace::{
     cfg::ItemId,
-    fmt::presentable::{Heading, HeadingLevel},
-    rt_model::{output::OutputWrite, IndexMap},
+    cmd_model::CmdOutcome,
+    fmt::{
+        presentable::{Heading, HeadingLevel},
+        presentln,
+    },
+    resources::{resources::ts::SetUp, Resources},
+    rt_model::{output::OutputWrite, Flow, IndexMap},
 };
 
 use crate::model::EnvManError;
@@ -114,6 +119,83 @@ where
                 error = source.source();
             }
         });
+    }
+
+    Ok(())
+}
+
+/// Presents interruption or error information of a `CmdOutcome`.
+pub async fn cmd_outcome_completion_present<O, T>(
+    output: &mut O,
+    flow: &Flow<EnvManError>,
+    resources: &Resources<SetUp>,
+    cmd_outcome: CmdOutcome<T, EnvManError>,
+) -> Result<(), EnvManError>
+where
+    O: OutputWrite<EnvManError>,
+{
+    match &cmd_outcome {
+        CmdOutcome::Complete { value: _ } => {
+            // Nothing to do.
+        }
+        CmdOutcome::BlockInterrupted { stream_outcome } => {
+            let item_ids_complete = stream_outcome
+                .fn_ids_processed()
+                .iter()
+                .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
+                .collect::<Vec<_>>();
+            let item_ids_incomplete = stream_outcome
+                .fn_ids_processed()
+                .iter()
+                .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
+                .collect::<Vec<_>>();
+            presentln!(output, ["Execution was interrupted."]);
+            presentln!(output, [""]);
+
+            // TODO: we're missing which `CmdBlock` this is up to.
+
+            presentln!(output, ["Items completed:"]);
+            presentln!(output, [""]);
+            presentln!(output, [&item_ids_complete]);
+            presentln!(output, [""]);
+
+            presentln!(output, ["Items not completed:"]);
+            presentln!(output, [""]);
+            presentln!(output, [&item_ids_incomplete]);
+        }
+        CmdOutcome::ExecutionInterrupted {
+            value: _,
+            cmd_blocks_processed,
+            cmd_blocks_not_processed,
+        } => {
+            let cmd_blocks_complete = cmd_blocks_processed
+                .iter()
+                .map(|cmd_block_desc| cmd_block_desc.cmd_block_name())
+                .collect::<Vec<_>>();
+            let cmd_blocks_incomplete = cmd_blocks_not_processed
+                .iter()
+                .map(|cmd_block_desc| cmd_block_desc.cmd_block_name())
+                .collect::<Vec<_>>();
+
+            presentln!(output, ["Execution was interrupted."]);
+            presentln!(output, [""]);
+
+            presentln!(output, ["Items completed:"]);
+            presentln!(output, [""]);
+            presentln!(output, [&cmd_blocks_complete]);
+            presentln!(output, [""]);
+
+            presentln!(output, ["Items not completed:"]);
+            presentln!(output, [""]);
+            presentln!(output, [&cmd_blocks_incomplete]);
+        }
+        CmdOutcome::ItemError {
+            stream_outcome: _,
+            errors,
+        } => {
+            item_errors_present(output, errors).await?;
+            let _ = tokio::fs::write("resources.ron", format!("{resources:#?}")).await;
+        }
     }
 
     Ok(())

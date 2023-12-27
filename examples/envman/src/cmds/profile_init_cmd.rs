@@ -6,6 +6,7 @@ use peace::{
             MultiProfileNoFlowView, SingleProfileSingleFlow, SingleProfileSingleFlowViewAndOutput,
         },
     },
+    cmd_model::CmdOutcome,
     fmt::{presentable::CodeInline, presentln},
     resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
@@ -147,19 +148,37 @@ impl ProfileInitCmd {
         let states_discover_outcome = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
         let SingleProfileSingleFlowViewAndOutput { output, .. } = cmd_ctx.view_and_output();
 
-        if states_discover_outcome.is_ok() {
-            presentln!(
-                output,
-                [
-                    "Initialized profile ",
-                    &profile_to_create,
-                    " using ",
-                    &CodeInline::new(format!("{slug}@{version}").into()),
-                    "."
-                ]
-            );
-        } else {
-            crate::output::item_errors_present(output, &states_discover_outcome.errors).await?;
+        match states_discover_outcome {
+            CmdOutcome::Complete { value: _ } => {
+                presentln!(
+                    output,
+                    [
+                        "Initialized profile ",
+                        &profile_to_create,
+                        " using ",
+                        &CodeInline::new(format!("{slug}@{version}").into()),
+                        "."
+                    ]
+                );
+            }
+            CmdOutcome::BlockInterrupted { .. } | CmdOutcome::ExecutionInterrupted { .. } => {
+                presentln!(
+                    output,
+                    ["Profile ", &profile_to_create, "not fully initialized."]
+                );
+                presentln!(
+                    output,
+                    [
+                        "Run the ",
+                        &CodeInline::new("init".into()),
+                        " command again to complete profile initialization."
+                    ]
+                );
+            }
+            CmdOutcome::ItemError {
+                stream_outcome: _,
+                errors,
+            } => crate::output::item_errors_present(output, &errors).await?,
         }
 
         Ok(())
