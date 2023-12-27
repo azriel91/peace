@@ -221,10 +221,7 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |(states_previous, states_applied_mut, _states_target_mut)| {
-                        CleanExecChange::Some(Box::new((
-                            states_previous,
-                            states_applied_mut,
-                        )))
+                        CleanExecChange::Some(Box::new((states_previous, states_applied_mut)))
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
