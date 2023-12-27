@@ -1,8 +1,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
+use fn_graph::StreamOutcomeState;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_cmd_model::{fn_graph::StreamOutcomeState, CmdBlockDesc, CmdBlockOutcome, CmdOutcome};
+use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
 use peace_resources::{resources::ts::SetUp, Resource};
 use peace_rt_model::params::ParamsKeys;
 use tynm::TypeParamsFmtOpts;
@@ -127,9 +128,8 @@ where
                         }
                         StreamOutcomeState::Interrupted => {
                             let stream_outcome = stream_outcome.map(self.fn_partial_exec_handler);
-                            let cmd_outcome = CmdOutcome::BlockInterrupted { stream_outcome };
 
-                            Err(CmdBlockError::Interrupt(cmd_outcome))
+                            Err(CmdBlockError::Interrupt { stream_outcome })
                         }
                         StreamOutcomeState::Finished => {
                             let block_outcome = stream_outcome.value;
@@ -151,11 +151,10 @@ where
                     // meaningful.
 
                     let stream_outcome = stream_outcome.map(self.fn_partial_exec_handler);
-                    let cmd_outcome = CmdOutcome::ItemError {
+                    Err(CmdBlockError::ItemError {
                         stream_outcome,
                         errors,
-                    };
-                    Err(CmdBlockError::ItemError(cmd_outcome))
+                    })
                 }
             }
         }

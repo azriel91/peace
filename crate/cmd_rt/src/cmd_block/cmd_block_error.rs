@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 
-use peace_cmd_model::CmdOutcome;
+use fn_graph::StreamOutcome;
+use indexmap::IndexMap;
+use peace_cfg::ItemId;
 use peace_resources::ResourceFetchError;
 
 /// Error while executing a `CmdBlock`.
@@ -38,8 +40,16 @@ where
     /// The `CmdBlock::Outcome` is mapped to the `ExecutionOutcome` using
     /// `fn_partial_exec_handler`.
     #[error("`CmdBlock` item logic failed.")]
-    ItemError(CmdOutcome<T, E>),
+    ItemError {
+        /// The outcome value.
+        stream_outcome: StreamOutcome<T>,
+        /// Item error(s) from the last command block's execution.
+        errors: IndexMap<ItemId, E>,
+    },
     /// An interrupt signal was received while the `CmdBlock` was executing.
     #[error("`CmdBlock` item logic failed.")]
-    Interrupt(CmdOutcome<T, E>),
+    Interrupt {
+        /// The stream outcome of the interrupted command block.
+        stream_outcome: StreamOutcome<T>,
+    },
 }

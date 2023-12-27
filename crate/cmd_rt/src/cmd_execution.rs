@@ -323,7 +323,45 @@ where
                 )),
             )),
             CmdBlockError::Exec(error) => Err(error),
-            CmdBlockError::ItemError(cmd_outcome) | CmdBlockError::Interrupt(cmd_outcome) => {
+            CmdBlockError::Interrupt { stream_outcome } => {
+                let cmd_blocks_processed = cmd_blocks
+                    .range(0..cmd_block_index)
+                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                    .collect::<Vec<CmdBlockDesc>>();
+
+                let cmd_blocks_not_processed = cmd_blocks
+                    .range(cmd_block_index..)
+                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                    .collect::<Vec<CmdBlockDesc>>();
+                let cmd_outcome = CmdOutcome::BlockInterrupted {
+                    stream_outcome,
+                    cmd_blocks_processed,
+                    cmd_blocks_not_processed,
+                };
+
+                Ok(cmd_outcome)
+            }
+            CmdBlockError::ItemError {
+                stream_outcome,
+                errors,
+            } => {
+                let cmd_blocks_processed = cmd_blocks
+                    .range(0..cmd_block_index)
+                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                    .collect::<Vec<CmdBlockDesc>>();
+
+                let cmd_blocks_not_processed = cmd_blocks
+                    .range(cmd_block_index..)
+                    .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                    .collect::<Vec<CmdBlockDesc>>();
+
+                let cmd_outcome = CmdOutcome::ItemError {
+                    stream_outcome,
+                    cmd_blocks_processed,
+                    cmd_blocks_not_processed,
+                    errors,
+                };
+
                 Ok(cmd_outcome)
             }
         }
@@ -346,6 +384,11 @@ where
                 cmd_blocks_not_processed,
             }
         } else {
+            let cmd_blocks_processed = cmd_blocks
+                .iter()
+                .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
+                .collect::<Vec<CmdBlockDesc>>();
+
             CmdOutcome::Complete {
                 value: execution_outcome.unwrap_or_else(|| {
                     let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
@@ -357,6 +400,7 @@ where
                         to specify how to fetch the `ExecutionOutcome`."
                     );
                 }),
+                cmd_blocks_processed,
             }
         };
         Ok(cmd_outcome)
