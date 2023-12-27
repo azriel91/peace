@@ -77,9 +77,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@master
         with:
-          # Normally use nightly for better lints, but we're blocked by
-          # <https://github.com/rust-lang/rust-clippy/issues/11533>
-          toolchain: stable
+          toolchain: nightly
           components: clippy
 
       - name: 'Run clippy'
