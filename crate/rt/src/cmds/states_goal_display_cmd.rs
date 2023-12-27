@@ -33,7 +33,7 @@ where
         match states_goal_stored_result {
             Ok(states_goal_cmd_outcome) => {
                 if let Some(states_goal) = states_goal_cmd_outcome.value() {
-                    output.present(&states_goal).await?;
+                    output.present(states_goal).await?;
                 }
 
                 Ok(states_goal_cmd_outcome)

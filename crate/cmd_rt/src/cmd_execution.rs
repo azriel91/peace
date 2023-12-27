@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Debug, pin::Pin};
+use std::{collections::VecDeque, fmt::Debug};
 
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
 use interruptible::InterruptSignal;
@@ -12,7 +12,7 @@ use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 
-use crate::{CmdBlockError, CmdBlockRt, CmdBlockRtBox};
+use crate::{CmdBlockError, CmdBlockRtBox};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -275,9 +275,7 @@ fn outcome_extract<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
         CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
         CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
     >,
-    cmd_blocks: &'view_ref VecDeque<
-        Pin<Box<dyn CmdBlockRt<Error = E, PKeys = PKeys, ExecutionOutcome = ExecutionOutcome>>>,
-    >,
+    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -317,15 +315,13 @@ where
 
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
-            CmdBlockError::InputFetch(resource_fetch_error) => {
-                Err(CmdExecutionErrorBuilder::build::<_, _, _, _>(
+            CmdBlockError::InputFetch(resource_fetch_error) => Err(E::from(
+                peace_rt_model::Error::from(CmdExecutionErrorBuilder::build::<_, _, _, _>(
                     cmd_blocks.iter(),
                     cmd_block_index,
                     resource_fetch_error,
-                ))
-                .map_err(peace_rt_model::Error::from)
-                .map_err(E::from)
-            }
+                )),
+            )),
             CmdBlockError::Exec(error) => Err(error),
             CmdBlockError::ItemError(cmd_outcome) | CmdBlockError::Interrupt(cmd_outcome) => {
                 Ok(cmd_outcome)

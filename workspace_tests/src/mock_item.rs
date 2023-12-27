@@ -150,9 +150,8 @@ where
 
         #[cfg(feature = "output_progress")]
         {
-            if let Ok(n) = u64::try_from(mock_state.0) {
-                fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
-            }
+            let n = u64::from(mock_state.0);
+            fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(mock_state)
@@ -168,9 +167,8 @@ where
 
         #[cfg(feature = "output_progress")]
         {
-            if let Ok(n) = u64::try_from(mock_state.0) {
-                fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
-            }
+            let n = u64::from(mock_state.0);
+            fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(mock_state)
@@ -268,7 +266,9 @@ where
         state_current: &MockState,
         state_goal: &MockState,
     ) -> Result<Self::StateDiff, MockItemError> {
-        Ok(i16::from(state_goal.0) - i16::from(state_current.0)).map(MockDiff)
+        Ok(MockDiff(
+            i16::from(state_goal.0) - i16::from(state_current.0),
+        ))
     }
 
     async fn apply_check(
@@ -292,9 +292,10 @@ where
                 }
                 #[cfg(feature = "output_progress")]
                 {
-                    let progress_limit = TryInto::<u64>::try_into(state_current.0 + state_target.0)
-                        .map(ProgressLimit::Bytes)
-                        .unwrap_or(ProgressLimit::Unknown);
+                    let progress_limit = {
+                        let byte_count = u64::from(state_current.0 + state_target.0);
+                        ProgressLimit::Bytes(byte_count)
+                    };
 
                     ApplyCheck::ExecRequired { progress_limit }
                 }
@@ -336,7 +337,8 @@ where
             #[cfg(not(feature = "output_progress"))]
             let _fn_ctx = fn_ctx;
             #[cfg(feature = "output_progress")]
-            if let Ok(n) = state_target.0.try_into() {
+            {
+                let n = state_target.0.into();
                 fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
             }
 

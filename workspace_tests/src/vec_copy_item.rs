@@ -133,7 +133,7 @@ impl Item for VecCopyItem {
         state_current: &VecCopyState,
         state_goal: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(state_goal)).map(VecCopyDiff::from)
+        Ok(VecCopyDiff::from(state_current.diff(state_goal)))
     }
 
     async fn state_clean(

@@ -223,7 +223,7 @@ where
                     |(states_previous, states_applied_mut, _states_target_mut)| {
                         CleanExecChange::Some(Box::new((
                             states_previous,
-                            States::<StatesTs>::from(states_applied_mut),
+                            states_applied_mut,
                         )))
                     },
                 ))

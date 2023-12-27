@@ -2,6 +2,8 @@ use fn_graph::StreamOutcome;
 use indexmap::IndexMap;
 use peace_cfg::ItemId;
 
+use crate::{StreamOutcomeAndErrors, ValueAndStreamOutcome};
+
 /// Outcome of running `CmdBlock::exec`.
 #[derive(Clone, Debug)]
 pub enum CmdBlockOutcome<T, E> {
@@ -64,20 +66,27 @@ impl<T, E> CmdBlockOutcome<T, E> {
 
     /// Returns this outcome's value if there are no errors, otherwise returns
     /// self.
-    pub fn try_into_value(
-        self,
-    ) -> Result<(T, Option<StreamOutcome<()>>), (StreamOutcome<T>, IndexMap<ItemId, E>)> {
+    pub fn try_into_value(self) -> Result<ValueAndStreamOutcome<T>, StreamOutcomeAndErrors<T, E>> {
         match self {
-            Self::Single(value) => Ok((value, None)),
+            Self::Single(value) => Ok(ValueAndStreamOutcome {
+                value,
+                stream_outcome: None,
+            }),
             Self::ItemWise {
                 stream_outcome,
                 errors,
             } => {
                 if errors.is_empty() {
                     let (stream_outcome, value) = stream_outcome.replace(());
-                    Ok((value, Some(stream_outcome)))
+                    Ok(ValueAndStreamOutcome {
+                        value,
+                        stream_outcome: Some(stream_outcome),
+                    })
                 } else {
-                    Err((stream_outcome, errors))
+                    Err(StreamOutcomeAndErrors {
+                        stream_outcome,
+                        errors,
+                    })
                 }
             }
         }
