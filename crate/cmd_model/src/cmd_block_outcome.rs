@@ -16,7 +16,7 @@ pub enum CmdBlockOutcome<T, E> {
     ///
     /// # Design Note
     ///
-    /// When implemeting this, the following structures were considered:
+    /// When implementing this, the following structures were considered:
     ///
     /// * Having separate fields for `T` and `StreamOutcome<()>`.
     /// * Having a single `StreamOutcome<T>` field.

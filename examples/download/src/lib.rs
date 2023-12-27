@@ -115,7 +115,7 @@ where
         value: (_states_current, _states_goal),
     } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?
     else {
-        panic!("Expeted `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
     };
     Ok(())
 }
