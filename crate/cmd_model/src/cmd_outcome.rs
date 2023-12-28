@@ -11,7 +11,7 @@ use crate::CmdBlockDesc;
 /// errored when processing an item.
 ///
 /// [`CmdExecution`]: https://docs.rs/peace_cmd_rt/latest/peace_cmd_rt/struct.CmdExecution.html
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CmdOutcome<T, E> {
     /// Execution completed successfully.
     Complete {

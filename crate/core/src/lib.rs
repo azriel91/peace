@@ -172,7 +172,7 @@ macro_rules! id_newtype {
         }
 
         #[doc = concat!("Error indicating `", stringify!($ty_name), "` provided is not in the correct format.")]
-        #[derive(Debug, PartialEq, Eq)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub struct $ty_err_name<'s> {
             /// String that was provided for the `$ty_name`.
             value: std::borrow::Cow<'s, str>,

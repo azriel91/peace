@@ -18,6 +18,7 @@ pub(crate) mod mock_item;
 // `peace` test modules
 mod cfg;
 mod cmd;
+mod cmd_model;
 mod cmd_rt;
 mod data;
 mod diff;
