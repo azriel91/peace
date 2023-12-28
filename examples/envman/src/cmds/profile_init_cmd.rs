@@ -94,6 +94,7 @@ impl ProfileInitCmd {
 
         let cmd_ctx_builder =
             CmdCtx::builder_single_profile_no_flow::<EnvManError, _>(output, &workspace);
+        crate::cmds::interruptibility_augment!(cmd_ctx_builder);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         // Creating the `CmdCtx` writes the workspace and profile params.
