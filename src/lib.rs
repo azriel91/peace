@@ -6,6 +6,8 @@ pub use miette;
 
 pub use peace_cfg as cfg;
 pub use peace_cmd as cmd;
+pub use peace_cmd_model as cmd_model;
+pub use peace_cmd_rt as cmd_rt;
 pub use peace_data as data;
 pub use peace_diff as diff;
 pub use peace_fmt as fmt;

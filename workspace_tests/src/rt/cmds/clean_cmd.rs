@@ -1,19 +1,20 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{
         ApplyStoredStateSync, CleanCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd,
         StatesGoalReadCmd,
     },
     rt_model::{
-        outcomes::CmdOutcome, ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder,
-        StateStoredAndDiscovered, Workspace, WorkspaceSpec,
+        ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder, StateStoredAndDiscovered,
+        Workspace, WorkspaceSpec,
     },
 };
 
 use crate::{
-    mock_item::{MockItem, MockSrc, MockState},
+    mock_item::{MockItem, MockItemError, MockSrc, MockState},
     vec_copy_item::VecB,
     NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
 };
@@ -45,16 +46,22 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         )
         .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.")
+    };
 
     // Dry-clean states
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned_dry,
-        errors,
-    } = CleanCmd::exec_dry(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec_dry(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec_dry` to complete successfully.")
+    };
 
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
@@ -72,7 +79,6 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         Some(MockState::default()).as_ref(),
         states_cleaned_dry.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
-    assert!(errors.is_empty());
 
     Ok(())
 }
@@ -107,23 +113,38 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Dry-clean states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_clean_dry,
-        errors: _,
-    } = CleanCmd::exec_dry(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec_dry(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec_dry` to complete successfully.");
+    };
 
     // Re-read states from disk.
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -192,13 +213,22 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Clean states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned,
-        errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete successfully.");
+    };
 
     // Re-read states from disk.
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
@@ -242,19 +272,31 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     // Clean states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned,
-        errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete successfully.");
+    };
 
     // Re-read states from disk.
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),).as_ref(),
@@ -302,10 +344,13 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -324,7 +369,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 
     // Dry-clean states.
     let exec_dry_result =
-        CleanCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+        CleanCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -335,7 +380,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -406,10 +451,13 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -423,18 +471,36 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Dry-clean states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned_dry,
-        errors: _,
-    } = CleanCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?
+    else {
+        panic!("Expected `CleanCmd::exec_dry_with` to complete successfully.");
+    };
 
     // Re-read states from disk.
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
-    let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
+        value: states_goal_stored,
+        cmd_blocks_processed: _,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -494,10 +560,13 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -515,8 +584,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     // Clean states.
-    let exec_result =
-        CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+    let exec_result = CleanCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -527,7 +595,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -598,10 +666,13 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -615,18 +686,36 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Clean states.
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned,
-        errors: _,
-    } = CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?
+    else {
+        panic!("Expected `CleanCmd::exec_with` to complete successfully.");
+    };
 
     // Re-read states from disk.
-    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
-    let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
+        value: states_goal_stored,
+        cmd_blocks_processed: _,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
+    let CmdOutcome::Complete {
         value: (states_current, states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete successfully.");
+    };
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -652,6 +741,237 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         Some(VecCopyState::new()).as_ref(),
         states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_state_clean(|_, _| {
+                    Err(MockItemError::Synthetic(String::from("state_clean_err")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    let CmdOutcome::Complete {
+        value: states_ensured,
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
+
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+
+    let CmdOutcome::ItemError {
+        stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
+        errors,
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete with item error.");
+    };
+    let states_cleaned = stream_outcome.value();
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_current_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        || {
+            assert!(
+                matches!(
+                    mock_error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "state_clean_err"
+                ),
+                "Expected `mock_error` to be \
+                `Err(.. {{ MockItemError::Synthetic {{ \"state_clean_err\" }} }})`,\n\
+                but was `{mock_error:?}`",
+            );
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Write current and goal states to disk.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+
+    let CmdOutcome::Complete {
+        value: states_ensured,
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
+
+    let CmdOutcome::Complete {
+        value: states_current_stored,
+        cmd_blocks_processed: _,
+    } = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
+    };
+
+    // Reinitialize graph with failing discover.
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_current(|_, _, _| {
+                    Err(MockItemError::Synthetic(String::from(
+                        "try_state_current_err",
+                    )))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
+
+    let CmdOutcome::ItemError {
+        stream_outcome,
+        cmd_blocks_processed: _,
+        cmd_blocks_not_processed: _,
+        errors,
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete with item error.");
+    };
+    let states_cleaned = stream_outcome.value();
+
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        None,
+        states_cleaned.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(1)).as_ref(),
+        states_current_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let mock_error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        || {
+            assert!(
+                matches!(
+                    mock_error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "try_state_current_err"
+                ),
+                "Expected `mock_error` to be \
+                `Err(.. {{ MockItemError::Synthetic {{ \"try_state_current_err\" }} }})`,\n\
+                but was `{mock_error:?}`",
+            );
+        }
+    })();
 
     Ok(())
 }

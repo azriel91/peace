@@ -118,7 +118,7 @@ macro_rules! impl_mapping_fn_impl {
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<T, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
-                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
                         panic!("`MappingFnImpl::map` called when `fn_map` is `None`\
                             {for_field_name}.\n\
@@ -182,7 +182,7 @@ macro_rules! impl_mapping_fn_impl {
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<Option<T>, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
-                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
                         panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`\
                             {for_field_name}.\n\

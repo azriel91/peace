@@ -80,6 +80,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
             {
                 let Self {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -109,6 +110,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }

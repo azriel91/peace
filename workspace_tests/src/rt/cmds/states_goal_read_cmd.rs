@@ -1,8 +1,9 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     rt::cmds::{StatesDiscoverCmd, StatesGoalReadCmd},
-    rt_model::{outcomes::CmdOutcome, Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState};
@@ -31,10 +32,13 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_goal_from_discover,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -46,7 +50,13 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_goal_from_read = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_goal_from_read,
+        cmd_blocks_processed: _,
+    } = StatesGoalReadCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesGoalReadCmd::exec` to complete successfully.");
+    };
 
     let vec_copy_state_from_discover =
         states_goal_from_discover.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);

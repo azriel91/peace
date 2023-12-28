@@ -77,41 +77,14 @@ where
                     "Expected instance profile to be some when get_instance_profile is successful.",
                 );
 
-                let instance_profile_name = instance_profile
-                    .instance_profile_name()
-                    .expect(
-                        "Expected instance profile name to be Some when \
-                        get_instance_profile is successful.",
-                    )
-                    .to_string();
-                let instance_profile_path = instance_profile
-                    .path()
-                    .expect(
-                        "Expected instance profile path to be Some when \
-                        get_instance_profile is successful.",
-                    )
-                    .to_string();
-                let instance_profile_id = instance_profile
-                    .instance_profile_id()
-                    .expect(
-                        "Expected instance profile id to be Some when \
-                        get_instance_profile is successful.",
-                    )
-                    .to_string();
-                let instance_profile_arn = instance_profile
-                    .arn()
-                    .expect(
-                        "Expected instance profile ARN to be Some when \
-                        get_instance_profile is successful.",
-                    )
-                    .to_string();
+                let instance_profile_name = instance_profile.instance_profile_name().to_string();
+                let instance_profile_path = instance_profile.path().to_string();
+                let instance_profile_id = instance_profile.instance_profile_id().to_string();
+                let instance_profile_arn = instance_profile.arn().to_string();
                 let instance_profile_id_and_arn =
                     InstanceProfileIdAndArn::new(instance_profile_id, instance_profile_arn);
 
-                let role_associated = instance_profile
-                    .roles()
-                    .and_then(|roles| roles.first())
-                    .is_some();
+                let role_associated = instance_profile.roles().first().is_some();
 
                 Some((
                     instance_profile_name,

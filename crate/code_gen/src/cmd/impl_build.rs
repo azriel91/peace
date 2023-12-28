@@ -409,6 +409,7 @@ fn impl_build_for(
 
                 // let crate::ctx::CmdCtxBuilder {
                 //     output,
+                //     interruptibility,
                 //     workspace,
                 //     scope_builder:
                 //         #scope_builder_name {
@@ -429,6 +430,7 @@ fn impl_build_for(
                 //     },
                 // } = self;
                 #scope_builder_deconstruct
+                let interruptibility_state = interruptibility.into();
 
                 // Serialize params to `PeaceAppDir`.
 
@@ -679,6 +681,7 @@ fn impl_build_for(
 
                 let scope = #scope_type_path::new(
                     // output,
+                    // interruptibility_state,
                     // workspace,
 
                     // === SingleProfileSingleFlow === //
@@ -858,6 +861,7 @@ fn scope_builder_deconstruct(
     quote! {
         let crate::ctx::CmdCtxBuilder {
             output,
+            interruptibility,
             workspace,
             scope_builder: #scope_builder_name {
                 // profile_selection: ProfileSelected(profile),
@@ -1388,6 +1392,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
 
     scope_fields.push(parse_quote!(output));
+    scope_fields.push(parse_quote!(interruptibility_state));
     scope_fields.push(parse_quote!(workspace));
 
     // progress tracker

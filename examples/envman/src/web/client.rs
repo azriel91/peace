@@ -11,9 +11,8 @@ cfg_if::cfg_if! {
             let _log = console_log::init_with_level(log::Level::Debug);
             console_error_panic_hook::set_once();
 
-            leptos::mount_to_body(move |cx| {
+            leptos::mount_to_body(move || {
                 view! {
-                    cx,
                     <div>rara</div>
                 }
             });

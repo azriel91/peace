@@ -13,11 +13,14 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 /// * The code for those types is more understandable.
 /// * We reduce the ripple effect of needing each of these associated types
 ///   propagated to callers who use those types in type / method signatures.
-pub trait ParamsKeys {
+pub trait ParamsKeys: Debug + Unpin {
     type WorkspaceParamsKMaybe: KeyMaybe;
     type ProfileParamsKMaybe: KeyMaybe;
     type FlowParamsKMaybe: KeyMaybe;
 }
+
+/// Shorter name for `ParamsKeys` without any known keys.
+pub type ParamsKeysUnknown = ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>;
 
 /// Concrete implementation of `ParamsKeys`.
 #[derive(Debug)]
@@ -64,7 +67,7 @@ pub struct KeyUnknown;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct KeyKnown<K>(PhantomData<K>);
 
-pub trait KeyMaybe: Debug {
+pub trait KeyMaybe: Debug + Unpin {
     type Key: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
 }
 
@@ -74,7 +77,7 @@ impl KeyMaybe for KeyUnknown {
 
 impl<K> KeyMaybe for KeyKnown<K>
 where
-    K: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    K: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
 {
     type Key = K;
 }

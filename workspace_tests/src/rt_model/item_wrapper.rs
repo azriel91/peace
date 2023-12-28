@@ -81,7 +81,7 @@ fn state_eq_returns_true_for_same_value() {
     );
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(&state_eq, Ok(true)),
@@ -100,7 +100,7 @@ fn state_eq_returns_false_for_different_value() {
     );
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(&state_eq, Ok(false)),
@@ -119,7 +119,7 @@ fn state_eq_returns_err_first_when_first_fails_downcast() {
     );
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -146,7 +146,7 @@ fn state_eq_returns_err_second_when_second_fails_downcast() {
     );
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -173,7 +173,7 @@ fn state_eq_returns_err_both_when_both_fail_downcast() {
     );
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

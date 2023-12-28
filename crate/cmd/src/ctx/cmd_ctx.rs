@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_resources::Resources;
 use peace_rt_model::{
     params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
     Workspace,
@@ -23,7 +23,6 @@ use crate::{
         },
         SingleProfileSingleFlow,
     },
-    CmdIndependence,
 };
 
 /// Information needed to execute a command.
@@ -143,17 +142,7 @@ impl CmdCtx<()> {
     }
 }
 
-impl<'scope, E, O, PKeys> CmdCtx<SingleProfileSingleFlow<'scope, E, O, PKeys, SetUp>>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Returns this `CmdCtx` wrapped in `CmdIndependence::Standalone`.
-    pub fn as_standalone(&mut self) -> CmdIndependence<'_, 'scope, '_, E, O, PKeys> {
-        CmdIndependence::Standalone { cmd_ctx: self }
-    }
-}
-
-impl<'scope, E, O, PKeys, ResTs0> CmdCtx<SingleProfileSingleFlow<'scope, E, O, PKeys, ResTs0>>
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -162,7 +151,7 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<SingleProfileSingleFlow<'scope, E, O, PKeys, ResTs1>>
+    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {

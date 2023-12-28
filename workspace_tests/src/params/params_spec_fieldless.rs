@@ -42,7 +42,7 @@ fn debug() {
             "{:?}",
             ParamsSpecFieldless::<MockSrc>::from_map(
                 Some(String::from("field")),
-                #[cfg_attr(coverage_nightly, no_coverage)]
+                #[cfg_attr(coverage_nightly, coverage(off))]
                 |_: &u8| None
             )
         )
@@ -138,7 +138,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
     )?;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(&deserialized, ParamsSpecFieldless::<u8>::InMemory),
@@ -161,7 +161,7 @@ marker: null
     )?;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -261,7 +261,7 @@ fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveErr
         ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -300,7 +300,7 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
         ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -380,7 +380,7 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
         ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -478,7 +478,7 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
         ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -558,7 +558,7 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -599,7 +599,7 @@ fn merge_value_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
     let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
         None,
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,
     ));
 
@@ -615,7 +615,7 @@ fn merge_in_memory_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::InMemory;
     let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
         None,
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,
     ));
 
@@ -631,7 +631,7 @@ fn merge_in_memory_with_other_no_change() {
 fn merge_mapping_fn_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::from_map(
         None,
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,
     );
     let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::InMemory);

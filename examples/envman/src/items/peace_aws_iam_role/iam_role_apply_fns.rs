@@ -211,12 +211,8 @@ where
                     let role = role_create_output
                         .role()
                         .expect("Expected role to be Some when created.");
-                    let role_id = role
-                        .role_id()
-                        .expect("Expected role ID to be Some when created.");
-                    let role_arn = role
-                        .arn()
-                        .expect("Expected role ARN to be Some when created.");
+                    let role_id = role.role_id();
+                    let role_arn = role.arn();
 
                     #[cfg(feature = "output_progress")]
                     progress_sender.tick(ProgressMsgUpdate::Set(String::from("attaching policy")));

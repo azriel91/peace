@@ -20,7 +20,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
+peace_cmd_model = { workspace = true }
 peace_cmd = { workspace = true }
+peace_cmd_rt = { workspace = true }
 peace_data = { workspace = true }
 peace_diff = { workspace = true }
 peace_fmt = { workspace = true }
@@ -34,12 +36,15 @@ default = []
 error_reporting = [
     "dep:miette",
     "miette?/fancy",
+    "peace_cmd_model/error_reporting",
+    "peace_cmd_rt/error_reporting",
     "peace_params/error_reporting",
     "peace_rt/error_reporting",
     "peace_rt_model/error_reporting",
 ]
 output_in_memory = ["peace_rt_model/output_in_memory"]
 output_progress = [
+    "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
@@ -69,7 +74,9 @@ license = "MIT OR Apache-2.0"
 peace = { path = ".", version = "0.0.11", default-features = false }
 
 peace_cfg = { path = "crate/cfg", version = "0.0.11" }
+peace_cmd_model = { path = "crate/cmd_model", version = "0.0.11" }
 peace_cmd = { path = "crate/cmd", version = "0.0.11" }
+peace_cmd_rt = { path = "crate/cmd_rt", version = "0.0.11" }
 peace_code_gen = { path = "crate/code_gen", version = "0.0.11" }
 peace_core = { path = "crate/core", version = "0.0.11" }
 peace_data = { path = "crate/data", version = "0.0.11" }
@@ -99,41 +106,42 @@ peace_item_tar_x = { path = "items/tar_x", version = "0.0.11" }
 #
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.
-async-trait = "0.1.68"
-base64 = "0.21.2"
-bytes = "1.4.0"
+async-trait = "0.1.75"
+base64 = "0.21.5"
+bytes = "1.5.0"
 cfg-if = "1.0.0"
-chrono = { version = "0.4.26", default-features = false, features = ["clock", "serde"] }
+chrono = { version = "0.4.31", default-features = false, features = ["clock", "serde"] }
 console = "0.15.7"
 derivative = "2.2.0"
-diff-struct = "0.5.2"
+diff-struct = "0.5.3"
 downcast-rs = "1.2.0"
-dyn-clone = "1.0.11"
+dyn-clone = "1.0.16"
 enser = "0.1.4"
-erased-serde = "0.3.25"
-fn_graph = { version = "0.8.3", features = ["resman"] }
-futures = "0.3.28"
+erased-serde = "0.3.31"
+fn_graph = { version = "0.10.0", features = ["async", "interruptible", "resman"] }
+futures = "0.3.30"
 heck = "0.4.1"
-indexmap = "2.0.0"
-indicatif = "0.17.5"
-miette = "5.9.0"
-pretty_assertions = "1.3.0"
-proc-macro2 = "1.0.63"
-quote = "1.0.28"
-reqwest = "0.11.18"
-resman = "0.16.1"
-serde = "1.0.164"
-serde-wasm-bindgen = "0.5.0"
-serde_json = "1.0.99"
-serde_yaml = "0.9.22"
-syn = "2.0.22"
-tar = "0.4.38"
-tempfile = "3.6.0"
-thiserror = "1.0.40"
-tokio = "1.28.2"
-tokio-util = "0.7.8"
-tynm = "0.1.8"
-type_reg = { version = "0.6.0", features = ["debug", "untagged", "ordered"] }
-url = "2.4.0"
-wasm-bindgen = "0.2.87"
-web-sys = "0.3.64"
+indexmap = "2.1.0"
+indicatif = "0.17.7"
+interruptible = "0.0.3"
+miette = "5.10.0"
+pretty_assertions = "1.4.0"
+proc-macro2 = "1.0.71"
+quote = "1.0.33"
+reqwest = "0.11.23"
+resman = "0.17.0"
+serde = "1.0.193"
+serde-wasm-bindgen = "0.6.3"
+serde_json = "1.0.108"
+serde_yaml = "0.9.29"
+syn = "2.0.43"
+tar = "0.4.40"
+tempfile = "3.8.1"
+thiserror = "1.0.52"
+tokio = "1.35.1"
+tokio-util = "0.7.10"
+tynm = "0.1.9"
+type_reg = { version = "0.6.2", features = ["debug", "untagged", "ordered"] }
+url = "2.5.0"
+wasm-bindgen = "0.2.89"
+web-sys = "0.3.66"

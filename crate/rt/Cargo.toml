@@ -17,11 +17,15 @@ doctest = false
 test = false
 
 [dependencies]
+async-trait = { workspace = true }
 cfg-if = { workspace = true }
+fn_graph = { workspace = true }
 futures = { workspace = true }
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
+peace_cmd_model = { workspace = true }
 peace_cmd = { workspace = true }
+peace_cmd_rt = { workspace = true }
 peace_params = { workspace = true }
 peace_resources = { workspace = true }
 peace_rt_model = { workspace = true }
@@ -29,6 +33,7 @@ peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
+tynm = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["fs", "io-util"] }
@@ -41,7 +46,11 @@ web-sys = { workspace = true, features = ["Storage", "Window"] }
 
 [features]
 default = []
-error_reporting = ["dep:miette", "peace_rt_model/error_reporting"]
+error_reporting = [
+    "dep:miette",
+    "peace_cmd_rt/error_reporting",
+    "peace_rt_model/error_reporting",
+]
 output_progress = [
     "peace_cfg/output_progress",
     "peace_cmd/output_progress",

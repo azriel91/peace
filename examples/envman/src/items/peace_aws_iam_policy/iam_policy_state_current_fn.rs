@@ -51,10 +51,11 @@ impl<Id> IamPolicyStateCurrentFn<Id> {
             })?;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding policy")));
-        let policy_id_arn_version = list_policies_output
-            .policies()
-            .and_then(|policies| {
-                policies.iter().find(|policy| {
+        let policy_id_arn_version = {
+            list_policies_output
+                .policies()
+                .iter()
+                .find(|policy| {
                     let name_matches = policy
                         .policy_name()
                         .filter(|policy_name| *policy_name == name)
@@ -66,15 +67,15 @@ impl<Id> IamPolicyStateCurrentFn<Id> {
 
                     name_matches && path_matches
                 })
-            })
-            .map(|policy| {
-                let policy_id = policy
-                    .policy_id()
-                    .expect("Expected policy id to be Some.")
-                    .to_string();
-                let policy_arn = policy.arn().expect("Expected ARN to be Some.").to_string();
-                (policy_id, policy_arn)
-            });
+                .map(|policy| {
+                    let policy_id = policy
+                        .policy_id()
+                        .expect("Expected policy id to be Some.")
+                        .to_string();
+                    let policy_arn = policy.arn().expect("Expected ARN to be Some.").to_string();
+                    (policy_id, policy_arn)
+                })
+        };
 
         #[cfg(feature = "output_progress")]
         {

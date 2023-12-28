@@ -459,7 +459,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -620,7 +620,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -694,7 +694,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -785,7 +785,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         tynm::type_name::<VecA>(),
     );
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(vec_a_spec,
@@ -849,7 +849,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -924,7 +924,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(
@@ -991,7 +991,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
         .await;
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 matches!(

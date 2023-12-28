@@ -1,11 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{
-        SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
-    },
-};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd_model::CmdOutcome;
 use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
@@ -18,7 +14,7 @@ pub struct StatesGoalDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesGoalDisplayCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
+    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
@@ -28,28 +24,19 @@ where
     /// state.
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesGoalStored, E> {
-        let SingleProfileSingleFlowViewAndOutput {
-            output,
-            cmd_view:
-                SingleProfileSingleFlowView {
-                    states_type_reg,
-                    resources,
-                    ..
-                },
-            ..
-        } = cmd_ctx.view_and_output();
+    pub async fn exec<'ctx>(
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdOutcome<StatesGoalStored, E>, E> {
+        let states_goal_stored_result = StatesGoalReadCmd::exec(cmd_ctx).await;
+        let output = cmd_ctx.output_mut();
 
-        let states_goal_result =
-            StatesGoalReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
-                .await;
+        match states_goal_stored_result {
+            Ok(states_goal_cmd_outcome) => {
+                if let Some(states_goal) = states_goal_cmd_outcome.value() {
+                    output.present(states_goal).await?;
+                }
 
-        match states_goal_result {
-            Ok(states_goal) => {
-                output.present(&states_goal).await?;
-                Ok(states_goal)
+                Ok(states_goal_cmd_outcome)
             }
             Err(e) => {
                 output.write_err(&e).await?;

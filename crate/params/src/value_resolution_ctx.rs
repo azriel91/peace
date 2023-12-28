@@ -76,7 +76,7 @@ impl fmt::Display for ValueResolutionCtx {
 
                     let field_name = field_name_and_type.field_name();
                     let type_name = field_name_and_type.type_name();
-                    write!(f, "{field_name}: {type_name} {{\n")
+                    writeln!(f, "{field_name}: {type_name} {{")
                 })?;
 
             // Don't add opening `{` for the actual field.
@@ -97,10 +97,10 @@ impl fmt::Display for ValueResolutionCtx {
             .try_for_each(|indentation| {
                 let indentation = indentation + 1;
                 (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                write!(f, "}},\n")?;
+                writeln!(f, "}},")?;
 
                 (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                write!(f, "..\n")
+                writeln!(f, "..")
             })?;
 
         write!(f, "}}")

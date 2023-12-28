@@ -1,0 +1,30 @@
+[package]
+name = "peace_cmd_model"
+description = "Data types for commands for the Peace framework."
+documentation = "https://docs.rs/peace_cmd_model/"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+fn_graph = { workspace = true }
+futures = { workspace = true }
+miette = { workspace = true, optional = true, features = ["fancy"] }
+indexmap = { workspace = true }
+peace_cfg = { workspace = true }
+thiserror = { workspace = true }
+tynm = { workspace = true }
+
+[features]
+default = []
+error_reporting = ["dep:miette"]

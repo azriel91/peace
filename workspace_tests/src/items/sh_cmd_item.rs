@@ -1,11 +1,10 @@
 use peace::{
     cfg::{app_name, item_id, profile, AppName, FlowId, ItemId, Profile, State},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     data::marker::Clean,
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{
-        outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
     ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff,
@@ -197,10 +196,13 @@ async fn state_current_returns_shell_command_current_state()
         )
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
@@ -244,10 +246,13 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
         )
         .await?;
 
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_goal,
-        errors: _,
-    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
+    };
     let state_goal = states_goal
         .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItem::ID,
@@ -295,7 +300,13 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
@@ -334,10 +345,13 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Create the file
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
@@ -388,7 +402,13 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     EnsureCmd::exec(&mut cmd_ctx).await?;
 
     // Diff state after creation
-    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: state_diffs,
+        cmd_blocks_processed: _,
+    } = DiffCmd::diff_stored(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
+    };
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
@@ -397,10 +417,13 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     assert_eq!("nothing to do", state_diff.stderr());
 
     // Run again, for idempotence check
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = EnsureCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `EnsureCmd::exec` to complete successfully.");
+    };
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
@@ -457,10 +480,13 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     assert!(!tempdir.path().join("test_file").exists());
 
     // Run again, for idempotence check
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_cleaned,
-        errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = CleanCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `CleanCmd::exec` to complete successfully.");
+    };
 
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)

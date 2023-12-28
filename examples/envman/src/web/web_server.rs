@@ -1,15 +1,12 @@
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, path::PathBuf};
 
-use axum::{Extension, Router};
-use leptos::{view, ServerFn};
+use axum::Router;
+use leptos::view;
 use leptos_axum::LeptosRoutes;
 use tokio::io::AsyncWriteExt;
 use tower_http::services::ServeDir;
 
-use crate::{
-    model::EnvManError,
-    web::components::{FlowGraphSrc, Home},
-};
+use crate::{model::EnvManError, web::components::Home};
 
 /// Web server that responds to `envman` requests.
 #[derive(Debug)]
@@ -22,11 +19,9 @@ impl WebServer {
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(|cx| view! { cx, <Home /> }).await;
+        let routes = leptos_axum::generate_route_list(|| view! {  <Home /> });
 
-        let _ = FlowGraphSrc::register();
-
-        let app = Router::new()
+        let router = Router::new()
             // serve the pkg directory
             .nest_service(
                 "/pkg",
@@ -36,18 +31,12 @@ impl WebServer {
                 ])),
             )
             // serve the SSR rendered homepage
-            .leptos_routes(
-                leptos_options.clone(),
-                routes,
-                move |cx| view! { cx, <Home /> },
-            )
-            .layer(Extension(Arc::new(leptos_options)))
+            .leptos_routes(&leptos_options, routes, move || view! {  <Home /> })
+            .with_state(leptos_options);
 
-            // When we upgrade leptos:
-            // .leptos_routes(&leptos_options, routes, move |cx| view! { cx, <Home /> })
-            // .with_state(leptos_options)
-            ;
-
+        let listener = tokio::net::TcpListener::bind(socket_addr)
+            .await
+            .unwrap_or_else(|e| panic!("Failed to listen on {socket_addr}. Error: {e}"));
         let (Ok(()) | Err(_)) = tokio::io::stderr()
             .write_all(format!("listening on http://{}\n", socket_addr).as_bytes())
             .await;
@@ -60,8 +49,7 @@ impl WebServer {
                 .as_bytes(),
             )
             .await;
-        axum::Server::bind(&socket_addr)
-            .serve(app.into_make_service())
+        axum::serve(listener, router)
             .await
             .map_err(|error| EnvManError::WebServerServe { error })
     }

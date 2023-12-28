@@ -72,19 +72,18 @@ where
         })?;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding bucket")));
-        let creation_date =
-            list_buckets_output.buckets().and_then(|buckets| {
-                buckets.iter().find_map(|bucket| {
-                if matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name) {
-                    Some(bucket
+        let creation_date = list_buckets_output.buckets().iter().find_map(|bucket| {
+            if matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name) {
+                Some(
+                    bucket
                         .creation_date()
                         .cloned()
-                        .expect("Expected bucket creation date to be Some."))
-                } else {
-                    None
-                }
-            })
-            });
+                        .expect("Expected bucket creation date to be Some."),
+                )
+            } else {
+                None
+            }
+        });
         #[cfg(feature = "output_progress")]
         {
             let message = if creation_date.is_some() {
@@ -129,7 +128,7 @@ where
         if let Some(creation_date) = creation_date {
             let state_current = S3BucketState::Some {
                 name: name.to_string(),
-                creation_date: Timestamped::Value(DateTime::from_utc(
+                creation_date: Timestamped::Value(DateTime::from_naive_utc_and_offset(
                     NaiveDateTime::from_timestamp_opt(
                         creation_date.secs(),
                         creation_date.subsec_nanos(),

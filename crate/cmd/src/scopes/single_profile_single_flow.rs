@@ -1,5 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
+use interruptible::InterruptibilityState;
 use peace_core::Profile;
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -15,13 +16,6 @@ use peace_rt_model::{
     Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
-
-use crate::CmdIndependence;
-
-#[cfg(feature = "output_progress")]
-use peace_core::progress::ProgressUpdateAndId;
-#[cfg(feature = "output_progress")]
-use tokio::sync::mpsc::Sender;
 
 /// A command that works with one profile and one flow.
 ///
@@ -68,6 +62,10 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Tracks progress of each function execution.
@@ -155,6 +153,10 @@ where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Whether the `CmdExecution` is interruptible.
+    ///
+    /// If it is, this holds the interrupt channel receiver.
+    pub interruptibility_state: InterruptibilityState<'view, 'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -235,6 +237,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
+        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
@@ -254,6 +257,7 @@ where
     ) -> Self {
         Self {
             output,
+            interruptibility_state,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -284,6 +288,7 @@ where
     pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
         let Self {
             output: _,
+            interruptibility_state,
             workspace,
             #[cfg(feature = "output_progress")]
                 cmd_progress_tracker: _,
@@ -302,7 +307,10 @@ where
             resources,
         } = self;
 
+        let interruptibility_state = interruptibility_state.reborrow();
+
         SingleProfileSingleFlowView {
+            interruptibility_state,
             workspace,
             profile,
             profile_dir,
@@ -326,6 +334,7 @@ where
     pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, E, O, PKeys, TS> {
         let Self {
             output,
+            interruptibility_state,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -344,11 +353,14 @@ where
             resources,
         } = self;
 
+        let interruptibility_state = interruptibility_state.reborrow();
+
         SingleProfileSingleFlowViewAndOutput {
             output,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             cmd_view: SingleProfileSingleFlowView {
+                interruptibility_state,
                 workspace,
                 profile,
                 profile_dir,
@@ -375,6 +387,11 @@ where
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut O {
         self.output
+    }
+
+    /// Returns the interruptibility capability.
+    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
+        self.interruptibility_state.reborrow()
     }
 
     /// Returns the workspace that the `peace` tool runs in.
@@ -493,6 +510,7 @@ where
     {
         let SingleProfileSingleFlow {
             output,
+            interruptibility_state,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -515,6 +533,7 @@ where
 
         SingleProfileSingleFlow {
             output,
+            interruptibility_state,
             workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -545,7 +564,7 @@ impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
     >
 where
     WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
@@ -566,7 +585,7 @@ impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
 where
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Returns the profile params.
@@ -586,32 +605,11 @@ impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
 where
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
 {
     /// Returns the flow params for the selected flow.
     pub fn flow_params(&self) -> &FlowParams<FlowParamsK> {
         &self.flow_params
-    }
-}
-
-impl<'view, E, PKeys> SingleProfileSingleFlowView<'view, E, PKeys, SetUp>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Returns this view wrapped in `CmdIndependence::SubCmd`.
-    pub fn as_sub_cmd<O>(&mut self) -> CmdIndependence<'_, '_, 'view, E, O, PKeys> {
-        CmdIndependence::SubCmd { cmd_view: self }
-    }
-
-    /// Returns this view wrapped in `CmdIndependence::SubCmdWithProgress`.
-    #[cfg(feature = "output_progress")]
-    pub fn as_sub_cmd_with_progress<O>(
-        &mut self,
-        progress_tx: Sender<ProgressUpdateAndId>,
-    ) -> CmdIndependence<'_, '_, 'view, E, O, PKeys> {
-        CmdIndependence::SubCmdWithProgress {
-            cmd_view: self,
-            progress_tx,
-        }
     }
 }

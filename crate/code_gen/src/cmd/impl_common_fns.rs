@@ -19,30 +19,66 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         type_params
     };
 
-    let common_fns = if scope.flow_count() == FlowCount::One {
-        quote! {
+    let mut common_fns = quote! {
+        /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.
+        pub fn with_interruptibility(
+            mut self,
+            interruptibility: interruptible::Interruptibility<'ctx>,
+        ) -> crate::ctx::CmdCtxBuilder<
+            'ctx,
+            O,
+            #scope_builder_name<
+                E,
+                // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                // FlowSelected<'ctx, E>,
+                // PKeys,
+                // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+                // FlowParamsNone,
+                #scope_builder_type_params
+            >,
+        > {
+            let crate::ctx::CmdCtxBuilder {
+                output,
+                interruptibility: _,
+                workspace,
+                scope_builder,
+            } = self;
+
+            crate::ctx::CmdCtxBuilder {
+                output,
+                interruptibility,
+                workspace,
+                scope_builder,
+            }
+        }
+    };
+
+    if scope.flow_count() == FlowCount::One {
+        common_fns.extend(quote! {
             /// Sets an item's parameters.
             ///
             /// Note: this **must** be called for each item in the flow.
-            pub fn with_item_params<IS>(
+            pub fn with_item_params<I>(
                 mut self,
                 item_id: peace_cfg::ItemId,
-                params_spec: <IS::Params<'_> as peace_params::Params>::Spec,
+                params_spec: <I::Params<'_> as peace_params::Params>::Spec,
             ) -> Self
             where
-                IS: peace_cfg::Item,
-                E: From<IS::Error>,
+                I: peace_cfg::Item,
+                E: From<I::Error>,
             {
                 self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
             }
-        }
-    } else {
-        proc_macro2::TokenStream::new()
+        });
     };
 
     quote! {
-        impl<'ctx, E, O,
+        impl<
+            'ctx,
+            E,
+            O,
             // ProfileSelection,
             // FlowSelection,
             // PKeys,

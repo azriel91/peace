@@ -1,4 +1,4 @@
-#![cfg_attr(coverage_nightly, feature(no_coverage))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 //! Manages extracting a tar file for the peace framework
 

@@ -38,6 +38,9 @@ type FnTryState<Id> = fn(
     MockData<'_, Id>,
 ) -> Result<Option<MockState>, MockItemError>;
 
+type FnStateClean<Id> =
+    fn(&<MockSrc as Params>::Partial, MockData<'_, Id>) -> Result<MockState, MockItemError>;
+
 type FnState<Id> = fn(FnCtx<'_>, &MockSrc, MockData<'_, Id>) -> Result<MockState, MockItemError>;
 
 type FnApplyCheck<Id> = fn(
@@ -63,6 +66,8 @@ pub struct MockFns<Id>
 where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
+    /// Override for `state_clean` function.
+    state_clean: Option<FnStateClean<Id>>,
     /// Override for `try_state_current` function.
     try_state_current: Option<FnTryState<Id>>,
     /// Override for `state_current` function.
@@ -85,13 +90,18 @@ impl<Id> MockItem<Id>
 where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
-    pub const ID_DEFAULT: &ItemId = &item_id!("mock");
+    pub const ID_DEFAULT: &'static ItemId = &item_id!("mock");
 
     pub fn new(id: ItemId) -> Self {
         Self {
             id,
             mock_fns: MockFns::<Id>::default(),
         }
+    }
+
+    pub fn with_state_clean(mut self, f: FnStateClean<Id>) -> Self {
+        self.mock_fns.state_clean = Some(f);
+        self
     }
 
     pub fn with_try_state_current(mut self, f: FnTryState<Id>) -> Self {
@@ -140,9 +150,8 @@ where
 
         #[cfg(feature = "output_progress")]
         {
-            if let Ok(n) = u64::try_from(mock_state.0) {
-                fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
-            }
+            let n = u64::from(mock_state.0);
+            fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(mock_state)
@@ -158,9 +167,8 @@ where
 
         #[cfg(feature = "output_progress")]
         {
-            if let Ok(n) = u64::try_from(mock_state.0) {
-                fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
-            }
+            let n = u64::from(mock_state.0);
+            fn_ctx.progress_sender.inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(mock_state)
@@ -189,6 +197,17 @@ where
 
     fn id(&self) -> &ItemId {
         &self.id
+    }
+
+    async fn state_clean(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, MockItemError> {
+        if let Some(state_clean) = data.mock_fns().state_clean.as_ref() {
+            state_clean(params_partial, data)
+        } else {
+            Ok(MockState::new())
+        }
     }
 
     async fn try_state_current(
@@ -247,14 +266,9 @@ where
         state_current: &MockState,
         state_goal: &MockState,
     ) -> Result<Self::StateDiff, MockItemError> {
-        Ok(i16::from(state_goal.0) - i16::from(state_current.0)).map(MockDiff)
-    }
-
-    async fn state_clean(
-        _params_partial: &<Self::Params<'_> as Params>::Partial,
-        _data: Self::Data<'_>,
-    ) -> Result<Self::State, MockItemError> {
-        Ok(MockState::new())
+        Ok(MockDiff(
+            i16::from(state_goal.0) - i16::from(state_current.0),
+        ))
     }
 
     async fn apply_check(
@@ -278,9 +292,10 @@ where
                 }
                 #[cfg(feature = "output_progress")]
                 {
-                    let progress_limit = TryInto::<u64>::try_into(state_current.0 + state_target.0)
-                        .map(ProgressLimit::Bytes)
-                        .unwrap_or(ProgressLimit::Unknown);
+                    let progress_limit = {
+                        let byte_count = u64::from(state_current.0 + state_target.0);
+                        ProgressLimit::Bytes(byte_count)
+                    };
 
                     ApplyCheck::ExecRequired { progress_limit }
                 }
@@ -322,7 +337,8 @@ where
             #[cfg(not(feature = "output_progress"))]
             let _fn_ctx = fn_ctx;
             #[cfg(feature = "output_progress")]
-            if let Ok(n) = state_target.0.try_into() {
+            {
+                let n = state_target.0.into();
                 fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
             }
 
@@ -567,6 +583,7 @@ mod tests {
             "MockItem { \
                 id: ItemId(\"mock\"), \
                 mock_fns: MockFns { \
+                    state_clean: None, \
                     try_state_current: None, \
                     state_current: None, \
                     try_state_goal: None, \

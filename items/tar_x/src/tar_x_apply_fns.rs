@@ -82,7 +82,7 @@ where
         let dest = params.dest();
 
         tokio::fs::create_dir_all(dest).await.map_err(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             |error| TarXError::TarDestDirCreate {
                 dest: dest.to_path_buf(),
                 error,
@@ -101,7 +101,7 @@ where
                     tar_path,
                     |sync_io_bridge| {
                         tar::Archive::new(sync_io_bridge).unpack(dest).map_err(
-                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            #[cfg_attr(coverage_nightly, coverage(off))]
                             |error| TarXError::TarUnpack {
                                 tar_path: tar_path.to_path_buf(),
                                 dest: dest.to_path_buf(),
@@ -127,7 +127,7 @@ where
                     tokio::fs::remove_file(&dest.join(entry_path))
                         .await
                         .map_err(
-                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            #[cfg_attr(coverage_nightly, coverage(off))]
                             |error| TarXError::TarDestFileRemove {
                                 dest: dest.to_path_buf(),
                                 entry_path: entry_path.to_path_buf(),

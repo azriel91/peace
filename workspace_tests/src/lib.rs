@@ -1,4 +1,4 @@
-#![cfg_attr(coverage_nightly, feature(no_coverage))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg(test)]
 
 pub(crate) use crate::{
@@ -18,6 +18,8 @@ pub(crate) mod mock_item;
 // `peace` test modules
 mod cfg;
 mod cmd;
+mod cmd_model;
+mod cmd_rt;
 mod data;
 mod diff;
 mod fmt;

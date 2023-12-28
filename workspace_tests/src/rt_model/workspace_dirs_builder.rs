@@ -12,7 +12,7 @@ fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::err
     let workspace_dir = workspace_dirs.workspace_dir();
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 workspace_dir.ends_with("peace/workspace_tests"),
@@ -34,7 +34,7 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
     let workspace_dir = workspace_dirs.workspace_dir();
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 workspace_dir.ends_with("peace"),
@@ -88,7 +88,7 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
     let peace_dir = workspace_dirs.peace_dir();
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 peace_dir.ends_with("peace/.peace"),
@@ -110,7 +110,7 @@ fn returns_peace_app_dir_relative_to_peace_dir() -> Result<(), Box<dyn std::erro
     let peace_app_dir = workspace_dirs.peace_app_dir();
 
     ({
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
                 peace_app_dir.ends_with("peace/.peace/workspace_tests"),

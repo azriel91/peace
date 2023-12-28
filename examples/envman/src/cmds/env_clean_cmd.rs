@@ -2,8 +2,9 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    resources::resources::ts::SetUp,
     rt::cmds::{ApplyStoredStateSync, CleanCmd},
-    rt_model::{outcomes::CmdOutcome, output::OutputWrite},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
         AppUploadCmd, EnvCmd,
     },
     model::{EnvManError, EnvManFlow},
+    rt_model::EnvManCmdCtx,
 };
 
 /// Cleans up (deletes) the environment.
@@ -42,62 +44,64 @@ impl EnvCleanCmd {
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, false, |cmd_ctx| {
-            async move {
-                let states_cleaned_outcome =
-                    CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::None)
-                        .await?;
-                let CmdOutcome {
-                    value: states_cleaned,
-                    errors,
-                } = &states_cleaned_outcome;
-                let SingleProfileSingleFlowViewAndOutput {
-                    output,
-                    cmd_view: SingleProfileSingleFlowView { flow, .. },
-                    ..
-                } = cmd_ctx.view_and_output();
-
-                if states_cleaned_outcome.is_ok() {
-                    let states_cleaned_raw_map = &***states_cleaned;
-
-                    let states_cleaned_presentables = {
-                        let states_cleaned_presentables = flow
-                            .graph()
-                            .iter_insertion()
-                            .map(|item| {
-                                let item_id = item.id();
-                                // Hack: for alignment
-                                let padding = " ".repeat(
-                                    $padding.saturating_sub(format!("{item_id}").len() + 2),
-                                );
-                                match states_cleaned_raw_map.get(item_id) {
-                                    Some(state_cleaned) => {
-                                        (item_id, format!("{padding}: {state_cleaned}"))
-                                    }
-                                    None => (item_id, format!("{padding}: <unknown>")),
-                                }
-                            })
-                            .collect::<Vec<_>>();
-
-                        ListNumbered::new(states_cleaned_presentables)
-                    };
-
-                    output
-                        .present(&(
-                            Heading::new(HeadingLevel::Level1, "Cleaned States"),
-                            states_cleaned_presentables,
-                            "\n",
-                        ))
-                        .await?;
-                } else {
-                    crate::output::item_errors_present(output, errors).await?;
-                }
-
-                Ok(())
-            }
-            .boxed_local()
+            run_with_ctx(cmd_ctx, $padding).boxed_local()
         })
         .await?;
     }};
+}
+
+async fn run_with_ctx<O>(
+    cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
+    padding_count: usize,
+) -> Result<(), EnvManError>
+where
+    O: OutputWrite<EnvManError>,
+{
+    let states_cleaned_outcome =
+        CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
+    let SingleProfileSingleFlowViewAndOutput {
+        output,
+        cmd_view: SingleProfileSingleFlowView {
+            flow, resources, ..
+        },
+        ..
+    } = cmd_ctx.view_and_output();
+
+    if let Some(states_ensured) = states_cleaned_outcome.value() {
+        let states_ensured_raw_map = &***states_ensured;
+
+        let states_ensured_presentables = {
+            let states_ensured_presentables = flow
+                .graph()
+                .iter_insertion()
+                .map(|item| {
+                    let item_id = item.id();
+                    // Hack: for alignment
+                    let padding =
+                        " ".repeat(padding_count.saturating_sub(format!("{item_id}").len() + 2));
+                    match states_ensured_raw_map.get(item_id) {
+                        Some(state_ensured) => (item_id, format!("{padding}: {state_ensured}")),
+                        None => (item_id, format!("{padding}: <unknown>")),
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            ListNumbered::new(states_ensured_presentables)
+        };
+
+        output
+            .present(&(
+                Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                states_ensured_presentables,
+                "\n",
+            ))
+            .await?;
+    }
+
+    crate::output::cmd_outcome_completion_present(output, flow, resources, states_cleaned_outcome)
+        .await?;
+
+    Ok(())
 }
 
 use run;

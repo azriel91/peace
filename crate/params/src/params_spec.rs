@@ -218,7 +218,7 @@ where
     {
         let other: Option<&Self> = other_boxed.downcast_ref();
         let other = other.unwrap_or_else(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             || {
                 let self_ty_name = tynm::type_name::<Self>();
                 panic!(

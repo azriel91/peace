@@ -1,8 +1,9 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    cmd_model::CmdOutcome,
     rt::cmds::{StatesCurrentStoredDisplayCmd, StatesDiscoverCmd},
-    rt_model::{outcomes::CmdOutcome, Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{
@@ -36,10 +37,13 @@ async fn reads_states_current_stored_from_disk_when_present()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
+    let CmdOutcome::Complete {
         value: states_current_stored_from_discover,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+        cmd_blocks_processed: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
+    };
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =
@@ -51,7 +55,13 @@ async fn reads_states_current_stored_from_disk_when_present()
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
-    let states_current_stored_from_read = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await?;
+    let CmdOutcome::Complete {
+        value: states_current_stored_from_read,
+        cmd_blocks_processed: _,
+    } = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await?
+    else {
+        panic!("Expected `StatesCurrentStoredDisplayCmd::exec` to complete successfully.");
+    };
     let fn_tracker_output = cmd_ctx.output();
 
     let vec_copy_state_from_discover =

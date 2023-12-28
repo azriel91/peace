@@ -9,8 +9,8 @@
 //! [`CmdContext`]: crate::CmdContext
 
 pub use self::{
+    apply_stored_state_sync::ApplyStoredStateSync,
     clean_cmd::CleanCmd,
-    cmd_base::CmdBase,
     diff_cmd::{DiffCmd, DiffInfoSpec, DiffStateSpec},
     ensure_cmd::EnsureCmd,
     states_current_read_cmd::StatesCurrentReadCmd,
@@ -18,13 +18,10 @@ pub use self::{
     states_discover_cmd::StatesDiscoverCmd,
     states_goal_display_cmd::StatesGoalDisplayCmd,
     states_goal_read_cmd::StatesGoalReadCmd,
-    sub::ApplyStoredStateSync,
 };
 
-pub mod sub;
-
+mod apply_stored_state_sync;
 mod clean_cmd;
-mod cmd_base;
 mod diff_cmd;
 mod ensure_cmd;
 mod states_current_read_cmd;

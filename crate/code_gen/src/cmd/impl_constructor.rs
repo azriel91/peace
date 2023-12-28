@@ -85,6 +85,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 
                 Self {
                     output,
+                    interruptibility: interruptible::Interruptibility::NonInterruptible,
                     workspace,
                     scope_builder,
                 }

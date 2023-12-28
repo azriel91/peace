@@ -76,7 +76,7 @@ pub enum S3ObjectError {
         object_key: String,
         /// Underlying error.
         #[source]
-        error: aws_smithy_http::byte_stream::error::Error,
+        error: aws_smithy_types::byte_stream::error::Error,
     },
 
     /// Content MD5 hex string failed to be parsed as bytes.

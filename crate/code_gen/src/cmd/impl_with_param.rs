@@ -187,11 +187,12 @@ fn impl_with_param_key_unknown(
             >
             where
                 #params_k_type_param:
-                    Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
+                    Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static,
                 #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -236,6 +237,7 @@ fn impl_with_param_key_unknown(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }
@@ -329,7 +331,7 @@ fn impl_with_param_key_known(
             >
         where
             // WorkspaceParamsK:
-            //     Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
+            //     Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static,
             // ProfileParamsKMaybe: KeyMaybe,
             // FlowParamsKMaybe: KeyMaybe,
 
@@ -375,6 +377,7 @@ fn impl_with_param_key_known(
             {
                 let Self {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -415,6 +418,7 @@ fn impl_with_param_key_known(
 
                 crate::ctx::CmdCtxBuilder {
                     output,
+                    interruptibility,
                     workspace,
                     scope_builder,
                 }

@@ -29,7 +29,7 @@ pub struct VecCopyItem {
 }
 
 impl VecCopyItem {
-    pub const ID_DEFAULT: &ItemId = &item_id!("vec_copy");
+    pub const ID_DEFAULT: &'static ItemId = &item_id!("vec_copy");
 
     pub fn new(id: ItemId) -> Self {
         Self { id }
@@ -133,7 +133,7 @@ impl Item for VecCopyItem {
         state_current: &VecCopyState,
         state_goal: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(state_goal)).map(VecCopyDiff::from)
+        Ok(VecCopyDiff::from(state_current.diff(state_goal)))
     }
 
     async fn state_clean(

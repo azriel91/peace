@@ -1,4 +1,4 @@
-#![cfg_attr(coverage_nightly, feature(no_coverage))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![recursion_limit = "256"]
 
 extern crate proc_macro;
@@ -38,7 +38,7 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         .iter()
         .find(peace_internal)
         .map(
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             |_| (quote!(peace_data), quote!(peace_cfg)),
         )
         .unwrap_or_else(|| (quote!(peace::data), quote!(peace::cfg)));
@@ -165,7 +165,7 @@ fn data_borrow_impl<'ast>(
         }) => (DataType::Tuple, unnamed),
 
         _ => ({
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             || -> ! { panic!("Enums are not supported") }
         })(),
     };

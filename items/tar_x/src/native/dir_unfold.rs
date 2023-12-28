@@ -39,7 +39,7 @@ impl DirUnfold {
                     } = dir_and_read_dir;
                     let dir_entry = read_dir.next_entry().await.map_err(
                         // We don't cover corrupted tar contents in tests.
-                        #[cfg_attr(coverage_nightly, no_coverage)]
+                        #[cfg_attr(coverage_nightly, coverage(off))]
                         |error| {
                             let base_dir = base_dir.to_path_buf();
                             TarXError::TarDestEntryRead {
@@ -54,7 +54,7 @@ impl DirUnfold {
                         // Don't include directories as dir entries, but recursively descend
                         let file_type = dir_entry.file_type().await.map_err(
                             // We don't cover corrupted tar contents in tests.
-                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            #[cfg_attr(coverage_nightly, coverage(off))]
                             |error| TarXError::TarDestEntryFileTypeRead {
                                 entry_path: entry_path.clone(),
                                 error,
@@ -109,7 +109,7 @@ impl DirUnfold {
                             .await
                             .map_err(
                                 // We don't cover corrupted tar contents in tests.
-                                #[cfg_attr(coverage_nightly, no_coverage)]
+                                #[cfg_attr(coverage_nightly, coverage(off))]
                                 |error| TarXError::TarDestReadDir {
                                     dir: dir_path,
                                     error,

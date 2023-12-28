@@ -225,8 +225,7 @@ where
                             // Need to delete all of the non-default versions individually.
                             match list_policy_versions_result {
                                 Ok(list_policy_versions_output) => {
-                                    let policy_versions =
-                                        list_policy_versions_output.versions().unwrap_or_default();
+                                    let policy_versions = list_policy_versions_output.versions();
 
                                     let non_default_policy_versions =
                                         policy_versions.iter().filter(|policy_version| {
