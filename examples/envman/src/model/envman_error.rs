@@ -166,7 +166,7 @@ pub enum EnvManError {
     WebServerServe {
         /// Underlying error.
         #[source]
-        error: hyper::Error,
+        error: std::io::Error,
     },
 
     /// Failed to join thread that rendered web server home page.

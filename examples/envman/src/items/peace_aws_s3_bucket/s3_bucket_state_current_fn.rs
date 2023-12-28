@@ -72,19 +72,18 @@ where
         })?;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding bucket")));
-        let creation_date =
-            list_buckets_output.buckets().and_then(|buckets| {
-                buckets.iter().find_map(|bucket| {
-                if matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name) {
-                    Some(bucket
+        let creation_date = list_buckets_output.buckets().iter().find_map(|bucket| {
+            if matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name) {
+                Some(
+                    bucket
                         .creation_date()
                         .cloned()
-                        .expect("Expected bucket creation date to be Some."))
-                } else {
-                    None
-                }
-            })
-            });
+                        .expect("Expected bucket creation date to be Some."),
+                )
+            } else {
+                None
+            }
+        });
         #[cfg(feature = "output_progress")]
         {
             let message = if creation_date.is_some() {

@@ -70,22 +70,10 @@ where
                     .role()
                     .expect("Expected Role to exist when get_role is successful");
 
-                let role_name = role
-                    .role_name()
-                    .expect("Expected role name to be Some when get_role is successful.")
-                    .to_string();
-                let role_path = role
-                    .path()
-                    .expect("Expected path to be Some when get_role is successful.")
-                    .to_string();
-                let role_id = role
-                    .role_id()
-                    .expect("Expected role id to be Some when get_role is successful.")
-                    .to_string();
-                let role_arn = role
-                    .arn()
-                    .expect("Expected role ARN to be Some when get_role is successful.")
-                    .to_string();
+                let role_name = role.role_name().to_string();
+                let role_path = role.path().to_string();
+                let role_id = role.role_id().to_string();
+                let role_arn = role.arn().to_string();
 
                 let role_id_and_arn = RoleIdAndArn::new(role_id, role_arn);
 
@@ -165,26 +153,25 @@ where
                 )));
                 let managed_policy_attachment = list_attached_role_policies_output
                     .attached_policies()
-                    .and_then(|attached_policies| {
-                        attached_policies.iter().find_map(|attached_policy| {
-                            let policy_name = attached_policy
-                                .policy_name()
-                                .expect("Expected policy_name to be Some for any attached policy.");
+                    .iter()
+                    .find_map(|attached_policy| {
+                        let policy_name = attached_policy
+                            .policy_name()
+                            .expect("Expected policy_name to be Some for any attached policy.");
 
-                            if policy_name == name {
-                                Some(
-                                    attached_policy
-                                        .policy_arn()
-                                        .expect(
-                                            "Expected policy_arn to be Some for \
+                        if policy_name == name {
+                            Some(
+                                attached_policy
+                                    .policy_arn()
+                                    .expect(
+                                        "Expected policy_arn to be Some for \
                                             any attached policy.",
-                                        )
-                                        .to_string(),
-                                )
-                            } else {
-                                None
-                            }
-                        })
+                                    )
+                                    .to_string(),
+                            )
+                        } else {
+                            None
+                        }
                     })
                     .map(|managed_policy_arn| {
                         ManagedPolicyAttachment::new(Generated::Value(managed_policy_arn), true)

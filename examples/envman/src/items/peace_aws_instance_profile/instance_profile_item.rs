@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use aws_config::BehaviorVersion;
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
@@ -71,7 +72,7 @@ where
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), InstanceProfileError> {
         if !resources.contains::<aws_sdk_iam::Client>() {
-            let sdk_config = aws_config::load_from_env().await;
+            let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
             let client = aws_sdk_iam::Client::new(&sdk_config);
             resources.insert(client);
         }

@@ -21,7 +21,7 @@ impl WebServer {
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
         let routes = leptos_axum::generate_route_list(|| view! {  <Home /> });
 
-        let app = Router::new()
+        let router = Router::new()
             // serve the pkg directory
             .nest_service(
                 "/pkg",
@@ -34,6 +34,9 @@ impl WebServer {
             .leptos_routes(&leptos_options, routes, move || view! {  <Home /> })
             .with_state(leptos_options);
 
+        let listener = tokio::net::TcpListener::bind(socket_addr)
+            .await
+            .unwrap_or_else(|e| panic!("Failed to listen on {socket_addr}. Error: {e}"));
         let (Ok(()) | Err(_)) = tokio::io::stderr()
             .write_all(format!("listening on http://{}\n", socket_addr).as_bytes())
             .await;
@@ -46,8 +49,7 @@ impl WebServer {
                 .as_bytes(),
             )
             .await;
-        axum::Server::bind(&socket_addr)
-            .serve(app.into_make_service())
+        axum::serve(listener, router)
             .await
             .map_err(|error| EnvManError::WebServerServe { error })
     }

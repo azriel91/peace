@@ -244,14 +244,8 @@ where
                     let instance_profile = create_instance_profile_output
                         .instance_profile()
                         .expect("Expected instance_profile to be Some when create_instance_profile is successful.");
-                    let instance_profile_id = instance_profile
-                        .instance_profile_id()
-                        .expect("Expected instance_profile id to be Some when create_instance_profile is successful.")
-                        .to_string();
-                    let instance_profile_arn = instance_profile
-                        .arn()
-                        .expect("Expected instance_profile ARN to be Some when create_instance_profile is successful.")
-                        .to_string();
+                    let instance_profile_id = instance_profile.instance_profile_id().to_string();
+                    let instance_profile_arn = instance_profile.arn().to_string();
                     let instance_profile_id_and_arn =
                         InstanceProfileIdAndArn::new(instance_profile_id, instance_profile_arn);
 

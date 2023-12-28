@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use aws_smithy_http::byte_stream::ByteStream;
+use aws_smithy_types::byte_stream::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
