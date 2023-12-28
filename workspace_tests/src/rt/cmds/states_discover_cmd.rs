@@ -270,7 +270,7 @@ async fn current_returns_error_when_try_state_current_returns_error()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -278,7 +278,7 @@ async fn current_returns_error_when_try_state_current_returns_error()
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete with item error.");
     };
-    let states_current = stream_outcome.value();
+    let states_current = item_stream_outcome.value();
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let CmdOutcome::Complete {
@@ -346,7 +346,7 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -354,7 +354,7 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
     else {
         panic!("Expected `StatesDiscoverCmd::goal` to complete with item error.");
     };
-    let states_goal = stream_outcome.value();
+    let states_goal = item_stream_outcome.value();
 
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let CmdOutcome::Complete {
@@ -425,7 +425,7 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -433,7 +433,7 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
     };
-    let (states_current, states_goal) = stream_outcome.value();
+    let (states_current, states_goal) = item_stream_outcome.value();
 
     // States current assertions
     let CmdOutcome::Complete {
@@ -529,7 +529,7 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -537,7 +537,7 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
     };
-    let (states_current, states_goal) = stream_outcome.value();
+    let (states_current, states_goal) = item_stream_outcome.value();
 
     // States current assertions
     let CmdOutcome::Complete {
@@ -635,7 +635,7 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -643,7 +643,7 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
     else {
         panic!("Expected `StatesDiscoverCmd::current_and_goal` to complete with item error.");
     };
-    let (states_current, states_goal) = stream_outcome.value();
+    let (states_current, states_goal) = item_stream_outcome.value();
 
     // States current assertions
     let CmdOutcome::Complete {

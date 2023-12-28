@@ -12,7 +12,7 @@ use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 
-use crate::{CmdBlockError, CmdBlockRtBox};
+use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -305,7 +305,9 @@ where
         };
 
     let CmdViewAndProgress {
-        cmd_view,
+        cmd_view: SingleProfileSingleFlowView {
+            flow, resources, ..
+        },
         #[cfg(feature = "output_progress")]
         progress_tx,
     } = cmd_view_and_progress;
@@ -324,6 +326,7 @@ where
             )),
             CmdBlockError::Exec(error) => Err(error),
             CmdBlockError::Interrupt { stream_outcome } => {
+                let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
                 let cmd_blocks_processed = cmd_blocks
                     .range(0..cmd_block_index)
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
@@ -334,7 +337,7 @@ where
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
                     .collect::<Vec<CmdBlockDesc>>();
                 let cmd_outcome = CmdOutcome::BlockInterrupted {
-                    stream_outcome,
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                 };
@@ -345,6 +348,7 @@ where
                 stream_outcome,
                 errors,
             } => {
+                let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
                 let cmd_blocks_processed = cmd_blocks
                     .range(0..cmd_block_index)
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
@@ -356,7 +360,7 @@ where
                     .collect::<Vec<CmdBlockDesc>>();
 
                 let cmd_outcome = CmdOutcome::ItemError {
-                    stream_outcome,
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                     errors,
@@ -366,7 +370,7 @@ where
             }
         }
     } else {
-        let execution_outcome = execution_outcome_fetch(cmd_view.resources);
+        let execution_outcome = execution_outcome_fetch(resources);
         let cmd_outcome = if let Some(cmd_block_index_next) = cmd_block_index_next {
             let cmd_blocks_processed = cmd_blocks
                 .range(0..cmd_block_index_next)

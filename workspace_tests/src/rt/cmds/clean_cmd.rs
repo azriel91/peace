@@ -798,7 +798,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
     };
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -806,7 +806,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
     else {
         panic!("Expected `CleanCmd::exec` to complete with item error.");
     };
-    let states_cleaned = stream_outcome.value();
+    let states_cleaned = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -921,7 +921,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -929,7 +929,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     else {
         panic!("Expected `CleanCmd::exec` to complete with item error.");
     };
-    let states_cleaned = stream_outcome.value();
+    let states_cleaned = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),

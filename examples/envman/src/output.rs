@@ -6,7 +6,7 @@ use peace::{
         presentln,
     },
     resources::{resources::ts::SetUp, Resources},
-    rt_model::{output::OutputWrite, Flow, IndexMap},
+    rt_model::{output::OutputWrite, IndexMap},
 };
 
 use crate::model::EnvManError;
@@ -127,7 +127,6 @@ where
 /// Presents interruption or error information of a `CmdOutcome`.
 pub async fn cmd_outcome_completion_present<O, T>(
     output: &mut O,
-    flow: &Flow<EnvManError>,
     resources: &Resources<SetUp>,
     cmd_outcome: CmdOutcome<T, EnvManError>,
 ) -> Result<(), EnvManError>
@@ -142,7 +141,7 @@ where
             // Nothing to do.
         }
         CmdOutcome::BlockInterrupted {
-            stream_outcome,
+            item_stream_outcome,
             cmd_blocks_processed,
             cmd_blocks_not_processed,
         } => {
@@ -154,15 +153,13 @@ where
                 .iter()
                 .map(|cmd_block_desc| cmd_block_desc.cmd_block_name())
                 .collect::<Vec<_>>();
-            let item_ids_complete = stream_outcome
-                .fn_ids_processed()
+            let item_ids_processed = item_stream_outcome
+                .item_ids_processed()
                 .iter()
-                .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
                 .collect::<Vec<_>>();
-            let item_ids_incomplete = stream_outcome
-                .fn_ids_not_processed()
+            let item_ids_not_processed = item_stream_outcome
+                .item_ids_not_processed()
                 .iter()
-                .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
                 .collect::<Vec<_>>();
 
             presentln!(output, ["Execution was interrupted."]);
@@ -178,11 +175,11 @@ where
 
             presentln!(output, ["Items completed:"]);
             presentln!(output, [""]);
-            presentln!(output, [&item_ids_complete]);
+            presentln!(output, [&item_ids_processed]);
 
             presentln!(output, ["Items not completed:"]);
             presentln!(output, [""]);
-            presentln!(output, [&item_ids_incomplete]);
+            presentln!(output, [&item_ids_not_processed]);
         }
         CmdOutcome::ExecutionInterrupted {
             value: _,
@@ -210,7 +207,7 @@ where
             presentln!(output, [&cmd_blocks_incomplete]);
         }
         CmdOutcome::ItemError {
-            stream_outcome: _,
+            item_stream_outcome: _,
             cmd_blocks_processed: _,
             cmd_blocks_not_processed: _,
             errors,

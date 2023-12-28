@@ -5,11 +5,14 @@
 * Change `CmdOutcome` to be an `enum` indicating whether it is completed, interrupted, or erroneous. ([#141], [#163])
 * Add `CmdBlock` trait to encompass one function for all items. ([#141], [#163])
 * Add interruptibility support using [`interruptible`] through `CmdCtxBuilder::with_interruptibility`. ([#141], [#163])
+* Add `ItemStreamOutcome` to track which `Item`s are processed or not processed. ([#164], [#165])
 
 
 [`interruptible`]: https://github.com/azriel91/interruptible
 [#141]: https://github.com/azriel91/peace/issues/141
 [#163]: https://github.com/azriel91/peace/pull/163
+[#164]: https://github.com/azriel91/peace/issues/164
+[#165]: https://github.com/azriel91/peace/pull/165
 
 
 ## 0.0.11 (2023-06-27)

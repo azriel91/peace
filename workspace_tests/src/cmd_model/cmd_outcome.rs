@@ -1,6 +1,6 @@
 use peace::{
-    cmd_model::CmdOutcome,
-    rt_model::{fn_graph::StreamOutcome, IndexMap},
+    cmd_model::{CmdOutcome, ItemStreamOutcome},
+    rt_model::IndexMap,
 };
 
 #[test]
@@ -167,7 +167,7 @@ fn cmd_outcome_complete<T>(value: T) -> CmdOutcome<T, String> {
 
 fn cmd_outcome_block_interrupted<T>(value: T) -> CmdOutcome<T, String> {
     CmdOutcome::<T, String>::BlockInterrupted {
-        stream_outcome: StreamOutcome::finished_with(value, Vec::new()),
+        item_stream_outcome: ItemStreamOutcome::finished_with(value, Vec::new()),
         cmd_blocks_processed: vec![],
         cmd_blocks_not_processed: vec![],
     }
@@ -183,7 +183,7 @@ fn cmd_outcome_execution_interrupted<T>(value: Option<T>) -> CmdOutcome<T, Strin
 
 fn cmd_outcome_item_error<T>(value: T) -> CmdOutcome<T, String> {
     CmdOutcome::<T, String>::ItemError {
-        stream_outcome: StreamOutcome::finished_with(value, Vec::new()),
+        item_stream_outcome: ItemStreamOutcome::finished_with(value, Vec::new()),
         cmd_blocks_processed: vec![],
         cmd_blocks_not_processed: vec![],
         errors: IndexMap::new(),

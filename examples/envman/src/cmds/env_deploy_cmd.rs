@@ -98,7 +98,7 @@ where
             .await?;
     }
 
-    crate::output::cmd_outcome_completion_present(output, flow, resources, states_ensured_outcome)
+    crate::output::cmd_outcome_completion_present(output, resources, states_ensured_outcome)
         .await?;
 
     Ok(())

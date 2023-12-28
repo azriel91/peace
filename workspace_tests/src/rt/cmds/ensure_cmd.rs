@@ -819,7 +819,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -827,7 +827,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -927,7 +927,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -935,7 +935,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1035,7 +1035,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1043,7 +1043,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1143,7 +1143,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1151,7 +1151,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1251,7 +1251,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
 
     // Ensure states again.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1259,7 +1259,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_with` to complete with item error.");
     };
-    let states_ensured_again = stream_outcome.value();
+    let states_ensured_again = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1294,7 +1294,6 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     Ok(())
 }
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
 async fn states_current_not_serialized_on_states_current_read_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -1381,7 +1380,6 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
     Ok(())
 }
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
 async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -1531,7 +1529,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed,
         cmd_blocks_not_processed,
         errors,
@@ -1539,7 +1537,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     else {
         panic!("Expected `EnsureCmd::exec` to complete with item error.");
     };
-    let states_ensured = stream_outcome.value();
+    let states_ensured = item_stream_outcome.value();
 
     assert_eq!(
         None,
@@ -1593,7 +1591,6 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     Ok(())
 }
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 #[tokio::test]
 async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_interrupt()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -1690,6 +1687,143 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
     assert_eq!(states_current_content, states_current_content_after_exec);
     let states_goal_content_after_exec = tokio::fs::read_to_string(&states_goal_file).await?;
     assert_eq!(states_goal_content, states_goal_content_after_exec);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn states_current_is_serialized_on_apply_exec_cmd_block_interrupt()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        let vec_copy_id = graph_builder.add_fn(VecCopyItem::default().into());
+        let mock_id = graph_builder.add_fn(MockItem::<()>::default().into());
+        graph_builder.add_edge(vec_copy_id, mock_id)?;
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    let (interrupt_tx, interrupt_rx) = mpsc::channel::<InterruptSignal>(16);
+
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_interruptibility(Interruptibility::new(
+            interrupt_rx.into(),
+            InterruptStrategy::PollNextN(9),
+        ))
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+
+    // Note: Write custom states current and states goal files to disk.
+    let flow_dir = cmd_ctx.flow_dir();
+    let states_current_content = "\
+        vec_copy: []\n\
+        mock: 0\n\
+    ";
+    let states_goal_content = "\
+        vec_copy: [0, 1, 2, 3, 4, 5, 6, 7]\n\
+        mock: 1\n\
+    ";
+    let states_current_file = StatesCurrentFile::from(flow_dir);
+    tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
+    let states_goal_file = StatesGoalFile::from(flow_dir);
+    tokio::fs::write(&states_goal_file, states_goal_content.as_bytes()).await?;
+
+    interrupt_tx.send(InterruptSignal).await?;
+    let cmd_outcome = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Both).await?;
+    let CmdOutcome::BlockInterrupted {
+        item_stream_outcome,
+        cmd_blocks_processed,
+        cmd_blocks_not_processed,
+    } = cmd_outcome
+    else {
+        panic!(
+            "Expected `EnsureCmd::exec_with` to complete with interruption,\n\
+            but was:\n\
+            \n\
+            ```ron\n\
+            {cmd_outcome:#?}\n\
+            ```\n\
+            "
+        );
+    };
+    let states_ensured = item_stream_outcome.value();
+
+    // Early interruption returns empty `states_ensured`.
+    assert_eq!(2, states_ensured.len());
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+    assert_eq!(
+        Some(MockState(0)).as_ref(),
+        states_ensured.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+    assert_eq!(
+        &[
+            "StatesCurrentReadCmdBlock",
+            "StatesGoalReadCmdBlock",
+            "StatesDiscoverCmdBlock",
+            "ApplyStateSyncCheckCmdBlock",
+        ],
+        cmd_blocks_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
+    );
+    assert_eq!(
+        &["ApplyExecCmdBlock",],
+        cmd_blocks_not_processed
+            .iter()
+            .map(CmdBlockDesc::cmd_block_name)
+            .collect::<Vec<_>>()
+            .as_slice()
+    );
+
+    // Note: Expect interruption to be between `vec_copy` and `mock` items.
+    let states_current_content_expected = r#"vec_copy:
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+mock: 0
+"#;
+    // Note: states_goal_file is re-serialized, because we may have generated
+    // information for earlier items that are used for later items' goal state.
+    let states_goal_content_expected = r#"vec_copy:
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+mock: 1
+"#;
+    let states_current_content_after_exec = tokio::fs::read_to_string(&states_current_file).await?;
+    assert_eq!(
+        states_current_content_expected,
+        states_current_content_after_exec
+    );
+    let states_goal_content_after_exec = tokio::fs::read_to_string(&states_goal_file).await?;
+    assert_eq!(states_goal_content_expected, states_goal_content_after_exec);
 
     Ok(())
 }
