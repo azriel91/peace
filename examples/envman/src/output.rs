@@ -160,7 +160,7 @@ where
                 .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
                 .collect::<Vec<_>>();
             let item_ids_incomplete = stream_outcome
-                .fn_ids_processed()
+                .fn_ids_not_processed()
                 .iter()
                 .filter_map(|fn_id| flow.graph().node_weight(*fn_id).map(|item| item.id()))
                 .collect::<Vec<_>>();
@@ -171,7 +171,6 @@ where
             presentln!(output, ["`CmdBlock`s completed:"]);
             presentln!(output, [""]);
             presentln!(output, [&cmd_blocks_complete]);
-            presentln!(output, [""]);
 
             presentln!(output, ["`CmdBlock`s not completed:"]);
             presentln!(output, [""]);
@@ -180,7 +179,6 @@ where
             presentln!(output, ["Items completed:"]);
             presentln!(output, [""]);
             presentln!(output, [&item_ids_complete]);
-            presentln!(output, [""]);
 
             presentln!(output, ["Items not completed:"]);
             presentln!(output, [""]);
@@ -206,7 +204,6 @@ where
             presentln!(output, ["`CmdBlock`s completed:"]);
             presentln!(output, [""]);
             presentln!(output, [&cmd_blocks_complete]);
-            presentln!(output, [""]);
 
             presentln!(output, ["`CmdBlock`s not completed:"]);
             presentln!(output, [""]);
