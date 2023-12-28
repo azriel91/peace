@@ -5,7 +5,7 @@ use peace_cfg::ItemId;
 use crate::{StreamOutcomeAndErrors, ValueAndStreamOutcome};
 
 /// Outcome of running `CmdBlock::exec`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CmdBlockOutcome<T, E> {
     /// Single value returned by the command block.
     ///

@@ -1,7 +1,7 @@
 use fn_graph::StreamOutcome;
 
 /// `CmdBlock` outcome value on success, and its `StreamOutcome` if applicable.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValueAndStreamOutcome<T> {
     /// The value returned by the `CmdBlock`.
     pub value: T,
