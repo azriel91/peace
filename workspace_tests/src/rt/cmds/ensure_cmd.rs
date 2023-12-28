@@ -819,7 +819,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -827,7 +827,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -927,7 +927,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -935,7 +935,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1035,7 +1035,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1043,7 +1043,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1143,7 +1143,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
 
     // Dry ensure states.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1151,7 +1151,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_dry_with` to complete with item error.");
     };
-    let states_ensured_dry = stream_outcome.value();
+    let states_ensured_dry = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1251,7 +1251,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
 
     // Ensure states again.
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed: _,
         cmd_blocks_not_processed: _,
         errors,
@@ -1259,7 +1259,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     else {
         panic!("Expected `EnsureCmd::exec_with` to complete with item error.");
     };
-    let states_ensured_again = stream_outcome.value();
+    let states_ensured_again = item_stream_outcome.value();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1531,7 +1531,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         .await?;
 
     let CmdOutcome::ItemError {
-        stream_outcome,
+        item_stream_outcome,
         cmd_blocks_processed,
         cmd_blocks_not_processed,
         errors,
@@ -1539,7 +1539,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     else {
         panic!("Expected `EnsureCmd::exec` to complete with item error.");
     };
-    let states_ensured = stream_outcome.value();
+    let states_ensured = item_stream_outcome.value();
 
     assert_eq!(
         None,

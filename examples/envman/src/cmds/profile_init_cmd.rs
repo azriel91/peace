@@ -180,7 +180,7 @@ impl ProfileInitCmd {
                 );
             }
             CmdOutcome::ItemError {
-                stream_outcome: _,
+                item_stream_outcome: _,
                 cmd_blocks_processed: _,
                 cmd_blocks_not_processed: _,
                 errors,
