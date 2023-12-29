@@ -26,15 +26,16 @@ impl EnvDiscoverCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
+    /// * `debug`: Whether to print `CmdOutcome` debug info.
+    pub async fn run<O>(output: &mut O, debug: bool) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
-            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize, debug),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize, debug),
         }
 
         Ok(())
@@ -42,9 +43,9 @@ impl EnvDiscoverCmd {
 }
 
 macro_rules! run {
-    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+    ($output:ident, $flow_cmd:ident, $padding:expr, $debug:expr) => {{
         $flow_cmd::run($output, CmdOpts::default(), |cmd_ctx| {
-            run_with_ctx(cmd_ctx, $padding).boxed_local()
+            run_with_ctx(cmd_ctx, $padding, $debug).boxed_local()
         })
         .await?;
     }};
@@ -53,6 +54,7 @@ macro_rules! run {
 async fn run_with_ctx<O>(
     cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
     padding_count: usize,
+    debug: bool,
 ) -> Result<(), EnvManError>
 where
     O: OutputWrite<EnvManError>,
@@ -120,8 +122,10 @@ where
             .await?;
     }
 
-    crate::output::cmd_outcome_completion_present(output, resources, states_discover_outcome)
-        .await?;
+    if debug {
+        crate::output::cmd_outcome_completion_present(output, resources, states_discover_outcome)
+            .await?;
+    }
 
     Ok(())
 }

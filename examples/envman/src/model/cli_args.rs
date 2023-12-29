@@ -23,22 +23,25 @@ pub struct CliArgs {
     #[command(subcommand)]
     pub command: EnvManCommand,
     /// Whether to run with multiple threads.
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "false", global(true))]
     pub fast: bool,
     /// The format of the command output.
     ///
     /// At this level, this needs to be specified before the subcommand.
     /// <https://github.com/clap-rs/clap/issues/3002> needs to be implemented
     /// for the argument to be passed in after the subcommand.
-    #[arg(long)]
+    #[arg(long, global(true))]
     pub format: Option<OutputFormat>,
     /// Whether output should be colorized.
     ///
     /// * "auto" (default): Colorize when used interactively.
     /// * "always": Always colorize output.
     /// * "never": Never colorize output.
-    #[arg(long, default_value = "auto")]
+    #[arg(long, default_value = "auto", global(true))]
     pub color: CliColorizeOpt,
+    /// Whether to show debug information.
+    #[arg(long, default_value = "false", global(true))]
+    pub debug: bool,
 }
 
 #[derive(Subcommand)]

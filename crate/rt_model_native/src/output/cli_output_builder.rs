@@ -237,6 +237,48 @@ where
             CliProgressFormatOpt::None => CliProgressFormat::None,
         };
 
+        // We need to suppress the `^C\n` characters that come through the terminal.
+        //
+        // This is a combination of reading the following:
+        //
+        // * <https://stackoverflow.com/questions/42563400/hide-c-pressing-ctrl-c-in-c>
+        // * <https://docs.rs/libc/latest/libc/constant.ECHOCTL.html>
+        // * <https://docs.rs/raw_tty/0.1.0/raw_tty/struct.TtyWithGuard.html>
+        //
+        // Also considered were:
+        //
+        // * [`uu_stty`](https://crates.io/crates/uu_stty)], but it doesn't look like it
+        //   supports modifying the terminal.
+        // * [`unix_tty`](https://docs.rs/unix-tty/0.3.4/unix_tty/), which looks like it
+        //   can do the job, but `raw_tty` has a drop guard to restore the original tty
+        //   settings.
+        #[cfg(unix)]
+        let stdin_tty_with_guard = {
+            use raw_tty::GuardMode;
+
+            match std::io::stdin().guard_mode() {
+                Ok(mut stdin_tty_with_guard) => {
+                    let mode_modify_result = stdin_tty_with_guard.modify_mode(|mut ios| {
+                        ios.c_lflag &= !libc::ECHOCTL;
+                        ios
+                    });
+                    match mode_modify_result {
+                        Ok(()) => {}
+                        Err(error) => {
+                            #[cfg(debug_assertions)]
+                            eprintln!("warn: Failed to modify termios mode:\n{error}");
+                        }
+                    }
+                    Some(stdin_tty_with_guard)
+                }
+                Err(error) => {
+                    #[cfg(debug_assertions)]
+                    eprintln!("warn: Failed to acquire stdin termios:\n{error}");
+                    None
+                }
+            }
+        };
+
         CliOutput {
             writer,
             outcome_format,
@@ -247,6 +289,8 @@ where
             progress_format,
             #[cfg(feature = "output_progress")]
             pb_item_id_width: None,
+            #[cfg(unix)]
+            stdin_tty_with_guard,
         }
     }
 }

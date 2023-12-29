@@ -23,6 +23,7 @@ pub fn run() -> Result<(), EnvManError> {
         fast,
         format,
         color,
+        debug,
     } = CliArgs::parse();
 
     let runtime = if fast {
@@ -47,7 +48,7 @@ pub fn run() -> Result<(), EnvManError> {
             builder.build()
         };
 
-        match run_command(&mut cli_output, command).await {
+        match run_command(&mut cli_output, command, debug).await {
             Ok(()) => Ok(()),
             Err(error) => envman::output::errors_present(&mut cli_output, &[error]).await,
         }
@@ -57,6 +58,7 @@ pub fn run() -> Result<(), EnvManError> {
 async fn run_command(
     cli_output: &mut CliOutput<Stdout>,
     command: EnvManCommand,
+    debug: bool,
 ) -> Result<(), EnvManError> {
     match command {
         EnvManCommand::Init {
@@ -106,7 +108,7 @@ async fn run_command(
             };
             ProfileSwitchCmd::run(cli_output, profile_switch).await?
         }
-        EnvManCommand::Discover => EnvDiscoverCmd::run(cli_output).await?,
+        EnvManCommand::Discover => EnvDiscoverCmd::run(cli_output, debug).await?,
         EnvManCommand::Status => EnvStatusCmd::run(cli_output).await?,
         EnvManCommand::Goal => EnvGoalCmd::run(cli_output).await?,
         EnvManCommand::Diff {
@@ -125,8 +127,8 @@ async fn run_command(
 
             EnvDiffCmd::run(cli_output, env_diff_selection).await?
         }
-        EnvManCommand::Deploy => EnvDeployCmd::run(cli_output).await?,
-        EnvManCommand::Clean => EnvCleanCmd::run(cli_output).await?,
+        EnvManCommand::Deploy => EnvDeployCmd::run(cli_output, debug).await?,
+        EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
             WebServer::start(Some(SocketAddr::from((address, port)))).await?
