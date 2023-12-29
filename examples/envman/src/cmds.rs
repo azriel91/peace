@@ -9,6 +9,7 @@
 pub use self::{
     app_upload_cmd::AppUploadCmd,
     cmd_ctx_builder::{interruptibility_augment, ws_and_profile_params_augment, ws_params_augment},
+    cmd_opts::CmdOpts,
     env_clean_cmd::EnvCleanCmd,
     env_cmd::EnvCmd,
     env_deploy_cmd::EnvDeployCmd,
@@ -24,6 +25,7 @@ pub use self::{
 
 mod app_upload_cmd;
 mod cmd_ctx_builder;
+mod cmd_opts;
 mod common;
 mod env_clean_cmd;
 mod env_cmd;

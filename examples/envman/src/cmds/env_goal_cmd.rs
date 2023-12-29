@@ -10,7 +10,7 @@ use peace::{
 use crate::{
     cmds::{
         common::{env_man_flow, workspace},
-        AppUploadCmd, EnvCmd,
+        AppUploadCmd, CmdOpts, EnvCmd,
     },
     model::{EnvManError, EnvManFlow},
     rt_model::EnvManCmdCtx,
@@ -43,7 +43,7 @@ impl EnvGoalCmd {
 
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
-        $flow_cmd::run($output, true, |cmd_ctx| {
+        $flow_cmd::run($output, CmdOpts::default(), |cmd_ctx| {
             run_with_ctx(cmd_ctx, $padding).boxed_local()
         })
         .await?;

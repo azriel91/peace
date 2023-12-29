@@ -19,6 +19,7 @@ use peace::{
 };
 
 use crate::{
+    cmds::CmdOpts,
     flows::AppUploadFlow,
     items::{
         peace_aws_s3_bucket::S3BucketState,
@@ -38,9 +39,9 @@ impl AppUploadCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `profile_print`: Whether to print the profile used.
+    /// * `cmd_opts`: Options to configure the `Cmd`'s output.
     /// * `f`: The command to run.
-    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, EnvManError>
+    pub async fn run<O, T, F>(output: &mut O, cmd_opts: CmdOpts, f: F) -> Result<T, EnvManError>
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
@@ -81,6 +82,8 @@ impl AppUploadCmd {
                 )
                 .await?
         };
+
+        let CmdOpts { profile_print } = cmd_opts;
 
         if profile_print {
             Self::profile_print(&mut cmd_ctx).await?;

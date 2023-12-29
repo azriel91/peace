@@ -14,7 +14,7 @@ use peace::{
 use crate::{
     cmds::{
         common::{env_man_flow, workspace},
-        AppUploadCmd, EnvCmd,
+        AppUploadCmd, CmdOpts, EnvCmd,
     },
     model::{EnvDiffSelection, EnvManError, EnvManFlow},
 };
@@ -126,7 +126,7 @@ impl EnvDiffCmd {
 
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
-        $flow_cmd::run($output, true, |ctx| {
+        $flow_cmd::run($output, CmdOpts::default(), |ctx| {
             async {
                 let state_diffs_outcome = DiffCmd::diff_stored(ctx).await?;
 
