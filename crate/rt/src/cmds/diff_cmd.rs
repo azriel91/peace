@@ -93,14 +93,15 @@ where
             StatesTs1::diff_state_spec(),
         );
 
-        let mut cmd_execution = cmd_execution_builder
-            .with_cmd_block(CmdBlockWrapper::new(
-                DiffCmdBlock::<_, _, StatesTs0, StatesTs1>::new(),
-                |_state_diffs_ts0_and_ts1| StateDiffs::new(),
-            ))
-            .build();
+        cmd_execution_builder = cmd_execution_builder.with_cmd_block(CmdBlockWrapper::new(
+            DiffCmdBlock::<_, _, StatesTs0, StatesTs1>::new(),
+            |_state_diffs_ts0_and_ts1| StateDiffs::new(),
+        ));
 
-        cmd_execution.exec(cmd_ctx).await
+        #[cfg(feature = "output_progress")]
+        let cmd_execution_builder = cmd_execution_builder.with_progress_render_enabled(false);
+
+        cmd_execution_builder.build().exec(cmd_ctx).await
     }
 
     fn states_fetch_cmd_block_append(
