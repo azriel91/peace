@@ -32,6 +32,10 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-std"] }
 tokio-util = { workspace = true, features = ["io", "io-util"] }
 
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+raw_tty = { workspace = true }
+
 [features]
 default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]

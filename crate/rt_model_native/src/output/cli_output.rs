@@ -1,3 +1,5 @@
+use std::fmt::{self, Debug};
+
 use peace_fmt::Presentable;
 use peace_rt_model_core::{
     async_trait,
@@ -56,7 +58,7 @@ cfg_if::cfg_if! {
 /// [`with_colorized`]: CliOutputBuilder::with_colorized
 /// [`with_progress_format`]: CliOutputBuilder::with_progress_format
 /// [`with_progress_target`]: CliOutputBuilder::with_progress_target
-#[derive(Debug)]
+#[cfg_attr(not(unix), derive(Debug))]
 pub struct CliOutput<W> {
     /// Output stream to write the command outcome to.
     pub(crate) writer: W,
@@ -76,6 +78,46 @@ pub struct CliOutput<W> {
     /// Width of the item ID column for progress bars
     #[cfg(feature = "output_progress")]
     pub(crate) pb_item_id_width: Option<usize>,
+    /// The TTY guard that restores the terminal mode when `CliOutput` is
+    /// dropped.
+    ///
+    /// This is used to suppress control character echo, e.g. `SIGINT` rendering
+    /// `^C\n`.
+    #[cfg(unix)]
+    pub(crate) stdin_tty_with_guard: Option<raw_tty::TtyWithGuard<std::io::Stdin>>,
+}
+
+#[cfg(unix)]
+impl<W> Debug for CliOutput<W>
+where
+    W: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut debug_struct = f.debug_struct("CliOutput");
+        debug_struct
+            .field("writer", &self.writer)
+            .field("outcome_format", &self.outcome_format)
+            .field("colorize", &self.colorize);
+
+        #[cfg(feature = "output_progress")]
+        {
+            debug_struct
+                .field("progress_target", &self.progress_target)
+                .field("progress_format", &self.progress_format)
+                .field("pb_item_id_width", &self.pb_item_id_width);
+        }
+
+        debug_struct.field(
+            "stdin_tty_with_guard",
+            if self.stdin_tty_with_guard.is_some() {
+                &Some(..)
+            } else {
+                &None::<()>
+            },
+        );
+
+        debug_struct.finish()
+    }
 }
 
 impl CliOutput<Stdout> {
