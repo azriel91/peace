@@ -6,6 +6,7 @@
 * Add `CmdBlock` trait to encompass one function for all items. ([#141], [#163])
 * Add interruptibility support using [`interruptible`] through `CmdCtxBuilder::with_interruptibility`. ([#141], [#163])
 * Add `ItemStreamOutcome` to track which `Item`s are processed or not processed. ([#164], [#165])
+* Suppress progress rendering for `StatesCurrentReadCmd`, `StatesGoalReadCmd`, and `DiffCmd`. ([#167], [#168])
 
 
 [`interruptible`]: https://github.com/azriel91/interruptible
@@ -13,6 +14,8 @@
 [#163]: https://github.com/azriel91/peace/pull/163
 [#164]: https://github.com/azriel91/peace/issues/164
 [#165]: https://github.com/azriel91/peace/pull/165
+[#167]: https://github.com/azriel91/peace/issues/167
+[#168]: https://github.com/azriel91/peace/pull/168
 
 
 ## 0.0.11 (2023-06-27)

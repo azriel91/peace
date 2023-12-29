@@ -28,14 +28,16 @@ where
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoalStored, E>, E> {
-        CmdExecution::<StatesGoalStored, _, _>::builder()
+        let cmd_execution_builder = CmdExecution::<StatesGoalStored, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 StatesGoalReadCmdBlock::new(),
                 std::convert::identity,
-            ))
-            .build()
-            .exec(cmd_ctx)
-            .await
+            ));
+
+        #[cfg(feature = "output_progress")]
+        let cmd_execution_builder = cmd_execution_builder.with_progress_render_enabled(false);
+
+        cmd_execution_builder.build().exec(cmd_ctx).await
     }
 }
 

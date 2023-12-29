@@ -19,6 +19,7 @@ use peace::{
 };
 
 use crate::{
+    cmds::CmdOpts,
     flows::EnvDeployFlow,
     items::{
         peace_aws_iam_policy::IamPolicyState,
@@ -38,9 +39,9 @@ impl EnvCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `profile_print`: Whether to print the profile used.
+    /// * `cmd_opts`: Options to configure the `Cmd`'s output.
     /// * `f`: The command to run.
-    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, EnvManError>
+    pub async fn run<O, T, F>(output: &mut O, cmd_opts: CmdOpts, f: F) -> Result<T, EnvManError>
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
@@ -72,6 +73,8 @@ impl EnvCmd {
                 Some(policy_id_arn_version.arn().to_string())
             })
             .build();
+
+        let CmdOpts { profile_print } = cmd_opts;
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =
