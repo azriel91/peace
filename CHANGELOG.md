@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.12 (2023-12-30)
 
 * Change `CmdOutcome` to be an `enum` indicating whether it is completed, interrupted, or erroneous. ([#141], [#163])
 * Add `CmdBlock` trait to encompass one function for all items. ([#141], [#163])
