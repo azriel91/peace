@@ -39,6 +39,9 @@ pub struct CliArgs {
     /// * "never": Never colorize output.
     #[arg(long, default_value = "auto")]
     pub color: CliColorizeOpt,
+    /// Whether to show debug information.
+    #[arg(long, default_value = "false")]
+    pub debug: bool,
 }
 
 #[derive(Subcommand)]
