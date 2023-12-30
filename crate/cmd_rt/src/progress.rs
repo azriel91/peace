@@ -1,3 +1,5 @@
+use std::ops::ControlFlow;
+
 use futures::stream::{self, StreamExt};
 use peace_cfg::{
     progress::{
@@ -24,22 +26,35 @@ impl Progress {
     {
         loop {
             tokio::select! {
-                Some(progress_update_and_id) = progress_rx.recv() => {
-                    Self::handle_progress_update_and_id(
-                        output,
-                        progress_trackers,
-                        progress_update_and_id
-                    ).await;
+                progress_update_and_id_message = progress_rx.recv() => {
+                    match progress_update_and_id_message {
+                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
+                            output,
+                            progress_trackers,
+                            progress_update_and_id
+                        ).await,
+                        None => break,
+                    }
                 }
                 Some(cmd_progress_update) = cmd_progress_rx.recv() => {
-                    Self::handle_cmd_progress_update(
+                    let control_flow = Self::handle_cmd_progress_update(
                         output,
                         progress_trackers,
                         cmd_progress_update
                     ).await;
+
+                    match control_flow {
+                        ControlFlow::Break(()) => break,
+                        ControlFlow::Continue(()) => break,
+                    }
                 }
                 else => break,
             }
+        }
+
+        while let Some(progress_update_and_id) = progress_rx.recv().await {
+            Self::handle_progress_update_and_id(output, progress_trackers, progress_update_and_id)
+                .await;
         }
     }
 
@@ -63,9 +78,7 @@ impl Progress {
             ProgressUpdate::Reset => {
                 progress_tracker.reset();
             }
-            ProgressUpdate::Interrupt => {
-                progress_tracker.set_progress_status(ProgressStatus::Interrupted);
-            }
+            ProgressUpdate::Interrupt => Self::progress_tracker_interrupt(progress_tracker),
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);
                 progress_tracker.set_progress_status(ProgressStatus::ExecPending);
@@ -98,14 +111,15 @@ impl Progress {
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         cmd_progress_update: CmdProgressUpdate,
-    ) where
+    ) -> ControlFlow<()>
+    where
         O: OutputWrite<E>,
     {
         match cmd_progress_update {
             CmdProgressUpdate::Interrupt => {
                 stream::iter(progress_trackers.iter_mut())
                     .fold(output, |output, (item_id, progress_tracker)| async move {
-                        progress_tracker.set_progress_status(ProgressStatus::Interrupted);
+                        Self::progress_tracker_interrupt(progress_tracker);
 
                         let item_id = item_id.clone();
                         let progress_update_and_id = ProgressUpdateAndId {
@@ -119,7 +133,23 @@ impl Progress {
                         output
                     })
                     .await;
+
+                ControlFlow::Break(())
             }
+        }
+    }
+
+    fn progress_tracker_interrupt(progress_tracker: &mut ProgressTracker) {
+        match *progress_tracker.progress_status() {
+            ProgressStatus::Initialized
+            | ProgressStatus::ExecPending
+            | ProgressStatus::UserPending => {
+                progress_tracker.set_progress_status(ProgressStatus::Interrupted)
+            }
+            ProgressStatus::Interrupted
+            | ProgressStatus::Running
+            | ProgressStatus::RunningStalled
+            | ProgressStatus::Complete(_) => {}
         }
     }
 }

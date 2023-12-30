@@ -346,7 +346,8 @@ where
         //
         //  32: blue pale (running)
         //  17: blue dark (running background)
-        // 222: yellow pale (stalled)
+        // 208: yellow-orange (stalled)
+        // 220: yellow (interrupted)
         //  75: indigo pale (user pending, item id)
         //  35: green pale (success)
         //  22: green dark (success background)
@@ -367,11 +368,11 @@ where
                         ProgressStatus::Initialized => {
                             console::style(BAR_EMPTY).color256(GRAY_DARK)
                         }
-                        ProgressStatus::Interrupted => console::style("{bar:40.222}"),
+                        ProgressStatus::Interrupted => console::style("{bar:40.220}"),
                         ProgressStatus::ExecPending | ProgressStatus::Running => {
                             console::style("{bar:40.32}")
                         }
-                        ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
+                        ProgressStatus::RunningStalled => console::style("{bar:40.208}"),
                         ProgressStatus::UserPending => console::style("{bar:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
                             // Ideally we just use `"{bar:40.35}"`,
@@ -395,8 +396,8 @@ where
                         ProgressStatus::ExecPending | ProgressStatus::Running => {
                             console::style("{spinner:40.32}")
                         }
-                        ProgressStatus::Interrupted => console::style("{spinner:40.222}"),
-                        ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
+                        ProgressStatus::Interrupted => console::style("{spinner:40.220}"),
+                        ProgressStatus::RunningStalled => console::style("{spinner:40.208}"),
                         ProgressStatus::UserPending => console::style("{spinner:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
                             // Ideally we just use `"{spinner:40.35}"`,
