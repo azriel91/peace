@@ -103,10 +103,12 @@ where
                 let (cmd_progress_tx, cmd_progress_rx) =
                     mpsc::channel::<CmdProgressUpdate>(crate::CMD_PROGRESS_COUNT_MAX);
 
+                let cmd_progress_tx_for_interruptibility_state = cmd_progress_tx.clone();
+
                 cmd_view.interruptibility_state
                     .set_fn_interrupt_activate(Some(move || {
                         let _cmd_progress_send_result =
-                            cmd_progress_tx.try_send(CmdProgressUpdate::Interrupt);
+                            cmd_progress_tx_for_interruptibility_state.try_send(CmdProgressUpdate::Interrupt);
                     }));
             } else {
                 let SingleProfileSingleFlowViewAndOutput {
@@ -122,6 +124,8 @@ where
             &mut cmd_view,
             #[cfg(feature = "output_progress")]
             progress_tx,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tx,
         );
 
         #[cfg(not(feature = "output_progress"))]
@@ -195,6 +199,7 @@ async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
     #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
+    #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
@@ -215,6 +220,8 @@ where
             cmd_view,
             #[cfg(feature = "output_progress")]
             progress_tx,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tx,
         },
         // `progress_tx` is moved into this closure, and dropped at the very end, so
         // that `progress_render_task` will actually end.
@@ -223,7 +230,20 @@ where
                 cmd_view,
                 #[cfg(feature = "output_progress")]
                 progress_tx,
+                #[cfg(feature = "output_progress")]
+                cmd_progress_tx,
             } = cmd_view_and_progress;
+
+            #[cfg(feature = "output_progress")]
+            if cmd_block_index != 0 {
+                cmd_progress_tx
+                    .send(CmdProgressUpdate::ResetToPending)
+                    .await
+                    .expect(
+                        "Expected `CmdProgressUpdate` channel to remain open \
+                        while iterating over `CmdBlock`s.",
+                    );
+            }
 
             // Check if we are interrupted before we execute this `CmdBlock`.
             if let Some(interrupt_signal) =
@@ -233,6 +253,8 @@ where
                     cmd_view,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tx,
                 };
                 return Err(CmdBlockStreamBreak::Interrupt {
                     cmd_view_and_progress,
@@ -254,6 +276,8 @@ where
                 cmd_view,
                 #[cfg(feature = "output_progress")]
                 progress_tx,
+                #[cfg(feature = "output_progress")]
+                cmd_progress_tx,
             };
 
             match block_cmd_outcome_result {
@@ -325,10 +349,14 @@ where
         },
         #[cfg(feature = "output_progress")]
         progress_tx,
+        #[cfg(feature = "output_progress")]
+        cmd_progress_tx,
     } = cmd_view_and_progress;
 
     #[cfg(feature = "output_progress")]
     drop(progress_tx);
+    #[cfg(feature = "output_progress")]
+    drop(cmd_progress_tx);
 
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
@@ -434,6 +462,8 @@ where
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
+    #[cfg(feature = "output_progress")]
+    cmd_progress_tx: Sender<CmdProgressUpdate>,
 }
 
 /// Reasons to stop processing `CmdBlock`s.

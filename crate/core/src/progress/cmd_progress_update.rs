@@ -8,4 +8,6 @@ pub enum CmdProgressUpdate {
     /// `CmdExecution` has been interrupted, we should indicate this on all
     /// unstarted progress bars.
     Interrupt,
+    /// We are in between `CmdBlock`s, set all progress bars to `ExecPending`.
+    ResetToPending,
 }

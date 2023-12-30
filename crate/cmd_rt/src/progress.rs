@@ -26,16 +26,7 @@ impl Progress {
     {
         loop {
             tokio::select! {
-                progress_update_and_id_message = progress_rx.recv() => {
-                    match progress_update_and_id_message {
-                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
-                            output,
-                            progress_trackers,
-                            progress_update_and_id
-                        ).await,
-                        None => break,
-                    }
-                }
+                biased;
                 Some(cmd_progress_update) = cmd_progress_rx.recv() => {
                     let control_flow = Self::handle_cmd_progress_update(
                         output,
@@ -45,7 +36,17 @@ impl Progress {
 
                     match control_flow {
                         ControlFlow::Break(()) => break,
-                        ControlFlow::Continue(()) => break,
+                        ControlFlow::Continue(()) => {}
+                    }
+                }
+                progress_update_and_id_message = progress_rx.recv() => {
+                    match progress_update_and_id_message {
+                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
+                            output,
+                            progress_trackers,
+                            progress_update_and_id
+                        ).await,
+                        None => break,
                     }
                 }
                 else => break,
@@ -65,15 +66,89 @@ impl Progress {
     ) where
         O: OutputWrite<E>,
     {
-        let ProgressUpdateAndId {
-            item_id,
-            progress_update,
-            msg_update,
-        } = &progress_update_and_id;
-
+        let item_id = &progress_update_and_id.item_id;
         let Some(progress_tracker) = progress_trackers.get_mut(item_id) else {
             panic!("Expected `progress_tracker` to exist for item: `{item_id}`.");
         };
+
+        Self::handle_progress_tracker_progress_update(
+            output,
+            progress_tracker,
+            progress_update_and_id,
+        )
+        .await;
+    }
+
+    async fn handle_cmd_progress_update<E, O>(
+        output: &mut O,
+        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
+        cmd_progress_update: CmdProgressUpdate,
+    ) -> ControlFlow<()>
+    where
+        O: OutputWrite<E>,
+    {
+        match cmd_progress_update {
+            CmdProgressUpdate::Interrupt => {
+                stream::iter(progress_trackers.iter_mut())
+                    .fold(output, |output, (item_id, progress_tracker)| async move {
+                        let item_id = item_id.clone();
+                        let progress_update_and_id = ProgressUpdateAndId {
+                            item_id,
+                            progress_update: ProgressUpdate::Interrupt,
+                            msg_update: ProgressMsgUpdate::Set(String::from("interrupted")),
+                        };
+
+                        Self::handle_progress_tracker_progress_update(
+                            output,
+                            progress_tracker,
+                            progress_update_and_id,
+                        )
+                        .await;
+
+                        output
+                    })
+                    .await;
+
+                ControlFlow::Break(())
+            }
+            CmdProgressUpdate::ResetToPending => {
+                stream::iter(progress_trackers.iter_mut())
+                    .fold(output, |output, (item_id, progress_tracker)| async move {
+                        let item_id = item_id.clone();
+                        let progress_update_and_id = ProgressUpdateAndId {
+                            item_id,
+                            progress_update: ProgressUpdate::ResetToPending,
+                            msg_update: ProgressMsgUpdate::Clear,
+                        };
+
+                        Self::handle_progress_tracker_progress_update(
+                            output,
+                            progress_tracker,
+                            progress_update_and_id,
+                        )
+                        .await;
+
+                        output
+                    })
+                    .await;
+
+                ControlFlow::Continue(())
+            }
+        }
+    }
+
+    async fn handle_progress_tracker_progress_update<E, O>(
+        output: &mut O,
+        progress_tracker: &mut ProgressTracker,
+        progress_update_and_id: ProgressUpdateAndId,
+    ) where
+        O: OutputWrite<E>,
+    {
+        let ProgressUpdateAndId {
+            item_id: _,
+            progress_update,
+            msg_update,
+        } = &progress_update_and_id;
         match progress_update {
             ProgressUpdate::Reset => progress_tracker.reset(),
             ProgressUpdate::ResetToPending => progress_tracker.reset_to_pending(),
@@ -104,38 +179,6 @@ impl Progress {
         output
             .progress_update(progress_tracker, &progress_update_and_id)
             .await;
-    }
-
-    async fn handle_cmd_progress_update<E, O>(
-        output: &mut O,
-        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
-        cmd_progress_update: CmdProgressUpdate,
-    ) -> ControlFlow<()>
-    where
-        O: OutputWrite<E>,
-    {
-        match cmd_progress_update {
-            CmdProgressUpdate::Interrupt => {
-                stream::iter(progress_trackers.iter_mut())
-                    .fold(output, |output, (item_id, progress_tracker)| async move {
-                        Self::progress_tracker_interrupt(progress_tracker);
-
-                        let item_id = item_id.clone();
-                        let progress_update_and_id = ProgressUpdateAndId {
-                            item_id,
-                            progress_update: ProgressUpdate::Interrupt,
-                            msg_update: ProgressMsgUpdate::Set(String::from("interrupted")),
-                        };
-                        output
-                            .progress_update(progress_tracker, &progress_update_and_id)
-                            .await;
-                        output
-                    })
-                    .await;
-
-                ControlFlow::Break(())
-            }
-        }
     }
 
     fn progress_tracker_interrupt(progress_tracker: &mut ProgressTracker) {
