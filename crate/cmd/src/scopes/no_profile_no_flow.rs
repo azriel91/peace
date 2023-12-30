@@ -45,7 +45,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -67,7 +67,7 @@ where
 {
     pub(crate) fn new(
         output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -93,7 +93,7 @@ where
     }
 
     //// Returns the interruptibility capability.
-    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
+    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_, '_> {
         self.interruptibility_state.reborrow()
     }
 

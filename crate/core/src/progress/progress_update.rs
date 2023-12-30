@@ -4,11 +4,10 @@ use crate::progress::{ProgressDelta, ProgressLimit};
 
 use super::ProgressComplete;
 
-/// Delta update for the progress tracker.
+/// Progress update for a single progress tracker.
 ///
 /// # Potential Future Variants
 ///
-/// * `Interrupt`
 /// * `PendingInput`
 /// * `Stall`
 ///

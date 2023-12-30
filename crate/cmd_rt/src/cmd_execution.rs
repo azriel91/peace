@@ -17,6 +17,7 @@ use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::progress::{
+            CmdProgressUpdate,
             ProgressUpdateAndId,
         };
         use peace_rt_model::CmdProgressTracker;
@@ -99,6 +100,14 @@ where
 
                 let (progress_tx, progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
+                let (cmd_progress_tx, cmd_progress_rx) =
+                    mpsc::channel::<CmdProgressUpdate>(crate::CMD_PROGRESS_COUNT_MAX);
+
+                cmd_view.interruptibility_state
+                    .set_fn_interrupt_activate(Some(move || {
+                        let _cmd_progress_send_result =
+                            cmd_progress_tx.try_send(CmdProgressUpdate::Interrupt);
+                    }));
             } else {
                 let SingleProfileSingleFlowViewAndOutput {
                     mut cmd_view,
@@ -115,18 +124,23 @@ where
             progress_tx,
         );
 
-        exec_internal(
-            cmd_outcome_task,
-            #[cfg(feature = "output_progress")]
-            progress_render_enabled,
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            #[cfg(feature = "output_progress")]
-            progress_rx,
-        )
-        .await
+        #[cfg(not(feature = "output_progress"))]
+        {
+            exec_internal(cmd_outcome_task).await
+        }
+
+        #[cfg(feature = "output_progress")]
+        {
+            exec_internal(
+                cmd_outcome_task,
+                progress_render_enabled,
+                output,
+                cmd_progress_tracker,
+                progress_rx,
+                cmd_progress_rx,
+            )
+            .await
+        }
     }
 
     // pub fn exec_bg -> CmdExecId
@@ -142,6 +156,7 @@ async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] 
     #[cfg(feature = "output_progress")] output: &mut O,
     #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
     #[cfg(feature = "output_progress")] mut progress_rx: mpsc::Receiver<ProgressUpdateAndId>,
+    #[cfg(feature = "output_progress")] cmd_progress_rx: mpsc::Receiver<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
@@ -157,7 +172,7 @@ where
         output.progress_begin(cmd_progress_tracker).await;
         let progress_trackers = &mut cmd_progress_tracker.progress_trackers;
         let progress_render_task =
-            Progress::progress_render(output, progress_trackers, progress_rx);
+            Progress::progress_render(output, progress_trackers, progress_rx, cmd_progress_rx);
 
         let (cmd_outcome, ()) = futures::join!(cmd_outcome_task, progress_render_task);
 

@@ -85,7 +85,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profiles that are accessible by this command.
@@ -153,7 +153,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    pub interruptibility_state: InterruptibilityState<'view, 'view>,
+    pub interruptibility_state: InterruptibilityState<'view, 'view, 'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profiles that are accessible by this command.
@@ -212,7 +212,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
@@ -322,7 +322,7 @@ where
     }
 
     /// Returns the interruptibility capability.
-    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
+    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_, '_> {
         self.interruptibility_state.reborrow()
     }
 

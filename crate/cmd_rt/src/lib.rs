@@ -20,6 +20,10 @@ cfg_if::cfg_if! {
         ///
         /// TODO: Remove the copy in `peace_rt`.
         pub const PROGRESS_COUNT_MAX: usize = 256;
+        /// Maximum number of `CmdExecution` progress messages to buffer.
+        ///
+        /// We don't expect many of these to happen at the same time, so a small limit is sufficient.
+        pub const CMD_PROGRESS_COUNT_MAX: usize = 32;
 
         pub(crate) use crate::progress::Progress;
         pub(crate) mod progress;
