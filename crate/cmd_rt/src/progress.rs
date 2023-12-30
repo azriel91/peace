@@ -173,7 +173,20 @@ impl Progress {
         match msg_update {
             ProgressMsgUpdate::Clear => progress_tracker.set_message(None),
             ProgressMsgUpdate::NoChange => {}
-            ProgressMsgUpdate::Set(message) => progress_tracker.set_message(Some(message.clone())),
+            ProgressMsgUpdate::Set(message) => {
+                // If we aren't an `Interrupt` update, always set the message.
+                //
+                // If we are an `Interrupt` update, then only set it if the progress tracker is
+                // actually on the `Interrupted` status.
+                if !matches!(progress_update, ProgressUpdate::Interrupt)
+                    || matches!(
+                        progress_tracker.progress_status(),
+                        ProgressStatus::Interrupted
+                    )
+                {
+                    progress_tracker.set_message(Some(message.clone()))
+                }
+            }
         }
 
         output
