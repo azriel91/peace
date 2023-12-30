@@ -95,7 +95,7 @@ impl Progress {
                         let progress_update_and_id = ProgressUpdateAndId {
                             item_id,
                             progress_update: ProgressUpdate::Interrupt,
-                            msg_update: ProgressMsgUpdate::Set(String::from("interrupted")),
+                            msg_update: ProgressMsgUpdate::NoChange,
                         };
 
                         Self::handle_progress_tracker_progress_update(
@@ -152,7 +152,7 @@ impl Progress {
         match progress_update {
             ProgressUpdate::Reset => progress_tracker.reset(),
             ProgressUpdate::ResetToPending => progress_tracker.reset_to_pending(),
-            ProgressUpdate::Interrupt => Self::progress_tracker_interrupt(progress_tracker),
+            ProgressUpdate::Interrupt => progress_tracker.interrupt(),
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);
                 progress_tracker.set_progress_status(ProgressStatus::ExecPending);
@@ -173,38 +173,11 @@ impl Progress {
         match msg_update {
             ProgressMsgUpdate::Clear => progress_tracker.set_message(None),
             ProgressMsgUpdate::NoChange => {}
-            ProgressMsgUpdate::Set(message) => {
-                // If we aren't an `Interrupt` update, always set the message.
-                //
-                // If we are an `Interrupt` update, then only set it if the progress tracker is
-                // actually on the `Interrupted` status.
-                if !matches!(progress_update, ProgressUpdate::Interrupt)
-                    || matches!(
-                        progress_tracker.progress_status(),
-                        ProgressStatus::Interrupted
-                    )
-                {
-                    progress_tracker.set_message(Some(message.clone()))
-                }
-            }
+            ProgressMsgUpdate::Set(message) => progress_tracker.set_message(Some(message.clone())),
         }
 
         output
             .progress_update(progress_tracker, &progress_update_and_id)
             .await;
-    }
-
-    fn progress_tracker_interrupt(progress_tracker: &mut ProgressTracker) {
-        match *progress_tracker.progress_status() {
-            ProgressStatus::Initialized
-            | ProgressStatus::ExecPending
-            | ProgressStatus::UserPending => {
-                progress_tracker.set_progress_status(ProgressStatus::Interrupted)
-            }
-            ProgressStatus::Interrupted
-            | ProgressStatus::Running
-            | ProgressStatus::RunningStalled
-            | ProgressStatus::Complete(_) => {}
-        }
     }
 }

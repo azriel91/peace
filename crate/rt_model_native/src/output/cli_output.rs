@@ -616,10 +616,13 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset
-                    | ProgressUpdate::ResetToPending
-                    | ProgressUpdate::Interrupt => {
+                    ProgressUpdate::Reset | ProgressUpdate::ResetToPending => {
                         self.progress_bar_style_update(progress_tracker);
+                    }
+                    ProgressUpdate::Interrupt => {
+                        self.progress_bar_style_update(progress_tracker);
+                        let progress_bar = progress_tracker.progress_bar();
+                        progress_bar.abandon();
                     }
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`
