@@ -27,8 +27,13 @@ use super::ProgressComplete;
 /// [`serde_yaml::with::singleton_map`]: https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressUpdate {
-    /// Resets the progress tracker to a clean state.
+    /// Resets the progress tracker to the `Initialized` state.
     Reset,
+    /// Resets the progress tracker to the `ExecPending` state.
+    ///
+    /// This is similar to `Reset`, but the progress bar is not styled as
+    /// disabled.
+    ResetToPending,
     /// `CmdExecution` has been interrupted, we should indicate this on the
     /// progress bar.
     Interrupt,

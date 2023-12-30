@@ -75,9 +75,8 @@ impl Progress {
             panic!("Expected `progress_tracker` to exist for item: `{item_id}`.");
         };
         match progress_update {
-            ProgressUpdate::Reset => {
-                progress_tracker.reset();
-            }
+            ProgressUpdate::Reset => progress_tracker.reset(),
+            ProgressUpdate::ResetToPending => progress_tracker.reset_to_pending(),
             ProgressUpdate::Interrupt => Self::progress_tracker_interrupt(progress_tracker),
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);

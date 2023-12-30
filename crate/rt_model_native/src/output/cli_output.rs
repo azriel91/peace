@@ -354,6 +354,7 @@ where
         // 160: red slightly dim (fail)
         //  88: red dark (fail background)
 
+        const BLUE_PALE: u8 = 32;
         const GRAY_DARK: u8 = 237;
         const GRAY_MED: u8 = 8;
         const GREEN_LIGHT: u8 = 35;
@@ -393,9 +394,10 @@ where
                         ProgressStatus::Initialized => {
                             console::style(SPINNER_EMPTY).color256(GRAY_MED)
                         }
-                        ProgressStatus::ExecPending | ProgressStatus::Running => {
-                            console::style("{spinner:40.32}")
+                        ProgressStatus::ExecPending => {
+                            console::style(SPINNER_EMPTY).color256(BLUE_PALE)
                         }
+                        ProgressStatus::Running => console::style("{spinner:40.32}"),
                         ProgressStatus::Interrupted => console::style("{spinner:40.220}"),
                         ProgressStatus::RunningStalled => console::style("{spinner:40.208}"),
                         ProgressStatus::UserPending => console::style("{spinner:40.75}"),
@@ -614,7 +616,9 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset | ProgressUpdate::Interrupt => {
+                    ProgressUpdate::Reset
+                    | ProgressUpdate::ResetToPending
+                    | ProgressUpdate::Interrupt => {
                         self.progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Limit(_progress_limit) => {

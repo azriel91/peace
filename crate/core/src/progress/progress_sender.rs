@@ -56,4 +56,13 @@ impl<'exec> ProgressSender<'exec> {
             msg_update: ProgressMsgUpdate::Clear,
         });
     }
+
+    /// Resets the progress tracker to a clean state.
+    pub fn reset_to_pending(&self) {
+        let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
+            item_id: self.item_id.clone(),
+            progress_update: ProgressUpdate::ResetToPending,
+            msg_update: ProgressMsgUpdate::Clear,
+        });
+    }
 }

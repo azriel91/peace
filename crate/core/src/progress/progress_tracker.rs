@@ -36,10 +36,22 @@ impl ProgressTracker {
         }
     }
 
-    /// Resets the progress tracker.
+    /// Resets the progress tracker to `Initialized`.
     // TODO: write test for this
     pub fn reset(&mut self) {
         self.progress_status = ProgressStatus::Initialized;
+        self.message = None;
+        self.progress_limit = None;
+        self.progress_bar.set_length(0);
+        self.progress_bar.set_position(0);
+        self.progress_bar.reset();
+        self.last_update_dt = Utc::now();
+    }
+
+    /// Resets the progress tracker to `ExecPending`.
+    // TODO: write test for this
+    pub fn reset_to_pending(&mut self) {
+        self.progress_status = ProgressStatus::ExecPending;
         self.message = None;
         self.progress_limit = None;
         self.progress_bar.set_length(0);
