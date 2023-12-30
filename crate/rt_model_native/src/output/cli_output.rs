@@ -463,6 +463,16 @@ where
             }
         };
 
+        // For showing `ProgressTracker` status for debugging:
+        //
+        // ```rust
+        // // `fmt::Debug` doesn't support alignment, so we need to render the `Debug` string,
+        // // then align it.
+        // let progress_status = progress_tracker.progress_status();
+        // let progress_status = format!("{progress_status:?}");
+        // let mut format_str = format!("{icon} {progress_status:20} {prefix} {bar_or_spinner}");
+        // ```
+
         // `prefix` is the item ID.
         let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
         if let Some(units) = units {

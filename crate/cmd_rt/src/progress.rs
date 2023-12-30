@@ -25,8 +25,25 @@ impl Progress {
         O: OutputWrite<E>,
     {
         loop {
+            // This **MUST** be `biased;` towards the `ProgressUpdateAndId` channel.
+            //
+            // Without it, some of the `ProgressUpdate::Delta(ProgressDelta::Tick)` messages
+            // from `StatesDiscoverCmdBlock` arrive after
+            // `CmdProgressUpdate::ResetToPending`, causing some progress bars
+            // to revert to `Running` even though the `CmdExecution`'s
+            // message should be applied after them.
             tokio::select! {
                 biased;
+                progress_update_and_id_message = progress_rx.recv() => {
+                    match progress_update_and_id_message {
+                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
+                            output,
+                            progress_trackers,
+                            progress_update_and_id
+                        ).await,
+                        None => break,
+                    }
+                }
                 Some(cmd_progress_update) = cmd_progress_rx.recv() => {
                     let control_flow = Self::handle_cmd_progress_update(
                         output,
@@ -37,16 +54,6 @@ impl Progress {
                     match control_flow {
                         ControlFlow::Break(()) => break,
                         ControlFlow::Continue(()) => {}
-                    }
-                }
-                progress_update_and_id_message = progress_rx.recv() => {
-                    match progress_update_and_id_message {
-                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
-                            output,
-                            progress_trackers,
-                            progress_update_and_id
-                        ).await,
-                        None => break,
                     }
                 }
                 else => break,
