@@ -31,6 +31,8 @@ pub enum ProgressStatus {
     ///
     /// This status is used when we don't know the progress limit.
     Initialized,
+    /// The item was waiting for execution, when the command was interrupted.
+    Interrupted,
     /// Execution has not yet begun.
     ///
     /// This is waiting on either:

@@ -59,7 +59,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
-        interruptibility_state: InterruptibilityState<'_, '_, '_>,
+        interruptibility_state: InterruptibilityState<'_, '_>,
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,

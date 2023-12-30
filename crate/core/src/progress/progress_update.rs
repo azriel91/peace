@@ -29,6 +29,9 @@ use super::ProgressComplete;
 pub enum ProgressUpdate {
     /// Resets the progress tracker to a clean state.
     Reset,
+    /// `CmdExecution` has been interrupted, we should indicate this on the
+    /// progress bar.
+    Interrupt,
     /// Progress limit has been discovered.
     #[serde(with = "serde_yaml::with::singleton_map")]
     Limit(ProgressLimit),

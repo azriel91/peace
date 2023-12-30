@@ -334,6 +334,7 @@ where
             ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
                 "⏳"
             }
+            ProgressStatus::Interrupted => "🛑",
             ProgressStatus::RunningStalled | ProgressStatus::UserPending => "⏰",
             ProgressStatus::Complete(ProgressComplete::Success) => "✅",
             ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
@@ -366,6 +367,7 @@ where
                         ProgressStatus::Initialized => {
                             console::style(BAR_EMPTY).color256(GRAY_DARK)
                         }
+                        ProgressStatus::Interrupted => console::style("{bar:40.222}"),
                         ProgressStatus::ExecPending | ProgressStatus::Running => {
                             console::style("{bar:40.32}")
                         }
@@ -393,6 +395,7 @@ where
                         ProgressStatus::ExecPending | ProgressStatus::Running => {
                             console::style("{spinner:40.32}")
                         }
+                        ProgressStatus::Interrupted => console::style("{spinner:40.222}"),
                         ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
                         ProgressStatus::UserPending => console::style("{spinner:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
@@ -414,7 +417,8 @@ where
                 if progress_tracker.progress_limit().is_some() {
                     match progress_tracker.progress_status() {
                         ProgressStatus::Initialized => console::style(BAR_EMPTY),
-                        ProgressStatus::ExecPending
+                        ProgressStatus::Interrupted
+                        | ProgressStatus::ExecPending
                         | ProgressStatus::Running
                         | ProgressStatus::RunningStalled
                         | ProgressStatus::UserPending
@@ -609,7 +613,7 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset => {
+                    ProgressUpdate::Reset | ProgressUpdate::Interrupt => {
                         self.progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Limit(_progress_limit) => {

@@ -65,7 +65,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Tracks progress of each function execution.
@@ -156,7 +156,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    pub interruptibility_state: InterruptibilityState<'view, 'view, 'view>,
+    pub interruptibility_state: InterruptibilityState<'view, 'view>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
     /// The profile this command operates on.
@@ -237,7 +237,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
@@ -390,7 +390,7 @@ where
     }
 
     /// Returns the interruptibility capability.
-    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_, '_> {
+    pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()
     }
 

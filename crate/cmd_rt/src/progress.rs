@@ -1,3 +1,4 @@
+use futures::stream::{self, StreamExt};
 use peace_cfg::{
     progress::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker,
@@ -62,6 +63,9 @@ impl Progress {
             ProgressUpdate::Reset => {
                 progress_tracker.reset();
             }
+            ProgressUpdate::Interrupt => {
+                progress_tracker.set_progress_status(ProgressStatus::Interrupted);
+            }
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);
                 progress_tracker.set_progress_status(ProgressStatus::ExecPending);
@@ -97,5 +101,25 @@ impl Progress {
     ) where
         O: OutputWrite<E>,
     {
+        match cmd_progress_update {
+            CmdProgressUpdate::Interrupt => {
+                stream::iter(progress_trackers.iter_mut())
+                    .fold(output, |output, (item_id, progress_tracker)| async move {
+                        progress_tracker.set_progress_status(ProgressStatus::Interrupted);
+
+                        let item_id = item_id.clone();
+                        let progress_update_and_id = ProgressUpdateAndId {
+                            item_id,
+                            progress_update: ProgressUpdate::Interrupt,
+                            msg_update: ProgressMsgUpdate::Set(String::from("interrupted")),
+                        };
+                        output
+                            .progress_update(progress_tracker, &progress_update_and_id)
+                            .await;
+                        output
+                    })
+                    .await;
+            }
+        }
     }
 }
