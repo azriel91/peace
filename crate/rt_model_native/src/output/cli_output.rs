@@ -331,11 +331,13 @@ where
     #[cfg(feature = "output_progress")]
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
         let icon = match progress_tracker.progress_status() {
-            ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
-                "⏳"
-            }
-            ProgressStatus::Interrupted => "🛑",
-            ProgressStatus::RunningStalled | ProgressStatus::UserPending => "⏰",
+            ProgressStatus::Initialized => "⚫",
+            ProgressStatus::ExecPending => "⚪",
+            ProgressStatus::Queued => "🟣",
+            ProgressStatus::Running => "🔵",
+            ProgressStatus::Interrupted => "🟡",
+            ProgressStatus::RunningStalled => "🐢",
+            ProgressStatus::UserPending => "👤",
             ProgressStatus::Complete(ProgressComplete::Success) => "✅",
             ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
         };
