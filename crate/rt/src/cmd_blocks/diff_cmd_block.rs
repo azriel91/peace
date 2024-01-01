@@ -23,7 +23,7 @@ use crate::cmds::DiffStateSpec;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -149,7 +149,7 @@ where
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,

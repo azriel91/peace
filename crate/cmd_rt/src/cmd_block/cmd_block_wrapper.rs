@@ -12,7 +12,7 @@ use crate::{CmdBlock, CmdBlockError, CmdBlockRt};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -86,7 +86,7 @@ where
     async fn exec(
         &self,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
         let cmd_block = &self.cmd_block;
         let input = cmd_block.input_fetch(cmd_view.resources)?;

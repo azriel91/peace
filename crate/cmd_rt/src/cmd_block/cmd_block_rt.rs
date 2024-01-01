@@ -11,7 +11,7 @@ use crate::CmdBlockError;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -32,7 +32,7 @@ pub trait CmdBlockRt: Debug + Unpin {
     async fn exec(
         &self,
         view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<(), CmdBlockError<Self::ExecutionOutcome, Self::Error>>;
 
     /// Returns the `String` representation of the `CmdBlock` in a

@@ -16,10 +16,7 @@ use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::{
-            CmdProgressUpdate,
-            ProgressUpdateAndId,
-        };
+        use peace_cfg::progress::CmdProgressUpdate;
         use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::{self, Sender};
 
@@ -98,8 +95,6 @@ where
                     ..
                 } = cmd_ctx.view_and_output();
 
-                let (progress_tx, progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
                 let (cmd_progress_tx, cmd_progress_rx) =
                     mpsc::channel::<CmdProgressUpdate>(crate::CMD_PROGRESS_COUNT_MAX);
 
@@ -123,8 +118,6 @@ where
             execution_outcome_fetch,
             &mut cmd_view,
             #[cfg(feature = "output_progress")]
-            progress_tx,
-            #[cfg(feature = "output_progress")]
             cmd_progress_tx,
         );
 
@@ -140,7 +133,6 @@ where
                 progress_render_enabled,
                 output,
                 cmd_progress_tracker,
-                progress_rx,
                 cmd_progress_rx,
             )
             .await
@@ -159,8 +151,7 @@ async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] 
     #[cfg(feature = "output_progress")] progress_render_enabled: bool,
     #[cfg(feature = "output_progress")] output: &mut O,
     #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
-    #[cfg(feature = "output_progress")] mut progress_rx: mpsc::Receiver<ProgressUpdateAndId>,
-    #[cfg(feature = "output_progress")] cmd_progress_rx: mpsc::Receiver<CmdProgressUpdate>,
+    #[cfg(feature = "output_progress")] mut cmd_progress_rx: mpsc::Receiver<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
@@ -176,7 +167,7 @@ where
         output.progress_begin(cmd_progress_tracker).await;
         let progress_trackers = &mut cmd_progress_tracker.progress_trackers;
         let progress_render_task =
-            Progress::progress_render(output, progress_trackers, progress_rx, cmd_progress_rx);
+            Progress::progress_render(output, progress_trackers, cmd_progress_rx);
 
         let (cmd_outcome, ()) = futures::join!(cmd_outcome_task, progress_render_task);
 
@@ -186,7 +177,7 @@ where
     } else {
         // When `progress_render_enabled` is false, still consumes progress updates
         // and drop them.
-        let progress_render_task = async move { while progress_rx.recv().await.is_some() {} };
+        let progress_render_task = async move { while cmd_progress_rx.recv().await.is_some() {} };
 
         let (cmd_outcome, ()) = futures::join!(cmd_outcome_task, progress_render_task);
 
@@ -198,7 +189,6 @@ async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
     cmd_blocks: &VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -219,8 +209,6 @@ where
         CmdViewAndProgress {
             cmd_view,
             #[cfg(feature = "output_progress")]
-            progress_tx,
-            #[cfg(feature = "output_progress")]
             cmd_progress_tx,
         },
         // `progress_tx` is moved into this closure, and dropped at the very end, so
@@ -228,8 +216,6 @@ where
         |cmd_view_and_progress, (cmd_block_index, cmd_block_rt)| async move {
             let CmdViewAndProgress {
                 cmd_view,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
                 #[cfg(feature = "output_progress")]
                 cmd_progress_tx,
             } = cmd_view_and_progress;
@@ -252,8 +238,6 @@ where
                 let cmd_view_and_progress = CmdViewAndProgress {
                     cmd_view,
                     #[cfg(feature = "output_progress")]
-                    progress_tx,
-                    #[cfg(feature = "output_progress")]
                     cmd_progress_tx,
                 };
                 return Err(CmdBlockStreamBreak::Interrupt {
@@ -267,15 +251,13 @@ where
                 .exec(
                     cmd_view,
                     #[cfg(feature = "output_progress")]
-                    progress_tx.clone(),
+                    cmd_progress_tx.clone(),
                 )
                 .await;
 
             // `CmdBlock` block logic errors are propagated.
             let cmd_view_and_progress = CmdViewAndProgress {
                 cmd_view,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
                 #[cfg(feature = "output_progress")]
                 cmd_progress_tx,
             };
@@ -348,13 +330,9 @@ where
             flow, resources, ..
         },
         #[cfg(feature = "output_progress")]
-        progress_tx,
-        #[cfg(feature = "output_progress")]
         cmd_progress_tx,
     } = cmd_view_and_progress;
 
-    #[cfg(feature = "output_progress")]
-    drop(progress_tx);
     #[cfg(feature = "output_progress")]
     drop(cmd_progress_tx);
 
@@ -460,8 +438,6 @@ where
     PKeys: ParamsKeys + 'static,
 {
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    #[cfg(feature = "output_progress")]
-    progress_tx: Sender<ProgressUpdateAndId>,
     #[cfg(feature = "output_progress")]
     cmd_progress_tx: Sender<CmdProgressUpdate>,
 }

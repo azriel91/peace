@@ -1,7 +1,10 @@
 use peace::{
     cfg::{
         item_id,
-        progress::{ProgressDelta, ProgressMsgUpdate, ProgressSender, ProgressUpdateAndId},
+        progress::{
+            CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressSender,
+            ProgressUpdateAndId,
+        },
         ItemId,
     },
     rt_model::ProgressUpdate,
@@ -17,15 +20,17 @@ fn clone() {
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
     progress_rx.close();
 
-    let progress_update_and_id = progress_rx.try_recv().unwrap();
+    let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
-            msg_update: ProgressMsgUpdate::NoChange,
+        CmdProgressUpdate::Item {
+            progress_update_and_id: ProgressUpdateAndId {
+                item_id: item_id!("test_item_id"),
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
         },
-        progress_update_and_id
+        cmd_progress_update
     );
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);
@@ -39,15 +44,17 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
 
-    let progress_update_and_id = progress_rx.try_recv().unwrap();
+    let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
-            msg_update: ProgressMsgUpdate::NoChange,
+        CmdProgressUpdate::Item {
+            progress_update_and_id: ProgressUpdateAndId {
+                item_id: item_id!("test_item_id"),
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
         },
-        progress_update_and_id
+        cmd_progress_update
     );
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);
@@ -64,15 +71,17 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed()
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
     progress_rx.close();
 
-    let progress_update_and_id = progress_rx.try_recv().unwrap();
+    let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
-            msg_update: ProgressMsgUpdate::NoChange,
+        CmdProgressUpdate::Item {
+            progress_update_and_id: ProgressUpdateAndId {
+                item_id: item_id!("test_item_id"),
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
         },
-        progress_update_and_id
+        cmd_progress_update
     );
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);
@@ -101,15 +110,17 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 
     progress_sender.tick(ProgressMsgUpdate::NoChange);
 
-    let progress_update_and_id = progress_rx.try_recv().unwrap();
+    let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
-            msg_update: ProgressMsgUpdate::NoChange,
+        CmdProgressUpdate::Item {
+            progress_update_and_id: ProgressUpdateAndId {
+                item_id: item_id!("test_item_id"),
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
         },
-        progress_update_and_id
+        cmd_progress_update
     );
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);
@@ -126,15 +137,17 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed()
     progress_sender.tick(ProgressMsgUpdate::NoChange);
     progress_rx.close();
 
-    let progress_update_and_id = progress_rx.try_recv().unwrap();
+    let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
-            msg_update: ProgressMsgUpdate::NoChange,
+        CmdProgressUpdate::Item {
+            progress_update_and_id: ProgressUpdateAndId {
+                item_id: item_id!("test_item_id"),
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
         },
-        progress_update_and_id
+        cmd_progress_update
     );
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);

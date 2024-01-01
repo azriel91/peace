@@ -19,75 +19,15 @@ impl Progress {
     pub async fn progress_render<E, O>(
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
-        mut progress_rx: Receiver<ProgressUpdateAndId>,
         mut cmd_progress_rx: Receiver<CmdProgressUpdate>,
     ) where
         O: OutputWrite<E>,
     {
-        loop {
-            // This **MUST** be `biased;` towards the `ProgressUpdateAndId` channel.
-            //
-            // Without it, some of the `ProgressUpdate::Delta(ProgressDelta::Tick)` messages
-            // from `StatesDiscoverCmdBlock` arrive after
-            // `CmdProgressUpdate::ResetToPending`, causing some progress bars
-            // to revert to `Running` even though the `CmdExecution`'s
-            // message should be applied after them.
-            //
-            // Alternatively, we use just one channel, so messages from each item's
-            // `ProgressSender`, and `CmdExecution` are always received and processed in
-            // order.
-            tokio::select! {
-                biased;
-                progress_update_and_id_message = progress_rx.recv() => {
-                    match progress_update_and_id_message {
-                        Some(progress_update_and_id) => Self::handle_progress_update_and_id(
-                            output,
-                            progress_trackers,
-                            progress_update_and_id
-                        ).await,
-                        None => break,
-                    }
-                }
-                Some(cmd_progress_update) = cmd_progress_rx.recv() => {
-                    let control_flow = Self::handle_cmd_progress_update(
-                        output,
-                        progress_trackers,
-                        cmd_progress_update
-                    ).await;
-
-                    match control_flow {
-                        ControlFlow::Break(()) => break,
-                        ControlFlow::Continue(()) => {}
-                    }
-                }
-                else => break,
-            }
+        while let Some(cmd_progress_update) = cmd_progress_rx.recv().await {
+            let _control_flow =
+                Self::handle_cmd_progress_update(output, progress_trackers, cmd_progress_update)
+                    .await;
         }
-
-        while let Some(progress_update_and_id) = progress_rx.recv().await {
-            Self::handle_progress_update_and_id(output, progress_trackers, progress_update_and_id)
-                .await;
-        }
-    }
-
-    async fn handle_progress_update_and_id<E, O>(
-        output: &mut O,
-        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
-        progress_update_and_id: ProgressUpdateAndId,
-    ) where
-        O: OutputWrite<E>,
-    {
-        let item_id = &progress_update_and_id.item_id;
-        let Some(progress_tracker) = progress_trackers.get_mut(item_id) else {
-            panic!("Expected `progress_tracker` to exist for item: `{item_id}`.");
-        };
-
-        Self::handle_progress_tracker_progress_update(
-            output,
-            progress_tracker,
-            progress_update_and_id,
-        )
-        .await;
     }
 
     async fn handle_cmd_progress_update<E, O>(
@@ -99,6 +39,18 @@ impl Progress {
         O: OutputWrite<E>,
     {
         match cmd_progress_update {
+            CmdProgressUpdate::Item {
+                progress_update_and_id,
+            } => {
+                Self::handle_progress_update_and_id(
+                    output,
+                    progress_trackers,
+                    progress_update_and_id,
+                )
+                .await;
+
+                ControlFlow::Continue(())
+            }
             CmdProgressUpdate::Interrupt => {
                 stream::iter(progress_trackers.iter_mut())
                     .fold(output, |output, (item_id, progress_tracker)| async move {
@@ -146,6 +98,26 @@ impl Progress {
                 ControlFlow::Continue(())
             }
         }
+    }
+
+    async fn handle_progress_update_and_id<E, O>(
+        output: &mut O,
+        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
+        progress_update_and_id: ProgressUpdateAndId,
+    ) where
+        O: OutputWrite<E>,
+    {
+        let item_id = &progress_update_and_id.item_id;
+        let Some(progress_tracker) = progress_trackers.get_mut(item_id) else {
+            panic!("Expected `progress_tracker` to exist for item: `{item_id}`.");
+        };
+
+        Self::handle_progress_tracker_progress_update(
+            output,
+            progress_tracker,
+            progress_update_and_id,
+        )
+        .await;
     }
 
     async fn handle_progress_tracker_progress_update<E, O>(
