@@ -34,6 +34,9 @@ pub enum ProgressUpdate {
     /// This is similar to `Reset`, but the progress bar is not styled as
     /// disabled.
     ResetToPending,
+    /// Sets the progress tracker as `Queued`, meaning it musn't be interrupted
+    /// as it is essentially `Running`
+    Queued,
     /// `CmdExecution` has been interrupted, we should indicate this on the
     /// progress bar.
     Interrupt,

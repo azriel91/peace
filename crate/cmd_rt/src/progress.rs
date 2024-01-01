@@ -32,6 +32,10 @@ impl Progress {
             // `CmdProgressUpdate::ResetToPending`, causing some progress bars
             // to revert to `Running` even though the `CmdExecution`'s
             // message should be applied after them.
+            //
+            // Alternatively, we use just one channel, so messages from each item's
+            // `ProgressSender`, and `CmdExecution` are always received and processed in
+            // order.
             tokio::select! {
                 biased;
                 progress_update_and_id_message = progress_rx.recv() => {
@@ -159,6 +163,7 @@ impl Progress {
         match progress_update {
             ProgressUpdate::Reset => progress_tracker.reset(),
             ProgressUpdate::ResetToPending => progress_tracker.reset_to_pending(),
+            ProgressUpdate::Queued => progress_tracker.set_progress_status(ProgressStatus::Queued),
             ProgressUpdate::Interrupt => progress_tracker.interrupt(),
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);

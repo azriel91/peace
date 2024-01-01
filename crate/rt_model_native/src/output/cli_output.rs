@@ -370,9 +370,9 @@ where
                             console::style(BAR_EMPTY).color256(GRAY_DARK)
                         }
                         ProgressStatus::Interrupted => console::style("{bar:40.220}"),
-                        ProgressStatus::ExecPending | ProgressStatus::Running => {
-                            console::style("{bar:40.32}")
-                        }
+                        ProgressStatus::ExecPending
+                        | ProgressStatus::Queued
+                        | ProgressStatus::Running => console::style("{bar:40.32}"),
                         ProgressStatus::RunningStalled => console::style("{bar:40.208}"),
                         ProgressStatus::UserPending => console::style("{bar:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
@@ -394,7 +394,7 @@ where
                         ProgressStatus::Initialized => {
                             console::style(SPINNER_EMPTY).color256(GRAY_MED)
                         }
-                        ProgressStatus::ExecPending => {
+                        ProgressStatus::ExecPending | ProgressStatus::Queued => {
                             console::style(SPINNER_EMPTY).color256(BLUE_PALE)
                         }
                         ProgressStatus::Running => console::style("{spinner:40.32}"),
@@ -422,6 +422,7 @@ where
                         ProgressStatus::Initialized => console::style(BAR_EMPTY),
                         ProgressStatus::Interrupted
                         | ProgressStatus::ExecPending
+                        | ProgressStatus::Queued
                         | ProgressStatus::Running
                         | ProgressStatus::RunningStalled
                         | ProgressStatus::UserPending
@@ -626,7 +627,9 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset | ProgressUpdate::ResetToPending => {
+                    ProgressUpdate::Reset
+                    | ProgressUpdate::ResetToPending
+                    | ProgressUpdate::Queued => {
                         self.progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Interrupt => {

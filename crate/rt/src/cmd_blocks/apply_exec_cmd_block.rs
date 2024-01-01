@@ -149,13 +149,23 @@ where
             outcomes_tx,
         } = item_apply_exec_ctx;
 
+        let item_id = item.id();
+
+        // Indicate this item is running, so that an `Interrupt` message from
+        // `CmdExecution` does not cause it to be rendered as `Interrupted`.
+        #[cfg(feature = "output_progress")]
+        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+            item_id: item_id.clone(),
+            progress_update: ProgressUpdate::Queued,
+            msg_update: ProgressMsgUpdate::NoChange,
+        });
+
         let apply_fn = if StatesTs::dry_run() {
             ItemRt::apply_exec_dry
         } else {
             ItemRt::apply_exec
         };
 
-        let item_id = item.id();
         let fn_ctx = FnCtx::new(
             item_id,
             #[cfg(feature = "output_progress")]

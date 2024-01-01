@@ -73,6 +73,7 @@ impl ProgressTracker {
                 self.last_update_dt = Utc::now();
             }
             ProgressStatus::Interrupted
+            | ProgressStatus::Queued
             | ProgressStatus::Running
             | ProgressStatus::RunningStalled
             | ProgressStatus::Complete(_) => {}
