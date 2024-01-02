@@ -98,12 +98,15 @@ where
                 let (cmd_progress_tx, cmd_progress_rx) =
                     mpsc::channel::<CmdProgressUpdate>(crate::CMD_PROGRESS_COUNT_MAX);
 
-                let cmd_progress_tx_for_interruptibility_state = cmd_progress_tx.clone();
+                let cmd_progress_tx_for_interruptibility_state = cmd_progress_tx.clone().downgrade();
 
                 cmd_view.interruptibility_state
                     .set_fn_interrupt_activate(Some(move || {
-                        let _cmd_progress_send_result =
-                            cmd_progress_tx_for_interruptibility_state.try_send(CmdProgressUpdate::Interrupt);
+                        if let Some(cmd_progress_tx) = cmd_progress_tx_for_interruptibility_state.upgrade() {
+                            let _cmd_progress_send_result =
+                            cmd_progress_tx.try_send(CmdProgressUpdate::Interrupt);
+                            drop(cmd_progress_tx);
+                        }
                     }));
             } else {
                 let SingleProfileSingleFlowViewAndOutput {
