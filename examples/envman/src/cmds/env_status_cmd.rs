@@ -1,6 +1,7 @@
 use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd_model::CmdOutcome,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     resources::resources::ts::SetUp,
     rt::cmds::StatesCurrentReadCmd,
@@ -58,14 +59,15 @@ where
     O: OutputWrite<EnvManError>,
 {
     let states_current_stored_outcome = StatesCurrentReadCmd::exec(cmd_ctx).await?;
+    let SingleProfileSingleFlowViewAndOutput {
+        output,
+        cmd_view: SingleProfileSingleFlowView { flow, .. },
+        ..
+    } = cmd_ctx.view_and_output();
+
     if let Some(states_current_stored) = states_current_stored_outcome.value() {
         let states_current_stored_raw_map = &***states_current_stored;
 
-        let SingleProfileSingleFlowViewAndOutput {
-            output,
-            cmd_view: SingleProfileSingleFlowView { flow, .. },
-            ..
-        } = cmd_ctx.view_and_output();
         let states_current_stored_presentables = {
             let states_current_stored_presentables = flow
                 .graph()
@@ -94,6 +96,9 @@ where
                 "\n",
             ))
             .await?;
+    }
+    if let CmdOutcome::ItemError { errors, .. } = &states_current_stored_outcome {
+        crate::output::item_errors_present(output, errors).await?;
     }
 
     Ok(())
