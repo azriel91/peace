@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 
 pub use crate::{
     clean, clean_dry, cmd_ctx, diff, ensure, ensure_dry, fetch, goal, status,
-    workspace_and_flow_setup, DownloadError, WorkspaceAndFlow,
+    workspace_and_flow_setup, WorkspaceAndFlow,
 };
 
 #[wasm_bindgen]
