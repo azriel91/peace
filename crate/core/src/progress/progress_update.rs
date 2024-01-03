@@ -39,7 +39,7 @@ pub enum ProgressUpdate {
     Queued,
     /// `CmdExecution` has been interrupted, we should indicate this on the
     /// progress bar.
-    Interrupted,
+    Interrupt,
     /// Progress limit has been discovered.
     #[serde(with = "serde_yaml::with::singleton_map")]
     Limit(ProgressLimit),

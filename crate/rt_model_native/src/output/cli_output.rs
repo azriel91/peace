@@ -634,7 +634,7 @@ where
                     | ProgressUpdate::Queued => {
                         self.progress_bar_style_update(progress_tracker);
                     }
-                    ProgressUpdate::Interrupted => {
+                    ProgressUpdate::Interrupt => {
                         self.progress_bar_style_update(progress_tracker);
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.abandon();

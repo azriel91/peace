@@ -57,7 +57,7 @@ impl Progress {
                         let item_id = item_id.clone();
                         let progress_update_and_id = ProgressUpdateAndId {
                             item_id,
-                            progress_update: ProgressUpdate::Interrupted,
+                            progress_update: ProgressUpdate::Interrupt,
                             msg_update: ProgressMsgUpdate::NoChange,
                         };
 
@@ -136,7 +136,7 @@ impl Progress {
             ProgressUpdate::Reset => progress_tracker.reset(),
             ProgressUpdate::ResetToPending => progress_tracker.reset_to_pending(),
             ProgressUpdate::Queued => progress_tracker.set_progress_status(ProgressStatus::Queued),
-            ProgressUpdate::Interrupted => progress_tracker.interrupt(),
+            ProgressUpdate::Interrupt => progress_tracker.interrupt(),
             ProgressUpdate::Limit(progress_limit) => {
                 progress_tracker.set_progress_limit(*progress_limit);
                 progress_tracker.set_progress_status(ProgressStatus::ExecPending);
