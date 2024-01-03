@@ -350,7 +350,6 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
     };
-    drop(cmd_ctx_0);
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -373,7 +372,6 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     else {
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
     };
-    drop(cmd_ctx_1);
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -460,7 +458,6 @@ async fn diff_stored_with_missing_profile_0() -> Result<(), Box<dyn std::error::
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
-    drop(cmd_ctx_1);
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -505,7 +502,6 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
-    drop(cmd_ctx_0);
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -554,7 +550,6 @@ async fn diff_stored_with_profile_0_missing_states_current()
         )
         .await?;
     StatesDiscoverCmd::goal(&mut cmd_ctx_0).await?;
-    drop(cmd_ctx_0);
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -569,7 +564,6 @@ async fn diff_stored_with_profile_0_missing_states_current()
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
-    drop(cmd_ctx_1);
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -615,7 +609,6 @@ async fn diff_stored_with_profile_1_missing_states_current()
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
-    drop(cmd_ctx_0);
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -628,7 +621,6 @@ async fn diff_stored_with_profile_1_missing_states_current()
         )
         .await?;
     StatesDiscoverCmd::goal(&mut cmd_ctx_1).await?;
-    drop(cmd_ctx_1);
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -691,7 +683,6 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
-    drop(cmd_ctx);
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(

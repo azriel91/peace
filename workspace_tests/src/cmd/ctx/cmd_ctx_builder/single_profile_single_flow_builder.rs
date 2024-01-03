@@ -500,13 +500,12 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let cmd_ctx_from_stored = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
@@ -553,13 +552,12 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let cmd_ctx_from_stored = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
@@ -607,13 +605,12 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
@@ -672,13 +669,12 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(item_id!("original_id"), VecA(vec![1u8]).into())
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let item_graph = {
         let mut item_graph_builder = ItemGraphBuilder::new();
@@ -747,7 +743,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -758,7 +754,6 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         )
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let item_graph = {
         let mut item_graph_builder = ItemGraphBuilder::new();
@@ -828,7 +823,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -839,7 +834,6 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         )
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let item_graph = {
         let mut item_graph_builder = ItemGraphBuilder::new();
@@ -900,7 +894,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -911,7 +905,6 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         )
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let item_graph = {
         let mut item_graph_builder = ItemGraphBuilder::new();
@@ -976,13 +969,12 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(item_id!("original_id"), VecA(vec![1u8]).into())
         .build()
         .await?;
-    drop(cmd_ctx);
 
     let item_graph = {
         let mut item_graph_builder = ItemGraphBuilder::new();
@@ -1049,12 +1041,11 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
         .build()
         .await?;
-    drop(cmd_ctx);
 
     // Build second `cmd_ctx` with item.
     let item_graph = {

@@ -898,7 +898,6 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     else {
         panic!("Expected `StatesCurrentReadCmd::exec` to complete successfully.");
     };
-    drop(cmd_ctx);
 
     // Reinitialize graph with failing discover.
     let graph = {
