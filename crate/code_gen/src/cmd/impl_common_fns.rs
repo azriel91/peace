@@ -23,7 +23,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.
         pub fn with_interruptibility(
             mut self,
-            interruptibility: interruptible::Interruptibility<'ctx>,
+            interruptibility: interruptible::Interruptibility<'static>,
         ) -> crate::ctx::CmdCtxBuilder<
             'ctx,
             O,
