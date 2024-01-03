@@ -37,8 +37,11 @@ pub enum ProgressUpdate {
     /// Sets the progress tracker as `Queued`, meaning it musn't be interrupted
     /// as it is essentially `Running`
     Queued,
-    /// `CmdExecution` has been interrupted, we should indicate this on the
-    /// progress bar.
+    /// The `CmdExecution` has received an interrupt request, but we haven't
+    /// determined which items to stop.
+    InterruptPending,
+    /// The `CmdExecution` has received an interrupt request, and this item will
+    /// not be processed.
     Interrupted,
     /// Progress limit has been discovered.
     #[serde(with = "serde_yaml::with::singleton_map")]
