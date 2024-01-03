@@ -1,5 +1,14 @@
 # Changelog
 
+## unreleased
+
+* Provide more accurate feedback about interruption on CLI. ([#172], [#173])
+
+
+[#172]: https://github.com/azriel91/peace/issues/172
+[#173]: https://github.com/azriel91/peace/pull/173
+
+
 ## 0.0.12 (2023-12-30)
 
 * Change `CmdOutcome` to be an `enum` indicating whether it is completed, interrupted, or erroneous. ([#141], [#163])
