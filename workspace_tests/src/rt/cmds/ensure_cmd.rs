@@ -1505,6 +1505,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
     ";
     let states_current_file = StatesCurrentFile::from(flow_dir);
     tokio::fs::write(&states_current_file, states_current_content.as_bytes()).await?;
+    drop(cmd_ctx);
 
     // Note: Change `MockItem` to fail on `try_state_current`.
     let graph = {

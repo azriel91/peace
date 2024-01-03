@@ -105,6 +105,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             )
             .await?;
     let exec_result = StatesGoalDisplayCmd::exec(&mut cmd_ctx).await;
+    drop(cmd_ctx);
 
     assert!(matches!(
         exec_result,

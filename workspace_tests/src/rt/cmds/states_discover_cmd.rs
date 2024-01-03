@@ -192,6 +192,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
 
     // Writes to states_current_file.yaml
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    drop(cmd_ctx);
 
     // Execute again to ensure StatesCurrentStored is included
     //
@@ -786,6 +787,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         EnsureCmd::exec(&mut cmd_ctx).await?,
         CmdOutcome::Complete { .. }
     ));
+    drop(cmd_ctx);
 
     // Discover without serializing to storage.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -858,6 +860,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?,
         CmdOutcome::Complete { .. }
     ));
+    drop(cmd_ctx);
 
     // Discover without serializing to storage.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
