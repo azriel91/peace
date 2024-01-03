@@ -104,7 +104,7 @@ where
                     .set_fn_interrupt_poll_item(Some(move || {
                         if let Some(cmd_progress_tx) = cmd_progress_tx_for_interruptibility_state.upgrade() {
                             let _cmd_progress_send_result =
-                            cmd_progress_tx.try_send(CmdProgressUpdate::Interrupt);
+                            cmd_progress_tx.try_send(CmdProgressUpdate::Interrupted);
                             drop(cmd_progress_tx);
                         }
                     }));

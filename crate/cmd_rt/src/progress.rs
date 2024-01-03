@@ -51,7 +51,7 @@ impl Progress {
 
                 ControlFlow::Continue(())
             }
-            CmdProgressUpdate::Interrupt => {
+            CmdProgressUpdate::Interrupted => {
                 stream::iter(progress_trackers.iter_mut())
                     .fold(output, |output, (item_id, progress_tracker)| async move {
                         let item_id = item_id.clone();
