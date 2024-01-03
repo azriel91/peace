@@ -83,7 +83,9 @@ where
             .graph()
             .fold_async_with(
                 (StatesMut::<Clean>::new(), IndexMap::new()),
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                StreamOpts::new()
+                    .interruptibility_state(interruptibility_state.reborrow())
+                    .interrupted_next_item_include(false),
                 |(mut states_clean_mut, mut errors), item_rt| {
                     async move {
                         let item_id = item_rt.id().clone();

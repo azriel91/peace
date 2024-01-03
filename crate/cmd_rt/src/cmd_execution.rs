@@ -101,7 +101,7 @@ where
                 let cmd_progress_tx_for_interruptibility_state = cmd_progress_tx.clone().downgrade();
 
                 cmd_view.interruptibility_state
-                    .set_fn_interrupt_poll_item(Some(move || {
+                    .set_fn_interrupt_activate(Some(move || {
                         if let Some(cmd_progress_tx) = cmd_progress_tx_for_interruptibility_state.upgrade() {
                             let _cmd_progress_send_result =
                             cmd_progress_tx.try_send(CmdProgressUpdate::Interrupt);

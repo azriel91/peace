@@ -299,7 +299,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
@@ -431,7 +433,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
@@ -577,7 +581,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]

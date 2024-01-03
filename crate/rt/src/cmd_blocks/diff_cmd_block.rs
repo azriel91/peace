@@ -70,7 +70,9 @@ where
             .graph()
             .try_fold_async_with(
                 StateDiffsMut::with_capacity(states_a.len()),
-                StreamOpts::new().interruptibility_state(interruptibility_state),
+                StreamOpts::new()
+                    .interruptibility_state(interruptibility_state)
+                    .interrupted_next_item_include(false),
                 |mut state_diffs_mut, item| {
                     async move {
                         let _params_specs = &params_specs;

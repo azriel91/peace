@@ -502,13 +502,14 @@ where
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemApplyOutcome<E>>(item_graph.node_count());
 
-        let stream_opts = match apply_for {
-            ApplyFor::Ensure => {
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow())
+        let stream_opts = {
+            let stream_opts = StreamOpts::new()
+                .interruptibility_state(interruptibility_state.reborrow())
+                .interrupted_next_item_include(false);
+            match apply_for {
+                ApplyFor::Ensure => stream_opts,
+                ApplyFor::Clean => stream_opts.rev(),
             }
-            ApplyFor::Clean => StreamOpts::new()
-                .rev()
-                .interruptibility_state(interruptibility_state.reborrow()),
         };
 
         let (stream_outcome_result, outcome_collate) = {
