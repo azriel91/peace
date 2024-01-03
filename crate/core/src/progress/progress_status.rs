@@ -31,11 +31,7 @@ pub enum ProgressStatus {
     ///
     /// This status is used when we don't know the progress limit.
     Initialized,
-    /// The `CmdExecution` has received an interrupt request, but we haven't
-    /// determined which items to stop.
-    InterruptPending,
-    /// The `CmdExecution` has received an interrupt request, and this item will
-    /// not be processed.
+    /// The item was waiting for execution, when the command was interrupted.
     Interrupted,
     /// Execution has not yet begun.
     ///
