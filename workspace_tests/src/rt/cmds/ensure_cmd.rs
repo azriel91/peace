@@ -1402,7 +1402,7 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_interruptibility(Interruptibility::new(
             interrupt_rx.into(),
-            InterruptStrategy::PollNextN(3),
+            InterruptStrategy::PollNextN(2),
         ))
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -1614,7 +1614,7 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_interruptibility(Interruptibility::new(
             interrupt_rx.into(),
-            InterruptStrategy::PollNextN(8),
+            InterruptStrategy::PollNextN(7),
         ))
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
