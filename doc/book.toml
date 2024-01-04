@@ -23,3 +23,7 @@ cname = "peace.mk"
 git-repository-url = "https://github.com/azriel91/peace"
 edit-url-template = "https://github.com/azriel91/peace/edit/main/doc/{path}"
 site-url = "/book/" # to work with `peace_website`
+
+[output.html.fold]
+enable = true
+level = 1
