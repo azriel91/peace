@@ -65,7 +65,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Tracks progress of each function execution.
@@ -237,7 +237,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,

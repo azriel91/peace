@@ -15,7 +15,7 @@ use peace_rt_model_core::IndexMap;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -67,7 +67,7 @@ where
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -83,7 +83,9 @@ where
             .graph()
             .fold_async_with(
                 (StatesMut::<Clean>::new(), IndexMap::new()),
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                StreamOpts::new()
+                    .interruptibility_state(interruptibility_state.reborrow())
+                    .interrupted_next_item_include(false),
                 |(mut states_clean_mut, mut errors), item_rt| {
                     async move {
                         let item_id = item_rt.id().clone();

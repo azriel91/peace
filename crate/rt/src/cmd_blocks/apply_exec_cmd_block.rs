@@ -32,6 +32,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                CmdProgressUpdate,
                 ProgressComplete,
                 ProgressMsgUpdate,
                 ProgressUpdate,
@@ -149,13 +150,26 @@ where
             outcomes_tx,
         } = item_apply_exec_ctx;
 
+        let item_id = item.id();
+
+        // Indicate this item is running, so that an `Interrupt` message from
+        // `CmdExecution` does not cause it to be rendered as `Interrupted`.
+        #[cfg(feature = "output_progress")]
+        let _progress_send_unused = progress_tx.try_send(
+            ProgressUpdateAndId {
+                item_id: item_id.clone(),
+                progress_update: ProgressUpdate::Queued,
+                msg_update: ProgressMsgUpdate::NoChange,
+            }
+            .into(),
+        );
+
         let apply_fn = if StatesTs::dry_run() {
             ItemRt::apply_exec_dry
         } else {
             ItemRt::apply_exec
         };
 
-        let item_id = item.id();
         let fn_ctx = FnCtx::new(
             item_id,
             #[cfg(feature = "output_progress")]
@@ -178,19 +192,27 @@ where
                     #[cfg(feature = "output_progress")]
                     ApplyCheck::ExecRequired { progress_limit } => {
                         // Update `OutputWrite`s with progress limit.
-                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_id: item_id.clone(),
-                            progress_update: ProgressUpdate::Limit(progress_limit),
-                            msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
-                        });
+                        let _progress_send_unused = progress_tx.try_send(
+                            ProgressUpdateAndId {
+                                item_id: item_id.clone(),
+                                progress_update: ProgressUpdate::Limit(progress_limit),
+                                msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
+                            }
+                            .into(),
+                        );
                     }
                     ApplyCheck::ExecNotRequired => {
                         #[cfg(feature = "output_progress")]
-                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_id: item_id.clone(),
-                            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
-                            msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
-                        });
+                        let _progress_send_unused = progress_tx.try_send(
+                            ProgressUpdateAndId {
+                                item_id: item_id.clone(),
+                                progress_update: ProgressUpdate::Complete(
+                                    ProgressComplete::Success,
+                                ),
+                                msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
+                            }
+                            .into(),
+                        );
 
                         // TODO: write test for this case
                         // In case of an interrupt or power failure, we may not have written states
@@ -212,11 +234,16 @@ where
                         // apply succeeded
 
                         #[cfg(feature = "output_progress")]
-                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_id: item_id.clone(),
-                            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
-                            msg_update: ProgressMsgUpdate::Set(String::from("done!")),
-                        });
+                        let _progress_send_unused = progress_tx.try_send(
+                            ProgressUpdateAndId {
+                                item_id: item_id.clone(),
+                                progress_update: ProgressUpdate::Complete(
+                                    ProgressComplete::Success,
+                                ),
+                                msg_update: ProgressMsgUpdate::Set(String::from("done!")),
+                            }
+                            .into(),
+                        );
 
                         outcomes_tx
                             .send(ItemApplyOutcome::Success {
@@ -232,16 +259,19 @@ where
                         // apply failed
 
                         #[cfg(feature = "output_progress")]
-                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_id: item_id.clone(),
-                            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                            msg_update: ProgressMsgUpdate::Set(
-                                error
-                                    .source()
-                                    .map(|source| format!("{source}"))
-                                    .unwrap_or_else(|| format!("{error}")),
-                            ),
-                        });
+                        let _progress_send_unused = progress_tx.try_send(
+                            ProgressUpdateAndId {
+                                item_id: item_id.clone(),
+                                progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                                msg_update: ProgressMsgUpdate::Set(
+                                    error
+                                        .source()
+                                        .map(|source| format!("{source}"))
+                                        .unwrap_or_else(|| format!("{error}")),
+                                ),
+                            }
+                            .into(),
+                        );
 
                         outcomes_tx
                             .send(ItemApplyOutcome::Fail {
@@ -259,16 +289,19 @@ where
             }
             Err((error, item_apply_partial)) => {
                 #[cfg(feature = "output_progress")]
-                let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                    item_id: item.id().clone(),
-                    progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                    msg_update: ProgressMsgUpdate::Set(
-                        error
-                            .source()
-                            .map(|source| format!("{source}"))
-                            .unwrap_or_else(|| format!("{error}")),
-                    ),
-                });
+                let _progress_send_unused = progress_tx.try_send(
+                    ProgressUpdateAndId {
+                        item_id: item.id().clone(),
+                        progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                        msg_update: ProgressMsgUpdate::Set(
+                            error
+                                .source()
+                                .map(|source| format!("{source}"))
+                                .unwrap_or_else(|| format!("{error}")),
+                        ),
+                    }
+                    .into(),
+                );
 
                 outcomes_tx
                     .send(ItemApplyOutcome::PrepareFail {
@@ -435,7 +468,7 @@ where
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_current, states_target) = input;
         let (states_previous, states_applied_mut, states_target_mut) = {
@@ -469,13 +502,14 @@ where
         let (outcomes_tx, outcomes_rx) =
             mpsc::channel::<ItemApplyOutcome<E>>(item_graph.node_count());
 
-        let stream_opts = match apply_for {
-            ApplyFor::Ensure => {
-                StreamOpts::new().interruptibility_state(interruptibility_state.reborrow())
+        let stream_opts = {
+            let stream_opts = StreamOpts::new()
+                .interruptibility_state(interruptibility_state.reborrow())
+                .interrupted_next_item_include(false);
+            match apply_for {
+                ApplyFor::Ensure => stream_opts,
+                ApplyFor::Clean => stream_opts.rev(),
             }
-            ApplyFor::Clean => StreamOpts::new()
-                .rev()
-                .interruptibility_state(interruptibility_state.reborrow()),
         };
 
         let (stream_outcome_result, outcome_collate) = {
@@ -545,7 +579,7 @@ struct ItemApplyExecCtx<'f, E> {
     apply_for_internal: &'f ApplyForInternal,
     /// Channel sender for `CmdBlock` item outcomes.
     #[cfg(feature = "output_progress")]
-    progress_tx: &'f Sender<ProgressUpdateAndId>,
+    progress_tx: &'f Sender<CmdProgressUpdate>,
     outcomes_tx: &'f Sender<ItemApplyOutcome<E>>,
 }
 

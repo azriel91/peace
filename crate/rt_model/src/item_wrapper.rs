@@ -691,7 +691,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        fn_ctx.progress_sender().reset();
+        fn_ctx.progress_sender().reset_to_pending();
         match self
             .state_goal_exec(
                 // Use current state of predecessor to discover goal state.
@@ -706,7 +706,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        fn_ctx.progress_sender().reset();
+        fn_ctx.progress_sender().reset_to_pending();
         match self
             .state_diff_exec_with(
                 params_specs,

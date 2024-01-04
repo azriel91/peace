@@ -8,7 +8,7 @@ use peace_rt_model::params::ParamsKeys;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -178,6 +178,6 @@ pub trait CmdBlock: Debug {
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error>;
 }

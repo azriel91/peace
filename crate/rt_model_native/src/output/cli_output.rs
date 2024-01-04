@@ -331,10 +331,13 @@ where
     #[cfg(feature = "output_progress")]
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
         let icon = match progress_tracker.progress_status() {
-            ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
-                "⏳"
-            }
-            ProgressStatus::RunningStalled | ProgressStatus::UserPending => "⏰",
+            ProgressStatus::Initialized => "⚫",
+            ProgressStatus::ExecPending => "⚪",
+            ProgressStatus::Queued => "🟣",
+            ProgressStatus::Running => "🔵",
+            ProgressStatus::Interrupted => "🟡",
+            ProgressStatus::RunningStalled => "🐢",
+            ProgressStatus::UserPending => "👤",
             ProgressStatus::Complete(ProgressComplete::Success) => "✅",
             ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
         };
@@ -345,13 +348,15 @@ where
         //
         //  32: blue pale (running)
         //  17: blue dark (running background)
-        // 222: yellow pale (stalled)
+        // 208: yellow-orange (stalled)
+        // 220: yellow (interrupted)
         //  75: indigo pale (user pending, item id)
         //  35: green pale (success)
         //  22: green dark (success background)
         // 160: red slightly dim (fail)
         //  88: red dark (fail background)
 
+        const BLUE_PALE: u8 = 32;
         const GRAY_DARK: u8 = 237;
         const GRAY_MED: u8 = 8;
         const GREEN_LIGHT: u8 = 35;
@@ -366,10 +371,11 @@ where
                         ProgressStatus::Initialized => {
                             console::style(BAR_EMPTY).color256(GRAY_DARK)
                         }
-                        ProgressStatus::ExecPending | ProgressStatus::Running => {
-                            console::style("{bar:40.32}")
-                        }
-                        ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
+                        ProgressStatus::Interrupted => console::style("{bar:40.220}"),
+                        ProgressStatus::ExecPending
+                        | ProgressStatus::Queued
+                        | ProgressStatus::Running => console::style("{bar:40.32}"),
+                        ProgressStatus::RunningStalled => console::style("{bar:40.208}"),
                         ProgressStatus::UserPending => console::style("{bar:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
                             // Ideally we just use `"{bar:40.35}"`,
@@ -390,10 +396,12 @@ where
                         ProgressStatus::Initialized => {
                             console::style(SPINNER_EMPTY).color256(GRAY_MED)
                         }
-                        ProgressStatus::ExecPending | ProgressStatus::Running => {
-                            console::style("{spinner:40.32}")
+                        ProgressStatus::ExecPending | ProgressStatus::Queued => {
+                            console::style(SPINNER_EMPTY).color256(BLUE_PALE)
                         }
-                        ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
+                        ProgressStatus::Running => console::style("{spinner:40.32}"),
+                        ProgressStatus::Interrupted => console::style("{spinner:40.220}"),
+                        ProgressStatus::RunningStalled => console::style("{spinner:40.208}"),
                         ProgressStatus::UserPending => console::style("{spinner:40.75}"),
                         ProgressStatus::Complete(progress_complete) => match progress_complete {
                             // Ideally we just use `"{spinner:40.35}"`,
@@ -414,7 +422,9 @@ where
                 if progress_tracker.progress_limit().is_some() {
                     match progress_tracker.progress_status() {
                         ProgressStatus::Initialized => console::style(BAR_EMPTY),
-                        ProgressStatus::ExecPending
+                        ProgressStatus::Interrupted
+                        | ProgressStatus::ExecPending
+                        | ProgressStatus::Queued
                         | ProgressStatus::Running
                         | ProgressStatus::RunningStalled
                         | ProgressStatus::UserPending
@@ -455,6 +465,16 @@ where
                 CliColorize::Uncolored => Some(elapsed_eta),
             }
         };
+
+        // For showing `ProgressTracker` status for debugging:
+        //
+        // ```rust
+        // // `fmt::Debug` doesn't support alignment, so we need to render the `Debug` string,
+        // // then align it.
+        // let progress_status = progress_tracker.progress_status();
+        // let progress_status = format!("{progress_status:?}");
+        // let mut format_str = format!("{icon} {progress_status:20} {prefix} {bar_or_spinner}");
+        // ```
 
         // `prefix` is the item ID.
         let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
@@ -609,8 +629,15 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset => {
+                    ProgressUpdate::Reset
+                    | ProgressUpdate::ResetToPending
+                    | ProgressUpdate::Queued => {
                         self.progress_bar_style_update(progress_tracker);
+                    }
+                    ProgressUpdate::Interrupt => {
+                        self.progress_bar_style_update(progress_tracker);
+                        let progress_bar = progress_tracker.progress_bar();
+                        progress_bar.abandon();
                     }
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`

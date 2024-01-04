@@ -36,7 +36,7 @@ impl ProgressTracker {
         }
     }
 
-    /// Resets the progress tracker.
+    /// Resets the progress tracker to `Initialized`.
     // TODO: write test for this
     pub fn reset(&mut self) {
         self.progress_status = ProgressStatus::Initialized;
@@ -46,6 +46,38 @@ impl ProgressTracker {
         self.progress_bar.set_position(0);
         self.progress_bar.reset();
         self.last_update_dt = Utc::now();
+    }
+
+    /// Resets the progress tracker to `ExecPending`.
+    // TODO: write test for this
+    pub fn reset_to_pending(&mut self) {
+        self.progress_status = ProgressStatus::ExecPending;
+        self.message = None;
+        self.progress_limit = None;
+        self.progress_bar.set_length(0);
+        self.progress_bar.set_position(0);
+        self.progress_bar.reset();
+        self.last_update_dt = Utc::now();
+    }
+
+    /// Resets the progress tracker to `ExecPending`.
+    // TODO: write test for this
+    pub fn interrupt(&mut self) {
+        match self.progress_status {
+            ProgressStatus::Initialized
+            | ProgressStatus::ExecPending
+            | ProgressStatus::UserPending => {
+                self.progress_status = ProgressStatus::Interrupted;
+                self.message = Some(String::from("interrupted"));
+                self.progress_limit = None;
+                self.last_update_dt = Utc::now();
+            }
+            ProgressStatus::Interrupted
+            | ProgressStatus::Queued
+            | ProgressStatus::Running
+            | ProgressStatus::RunningStalled
+            | ProgressStatus::Complete(_) => {}
+        }
     }
 
     /// Increments the progress by the given unit count.

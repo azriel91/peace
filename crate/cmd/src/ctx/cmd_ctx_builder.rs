@@ -45,7 +45,7 @@ pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    interruptibility: Interruptibility<'ctx>,
+    interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Data held while building `CmdCtx`.

@@ -15,6 +15,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                CmdProgressUpdate,
                 ProgressComplete,
                 ProgressDelta,
                 ProgressMsgUpdate,
@@ -128,7 +129,7 @@ where
         cmd_view: &SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<ItemsStateStoredStale, E>
     where
         E: std::error::Error + From<Error> + Send + 'static,
@@ -168,8 +169,8 @@ where
                                 #[cfg(feature = "output_progress")]
                                 {
                                     let state_type = tynm::type_name::<StatesTs>();
-                                    let _progress_send_unused =
-                                        progress_tx.try_send(ProgressUpdateAndId {
+                                    let _progress_send_unused = progress_tx.try_send(
+                                        ProgressUpdateAndId {
                                             item_id: item_id.clone(),
                                             progress_update: ProgressUpdate::Delta(
                                                 ProgressDelta::Tick,
@@ -177,15 +178,17 @@ where
                                             msg_update: ProgressMsgUpdate::Set(format!(
                                                 "State {state_type} in sync"
                                             )),
-                                        });
+                                        }
+                                        .into(),
+                                    );
                                 }
                             }
                             Ok(false) => {
                                 #[cfg(feature = "output_progress")]
                                 {
                                     let state_type = tynm::type_name::<StatesTs>();
-                                    let _progress_send_unused =
-                                        progress_tx.try_send(ProgressUpdateAndId {
+                                    let _progress_send_unused = progress_tx.try_send(
+                                        ProgressUpdateAndId {
                                             item_id: item_id.clone(),
                                             progress_update: ProgressUpdate::Complete(
                                                 ProgressComplete::Fail,
@@ -193,7 +196,9 @@ where
                                             msg_update: ProgressMsgUpdate::Set(format!(
                                                 "State {state_type} out of sync"
                                             )),
-                                        });
+                                        }
+                                        .into(),
+                                    );
                                 }
 
                                 let item_id = item_id.clone();
@@ -249,7 +254,7 @@ where
         &self,
         input: Self::InputT,
         _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         outcome_collate(input, OutcomeResult::Ok)
     }
@@ -297,7 +302,7 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_current_stored, states_current) = &mut input;
 
@@ -370,7 +375,7 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_goal_stored, states_goal) = &mut input;
 
@@ -462,7 +467,7 @@ where
         &self,
         mut input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 

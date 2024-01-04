@@ -99,7 +99,7 @@ impl ProfileInitCmd {
 
         // Creating the `CmdCtx` writes the workspace and profile params.
         // We don't need to run any flows with it.
-        let _cmd_ctx = cmd_ctx_builder
+        let cmd_ctx = cmd_ctx_builder
             .with_workspace_param_value(
                 WorkspaceParamsKey::Profile,
                 Some(profile_to_create.clone()),
@@ -108,6 +108,7 @@ impl ProfileInitCmd {
             .with_profile_param_value(ProfileParamsKey::EnvType, Some(env_type))
             .with_profile(profile_to_create.clone())
             .await?;
+        drop(cmd_ctx);
 
         // --- //
 

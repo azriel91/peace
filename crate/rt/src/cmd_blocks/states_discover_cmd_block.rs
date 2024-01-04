@@ -25,6 +25,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                CmdProgressUpdate,
                 ProgressComplete,
                 ProgressDelta,
                 ProgressMsgUpdate,
@@ -133,7 +134,7 @@ where
     }
 
     async fn item_states_discover(
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -217,7 +218,7 @@ where
         progress_complete_on_success: bool,
         states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
         states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        progress_tx: &Sender<ProgressUpdateAndId>,
+        progress_tx: &Sender<CmdProgressUpdate>,
         item_id: &ItemId,
     ) {
         if let Some((progress_update, msg_update)) = DiscoverFor::progress_update(
@@ -225,11 +226,14 @@ where
             states_current_result,
             states_goal_result,
         ) {
-            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                item_id: item_id.clone(),
-                progress_update,
-                msg_update,
-            });
+            let _progress_send_unused = progress_tx.try_send(
+                ProgressUpdateAndId {
+                    item_id: item_id.clone(),
+                    progress_update,
+                    msg_update,
+                }
+                .into(),
+            );
         }
     }
 }
@@ -274,7 +278,7 @@ where
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -295,7 +299,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
@@ -406,7 +412,7 @@ where
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -427,7 +433,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
@@ -551,7 +559,7 @@ where
         &self,
         _input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -573,7 +581,9 @@ where
                     .graph()
                     .for_each_concurrent_with(
                         BUFFERED_FUTURES_MAX,
-                        StreamOpts::new().interruptibility_state(interruptibility_state.reborrow()),
+                        StreamOpts::new()
+                            .interruptibility_state(interruptibility_state.reborrow())
+                            .interrupted_next_item_include(false),
                         |item| {
                             Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]

@@ -1,6 +1,7 @@
 use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd_model::CmdOutcome,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
@@ -120,6 +121,9 @@ where
                 "\n",
             ))
             .await?;
+    }
+    if let CmdOutcome::ItemError { errors, .. } = &states_discover_outcome {
+        crate::output::item_errors_present(output, errors).await?;
     }
 
     if debug {

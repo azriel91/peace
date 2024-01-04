@@ -31,6 +31,8 @@ pub enum ProgressStatus {
     ///
     /// This status is used when we don't know the progress limit.
     Initialized,
+    /// The item was waiting for execution, when the command was interrupted.
+    Interrupted,
     /// Execution has not yet begun.
     ///
     /// This is waiting on either:
@@ -38,6 +40,9 @@ pub enum ProgressStatus {
     /// * The framework to begin executing the logic.
     /// * A predecessor's execution completion.
     ExecPending,
+    /// Execution has started for this item, but we haven't received
+    /// `ProgressDelta` update from the item exec logic.
+    Queued,
     /// Execution is in progress.
     ///
     /// This status is best conveyed alongside additional information:

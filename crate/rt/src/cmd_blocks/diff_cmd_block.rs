@@ -23,7 +23,7 @@ use crate::cmds::DiffStateSpec;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
+        use peace_cfg::progress::CmdProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -70,7 +70,9 @@ where
             .graph()
             .try_fold_async_with(
                 StateDiffsMut::with_capacity(states_a.len()),
-                StreamOpts::new().interruptibility_state(interruptibility_state),
+                StreamOpts::new()
+                    .interruptibility_state(interruptibility_state)
+                    .interrupted_next_item_include(false),
                 |mut state_diffs_mut, item| {
                     async move {
                         let _params_specs = &params_specs;
@@ -149,7 +151,7 @@ where
         &self,
         input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
+        #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let SingleProfileSingleFlowView {
             interruptibility_state,

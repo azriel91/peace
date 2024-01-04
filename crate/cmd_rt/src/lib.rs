@@ -17,9 +17,7 @@ mod item_stream_outcome_mapper;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         /// Maximum number of progress messages to buffer.
-        ///
-        /// TODO: Remove the copy in `peace_rt`.
-        pub const PROGRESS_COUNT_MAX: usize = 256;
+        pub const CMD_PROGRESS_COUNT_MAX: usize = 256;
 
         pub(crate) use crate::progress::Progress;
         pub(crate) mod progress;
