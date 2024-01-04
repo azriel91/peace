@@ -20,7 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download"] }
-thiserror = "1.0.52"
+thiserror = "1.0.56"
 url = { version = "2.5.0", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
