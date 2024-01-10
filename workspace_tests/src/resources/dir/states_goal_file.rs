@@ -4,7 +4,7 @@ use std::{
 };
 
 use peace::{
-    cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
+    cfg::{app_name, flow_id, profile},
     resources::paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, StatesGoalFile},
 };
 

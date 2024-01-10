@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use peace::{
-    cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
+    cfg::{app_name, flow_id, profile},
     cmd::ctx::CmdCtx,
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{params::ParamsTypeRegs, Flow, ItemGraphBuilder, ParamsSpecsTypeReg, StatesTypeReg},

@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, path::Path};
 
 use peace::{
-    cfg::{app_name, profile, AppName, Profile},
+    cfg::{app_name, profile},
     resources::paths::{PeaceAppDir, PeaceDir, ProfileDir},
 };
 

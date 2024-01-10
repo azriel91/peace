@@ -5,7 +5,6 @@ use peace::{
             CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressSender,
             ProgressUpdateAndId,
         },
-        ItemId,
     },
     rt_model::ProgressUpdate,
 };

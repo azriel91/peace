@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{item_id, ApplyCheck, FnCtx, ItemId},
+    cfg::{item_id, ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Goal},
     params::{ParamsSpec, ParamsSpecs},
     resources::{

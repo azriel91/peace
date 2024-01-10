@@ -4,7 +4,7 @@ use std::{
 };
 
 use peace::{
-    cfg::{app_name, profile, AppName, Profile},
+    cfg::{app_name, profile},
     resources::{
         internal::ProfileParamsFile,
         paths::{PeaceAppDir, PeaceDir, ProfileDir},

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{app_name, AppName},
+    cfg::app_name,
     rt_model::{Error, NativeError, WorkspaceDirsBuilder, WorkspaceSpec},
 };
 

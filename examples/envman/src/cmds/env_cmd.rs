@@ -1,6 +1,6 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::{app_name, item_id, state::Generated, AppName, ItemId, Profile},
+    cfg::{app_name, item_id, state::Generated, Profile},
     cmd::{
         ctx::CmdCtx,
         scopes::{
