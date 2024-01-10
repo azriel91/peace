@@ -232,7 +232,10 @@ mod tests {
             None,
         );
 
-        assert_eq!(r#"Ty :: new_unchecked ("_")"#, tokens.to_string());
+        assert_eq!(
+            r#"peace :: cfg :: Ty :: new_unchecked ("_")"#,
+            tokens.to_string()
+        );
     }
 
     #[test]
@@ -242,7 +245,10 @@ mod tests {
             "Ty",
             None,
         );
-        assert_eq!(r#"Ty :: new_unchecked ("a")"#, tokens.to_string());
+        assert_eq!(
+            r#"peace :: cfg :: Ty :: new_unchecked ("a")"#,
+            tokens.to_string()
+        );
 
         let tokens = ensure_valid_id(
             &LitStrMaybe(Some(LitStr::new("A", Span::call_site()))),
@@ -250,7 +256,10 @@ mod tests {
             None,
         );
 
-        assert_eq!(r#"Ty :: new_unchecked ("A")"#, tokens.to_string());
+        assert_eq!(
+            r#"peace :: cfg :: Ty :: new_unchecked ("A")"#,
+            tokens.to_string()
+        );
     }
 
     #[test]
