@@ -182,7 +182,7 @@ fn ensure_valid_id(
     if let Some(proposed_id) = proposed_id {
         if is_valid_id(proposed_id) {
             let ty_name = Ident::new(ty_name, Span::call_site());
-            quote!( #ty_name ::new_unchecked( #proposed_id ))
+            quote!( peace::cfg:: #ty_name ::new_unchecked( #proposed_id ))
         } else {
             let message = format!(
                 "\"{proposed_id}\" is not a valid `{ty_name}`.\n\
