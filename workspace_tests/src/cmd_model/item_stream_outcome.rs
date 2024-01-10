@@ -1,8 +1,4 @@
-use peace::{
-    cfg::{item_id},
-    cmd_model::ItemStreamOutcome,
-    rt_model::fn_graph::StreamOutcomeState,
-};
+use peace::{cfg::item_id, cmd_model::ItemStreamOutcome, rt_model::fn_graph::StreamOutcomeState};
 
 #[test]
 fn map() {

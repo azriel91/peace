@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile},
+    cfg::profile,
     rt::cmds::{DiffInfoSpec, DiffStateSpec},
 };
 
