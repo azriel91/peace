@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, profile, AppName, Profile},
+    cfg::{app_name, profile},
     cmd::ctx::CmdCtx,
 };
 

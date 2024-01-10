@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{app_name, profile, AppName, FlowId, Profile},
+    cfg::{app_name, profile, FlowId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     params::ParamsSpec,

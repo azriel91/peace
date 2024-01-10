@@ -4,7 +4,6 @@ use peace::cfg::{
         ProgressComplete, ProgressDelta, ProgressLimit, ProgressMsgUpdate, ProgressUpdate,
         ProgressUpdateAndId,
     },
-    ItemId,
 };
 
 #[test]

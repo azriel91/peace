@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileNoFlowView},
     fmt::presentln,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
