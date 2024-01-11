@@ -1,0 +1,20 @@
+[package]
+name = "peace_value_traits"
+description = "Trait bounds for value types for the Peace framework."
+documentation = "https://docs.rs/peace_value_traits/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+
