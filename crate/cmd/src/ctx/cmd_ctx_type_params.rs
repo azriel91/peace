@@ -1,4 +1,4 @@
-use peace_rt_model::{output::OutputWrite, params::KeyMaybe};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 use peace_value_traits::AppError;
 
 /// Trait so that a single type parameter can be used in `CmdCtx` and `Scopes`.
@@ -10,12 +10,9 @@ pub trait CmdCtxTypeParams {
     type Output;
     /// Error type of the automation software.
     type AppError;
-    /// Workspace parameters key type.
-    type WorkspaceParamsKey;
-    /// Profile parameters key type.
-    type ProfileParamsKey;
-    /// Flow parameters key type.
-    type FlowParamsKey;
+    /// Parameter key types for workspace params, profile params, and flow
+    /// params.
+    type ParamsKeys;
 }
 
 /// Trait so that a single type parameter can be used in `CmdCtx` and `Scopes`.
@@ -27,10 +24,7 @@ pub trait CmdCtxTypeParamsConstrained {
     type Output: OutputWrite<Self::AppError> + 'static;
     /// Error type of the automation software.
     type AppError: AppError;
-    /// Workspace parameters key type.
-    type WorkspaceParamsKey: KeyMaybe;
-    /// Profile parameters key type.
-    type ProfileParamsKey: KeyMaybe;
-    /// Flow parameters key type.
-    type FlowParamsKey: KeyMaybe;
+    /// Parameter key types for workspace params, profile params, and flow
+    /// params.
+    type ParamsKeys: ParamsKeys;
 }
