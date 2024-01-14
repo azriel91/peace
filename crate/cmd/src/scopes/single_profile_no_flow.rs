@@ -118,7 +118,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut O,
+    pub output: &'view mut CmdCtxTypeParamsT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -206,7 +206,7 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypeParamsT::Output {
         self.output
     }
 

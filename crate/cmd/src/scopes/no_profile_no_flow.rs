@@ -83,7 +83,7 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypeParamsT::Output {
         self.output
     }
 

@@ -220,7 +220,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut O,
+    pub output: &'view mut CmdCtxTypeParamsT::Output,
     /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
@@ -381,7 +381,7 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypeParamsT::Output {
         self.output
     }
 
