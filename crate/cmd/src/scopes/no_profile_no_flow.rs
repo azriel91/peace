@@ -31,7 +31,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct NoProfileNoFlow<'ctx, E, O, PKeys>
+pub struct NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -41,7 +41,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypeParamsT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -54,22 +54,22 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    params_type_regs: ParamsTypeRegs<PKeys>,
+    params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Marker.
     marker: PhantomData<E>,
 }
 
-impl<'ctx, E, O, PKeys> NoProfileNoFlow<'ctx, E, O, PKeys>
+impl<'ctx, CmdCtxTypeParamsT> NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
     PKeys: ParamsKeys + 'static,
 {
     pub(crate) fn new(
-        output: &'ctx mut O,
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
-        params_type_regs: ParamsTypeRegs<PKeys>,
+        params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self {
@@ -88,7 +88,7 @@ where
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut O {
+    pub fn output_mut(&mut self) -> &mut CmdCtxTypeParamsT::Output {
         self.output
     }
 
@@ -123,7 +123,7 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys> {
         &self.params_type_regs
     }
 }

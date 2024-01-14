@@ -28,9 +28,9 @@ cfg_if::cfg_if! {
 ///
 /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
 #[derive(Debug)]
-pub struct StatesGoalReadCmdBlock<E, PKeys>(PhantomData<(E, PKeys)>);
+pub struct StatesGoalReadCmdBlock<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, PKeys> StatesGoalReadCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> StatesGoalReadCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -67,14 +67,14 @@ where
     }
 }
 
-impl<E, PKeys> Default for StatesGoalReadCmdBlock<E, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesGoalReadCmdBlock<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesGoalReadCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> CmdBlock for StatesGoalReadCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

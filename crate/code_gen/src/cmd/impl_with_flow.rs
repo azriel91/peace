@@ -94,7 +94,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         {
             pub fn with_flow(
                 self,
-                flow: &'ctx peace_rt_model::Flow<E>,
+                flow: &'ctx peace_rt_model::Flow<CmdCtxTypeParamsT::AppError>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,

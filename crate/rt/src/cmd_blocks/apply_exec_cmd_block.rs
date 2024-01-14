@@ -45,15 +45,17 @@ cfg_if::cfg_if! {
 
 /// Stops a `CmdExecution` if stored states and discovered states are not in
 /// sync.
-pub struct ApplyExecCmdBlock<E, PKeys, StatesTs>(PhantomData<(E, PKeys, StatesTs)>);
+pub struct ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>(
+    PhantomData<(CmdCtxTypeParamsT, StatesTs)>,
+);
 
-impl<E, PKeys, StatesTs> Debug for ApplyExecCmdBlock<E, PKeys, StatesTs> {
+impl<CmdCtxTypeParamsT, StatesTs> Debug for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("ApplyExecCmdBlock").field(&self.0).finish()
     }
 }
 
-impl<E, PKeys, StatesTs> ApplyExecCmdBlock<E, PKeys, StatesTs> {
+impl<CmdCtxTypeParamsT, StatesTs> ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
     /// Returns an `ApplyExecCmdBlock`.
     ///
     /// This is a generic constructor where `StatesTs` determines whether the
@@ -63,13 +65,13 @@ impl<E, PKeys, StatesTs> ApplyExecCmdBlock<E, PKeys, StatesTs> {
     }
 }
 
-impl<E, PKeys, StatesTs> Default for ApplyExecCmdBlock<E, PKeys, StatesTs> {
+impl<CmdCtxTypeParamsT, StatesTs> Default for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<E, PKeys> ApplyExecCmdBlock<E, PKeys, Ensured>
+impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, Ensured>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -80,7 +82,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyExecCmdBlock<E, PKeys, EnsuredDry>
+impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, EnsuredDry>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -91,7 +93,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyExecCmdBlock<E, PKeys, Cleaned>
+impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, Cleaned>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -102,7 +104,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyExecCmdBlock<E, PKeys, CleanedDry>
+impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, CleanedDry>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -113,7 +115,7 @@ where
     }
 }
 
-impl<E, PKeys, StatesTs> ApplyExecCmdBlock<E, PKeys, StatesTs>
+impl<CmdCtxTypeParamsT, StatesTs> ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>
 where
     PKeys: ParamsKeys + 'static,
     StatesTs: StatesTsApplyExt + Debug + Send,
@@ -420,7 +422,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys, StatesTs> CmdBlock for ApplyExecCmdBlock<E, PKeys, StatesTs>
+impl<CmdCtxTypeParamsT, StatesTs> CmdBlock for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

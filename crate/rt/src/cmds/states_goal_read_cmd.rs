@@ -11,9 +11,9 @@ use crate::cmd_blocks::StatesGoalReadCmdBlock;
 
 /// Reads [`StatesGoalStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesGoalReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesGoalReadCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, O, PKeys> StatesGoalReadCmd<E, O, PKeys>
+impl<CmdCtxTypeParamsT> StatesGoalReadCmd<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     O: OutputWrite<E>,
@@ -26,7 +26,7 @@ where
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoalStored, E>, E> {
         let cmd_execution_builder = CmdExecution::<StatesGoalStored, _, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesGoalReadCmd<E, O, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesGoalReadCmd<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }

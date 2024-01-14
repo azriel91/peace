@@ -11,9 +11,9 @@ use crate::cmd_blocks::StatesCurrentReadCmdBlock;
 
 /// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesCurrentReadCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, O, PKeys> StatesCurrentReadCmd<E, O, PKeys>
+impl<CmdCtxTypeParamsT> StatesCurrentReadCmd<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     O: OutputWrite<E>,
@@ -27,7 +27,7 @@ where
     /// [`StatesCurrentStoredDiscoverCmd`]: crate::StatesCurrentStoredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrentStored, E>, E> {
         let cmd_execution_builder =
             CmdExecution::<StatesCurrentStored, _, _>::builder().with_cmd_block(
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesCurrentReadCmd<E, O, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesCurrentReadCmd<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }

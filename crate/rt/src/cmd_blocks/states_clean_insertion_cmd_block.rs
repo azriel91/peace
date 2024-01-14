@@ -25,9 +25,9 @@ cfg_if::cfg_if! {
 /// This calls [`Item::state_clean`] for each item, and groups them together
 /// into `StatesClean`.
 #[derive(Debug)]
-pub struct StatesCleanInsertionCmdBlock<E, PKeys>(PhantomData<(E, PKeys)>);
+pub struct StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, PKeys> StatesCleanInsertionCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -38,14 +38,14 @@ where
     }
 }
 
-impl<E, PKeys> Default for StatesCleanInsertionCmdBlock<E, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesCleanInsertionCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

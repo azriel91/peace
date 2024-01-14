@@ -50,8 +50,8 @@ impl<Scope> CmdCtx<Scope> {
 
 impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<'ctx, E, O>(
-        output: &'ctx mut O,
+    pub fn builder_no_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
@@ -66,8 +66,8 @@ impl CmdCtx<()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<'ctx, E, O>(
-        output: &'ctx mut O,
+    pub fn builder_multi_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
@@ -84,8 +84,8 @@ impl CmdCtx<()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<'ctx, E, O>(
-        output: &'ctx mut O,
+    pub fn builder_multi_profile_single_flow<'ctx, CmdCtxTypeParamsT>(
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
@@ -104,8 +104,8 @@ impl CmdCtx<()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<'ctx, E, O>(
-        output: &'ctx mut O,
+    pub fn builder_single_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
@@ -122,8 +122,8 @@ impl CmdCtx<()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow<'ctx, E, O>(
-        output: &'ctx mut O,
+    pub fn builder_single_profile_single_flow<'ctx, CmdCtxTypeParamsT>(
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
@@ -142,7 +142,8 @@ impl CmdCtx<()> {
     }
 }
 
-impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
+impl<'ctx, CmdCtxTypeParamsT, ResTs0>
+    CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -151,7 +152,7 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
+    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {

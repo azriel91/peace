@@ -63,12 +63,12 @@ pub struct ApplyStoreStateSyncCurrentAndGoal;
 
 /// Stops a `CmdExecution` if stored states and discovered states are not in
 /// sync.
-pub struct ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>(
-    PhantomData<(E, PKeys, ApplyStoreStateSync)>,
+pub struct ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSync>(
+    PhantomData<(CmdCtxTypeParamsT, ApplyStoreStateSync)>,
 );
 
-impl<E, PKeys, ApplyStoreStateSync> Debug
-    for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>
+impl<CmdCtxTypeParamsT, ApplyStoreStateSync> Debug
+    for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSync>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("ApplyStateSyncCheckCmdBlock")
@@ -77,7 +77,7 @@ impl<E, PKeys, ApplyStoreStateSync> Debug
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncNone>
+impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncNone>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -88,7 +88,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrent>
+impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -99,7 +99,7 @@ where
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncGoal>
+impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -110,7 +110,8 @@ where
     }
 }
 
-impl<E, PKeys> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrentAndGoal>
+impl<CmdCtxTypeParamsT>
+    ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -121,12 +122,13 @@ where
     }
 }
 
-impl<E, PKeys, ApplyStoreStateSync> ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSync>
+impl<CmdCtxTypeParamsT, ApplyStoreStateSync>
+    ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSync>
 where
     PKeys: ParamsKeys + 'static,
 {
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
-        cmd_view: &SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, SetUp>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
@@ -226,7 +228,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncNone>
+impl<CmdCtxTypeParamsT> CmdBlock
+    for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncNone>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -261,7 +264,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrent>
+impl<CmdCtxTypeParamsT> CmdBlock
+    for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -334,7 +338,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncGoal>
+impl<CmdCtxTypeParamsT> CmdBlock
+    for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -407,7 +412,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for ApplyStateSyncCheckCmdBlock<E, PKeys, ApplyStoreStateSyncCurrentAndGoal>
+impl<CmdCtxTypeParamsT> CmdBlock
+    for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

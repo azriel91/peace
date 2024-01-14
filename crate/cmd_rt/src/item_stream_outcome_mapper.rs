@@ -20,7 +20,10 @@ pub struct ItemStreamOutcomeMapper;
 
 impl ItemStreamOutcomeMapper {
     /// Maps `FnId`s into `ItemId`s for a better information abstraction level.
-    pub fn map<T, E>(flow: &Flow<E>, stream_outcome: StreamOutcome<T>) -> ItemStreamOutcome<T>
+    pub fn map<T, E>(
+        flow: &Flow<CmdCtxTypeParamsT::AppError>,
+        stream_outcome: StreamOutcome<T>,
+    ) -> ItemStreamOutcome<T>
     where
         E: 'static,
     {

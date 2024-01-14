@@ -16,15 +16,15 @@ use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, 
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 
-pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesDiscoverCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, O, PKeys> Debug for StatesDiscoverCmd<E, O, PKeys> {
+impl<CmdCtxTypeParamsT> Debug for StatesDiscoverCmd<CmdCtxTypeParamsT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("StatesDiscoverCmd").field(&self.0).finish()
     }
 }
 
-impl<E, O, PKeys> StatesDiscoverCmd<E, O, PKeys>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmd<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     O: OutputWrite<E>,
@@ -49,7 +49,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         Self::current_with(cmd_ctx, true).await
     }
@@ -69,7 +69,7 @@ where
     ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
@@ -117,7 +117,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
         Self::goal_with(cmd_ctx, true).await
     }
@@ -137,7 +137,7 @@ where
     ///
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
         let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
@@ -194,7 +194,7 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         Self::current_and_goal_with(cmd_ctx, true).await
     }
@@ -216,7 +216,7 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()
@@ -304,7 +304,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesDiscoverCmd<E, O, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesDiscoverCmd<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }

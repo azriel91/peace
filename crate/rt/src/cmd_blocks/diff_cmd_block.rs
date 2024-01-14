@@ -28,24 +28,28 @@ cfg_if::cfg_if! {
     }
 }
 
-pub struct DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1>(
-    PhantomData<(E, PKeys, StatesTs0, StatesTs1)>,
+pub struct DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>(
+    PhantomData<(CmdCtxTypeParamsT, StatesTs0, StatesTs1)>,
 );
 
-impl<E, PKeys, StatesTs0, StatesTs1> Debug for DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1> {
+impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> Debug
+    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("DiffCmdBlock").field(&self.0).finish()
     }
 }
 
-impl<E, PKeys, StatesTs0, StatesTs1> DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1> {
+impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+    DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+{
     /// Returns a new `DiffCmdBlock`.
     pub fn new() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<E, PKeys, StatesTs0, StatesTs1> DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1>
+impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -60,7 +64,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
         interruptibility_state: InterruptibilityState<'_, '_>,
-        flow: &Flow<E>,
+        flow: &Flow<CmdCtxTypeParamsT::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
@@ -96,14 +100,17 @@ where
     }
 }
 
-impl<E, PKeys, StatesTs0, StatesTs1> Default for DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1> {
+impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> Default
+    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+{
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys, StatesTs0, StatesTs1> CmdBlock for DiffCmdBlock<E, PKeys, StatesTs0, StatesTs1>
+impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> CmdBlock
+    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

@@ -189,7 +189,7 @@ fn impl_build_for(
     );
 
     quote! {
-        impl<'ctx, 'key, E, O, PKeys>
+        impl<'ctx, 'key, CmdCtxTypeParamsT>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
@@ -737,7 +737,7 @@ fn impl_build_for(
             }
         }
 
-        impl<'ctx, 'key: 'ctx, E, O, PKeys> std::future::IntoFuture
+        impl<'ctx, 'key: 'ctx, CmdCtxTypeParamsT> std::future::IntoFuture
         for crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,

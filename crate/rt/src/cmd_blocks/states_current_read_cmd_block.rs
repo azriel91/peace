@@ -28,9 +28,9 @@ cfg_if::cfg_if! {
 ///
 /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
 #[derive(Debug)]
-pub struct StatesCurrentReadCmdBlock<E, PKeys>(PhantomData<(E, PKeys)>);
+pub struct StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, PKeys> StatesCurrentReadCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -67,14 +67,14 @@ where
     }
 }
 
-impl<E, PKeys> Default for StatesCurrentReadCmdBlock<E, PKeys> {
+impl<CmdCtxTypeParamsT> Default for StatesCurrentReadCmdBlock<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesCurrentReadCmdBlock<E, PKeys>
+impl<CmdCtxTypeParamsT> CmdBlock for StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

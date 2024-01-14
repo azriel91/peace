@@ -31,16 +31,16 @@ pub use self::{diff_info_spec::DiffInfoSpec, diff_state_spec::DiffStateSpec};
 mod diff_info_spec;
 mod diff_state_spec;
 
-pub struct DiffCmd<'cmd, E, O, PKeys, Scope>(PhantomData<(E, &'cmd O, PKeys, Scope)>);
+pub struct DiffCmd<'cmd, CmdCtxTypeParamsT, Scope>(PhantomData<(E, &'cmd O, PKeys, Scope)>);
 
-impl<'cmd, E, O, PKeys, Scope> Debug for DiffCmd<'cmd, E, O, PKeys, Scope> {
+impl<'cmd, CmdCtxTypeParamsT, Scope> Debug for DiffCmd<'cmd, CmdCtxTypeParamsT, Scope> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("DiffCmd").field(&self.0).finish()
     }
 }
 
-impl<'cmd, E, O, PKeys>
-    DiffCmd<'cmd, E, O, PKeys, SingleProfileSingleFlow<'cmd, E, O, PKeys, SetUp>>
+impl<'cmd, CmdCtxTypeParamsT>
+    DiffCmd<'cmd, CmdCtxTypeParamsT, SingleProfileSingleFlow<'cmd, CmdCtxTypeParamsT, SetUp>>
 where
     E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     O: OutputWrite<E> + 'cmd,
@@ -61,7 +61,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff_stored<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StateDiffs, E>, E> {
         Self::diff::<CurrentStored, GoalStored>(cmd_ctx).await
     }
@@ -77,7 +77,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff<'ctx, StatesTs0, StatesTs1>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StateDiffs, E>, E>
     where
         StatesTs0: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
@@ -105,9 +105,9 @@ where
     }
 
     fn states_fetch_cmd_block_append(
-        cmd_execution_builder: CmdExecutionBuilder<StateDiffs, E, PKeys>,
+        cmd_execution_builder: CmdExecutionBuilder<StateDiffs, CmdCtxTypeParamsT>,
         diff_state_spec: DiffStateSpec,
-    ) -> CmdExecutionBuilder<StateDiffs, E, PKeys> {
+    ) -> CmdExecutionBuilder<StateDiffs, CmdCtxTypeParamsT> {
         match diff_state_spec {
             DiffStateSpec::Current => cmd_execution_builder.with_cmd_block(CmdBlockWrapper::new(
                 StatesDiscoverCmdBlock::current(),
@@ -130,7 +130,8 @@ where
     }
 }
 
-impl<'cmd, E, O, PKeys> DiffCmd<'cmd, E, O, PKeys, MultiProfileSingleFlow<'cmd, E, O, PKeys, SetUp>>
+impl<'cmd, CmdCtxTypeParamsT>
+    DiffCmd<'cmd, CmdCtxTypeParamsT, MultiProfileSingleFlow<'cmd, CmdCtxTypeParamsT, SetUp>>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     O: OutputWrite<E> + 'cmd,
@@ -145,7 +146,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_current_stored<'ctx>(
-        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         profile_a: &Profile,
         profile_b: &Profile,
     ) -> Result<StateDiffs, E> {
@@ -204,7 +205,7 @@ where
     }
 }
 
-impl<'cmd, E, O, PKeys, Scope> DiffCmd<'cmd, E, O, PKeys, Scope>
+impl<'cmd, CmdCtxTypeParamsT, Scope> DiffCmd<'cmd, CmdCtxTypeParamsT, Scope>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     O: OutputWrite<E> + 'cmd,
@@ -219,7 +220,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
-        flow: &Flow<E>,
+        flow: &Flow<CmdCtxTypeParamsT::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
@@ -247,7 +248,7 @@ where
     }
 }
 
-impl<'cmd, E, O, PKeys, Scope> Default for DiffCmd<'cmd, E, O, PKeys, Scope> {
+impl<'cmd, CmdCtxTypeParamsT, Scope> Default for DiffCmd<'cmd, CmdCtxTypeParamsT, Scope> {
     fn default() -> Self {
         Self(PhantomData)
     }

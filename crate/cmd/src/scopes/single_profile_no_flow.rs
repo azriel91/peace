@@ -41,7 +41,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileNoFlow<'ctx, E, O, PKeys>
+pub struct SingleProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -51,7 +51,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypeParamsT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -70,7 +70,7 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    params_type_regs: ParamsTypeRegs<PKeys>,
+    params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -137,27 +137,27 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+    pub params_type_regs: &'view ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
     pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
     pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
 }
 
-impl<'ctx, E, O, PKeys> SingleProfileNoFlow<'ctx, E, O, PKeys>
+impl<'ctx, CmdCtxTypeParamsT> SingleProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileNoFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
-        output: &'ctx mut O,
+        output: &'ctx mut CmdCtxTypeParamsT::Output,
         interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        params_type_regs: ParamsTypeRegs<PKeys>,
+        params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
@@ -211,7 +211,7 @@ where
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut O {
+    pub fn output_mut(&mut self) -> &mut CmdCtxTypeParamsT::Output {
         self.output
     }
 
@@ -261,7 +261,7 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys> {
         &self.params_type_regs
     }
 }

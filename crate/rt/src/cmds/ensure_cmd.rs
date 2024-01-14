@@ -23,9 +23,9 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct EnsureCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct EnsureCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
 
-impl<E, O, PKeys> EnsureCmd<E, O, PKeys>
+impl<CmdCtxTypeParamsT> EnsureCmd<CmdCtxTypeParamsT>
 where
     E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
@@ -55,7 +55,7 @@ where
     /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -67,7 +67,7 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_dry_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
@@ -112,7 +112,7 @@ where
     /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
     /// [`Item`]: peace_cfg::Item
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -124,7 +124,7 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
@@ -165,7 +165,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<'ctx, StatesTs>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<EnsureExecChange<StatesTs>, E>, E>
     where
@@ -213,7 +213,7 @@ where
 
             cmd_execution_builder
                 .with_cmd_block(CmdBlockWrapper::new(
-                    ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
+                    ApplyExecCmdBlock::<CmdCtxTypeParamsT, StatesTs>::new(),
                     |(states_previous, states_applied, states_target): (
                         StatesPrevious,
                         States<StatesTs>,
@@ -305,7 +305,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for EnsureCmd<E, O, PKeys> {
+impl<CmdCtxTypeParamsT> Default for EnsureCmd<CmdCtxTypeParamsT> {
     fn default() -> Self {
         Self(PhantomData)
     }

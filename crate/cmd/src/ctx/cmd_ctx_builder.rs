@@ -43,7 +43,7 @@ pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypeParamsT::Output,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
@@ -264,7 +264,7 @@ where
 /// If an item's parameters are not provided, and nothing was previously
 /// stored, then an error is returned.
 fn params_specs_merge<E>(
-    flow: &Flow<E>,
+    flow: &Flow<CmdCtxTypeParamsT::AppError>,
     mut params_specs_provided: ParamsSpecs,
     params_specs_stored: Option<ParamsSpecs>,
 ) -> Result<ParamsSpecs, Error>

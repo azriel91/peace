@@ -10,14 +10,14 @@ use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 /// [`CmdBlock`]: crate::CmdBlock
 /// [`CmdExecution`]: crate::CmdExecution
 #[derive(Debug)]
-pub struct CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
+pub struct CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
@@ -31,7 +31,7 @@ where
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
+impl<ExecutionOutcome, CmdCtxTypeParamsT> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
@@ -44,10 +44,16 @@ where
     /// Adds a `CmdBlock` to this execution.
     pub fn with_cmd_block<CB, BlockOutcomeNext, InputT>(
         self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcomeNext, InputT>,
-    ) -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
+        cmd_block: CmdBlockWrapper<
+            CB,
+            CmdCtxTypeParamsT,
+            ExecutionOutcome,
+            BlockOutcomeNext,
+            InputT,
+        >,
+    ) -> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
     where
-        CB: CmdBlock<Error = E, PKeys = PKeys, Outcome = BlockOutcomeNext, InputT = InputT>
+        CB: CmdBlock<CmdCtxTypeParamsT, Outcome = BlockOutcomeNext, InputT = InputT>
             + Unpin
             + 'static,
         ExecutionOutcome: Debug + Resource + Unpin + 'static,
@@ -102,7 +108,7 @@ where
     }
 
     /// Returns the `CmdExecution` to execute.
-    pub fn build(self) -> CmdExecution<ExecutionOutcome, E, PKeys> {
+    pub fn build(self) -> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT> {
         let CmdExecutionBuilder {
             cmd_blocks,
             execution_outcome_fetch,
@@ -119,7 +125,8 @@ where
     }
 }
 
-impl<ExecutionOutcome, E, PKeys> Default for CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
+impl<ExecutionOutcome, CmdCtxTypeParamsT> Default
+    for CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: ParamsKeys + 'static,

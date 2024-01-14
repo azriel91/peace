@@ -16,8 +16,8 @@ pub struct Progress;
 impl Progress {
     /// Receives progress updates and updates `output` to render it.
     // TODO: write test for this
-    pub async fn progress_render<E, O>(
-        output: &mut O,
+    pub async fn progress_render<CmdCtxTypeParamsT>(
+        output: &mut CmdCtxTypeParamsT::Output,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         mut cmd_progress_rx: Receiver<CmdProgressUpdate>,
     ) where
@@ -30,8 +30,8 @@ impl Progress {
         }
     }
 
-    async fn handle_cmd_progress_update<E, O>(
-        output: &mut O,
+    async fn handle_cmd_progress_update<CmdCtxTypeParamsT>(
+        output: &mut CmdCtxTypeParamsT::Output,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         cmd_progress_update: CmdProgressUpdate,
     ) -> ControlFlow<()>
@@ -100,8 +100,8 @@ impl Progress {
         }
     }
 
-    async fn handle_progress_update_and_id<E, O>(
-        output: &mut O,
+    async fn handle_progress_update_and_id<CmdCtxTypeParamsT>(
+        output: &mut CmdCtxTypeParamsT::Output,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         progress_update_and_id: ProgressUpdateAndId,
     ) where
@@ -120,8 +120,8 @@ impl Progress {
         .await;
     }
 
-    async fn handle_progress_tracker_progress_update<E, O>(
-        output: &mut O,
+    async fn handle_progress_tracker_progress_update<CmdCtxTypeParamsT>(
+        output: &mut CmdCtxTypeParamsT::Output,
         progress_tracker: &mut ProgressTracker,
         progress_update_and_id: ProgressUpdateAndId,
     ) where

@@ -51,15 +51,17 @@ pub struct DiscoverForGoal;
 pub struct DiscoverForCurrentAndGoal;
 
 /// Discovers [`StatesCurrent`] and/or [`StatesGoal`].
-pub struct StatesDiscoverCmdBlock<E, PKeys, DiscoverFor> {
+pub struct StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor> {
     /// Whether or not to mark progress bars complete on success.
     #[cfg(feature = "output_progress")]
     progress_complete_on_success: bool,
     /// Marker.
-    marker: PhantomData<(E, PKeys, DiscoverFor)>,
+    marker: PhantomData<(CmdCtxTypeParamsT, DiscoverFor)>,
 }
 
-impl<E, PKeys, DiscoverFor> Debug for StatesDiscoverCmdBlock<E, PKeys, DiscoverFor> {
+impl<CmdCtxTypeParamsT, DiscoverFor> Debug
+    for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("StatesDiscoverCmdBlock");
         #[cfg(feature = "output_progress")]
@@ -72,7 +74,7 @@ impl<E, PKeys, DiscoverFor> Debug for StatesDiscoverCmdBlock<E, PKeys, DiscoverF
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -87,7 +89,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -102,7 +104,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -117,7 +119,7 @@ where
     }
 }
 
-impl<E, PKeys, DiscoverFor> StatesDiscoverCmdBlock<E, PKeys, DiscoverFor>
+impl<CmdCtxTypeParamsT, DiscoverFor> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -256,7 +258,7 @@ pub enum ItemDiscoverOutcome<E> {
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
+impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -337,7 +339,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrent>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -390,7 +392,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
+impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -471,7 +473,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForGoal>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -524,7 +526,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypeParamsT> CmdBlock
+    for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
@@ -620,7 +623,7 @@ where
     }
 }
 
-impl<E, PKeys> StatesDiscoverCmdBlock<E, PKeys, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,

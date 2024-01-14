@@ -45,13 +45,13 @@ mod cmd_execution_error_builder;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<ExecutionOutcome, E, PKeys>
+pub struct CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
@@ -59,20 +59,20 @@ where
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
+impl<ExecutionOutcome, CmdCtxTypeParamsT> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
 {
-    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys> {
+    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT> {
         CmdExecutionBuilder::new()
     }
 
     /// Returns the result of executing the command.
     pub async fn exec<'ctx, O>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
@@ -152,7 +152,7 @@ where
 async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] O: OutputWrite<E>>(
     cmd_outcome_task: impl Future<Output = Result<CmdOutcome<ExecutionOutcome, E>, E>>,
     #[cfg(feature = "output_progress")] progress_render_enabled: bool,
-    #[cfg(feature = "output_progress")] output: &mut O,
+    #[cfg(feature = "output_progress")] output: &mut CmdCtxTypeParamsT::Output,
     #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
     #[cfg(feature = "output_progress")] mut cmd_progress_rx: mpsc::Receiver<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
@@ -188,10 +188,10 @@ where
     }
 }
 
-async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
-    cmd_blocks: &VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
+    cmd_blocks: &VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
-    cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
+    cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, SetUp>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -207,7 +207,7 @@ where
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
     })
     .enumerate()
-    .map(Result::<_, CmdBlockStreamBreak<'_, '_, ExecutionOutcome, E, PKeys>>::Ok)
+    .map(Result::<_, CmdBlockStreamBreak<'_, '_, ExecutionOutcome, CmdCtxTypeParamsT>>::Ok)
     .try_fold(
         CmdViewAndProgress {
             cmd_view,
@@ -277,7 +277,7 @@ where
     )
     .await;
 
-    outcome_extract::<ExecutionOutcome, E, PKeys>(
+    outcome_extract::<ExecutionOutcome, CmdCtxTypeParamsT>(
         cmd_view_and_progress_result,
         cmd_blocks,
         execution_outcome_fetch,
@@ -294,12 +294,12 @@ where
 /// * `cmd_blocks`: `CmdBlock`s in this execution, used to build a useful error
 ///   message if needed.
 /// * `execution_outcome_fetch`: Logic to extract the `ExecutionOutcome` type.
-fn outcome_extract<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
+fn outcome_extract<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
     cmd_view_and_progress_result: Result<
-        CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
-        CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
+        CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>,
+        CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>,
     >,
-    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
 where
@@ -435,18 +435,18 @@ where
     }
 }
 
-struct CmdViewAndProgress<'view, 'view_ref, E, PKeys>
+struct CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
-    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
+    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, SetUp>,
     #[cfg(feature = "output_progress")]
     cmd_progress_tx: Sender<CmdProgressUpdate>,
 }
 
 /// Reasons to stop processing `CmdBlock`s.
-enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>
+enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug,
     E: Debug + 'static,
@@ -454,22 +454,22 @@ where
 {
     /// An interruption happened between `CmdBlock` executions.
     Interrupt {
-        cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+        cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>,
         /// Index of the next `CmdBlock` that hasn't been processed.
         cmd_block_index_next: usize,
         interrupt_signal: InterruptSignal,
     },
     /// A `CmdBlockError` was returned from `CmdBlockRt::exec`.
-    BlockErr(CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>),
+    BlockErr(CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>),
 }
 
-struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>
+struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug,
     E: Debug + 'static,
     PKeys: ParamsKeys + 'static,
 {
-    cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+    cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>,
     /// Index of the `CmdBlock` that erred.
     cmd_block_index: usize,
     cmd_block_error: CmdBlockError<ExecutionOutcome, E>,

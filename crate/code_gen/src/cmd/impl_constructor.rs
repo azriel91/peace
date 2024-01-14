@@ -36,7 +36,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        impl<'ctx, E, O>
+        impl<'ctx, CmdCtxTypeParamsT>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
@@ -58,7 +58,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
             pub fn #constructor_method_name(
-                output: &'ctx mut O,
+                output: &'ctx mut CmdCtxTypeParamsT::Output,
                 workspace: &'ctx peace_rt_model::Workspace,
             ) -> Self
             {

@@ -29,7 +29,7 @@ cfg_if::cfg_if! {
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
-pub struct CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT> {
+pub struct CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> {
     /// Underlying `CmdBlock` implementation.
     ///
     /// The trait constraints are applied on impl blocks.
@@ -38,13 +38,13 @@ pub struct CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT>
     /// executing this `CmdBlock`.
     fn_partial_exec_handler: fn(BlockOutcome) -> ExecutionOutcome,
     /// Marker.
-    marker: PhantomData<(E, PKeys, BlockOutcome, InputT)>,
+    marker: PhantomData<(CmdCtxTypeParamsT, BlockOutcome, InputT)>,
 }
 
-impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT>
-    CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT>
+impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
+    CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<Error = E, PKeys = PKeys, InputT = InputT>,
+    CB: CmdBlock<CmdCtxTypeParamsT, InputT = InputT>,
 {
     /// Returns a new `CmdBlockWrapper`.
     ///
@@ -69,10 +69,10 @@ where
 }
 
 #[async_trait(?Send)]
-impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
-    for CmdBlockWrapper<CB, E, PKeys, ExecutionOutcome, BlockOutcome, InputT>
+impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
+    for CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<Error = E, PKeys = PKeys, Outcome = BlockOutcome, InputT = InputT> + Unpin,
+    CB: CmdBlock<CmdCtxTypeParamsT, Outcome = BlockOutcome, InputT = InputT> + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
