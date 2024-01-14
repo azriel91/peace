@@ -28,7 +28,7 @@ pub use self::{
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
 };
 
-use crate::ctx::CmdCtxTypeParams;
+use crate::ctx::CmdCtxBuilderTypeParams;
 
 mod multi_profile_no_flow_builder;
 mod multi_profile_single_flow_builder;
@@ -38,9 +38,9 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
+pub struct CmdCtxBuilder<'ctx, CmdCtxBuilderTypeParamsT>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    CmdCtxBuilderTypeParamsT: CmdCtxBuilderTypeParams,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -48,18 +48,13 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut CmdCtxTypeParamsT::Output,
+    output: &'ctx mut CmdCtxBuilderTypeParamsT::Output,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Data held while building `CmdCtx`.
-    ///
-    /// # Note:
-    ///
-    /// Although this uses the `CmdCtxTypeParams::Scope` type parameter, the
-    /// concrete type will be the `ScopeBuilder`.
-    scope_builder: CmdCtxTypeParamsT::Scope,
+    scope_builder: CmdCtxBuilderTypeParamsT::ScopeBuilder,
 }
 
 /// Serializes workspace params to storage.

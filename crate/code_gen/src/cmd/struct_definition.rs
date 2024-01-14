@@ -1,7 +1,7 @@
 use quote::ToTokens;
-use syn::{parse_quote, punctuated::Punctuated, Fields, FieldsNamed, GenericArgument, Token};
+use syn::{parse_quote, Fields, FieldsNamed};
 
-use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
+use crate::cmd::scope_struct::ScopeStruct;
 
 /// Generates the struct definition for a scope struct builder.
 ///
@@ -47,35 +47,6 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 /// ```
 pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
-
-    scope_struct.item_struct_mut().generics = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-
-        type_params.push(parse_quote!(E));
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-
-        // <
-        //     E,
-        //
-        //     // SingleProfile / MultiProfile
-        //     ProfileSelection,
-        //     // SingleFlow
-        //     FlowSelection,
-        //
-        //     PKeys,
-        //     WorkspaceParamsSelection,
-        //     // SingleProfile / MultiProfile
-        //     ProfileParamsSelection,
-        //     // SingleFlow
-        //     FlowParamsSelection,
-        // >
-        parse_quote!(<#type_params>)
-    };
-    scope_struct.item_struct_mut().generics.where_clause = Some(parse_quote! {
-        where
-            PKeys: peace_rt_model::params::ParamsKeys + 'static,
-    });
 
     scope_struct.item_struct_mut().fields = {
         let mut fields: FieldsNamed = parse_quote!({});
