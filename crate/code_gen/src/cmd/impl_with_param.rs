@@ -203,7 +203,6 @@ fn impl_with_param_key_unknown(
                             // profile_params_selection,
                             // flow_params_selection,
                             // params_specs_provided,
-                            // marker,
 
                             #scope_builder_fields_params_none
                         },
@@ -230,7 +229,6 @@ fn impl_with_param_key_unknown(
                     // profile_params_selection,
                     // flow_params_selection,
                     // params_specs_provided,
-                    // marker,
 
                     #scope_builder_fields_params_some_new
                 };
@@ -388,7 +386,6 @@ fn impl_with_param_key_known(
                             // profile_params_selection,
                             // flow_params_selection,
                             // params_specs_provided,
-                            // marker,
 
                             #scope_builder_fields_params_some
                         },
@@ -411,7 +408,6 @@ fn impl_with_param_key_known(
                     // profile_params_selection,
                     // flow_params_selection,
                     // params_specs_provided,
-                    // marker,
 
                     #scope_builder_fields_passthrough
                 };

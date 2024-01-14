@@ -188,7 +188,6 @@ fn impl_with_params_k_key_unknown(
                             // workspace_params_selection: WorkspaceParamsNone,
                             // profile_params_selection,
                             // flow_params_selection,
-                            // marker,
 
                             #scope_builder_fields_params_none
                         },
@@ -209,7 +208,6 @@ fn impl_with_params_k_key_unknown(
                     // workspace_params_selection: WorkspaceParamsSome(params_map),
                     // profile_params_selection,
                     // flow_params_selection,
-                    // marker,
 
                     #scope_builder_fields_params_some_new
                 };
@@ -360,7 +358,6 @@ fn impl_with_param_key_known(
                             // mut workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
-                            // marker,
 
                             #scope_builder_fields_params_some
                         },
@@ -377,7 +374,6 @@ fn impl_with_param_key_known(
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
-                    // marker,
 
                     #scope_builder_fields_passthrough
                 };

@@ -425,8 +425,6 @@ fn impl_build_for(
                 //
                 //         // === SingleProfileSingleFlow === //
                 //         params_specs_provided,
-                //
-                //         marker: std::marker::PhantomData,
                 //     },
                 // } = self;
                 #scope_builder_deconstruct
@@ -854,10 +852,6 @@ fn scope_builder_deconstruct(
         });
     }
 
-    scope_builder_fields.push(parse_quote! {
-        marker: std::marker::PhantomData
-    });
-
     quote! {
         let crate::ctx::CmdCtxBuilder {
             output,
@@ -874,7 +868,6 @@ fn scope_builder_deconstruct(
                 // // === SingleProfileSingleFlow === //
                 // params_specs_provided,
 
-                // marker: std::marker::PhantomData,
                 #scope_builder_fields,
             },
         } = self;

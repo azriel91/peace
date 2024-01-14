@@ -30,7 +30,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 params_specs_provided: peace_params::ParamsSpecs::new()
             ));
         }
-        type_params.push(parse_quote!(marker: std::marker::PhantomData));
 
         type_params
     };
@@ -79,7 +78,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     // // === SingleProfileSingleFlow === //
                     // params_specs_provided: peace_params::ParamsSpecs::new()
 
-                    // marker: std::marker::PhantomData,
                     #scope_field_values
                 };
 

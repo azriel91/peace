@@ -122,7 +122,6 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                             // profile_params_selection,
                             // flow_params_selection,
                             // params_specs_provided,
-                            // marker: std::marker::PhantomData,
                             #scope_builder_fields_flow_not_selected
                         },
                 } = self;
@@ -135,7 +134,6 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     // profile_params_selection,
                     // flow_params_selection,
                     // params_specs_provided,
-                    // marker: std::marker::PhantomData,
                     #scope_builder_fields_flow_selected
                 };
 
@@ -167,7 +165,6 @@ fn scope_builder_fields_flow_not_selected(scope: Scope) -> Punctuated<FieldValue
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 
     field_values
 }
@@ -189,7 +186,6 @@ fn scope_builder_fields_flow_selected(scope: Scope) -> Punctuated<FieldValue, Co
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 
     field_values
 }

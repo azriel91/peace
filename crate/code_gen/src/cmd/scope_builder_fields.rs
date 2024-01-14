@@ -53,8 +53,6 @@ pub(crate) fn passthrough(
         field_values.push(parse_quote!(params_specs_provided));
     }
 
-    field_values.push(parse_quote!(marker));
-
     field_values
 }
 
@@ -115,8 +113,6 @@ pub(crate) fn params_none(
         field_values.push(parse_quote!(params_specs_provided));
     }
 
-    field_values.push(parse_quote!(marker));
-
     field_values
 }
 
@@ -167,8 +163,6 @@ pub(crate) fn params_some(scope: Scope, params_scope: ParamsScope) -> Punctuated
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-
-    field_values.push(parse_quote!(marker));
 
     field_values
 }
@@ -232,8 +226,6 @@ pub(crate) fn params_some_new(
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-
-    field_values.push(parse_quote!(marker));
 
     field_values
 }
