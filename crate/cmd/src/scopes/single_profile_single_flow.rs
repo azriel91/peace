@@ -10,7 +10,7 @@ use peace_resources::{
 };
 use peace_rt_model::{
     params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
     Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
@@ -90,11 +90,17 @@ where
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
     params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
-    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    workspace_params: WorkspaceParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+    profile_params: ProfileParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Flow params for the selected flow.
-    flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    flow_params: FlowParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -177,11 +183,17 @@ where
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
     pub params_type_regs: &'view ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
-    pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    pub workspace_params: &'view WorkspaceParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+    pub profile_params: &'view ProfileParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Flow params for the selected flow.
-    pub flow_params: &'view FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    pub flow_params: &'view FlowParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -246,9 +258,15 @@ where
         flow: &'ctx Flow<CmdCtxTypeParamsT::AppError>,
         flow_dir: FlowDir,
         params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
-        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-        flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        workspace_params: WorkspaceParams<
+            <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+        >,
+        profile_params: ProfileParams<
+            <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+        >,
+        flow_params: FlowParams<
+            <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
+        >,
         params_specs_type_reg: ParamsSpecsTypeReg,
         params_specs: ParamsSpecs,
         states_type_reg: StatesTypeReg,
