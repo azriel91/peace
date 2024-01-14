@@ -41,3 +41,16 @@ pub trait CmdCtxTypeParamsConstrained:
     /// params.
     type ParamsKeys: ParamsKeys;
 }
+
+impl<T> CmdCtxTypeParamsConstrained for T
+where
+    T: CmdCtxTypeParams,
+    T::AppError: AppError,
+    T::ParamsKeys: ParamsKeys,
+    T::Output: OutputWrite<T::AppError> + 'static,
+{
+    type AppError = T::AppError;
+    type Output = T::Output;
+    type ParamsKeys = T::ParamsKeys;
+    type Scope = T::Scope;
+}
