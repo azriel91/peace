@@ -10,12 +10,14 @@ use peace_resources::{
 };
 use peace_rt_model::{
     params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
     Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
+
+use crate::ctx::CmdCtxTypeParams;
 
 /// A command that works with one profile and one flow.
 ///
@@ -52,8 +54,7 @@ use serde::{de::DeserializeOwned, Serialize};
 #[derive(Debug)]
 pub struct SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -150,8 +151,7 @@ where
 #[derive(Debug)]
 pub struct SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Whether the `CmdExecution` is interruptible.
     ///
@@ -212,8 +212,7 @@ where
 #[derive(Debug)]
 pub struct SingleProfileSingleFlowViewAndOutput<'view, CmdCtxTypeParamsT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -231,7 +230,7 @@ where
 
 impl<'ctx, CmdCtxTypeParamsT> SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Returns a new `SingleProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
@@ -280,7 +279,7 @@ where
 
 impl<'ctx, CmdCtxTypeParamsT, TS> SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Returns a view struct of this scope.
     ///
@@ -556,15 +555,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypeParamsT, TS, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
+    CmdCtxTypeParamsT: CmdCtxTypeParams<
+        ParamsKeys = ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
@@ -576,15 +576,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypeParamsT, TS, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
+    CmdCtxTypeParamsT: CmdCtxTypeParams<
+        ParamsKeys = ParamsKeysImpl<
+            WorkspaceParamsKMaybe,
+            KeyKnown<ProfileParamsK>,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
@@ -596,21 +597,22 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypeParamsT, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
+    CmdCtxTypeParamsT: CmdCtxTypeParams<
+        ParamsKeys = ParamsKeysImpl<
+            WorkspaceParamsKMaybe,
+            ProfileParamsKMaybe,
+            KeyKnown<FlowParamsK>,
+        >,
+    >,
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
 {
-    /// Returns the flow params for the selected flow.
+    /// Returns the flow params.
     pub fn flow_params(&self) -> &FlowParams<FlowParamsK> {
         &self.flow_params
     }
