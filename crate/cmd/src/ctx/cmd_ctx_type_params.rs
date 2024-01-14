@@ -6,6 +6,9 @@ use peace_value_traits::AppError;
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
 pub trait CmdCtxTypeParams {
+    /// Whether the command works with zero, one, or multiple profiles, and zero
+    /// or one flow.
+    type Scope;
     /// Output to write progress or outcome to.
     type Output;
     /// Error type of the automation software.
@@ -20,6 +23,9 @@ pub trait CmdCtxTypeParams {
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
 pub trait CmdCtxTypeParamsConstrained {
+    /// Whether the command works with zero, one, or multiple profiles, and zero
+    /// or one flow.
+    type Scope;
     /// Output to write progress or outcome to.
     type Output: OutputWrite<Self::AppError> + 'static;
     /// Error type of the automation software.
