@@ -6,4 +6,4 @@ pub struct FlowNotSelected;
 
 /// A `Flow` is selected.
 #[derive(Debug)]
-pub struct FlowSelected<'ctx, E>(pub(crate) &'ctx Flow<CmdCtxTypeParamsT::AppError>);
+pub struct FlowSelected<'ctx, E>(pub(crate) &'ctx Flow<E>);
