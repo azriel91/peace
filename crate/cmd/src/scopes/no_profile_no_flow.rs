@@ -8,6 +8,8 @@ use peace_rt_model::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::ctx::CmdCtxTypeParams;
+
 /// A command that only works with workspace parameters.
 ///
 /// ```bash
@@ -28,12 +30,12 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write profile parameters -- see `SingleProfileNoFlow` or
 ///   `MultiProfileNoFlow`.
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
-/// * Read or write flow state -- see `SingleProfileSingleFlow` or
+/// * Read or write flow state -- see `NoProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
 pub struct NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -56,21 +58,25 @@ where
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
     params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
     /// Workspace params.
-    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    workspace_params: WorkspaceParams<
+        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Marker.
     marker: PhantomData<E>,
 }
 
 impl<'ctx, CmdCtxTypeParamsT> NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     pub(crate) fn new(
         output: &'ctx mut CmdCtxTypeParamsT::Output,
         interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
         workspace: &'ctx Workspace,
         params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
-        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        workspace_params: WorkspaceParams<
+            <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+        >,
     ) -> Self {
         Self {
             output,
@@ -128,14 +134,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    NoProfileNoFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-    >
+impl<'ctx, CmdCtxTypeParamsT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
 where
+    CmdCtxTypeParamsT: CmdCtxTypeParams<
+        ParamsKeys = ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
