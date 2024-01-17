@@ -50,7 +50,7 @@ pub fn impl_with_param(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
             let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
 
-            impl_tokens.extend(impl_with_param_key_unknown);
+            // impl_tokens.extend(impl_with_param_key_unknown);
             impl_tokens.extend(impl_with_param_key_known);
 
             impl_tokens
