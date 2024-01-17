@@ -30,17 +30,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
     let scope_builder_fields_profile_filter_fn = scope_builder_fields_profile_filter_fn(scope);
 
     quote! {
-        impl<
-            'ctx,
-            E,
-            O,
-            // FlowSelection,
-            // PKeys,
-            // WorkspaceParamsSelection,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #scope_params,
-        >
+        impl<'ctx, CmdCtxBuilderTypeParamsT>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
