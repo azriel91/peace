@@ -3,7 +3,9 @@
 pub use self::{
     cmd_ctx::CmdCtx,
     cmd_ctx_builder::CmdCtxBuilder,
-    cmd_ctx_builder_type_params::CmdCtxBuilderTypeParams,
+    cmd_ctx_builder_type_params::{
+        CmdCtxBuilderTypeParams, CmdCtxBuilderTypeParamsCollector, CmdCtxTypeParamsCollectorEmpty,
+    },
     cmd_ctx_type_params::{CmdCtxTypeParams, CmdCtxTypeParamsConstrained},
 };
 

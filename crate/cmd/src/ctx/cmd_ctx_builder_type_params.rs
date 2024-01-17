@@ -1,11 +1,16 @@
+use std::marker::PhantomData;
+
+use peace_rt_model::params::{KeyUnknown, ParamsKeysImpl};
+
+use crate::scopes::type_params::{
+    FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone, WorkspaceParamsNone,
+};
+
 /// Trait so that a single type parameter can be used in `CmdCtx` and `Scopes`.
 ///
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
 pub trait CmdCtxBuilderTypeParams {
-    /// Whether the command works with zero, one, or multiple profiles, and zero
-    /// or one flow.
-    type ScopeBuilder;
     /// Output to write progress or outcome to.
     type Output;
     /// Error type of the automation software.
@@ -60,3 +65,42 @@ pub trait CmdCtxBuilderTypeParams {
     /// Only applicable to `*SingleFlow` scopes.
     type FlowSelection;
 }
+
+/// Concrete struct to collect `CmdCtxBuilderTypeParams`.
+#[derive(Debug)]
+pub struct CmdCtxBuilderTypeParamsCollector<
+    Output,
+    AppError,
+    ParamsKeys,
+    WorkspaceParamsSelection,
+    ProfileParamsSelection,
+    FlowParamsSelection,
+    ProfileSelection,
+    FlowSelection,
+>(
+    pub  PhantomData<(
+        Output,
+        AppError,
+        ParamsKeys,
+        WorkspaceParamsSelection,
+        ProfileParamsSelection,
+        FlowParamsSelection,
+        ProfileSelection,
+        FlowSelection,
+    )>,
+);
+
+/// `CmdCtxBuilderTypeParamsCollector` with `Output` and `AppError` needing to
+/// be specified.
+///
+/// The remainder of the type arguments use *none* type values.
+pub type CmdCtxTypeParamsCollectorEmpty<Output, AppError> = CmdCtxBuilderTypeParamsCollector<
+    Output,
+    AppError,
+    ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    WorkspaceParamsNone,
+    ProfileParamsNone,
+    FlowParamsNone,
+    ProfileNotSelected,
+    FlowNotSelected,
+>;

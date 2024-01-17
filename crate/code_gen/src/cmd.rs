@@ -4,15 +4,16 @@ use syn::parse_macro_input;
 use crate::cmd::scope_struct::ScopeStruct;
 
 pub use self::{
-    flow_count::FlowCount, impl_build::impl_build, impl_common_fns::impl_common_fns,
-    impl_constructor::impl_constructor, impl_params_deserialize::impl_params_deserialize,
-    impl_params_merge::impl_params_merge, impl_with_flow::impl_with_flow,
-    impl_with_param::impl_with_param, impl_with_params_k::impl_with_params_k,
-    impl_with_profile::impl_with_profile, impl_with_profile_filter::impl_with_profile_filter,
-    params_scope::ParamsScope, profile_count::ProfileCount, scope::Scope,
-    struct_definition::struct_definition,
+    cmd_ctx_builder_return_type_builder::CmdCtxBuilderReturnTypeBuilder, flow_count::FlowCount,
+    impl_build::impl_build, impl_common_fns::impl_common_fns, impl_constructor::impl_constructor,
+    impl_params_deserialize::impl_params_deserialize, impl_params_merge::impl_params_merge,
+    impl_with_flow::impl_with_flow, impl_with_param::impl_with_param,
+    impl_with_params_k::impl_with_params_k, impl_with_profile::impl_with_profile,
+    impl_with_profile_filter::impl_with_profile_filter, params_scope::ParamsScope,
+    profile_count::ProfileCount, scope::Scope, struct_definition::struct_definition,
 };
 
+mod cmd_ctx_builder_return_type_builder;
 mod flow_count;
 mod impl_build;
 mod impl_common_fns;

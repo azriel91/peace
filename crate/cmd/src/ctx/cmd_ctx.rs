@@ -3,10 +3,7 @@
 use std::ops::{Deref, DerefMut};
 
 use peace_resources::Resources;
-use peace_rt_model::{
-    params::{KeyUnknown, ParamsKeysImpl},
-    Workspace,
-};
+use peace_rt_model::Workspace;
 
 use crate::{
     ctx::{
@@ -16,14 +13,10 @@ use crate::{
         },
         CmdCtxBuilder, CmdCtxTypeParams,
     },
-    scopes::{
-        type_params::{
-            FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
-            WorkspaceParamsNone,
-        },
-        SingleProfileSingleFlow,
-    },
+    scopes::SingleProfileSingleFlow,
 };
+
+use super::CmdCtxTypeParamsCollectorEmpty;
 
 /// Information needed to execute a command.
 ///
@@ -50,99 +43,62 @@ impl<Scope> CmdCtx<Scope> {
 
 impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
-        output: &'ctx mut CmdCtxTypeParamsT::Output,
+    pub fn builder_no_profile_no_flow<'ctx, Output, AppError>(
+        output: &'ctx mut Output,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
-    where
-        CmdCtxTypeParamsT: CmdCtxTypeParams<
-            Scope = NoProfileNoFlowBuilder<
-                <CmdCtxTypeParamsT as CmdCtxTypeParams>::AppError,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                WorkspaceParamsNone,
-            >,
-        >,
-    {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
+        NoProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+    > {
         CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
-        output: &'ctx mut CmdCtxTypeParamsT::Output,
+    pub fn builder_multi_profile_no_flow<'ctx, Output, AppError>(
+        output: &'ctx mut Output,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
-    where
-        CmdCtxTypeParamsT: CmdCtxTypeParams<
-            Scope = MultiProfileNoFlowBuilder<
-                <CmdCtxTypeParamsT as CmdCtxTypeParams>::AppError,
-                ProfileNotSelected,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                WorkspaceParamsNone,
-                ProfileParamsNone,
-            >,
-        >,
-    {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
+        MultiProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+    > {
         CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<'ctx, CmdCtxTypeParamsT>(
-        output: &'ctx mut CmdCtxTypeParamsT::Output,
+    pub fn builder_multi_profile_single_flow<'ctx, Output, AppError>(
+        output: &'ctx mut Output,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
-    where
-        CmdCtxTypeParamsT: CmdCtxTypeParams<
-            Scope = MultiProfileSingleFlowBuilder<
-                <CmdCtxTypeParamsT as CmdCtxTypeParams>::AppError,
-                ProfileNotSelected,
-                FlowNotSelected,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                WorkspaceParamsNone,
-                ProfileParamsNone,
-                FlowParamsNone,
-            >,
-        >,
-    {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
+        MultiProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+    > {
         CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<'ctx, CmdCtxTypeParamsT>(
-        output: &'ctx mut CmdCtxTypeParamsT::Output,
+    pub fn builder_single_profile_no_flow<'ctx, Output, AppError>(
+        output: &'ctx mut Output,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
-    where
-        CmdCtxTypeParamsT: CmdCtxTypeParams<
-            Scope = SingleProfileNoFlowBuilder<
-                <CmdCtxTypeParamsT as CmdCtxTypeParams>::AppError,
-                ProfileNotSelected,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                WorkspaceParamsNone,
-                ProfileParamsNone,
-            >,
-        >,
-    {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
+        SingleProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+    > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow<'ctx, CmdCtxTypeParamsT>(
-        output: &'ctx mut CmdCtxTypeParamsT::Output,
+    pub fn builder_single_profile_single_flow<'ctx, Output, AppError>(
+        output: &'ctx mut Output,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, CmdCtxTypeParamsT>
-    where
-        CmdCtxTypeParamsT: CmdCtxTypeParams<
-            Scope = SingleProfileSingleFlowBuilder<
-                <CmdCtxTypeParamsT as CmdCtxTypeParams>::AppError,
-                ProfileNotSelected,
-                FlowNotSelected,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                WorkspaceParamsNone,
-                ProfileParamsNone,
-                FlowParamsNone,
-            >,
-        >,
-    {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
+        SingleProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+    > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }
 }

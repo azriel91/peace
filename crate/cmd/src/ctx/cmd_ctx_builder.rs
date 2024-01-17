@@ -38,7 +38,7 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, CmdCtxBuilderTypeParamsT>
+pub struct CmdCtxBuilder<'ctx, CmdCtxBuilderTypeParamsT, ScopeBuilder>
 where
     CmdCtxBuilderTypeParamsT: CmdCtxBuilderTypeParams,
 {
@@ -54,7 +54,7 @@ where
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Data held while building `CmdCtx`.
-    scope_builder: CmdCtxBuilderTypeParamsT::ScopeBuilder,
+    scope_builder: ScopeBuilder,
 }
 
 /// Serializes workspace params to storage.

@@ -127,7 +127,7 @@ pub fn params_selection_none_push(
     };
 
     type_params.push(parse_quote! {
-        peace_rt_model::params::ParamsKeysImpl<
+        ParamsKeys = peace_rt_model::params::ParamsKeysImpl<
             // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
             #impl_params_key_unknown_params
         >
@@ -136,39 +136,21 @@ pub fn params_selection_none_push(
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
-                crate::scopes::type_params::WorkspaceParamsNone
+                WorkspaceParamsSelection = crate::scopes::type_params::WorkspaceParamsNone
             ));
-
-            if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsSelection));
-            }
-
-            if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsSelection));
-            }
         }
         ParamsScope::Profile => {
-            // Workspace params are supported by all scopes.
-            type_params.push(parse_quote!(WorkspaceParamsSelection));
-
             if scope.profile_params_supported() {
-                type_params.push(parse_quote!(crate::scopes::type_params::ProfileParamsNone));
-            }
-
-            if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsSelection));
+                type_params.push(parse_quote!(
+                    ProfileParamsSelection = crate::scopes::type_params::ProfileParamsNone
+                ));
             }
         }
         ParamsScope::Flow => {
-            // Workspace params are supported by all scopes.
-            type_params.push(parse_quote!(WorkspaceParamsSelection));
-
-            if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsSelection));
-            }
-
             if scope.flow_params_supported() {
-                type_params.push(parse_quote!(crate::scopes::type_params::FlowParamsNone));
+                type_params.push(parse_quote!(
+                    FlowParamsSelection = crate::scopes::type_params::FlowParamsNone
+                ));
             }
         }
     }
@@ -196,7 +178,7 @@ pub fn params_selection_some_push(
     };
 
     type_params.push(parse_quote! {
-        peace_rt_model::params::ParamsKeysImpl<
+        ParamsKeys = peace_rt_model::params::ParamsKeysImpl<
             // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
             #impl_params_key_known_params
         >
@@ -205,42 +187,20 @@ pub fn params_selection_some_push(
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
-                crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+                WorkspaceParamsSelection = crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             ));
-
-            if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsSelection));
-            }
-
-            if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsSelection));
-            }
         }
         ParamsScope::Profile => {
-            // Workspace params are supported by all scopes.
-            type_params.push(parse_quote!(WorkspaceParamsSelection));
-
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(
-                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
+                    ProfileParamsSelection = crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
                 ));
-            }
-
-            if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsSelection));
             }
         }
         ParamsScope::Flow => {
-            // Workspace params are supported by all scopes.
-            type_params.push(parse_quote!(WorkspaceParamsSelection));
-
-            if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsSelection));
-            }
-
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(
-                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
+                    FlowParamsSelection = crate::scopes::type_params::FlowParamsSome<FlowParamsK>
                 ));
             }
         }
@@ -256,7 +216,7 @@ pub fn params_selection_some_push(
 /// * `KeyUnknown`: Indicates that the incoming params key is known.
 /// * `ProfileParamsKMaybe`: To retain any existing profile params key.
 /// * `FlowParamsKMaybe`: To retain any existing flow params key.
-pub fn params_key_unknown_push(
+fn params_key_unknown_push(
     type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
