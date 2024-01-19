@@ -104,3 +104,34 @@ pub type CmdCtxTypeParamsCollectorEmpty<Output, AppError> = CmdCtxBuilderTypePar
     ProfileNotSelected,
     FlowNotSelected,
 >;
+
+impl<
+    Output,
+    AppError,
+    ParamsKeys,
+    WorkspaceParamsSelection,
+    ProfileParamsSelection,
+    FlowParamsSelection,
+    ProfileSelection,
+    FlowSelection,
+> CmdCtxBuilderTypeParams
+    for CmdCtxBuilderTypeParamsCollector<
+        Output,
+        AppError,
+        ParamsKeys,
+        WorkspaceParamsSelection,
+        ProfileParamsSelection,
+        FlowParamsSelection,
+        ProfileSelection,
+        FlowSelection,
+    >
+{
+    type AppError = AppError;
+    type FlowParamsSelection = FlowParamsSelection;
+    type FlowSelection = FlowSelection;
+    type Output = Output;
+    type ParamsKeys = ParamsKeys;
+    type ProfileParamsSelection = ProfileParamsSelection;
+    type ProfileSelection = ProfileSelection;
+    type WorkspaceParamsSelection = WorkspaceParamsSelection;
+}
