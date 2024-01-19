@@ -1,114 +1,61 @@
 use quote::quote;
-use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
-};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
-use crate::cmd::{type_parameters_impl, FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
 
 /// Generates the `with_flow` method for the command context builder.
 pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     if scope.profile_count() == ProfileCount::None || scope.flow_count() == FlowCount::None {
         // `with_flow` is not supported.
         return proc_macro2::TokenStream::new();
     };
 
-    let impl_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        match scope.profile_count() {
-            ProfileCount::None => {
-                unreachable!("Flow is not specifiable when there are no profiles.")
-            }
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(parse_quote!(ProfileSelection));
-            }
-        }
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-        type_params
-    };
-    let scope_builder_type_params_flow_not_selected = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        match scope.profile_count() {
-            ProfileCount::None => {
-                unreachable!("Flow is not specifiable when there are no profiles.")
-            }
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(parse_quote!(ProfileSelection));
-            }
-        }
-        type_params.push(parse_quote!(crate::scopes::type_params::FlowNotSelected));
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-        type_params
-    };
-    let scope_builder_type_params_flow_selected = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        match scope.profile_count() {
-            ProfileCount::None => {
-                unreachable!("Flow is not specifiable when there are no profiles.")
-            }
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(parse_quote!(ProfileSelection));
-            }
-        }
-        type_params.push(parse_quote!(
-            crate::scopes::type_params::FlowSelected<'ctx, E>
-        ));
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-        type_params
-    };
-
     let scope_builder_fields_flow_not_selected = scope_builder_fields_flow_not_selected(scope);
     let scope_builder_fields_flow_selected = scope_builder_fields_flow_selected(scope);
 
+    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+        .with_flow_selection(parse_quote!(
+            crate::scopes::type_params::FlowSelected<'ctx, CmdCtxBuilderTypeParamsT::AppError>
+        ))
+        .build();
+
     quote! {
-        impl<
+        impl<'ctx, CmdCtxBuilderTypeParamsT> crate::ctx::CmdCtxBuilder<
             'ctx,
-            E,
-            O,
-            // ProfileSelection,
-            // PKeys,
-            // WorkspaceParamsSelection,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #impl_type_params
+            CmdCtxBuilderTypeParamsT,
+            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
         >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileSelection,
-                    // FlowNotSelected,
-                    // PKeys,
-                    // WorkspaceParamsSelection,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_builder_type_params_flow_not_selected
-                >,
-            >
         where
-            PKeys: #params_module::ParamsKeys + 'static,
+            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
+                FlowSelection = crate::scopes::type_params::FlowNotSelected,
+            >,
         {
             pub fn with_flow(
                 self,
-                flow: &'ctx peace_rt_model::Flow<CmdCtxTypeParamsT::AppError>,
-            ) -> crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileSelection,
-                    // FlowSelected<'ctx, E>,
-                    // PKeys,
-                    // WorkspaceParamsSelection,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_builder_type_params_flow_selected
-                >,
-            > {
+                flow: &'ctx peace_rt_model::Flow<CmdCtxBuilderTypeParamsT::AppError>,
+            ) ->
+                // crate::ctx::CmdCtxBuilder<
+                //     'ctx,
+                //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+                //         CmdCtxBuilderTypeParamsT::Output,
+                //         CmdCtxBuilderTypeParamsT::AppError,
+                //         peace_rt_model::params::ParamsKeysImpl<
+                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe,
+                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe,
+                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe,
+                //         >,
+                //         CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection,
+                //         CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
+                //         CmdCtxBuilderTypeParamsT::FlowParamsSelection,
+                //         CmdCtxBuilderTypeParamsT::ProfileSelection,
+                //         crate::scopes::type_params::FlowSelected<'ctx, CmdCtxBuilderTypeParamsT::AppError>,
+                //     >,
+                // >
+                #return_type
+            {
                 let Self {
                     output,
                     interruptibility,
