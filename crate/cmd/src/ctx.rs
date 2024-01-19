@@ -6,7 +6,9 @@ pub use self::{
     cmd_ctx_builder_type_params::{
         CmdCtxBuilderTypeParams, CmdCtxBuilderTypeParamsCollector, CmdCtxTypeParamsCollectorEmpty,
     },
-    cmd_ctx_type_params::{CmdCtxTypeParams, CmdCtxTypeParamsConstrained},
+    cmd_ctx_type_params::{
+        CmdCtxTypeParams, CmdCtxTypeParamsCollector, CmdCtxTypeParamsConstrained,
+    },
 };
 
 mod cmd_ctx;

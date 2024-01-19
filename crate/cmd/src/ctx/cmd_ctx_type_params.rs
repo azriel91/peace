@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 use peace_value_traits::AppError;
 
@@ -45,4 +47,20 @@ where
     type AppError = T::AppError;
     type Output = T::Output;
     type ParamsKeys = T::ParamsKeys;
+}
+
+/// Concrete struct to collect `CmdCtxTypeParams`.
+#[derive(Debug)]
+pub struct CmdCtxTypeParamsCollector<Output, AppError, ParamsKeys>(
+    pub PhantomData<(Output, AppError, ParamsKeys)>,
+);
+
+impl<Output, AppError, ParamsKeysT> CmdCtxTypeParams
+    for CmdCtxTypeParamsCollector<Output, AppError, ParamsKeysT>
+where
+    ParamsKeysT: ParamsKeys,
+{
+    type AppError = AppError;
+    type Output = Output;
+    type ParamsKeys = ParamsKeysT;
 }
