@@ -1,23 +1,14 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Token};
+use syn::{parse_quote, punctuated::Punctuated, FieldValue, Token};
 
-use crate::cmd::{FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ScopeStruct};
 
 /// Generates the constructor for the command context builder for a given scope.
 pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let constructor_method_name = Ident::new(scope.as_str(), Span::call_site());
-
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-
-        scope_builder_type_params::profile_and_flow_selection_push(&mut type_params, scope);
-        scope_builder_type_params::params_selection_push(&mut type_params, scope);
-
-        type_params
-    };
 
     let scope_field_values = {
         let mut type_params = Punctuated::<FieldValue, Token![,]>::new();
@@ -34,30 +25,44 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         type_params
     };
 
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //         O,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             peace_rt_model::params::KeyUnknown,
+    //             peace_rt_model::params::KeyUnknown,
+    //             peace_rt_model::params::KeyUnknown,
+    //         >,
+    //         crate::scopes::type_params::WorkspaceParamsNone,
+    //         crate::scopes::type_params::ProfileParamsNone,
+    //         crate::scopes::type_params::FlowParamsNone,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         crate::scopes::type_params::FlowNotSelected,
+    //     >,
+    // >
+
+    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+        .with_output(parse_quote!(O))
+        .with_app_error(parse_quote!(AppError))
+        .with_workspace_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_profile_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_flow_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_workspace_params_selection(parse_quote!(
+            crate::scopes::type_params::WorkspaceParamsNone
+        ))
+        .with_profile_params_selection(parse_quote!(crate::scopes::type_params::ProfileParamsNone))
+        .with_flow_params_selection(parse_quote!(crate::scopes::type_params::FlowParamsNone))
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .with_flow_selection(parse_quote!(crate::scopes::type_params::FlowNotSelected))
+        .build();
+
     quote! {
-        impl<'ctx, CmdCtxTypeParamsT>
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                // SingleProfileSingleFlowBuilder<
-                #scope_builder_name<
-                    E,
-                    // ProfileNotSelected,
-                    // FlowNotSelected,
-                    // peace_rt_model::params::ParamsKeysImpl<
-                    //     peace_rt_model::params::KeyUnknown,
-                    //     peace_rt_model::params::KeyUnknown,
-                    //     peace_rt_model::params::KeyUnknown,
-                    // >,
-                    // WorkspaceParamsNone,
-                    // ProfileParamsNone,
-                    #scope_builder_type_params
-                >,
-            >
-        {
+        impl<'ctx, O, AppError> #return_type {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
             pub fn #constructor_method_name(
-                output: &'ctx mut CmdCtxTypeParamsT::Output,
+                output: &'ctx mut O,
                 workspace: &'ctx peace_rt_model::Workspace,
             ) -> Self
             {
@@ -88,58 +93,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     scope_builder,
                 }
             }
-        }
-    }
-}
-
-mod scope_builder_type_params {
-    use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Token};
-
-    use crate::cmd::{FlowCount, ProfileCount, Scope};
-
-    /// Appends profile / flow ID selection type parameters if applicable to the
-    /// given scope.
-    pub fn profile_and_flow_selection_push(
-        type_params: &mut Punctuated<GenericArgument, Token![,]>,
-        scope: Scope,
-    ) {
-        match scope.profile_count() {
-            ProfileCount::None => {}
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(parse_quote!(crate::scopes::type_params::ProfileNotSelected));
-            }
-        }
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(crate::scopes::type_params::FlowNotSelected));
-        }
-    }
-
-    /// Appends workspace / profile / flow params selection type parameters if
-    /// applicable to the given scope.
-    pub fn params_selection_push(
-        type_params: &mut Punctuated<GenericArgument, Token![,]>,
-        scope: Scope,
-    ) {
-        // Always collect PKeys
-        type_params.push(parse_quote! {
-            peace_rt_model::params::ParamsKeysImpl<
-                peace_rt_model::params::KeyUnknown,
-                peace_rt_model::params::KeyUnknown,
-                peace_rt_model::params::KeyUnknown,
-            >
-        });
-
-        // Workspace params are supported by all scopes.
-        type_params.push(parse_quote!(
-            crate::scopes::type_params::WorkspaceParamsNone
-        ));
-
-        if scope.profile_params_supported() {
-            type_params.push(parse_quote!(crate::scopes::type_params::ProfileParamsNone));
-        }
-
-        if scope.flow_params_supported() {
-            type_params.push(parse_quote!(crate::scopes::type_params::FlowParamsNone));
         }
     }
 }

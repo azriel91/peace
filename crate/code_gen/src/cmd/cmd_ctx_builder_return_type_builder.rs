@@ -9,6 +9,22 @@ use syn::{parse_quote, Ident, TypePath};
 pub struct CmdCtxBuilderReturnTypeBuilder {
     /// Name of the scope builder struct.
     scope_builder_name: Ident,
+    /// Path of the output type.
+    ///
+    /// Defaults to `CmdCtxBuilderTypeParamsT::Output`.
+    ///
+    /// You may want to set this to be one of:
+    ///
+    /// * `O`
+    output: TypePath,
+    /// Path of the app error type.
+    ///
+    /// Defaults to `CmdCtxBuilderTypeParamsT::AppError`.
+    ///
+    /// You may want to set this to be one of:
+    ///
+    /// * `AppError`
+    app_error: TypePath,
     /// Path of the workspace params key type.
     ///
     /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
@@ -98,6 +114,8 @@ impl CmdCtxBuilderReturnTypeBuilder {
     pub fn new(scope_builder_name: Ident) -> Self {
         Self {
             scope_builder_name,
+            output: parse_quote!(CmdCtxBuilderTypeParamsT::Output),
+            app_error: parse_quote!(CmdCtxBuilderTypeParamsT::AppError),
             workspace_params_k: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
                     as peace_rt_model::params::ParamsKeys
@@ -123,6 +141,16 @@ impl CmdCtxBuilderReturnTypeBuilder {
             profile_selection: parse_quote!(CmdCtxBuilderTypeParamsT::ProfileSelection),
             flow_selection: parse_quote!(CmdCtxBuilderTypeParamsT::FlowSelection),
         }
+    }
+
+    pub fn with_output(mut self, output: TypePath) -> Self {
+        self.output = output;
+        self
+    }
+
+    pub fn with_app_error(mut self, app_error: TypePath) -> Self {
+        self.app_error = app_error;
+        self
     }
 
     pub fn with_workspace_params_k(mut self, workspace_params_k: TypePath) -> Self {
@@ -167,6 +195,8 @@ impl CmdCtxBuilderReturnTypeBuilder {
 
     pub fn build(self) -> proc_macro2::TokenStream {
         let CmdCtxBuilderReturnTypeBuilder {
+            output,
+            app_error,
             scope_builder_name,
             workspace_params_k,
             profile_params_k,
@@ -180,8 +210,8 @@ impl CmdCtxBuilderReturnTypeBuilder {
 
         let cmd_ctx_builder_type_params_collector = quote! {
             crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                CmdCtxBuilderTypeParamsT::Output,
-                CmdCtxBuilderTypeParamsT::AppError,
+                #output,
+                #app_error,
                 peace_rt_model::params::ParamsKeysImpl<
                     #workspace_params_k,
                     #profile_params_k,
