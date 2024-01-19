@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_rt_model::params::{KeyUnknown, ParamsKeysImpl};
+use peace_rt_model::params::{KeyUnknown, ParamsKeys, ParamsKeysImpl};
 
 use crate::scopes::type_params::{
     FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone, WorkspaceParamsNone,
@@ -17,7 +17,7 @@ pub trait CmdCtxBuilderTypeParams {
     type AppError;
     /// Parameter key types for workspace params, profile params, and flow
     /// params.
-    type ParamsKeys;
+    type ParamsKeys: ParamsKeys;
     /// Whether workspace params keys have been selected.
     ///
     /// One of:
@@ -108,7 +108,7 @@ pub type CmdCtxTypeParamsCollectorEmpty<Output, AppError> = CmdCtxBuilderTypePar
 impl<
     Output,
     AppError,
-    ParamsKeys,
+    ParamsKeysT,
     WorkspaceParamsSelection,
     ProfileParamsSelection,
     FlowParamsSelection,
@@ -118,19 +118,21 @@ impl<
     for CmdCtxBuilderTypeParamsCollector<
         Output,
         AppError,
-        ParamsKeys,
+        ParamsKeysT,
         WorkspaceParamsSelection,
         ProfileParamsSelection,
         FlowParamsSelection,
         ProfileSelection,
         FlowSelection,
     >
+where
+    ParamsKeysT: ParamsKeys,
 {
     type AppError = AppError;
     type FlowParamsSelection = FlowParamsSelection;
     type FlowSelection = FlowSelection;
     type Output = Output;
-    type ParamsKeys = ParamsKeys;
+    type ParamsKeys = ParamsKeysT;
     type ProfileParamsSelection = ProfileParamsSelection;
     type ProfileSelection = ProfileSelection;
     type WorkspaceParamsSelection = WorkspaceParamsSelection;
