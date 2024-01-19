@@ -1,43 +1,21 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
-use crate::cmd::{type_parameters_impl, FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ScopeStruct};
 
 /// Generates functions for the command context builder that are not constrained
 /// by type parameters.
 pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-
-        type_params
-    };
+    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone()).build();
 
     let mut common_fns = quote! {
         /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.
         pub fn with_interruptibility(
             mut self,
             interruptibility: interruptible::Interruptibility<'static>,
-        ) -> crate::ctx::CmdCtxBuilder<
-            'ctx,
-            O,
-            #scope_builder_name<
-                E,
-                // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                // FlowSelected<'ctx, E>,
-                // PKeys,
-                // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-                // FlowParamsNone,
-                #scope_builder_type_params
-            >,
-        > {
+        ) -> #return_type {
             let crate::ctx::CmdCtxBuilder {
                 output,
                 interruptibility: _,
@@ -66,7 +44,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             ) -> Self
             where
                 I: peace_cfg::Item,
-                E: From<I::Error>,
+                <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::AppError: From<I::Error>,
             {
                 self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
@@ -75,36 +53,16 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     };
 
     quote! {
-        impl<
+        impl<'ctx, CmdCtxBuilderTypeParamsT> crate::ctx::CmdCtxBuilder<
             'ctx,
-            E,
-            O,
-            // ProfileSelection,
-            // FlowSelection,
-            // PKeys,
-            // WorkspaceParamsSelection,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #scope_builder_type_params
+            CmdCtxBuilderTypeParamsT,
+            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
         >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                // SingleProfileSingleFlowBuilder<
-                #scope_builder_name<
-                    E,
-                    // ProfileSelection,
-                    // FlowSelection,
-                    // PKeys,
-                    // WorkspaceParamsSelection,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_builder_type_params
-                >,
-            >
         where
-            E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            PKeys: #params_module::ParamsKeys + 'static,
+            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams,
+            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::AppError: peace_value_traits::AppError + From<peace_rt_model::Error>,
+            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys:
+                peace_rt_model::params::ParamsKeys,
         {
             #common_fns
         }
