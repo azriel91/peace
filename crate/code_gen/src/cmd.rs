@@ -35,6 +35,7 @@ mod type_parameters_impl;
 mod impl_constructor;
 pub(crate) mod scope_builder_fields;
 pub(crate) mod type_params_selection;
+pub(crate) mod with_params;
 
 /// Generates the command context builder implementation for the given scope.
 pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
