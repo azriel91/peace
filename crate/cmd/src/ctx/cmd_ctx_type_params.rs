@@ -14,7 +14,7 @@ pub trait CmdCtxTypeParams {
     type AppError;
     /// Parameter key types for workspace params, profile params, and flow
     /// params.
-    type ParamsKeys;
+    type ParamsKeys: ParamsKeys;
 }
 
 /// Trait so that a single type parameter can be used in `CmdCtx` and `Scopes`.
