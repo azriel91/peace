@@ -46,9 +46,9 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(O))
         .with_app_error(parse_quote!(AppError))
-        .with_workspace_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
-        .with_profile_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
-        .with_flow_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_workspace_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_profile_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
+        .with_flow_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
         .with_workspace_params_selection(parse_quote!(
             crate::scopes::type_params::WorkspaceParamsNone
         ))

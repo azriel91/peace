@@ -69,21 +69,21 @@ pub(crate) fn cmd_ctx_builder_return_type_with_params_key_some(
     let cmd_ctx_builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name);
     match params_scope {
         ParamsScope::Workspace => cmd_ctx_builder_type_builder
-            .with_workspace_params_k(parse_quote!(
+            .with_workspace_params_k_maybe(parse_quote!(
                 peace_rt_model::params::KeyKnown<WorkspaceParamsK>
             ))
             .with_workspace_params_selection(parse_quote!(
                 crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             )),
         ParamsScope::Profile => cmd_ctx_builder_type_builder
-            .with_profile_params_k(parse_quote!(
+            .with_profile_params_k_maybe(parse_quote!(
                 peace_rt_model::params::KeyKnown<ProfileParamsK>
             ))
             .with_profile_params_selection(parse_quote!(
                 crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
             )),
         ParamsScope::Flow => cmd_ctx_builder_type_builder
-            .with_flow_params_k(parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>))
+            .with_flow_params_k_maybe(parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>))
             .with_flow_params_selection(parse_quote!(
                 crate::scopes::type_params::FlowParamsSome<FlowParamsK>
             )),

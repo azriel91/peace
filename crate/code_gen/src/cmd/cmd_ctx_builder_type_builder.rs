@@ -43,7 +43,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     ///
     /// * `peace_rt_model::params::KeyKnown<WorkspaceParamsK>`
     /// * `peace_rt_model::params::KeyUnknown`
-    workspace_params_k: TypePath,
+    workspace_params_k_maybe: TypePath,
     /// Path of the profile params key type.
     ///
     /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
@@ -53,7 +53,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     ///
     /// * `peace_rt_model::params::KeyKnown<ProfileParamsK>`
     /// * `peace_rt_model::params::KeyUnknown`
-    profile_params_k: TypePath,
+    profile_params_k_maybe: TypePath,
     /// Path of the flow params key type.
     ///
     /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
@@ -63,7 +63,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     ///
     /// * `peace_rt_model::params::KeyKnown<FlowParamsK>`
     /// * `peace_rt_model::params::KeyUnknown`
-    flow_params_k: TypePath,
+    flow_params_k_maybe: TypePath,
 
     /// Type state to track whether workspace params has been selected.
     ///
@@ -126,17 +126,17 @@ impl CmdCtxBuilderTypeBuilder {
             output: parse_quote!(Output),
             app_error: parse_quote!(AppError),
             params_keys: None,
-            workspace_params_k: parse_quote!(
+            workspace_params_k_maybe: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
                     as peace_rt_model::params::ParamsKeys
                 >::WorkspaceParamsKMaybe
             ),
-            profile_params_k: parse_quote!(
+            profile_params_k_maybe: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
                     as peace_rt_model::params::ParamsKeys
                 >::ProfileParamsKMaybe
             ),
-            flow_params_k: parse_quote!(
+            flow_params_k_maybe: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
                     as peace_rt_model::params::ParamsKeys
                 >::FlowParamsKMaybe
@@ -164,18 +164,18 @@ impl CmdCtxBuilderTypeBuilder {
         self
     }
 
-    pub fn with_workspace_params_k(mut self, workspace_params_k: TypePath) -> Self {
-        self.workspace_params_k = workspace_params_k;
+    pub fn with_workspace_params_k_maybe(mut self, workspace_params_k_maybe: TypePath) -> Self {
+        self.workspace_params_k_maybe = workspace_params_k_maybe;
         self
     }
 
-    pub fn with_profile_params_k(mut self, profile_params_k: TypePath) -> Self {
-        self.profile_params_k = profile_params_k;
+    pub fn with_profile_params_k_maybe(mut self, profile_params_k_maybe: TypePath) -> Self {
+        self.profile_params_k_maybe = profile_params_k_maybe;
         self
     }
 
-    pub fn with_flow_params_k(mut self, flow_params_k: TypePath) -> Self {
-        self.flow_params_k = flow_params_k;
+    pub fn with_flow_params_k_maybe(mut self, flow_params_k_maybe: TypePath) -> Self {
+        self.flow_params_k_maybe = flow_params_k_maybe;
         self
     }
 
@@ -210,9 +210,9 @@ impl CmdCtxBuilderTypeBuilder {
             app_error,
             params_keys,
             scope_builder_name,
-            workspace_params_k,
-            profile_params_k,
-            flow_params_k,
+            workspace_params_k_maybe,
+            profile_params_k_maybe,
+            flow_params_k_maybe,
             workspace_params_selection,
             profile_params_selection,
             flow_params_selection,
@@ -223,9 +223,9 @@ impl CmdCtxBuilderTypeBuilder {
         let params_keys = params_keys.unwrap_or_else(|| {
             parse_quote! {
                 peace_rt_model::params::ParamsKeysImpl<
-                    #workspace_params_k,
-                    #profile_params_k,
-                    #flow_params_k,
+                    #workspace_params_k_maybe,
+                    #profile_params_k_maybe,
+                    #flow_params_k_maybe,
                 >
             }
         });
