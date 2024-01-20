@@ -6,7 +6,7 @@ use syn::{parse_quote, Ident, TypePath};
 /// By default, this references the associated types from the passed in
 /// `CmdCtxBuilderTypeParamsT`.
 #[derive(Debug)]
-pub struct CmdCtxBuilderReturnTypeBuilder {
+pub struct CmdCtxBuilderTypeBuilder {
     /// Name of the scope builder struct.
     scope_builder_name: Ident,
     /// Path of the output type.
@@ -119,7 +119,7 @@ pub struct CmdCtxBuilderReturnTypeBuilder {
     flow_selection: TypePath,
 }
 
-impl CmdCtxBuilderReturnTypeBuilder {
+impl CmdCtxBuilderTypeBuilder {
     pub fn new(scope_builder_name: Ident) -> Self {
         Self {
             scope_builder_name,
@@ -209,7 +209,7 @@ impl CmdCtxBuilderReturnTypeBuilder {
     }
 
     pub fn build(self) -> proc_macro2::TokenStream {
-        let CmdCtxBuilderReturnTypeBuilder {
+        let CmdCtxBuilderTypeBuilder {
             output,
             app_error,
             params_keys,

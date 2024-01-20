@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
 
 /// Generates the `with_profile_filter` method for the command context builder.
 pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -17,7 +17,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_filter_fn = scope_builder_fields_profile_filter_fn(scope);
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_profile_selection(parse_quote!(
             crate::scopes::type_params::ProfileFilterFn<'ctx>
         ))

@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ScopeStruct};
 
 /// Generates functions for the command context builder that are not constrained
 /// by type parameters.
@@ -8,7 +8,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone()).build();
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone()).build();
 
     let mut common_fns = quote! {
         /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.

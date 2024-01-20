@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ScopeStruct};
 
 /// Generates the constructor for the command context builder for a given scope.
 pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -43,7 +43,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     //     >,
     // >
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(O))
         .with_app_error(parse_quote!(AppError))
         .with_workspace_params_k(parse_quote!(peace_rt_model::params::KeyUnknown))

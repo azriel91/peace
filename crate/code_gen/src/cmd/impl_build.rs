@@ -6,7 +6,7 @@ use crate::cmd::{
         FlowParamsSelection, FlowSelection, ProfileParamsSelection, ProfileSelection,
         WorkspaceParamsSelection,
     },
-    CmdCtxBuilderReturnTypeBuilder, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
+    CmdCtxBuilderTypeBuilder, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
 };
 
 /// Generates the `CmdCtxBuilder::build` methods for each type param selection.
@@ -193,7 +193,7 @@ fn impl_build_for(
     // >
     // ```
 
-    let builder_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(Output))
         .with_app_error(parse_quote!(AppError))
         .with_params_keys(parse_quote!(ParamsKeysT))

@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderReturnTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
 
 /// Generates the `with_flow` method for the command context builder.
 pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -36,7 +36,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     // >
     // ```
 
-    let builder_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(Output))
         .with_app_error(parse_quote!(AppError))
         .with_workspace_params_k(parse_quote!(WorkspaceParamsKMaybe))
@@ -49,7 +49,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         .with_flow_selection(parse_quote!(crate::scopes::type_params::FlowNotSelected))
         .build();
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(Output))
         .with_app_error(parse_quote!(AppError))
         .with_workspace_params_k(parse_quote!(WorkspaceParamsKMaybe))

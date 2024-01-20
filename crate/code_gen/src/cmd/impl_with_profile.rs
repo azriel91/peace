@@ -2,7 +2,7 @@ use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
 use crate::cmd::{
-    param_key_impl, CmdCtxBuilderReturnTypeBuilder, FlowCount, ParamsScope, ProfileCount, Scope,
+    param_key_impl, CmdCtxBuilderTypeBuilder, FlowCount, ParamsScope, ProfileCount, Scope,
     ScopeStruct,
 };
 
@@ -20,7 +20,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_selected = scope_builder_fields_profile_selected(scope);
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileSelected))
         .build();
 
@@ -116,7 +116,7 @@ pub fn impl_with_profile_from_workspace_param(
     let scope_builder_fields_profile_from_workspace =
         scope_builder_fields_profile_from_workspace(scope);
 
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_profile_selection(parse_quote!(
             crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>
         ))

@@ -2,7 +2,7 @@ use syn::{parse_quote, Ident};
 
 use crate::cmd::ParamsScope;
 
-use super::CmdCtxBuilderReturnTypeBuilder;
+use super::CmdCtxBuilderTypeBuilder;
 
 pub(crate) fn params_selection_types_none(params_scope: ParamsScope) -> (Ident, Ident, Ident) {
     let (params_keys_assoc_type, params_selection_assoc_type, params_selection_struct): (
@@ -66,7 +66,7 @@ pub(crate) fn cmd_ctx_builder_return_type_with_params_key_some(
     scope_builder_name: Ident,
     params_scope: ParamsScope,
 ) -> proc_macro2::TokenStream {
-    let return_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name);
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name);
     let return_type = match params_scope {
         ParamsScope::Workspace => return_type
             .with_workspace_params_k(parse_quote!(

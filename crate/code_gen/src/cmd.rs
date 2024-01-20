@@ -4,7 +4,7 @@ use syn::parse_macro_input;
 use crate::cmd::scope_struct::ScopeStruct;
 
 pub use self::{
-    cmd_ctx_builder_return_type_builder::CmdCtxBuilderReturnTypeBuilder, flow_count::FlowCount,
+    cmd_ctx_builder_type_builder::CmdCtxBuilderTypeBuilder, flow_count::FlowCount,
     impl_build::impl_build, impl_common_fns::impl_common_fns, impl_constructor::impl_constructor,
     impl_params_deserialize::impl_params_deserialize, impl_params_merge::impl_params_merge,
     impl_with_flow::impl_with_flow, impl_with_param::impl_with_param,
@@ -13,7 +13,7 @@ pub use self::{
     profile_count::ProfileCount, scope::Scope, struct_definition::struct_definition,
 };
 
-mod cmd_ctx_builder_return_type_builder;
+mod cmd_ctx_builder_type_builder;
 mod flow_count;
 mod impl_build;
 mod impl_common_fns;
