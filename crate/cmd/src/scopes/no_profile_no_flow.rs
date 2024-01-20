@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
@@ -61,8 +61,6 @@ where
     workspace_params: WorkspaceParams<
         <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
     >,
-    /// Marker.
-    marker: PhantomData<E>,
 }
 
 impl<'ctx, CmdCtxTypeParamsT> NoProfileNoFlow<'ctx, CmdCtxTypeParamsT>
@@ -84,7 +82,6 @@ where
             workspace,
             params_type_regs,
             workspace_params,
-            marker: PhantomData,
         }
     }
 
