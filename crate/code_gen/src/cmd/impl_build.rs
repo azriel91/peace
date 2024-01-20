@@ -174,11 +174,7 @@ fn impl_build_for(
     //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
     //         Output,
     //         AppError,
-    //         peace_rt_model::params::ParamsKeysImpl<
-    //             <ParamsKeysT as peace_rt_model::params::ParamsKeys>::WorkspaceParamsKMaybe,
-    //             <ParamsKeysT as peace_rt_model::params::ParamsKeys>::ProfileParamsKMaybe,
-    //             <ParamsKeysT as peace_rt_model::params::ParamsKeys>::FlowParamsKMaybe,
-    //         >,
+    //         ParamsKeysT,
     //         crate::scopes::type_params::WorkspaceParamsSome<
     //             <ParamsKeysT::WorkspaceParamsKMaybe as KeyMaybe>::Key
     //         >,
@@ -200,15 +196,7 @@ fn impl_build_for(
     let builder_type = CmdCtxBuilderReturnTypeBuilder::new(scope_builder_name.clone())
         .with_output(parse_quote!(Output))
         .with_app_error(parse_quote!(AppError))
-        .with_workspace_params_k(parse_quote!(
-            <ParamsKeysT as peace_rt_model::params::ParamsKeys>::WorkspaceParamsKMaybe
-        ))
-        .with_profile_params_k(parse_quote!(
-            <ParamsKeysT as peace_rt_model::params::ParamsKeys>::ProfileParamsKMaybe
-        ))
-        .with_flow_params_k(parse_quote!(
-            <ParamsKeysT as peace_rt_model::params::ParamsKeys>::FlowParamsKMaybe
-        ))
+        .with_params_keys(parse_quote!(ParamsKeysT))
         .with_workspace_params_selection(parse_quote!(#workspace_params_selection_type_param))
         .with_profile_params_selection(parse_quote!(#profile_params_selection_type_param))
         .with_flow_params_selection(parse_quote!(#flow_params_selection_type_param))
@@ -230,7 +218,11 @@ fn impl_build_for(
             ParamsKeysT: peace_rt_model::params::ParamsKeys,
 
             crate::ctx::CmdCtxTypeParamsCollector<Output, AppError, ParamsKeysT>:
-                crate::ctx::CmdCtxTypeParamsConstrained,
+                crate::ctx::CmdCtxTypeParamsConstrained<
+                    Output = Output,
+                    AppError = AppError,
+                    ParamsKeys = ParamsKeysT
+                >,
     };
 
     let cmd_ctx_return_type = quote! {
@@ -771,7 +763,11 @@ fn impl_build_for(
             ParamsKeysT: peace_rt_model::params::ParamsKeys,
 
             crate::ctx::CmdCtxTypeParamsCollector<Output, AppError, ParamsKeysT>:
-                crate::ctx::CmdCtxTypeParamsConstrained,
+                crate::ctx::CmdCtxTypeParamsConstrained<
+                    Output = Output,
+                    AppError = AppError,
+                    ParamsKeys = ParamsKeysT
+                >,
         {
             /// Future that returns the `CmdCtx`.
             ///

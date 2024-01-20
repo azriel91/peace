@@ -25,6 +25,15 @@ pub struct CmdCtxBuilderReturnTypeBuilder {
     ///
     /// * `AppError`
     app_error: TypePath,
+    /// Path of the params keys type.
+    ///
+    /// By default this is not set, and the `ParamsKeysImpl` type is used as the
+    /// `ParamsKeys` type parameter, delegating the `*KeyMaybe` to the
+    /// `*_params_k` fields.
+    ///
+    /// You may want to set this to `ParamsKeysT`, so that `ParamsKeysT` can be
+    /// referenced by another trait bound in the `quote!` macro.
+    params_keys: Option<TypePath>,
     /// Path of the workspace params key type.
     ///
     /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
@@ -116,6 +125,7 @@ impl CmdCtxBuilderReturnTypeBuilder {
             scope_builder_name,
             output: parse_quote!(CmdCtxBuilderTypeParamsT::Output),
             app_error: parse_quote!(CmdCtxBuilderTypeParamsT::AppError),
+            params_keys: None,
             workspace_params_k: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
                     as peace_rt_model::params::ParamsKeys
@@ -150,6 +160,11 @@ impl CmdCtxBuilderReturnTypeBuilder {
 
     pub fn with_app_error(mut self, app_error: TypePath) -> Self {
         self.app_error = app_error;
+        self
+    }
+
+    pub fn with_params_keys(mut self, params_keys: TypePath) -> Self {
+        self.params_keys = Some(params_keys);
         self
     }
 
@@ -197,6 +212,7 @@ impl CmdCtxBuilderReturnTypeBuilder {
         let CmdCtxBuilderReturnTypeBuilder {
             output,
             app_error,
+            params_keys,
             scope_builder_name,
             workspace_params_k,
             profile_params_k,
@@ -208,15 +224,21 @@ impl CmdCtxBuilderReturnTypeBuilder {
             flow_selection,
         } = self;
 
-        let cmd_ctx_builder_type_params_collector = quote! {
-            crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                #output,
-                #app_error,
+        let params_keys = params_keys.unwrap_or_else(|| {
+            parse_quote! {
                 peace_rt_model::params::ParamsKeysImpl<
                     #workspace_params_k,
                     #profile_params_k,
                     #flow_params_k,
-                >,
+                >
+            }
+        });
+
+        let cmd_ctx_builder_type_params_collector = quote! {
+            crate::ctx::CmdCtxBuilderTypeParamsCollector<
+                #output,
+                #app_error,
+                #params_keys,
                 #workspace_params_selection,
                 #profile_params_selection,
                 #flow_params_selection,
