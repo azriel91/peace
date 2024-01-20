@@ -143,18 +143,33 @@ impl ParamsScope {
         }
     }
 
-    /// Returns the `<PKeys::*ParamsKMaybe as KeyMaybe>::Key` associated type.
+    /// Returns the `*ParamsK` associated type.
     pub fn p_keys_key_maybe_key(self) -> TypePath {
         match self {
             Self::Workspace => parse_quote!(
-                <PKeys::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key
+                <
+                    <
+                        <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys
+                        as peace_rt_model::params::ParamsKeys
+                    >::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe
+                >::Key
             ),
-            Self::Profile => {
-                parse_quote!(<PKeys::ProfileParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key)
-            }
-            Self::Flow => {
-                parse_quote!(<PKeys::FlowParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key)
-            }
+            Self::Profile => parse_quote!(
+                <
+                    <
+                        <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys
+                        as peace_rt_model::params::ParamsKeys
+                    >::ProfileParamsKMaybe as peace_rt_model::params::KeyMaybe
+                >::Key
+            ),
+            Self::Flow => parse_quote!(
+                <
+                    <
+                        <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys
+                        as peace_rt_model::params::ParamsKeys
+                    >::FlowParamsKMaybe as peace_rt_model::params::KeyMaybe
+                >::Key
+            ),
         }
     }
 

@@ -1,12 +1,7 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
 use crate::cmd::{
-    type_parameters_impl,
-    type_params_selection::{
-        FlowParamsSelection, ProfileParamsSelection, WorkspaceParamsSelection,
-    },
-    ParamsScope, ScopeStruct,
+    param_key_impl, with_params::params_selection_types_some, ParamsScope, ScopeStruct,
 };
 
 /// Generates the `CmdCtxBuilder::*_params_merge` methods for each params type.
@@ -39,80 +34,16 @@ fn impl_params_merge_for(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
-    let (workspace_params_selection, profile_params_selection, flow_params_selection) =
-        match params_scope {
-            ParamsScope::Workspace => (
-                WorkspaceParamsSelection::Some.type_param(),
-                parse_quote!(ProfileParamsSelection),
-                parse_quote!(FlowParamsSelection),
-            ),
-            ParamsScope::Profile => (
-                parse_quote!(WorkspaceParamsSelection),
-                ProfileParamsSelection::Some.type_param(),
-                parse_quote!(FlowParamsSelection),
-            ),
-            ParamsScope::Flow => (
-                parse_quote!(WorkspaceParamsSelection),
-                parse_quote!(ProfileParamsSelection),
-                FlowParamsSelection::Some.type_param(),
-            ),
-        };
+    let (params_keys_assoc_type, params_selection_assoc_type, params_selection_struct) =
+        params_selection_types_some(params_scope);
 
-    let impl_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
+    let param_key_impl_known_predicates = param_key_impl::known_predicates(scope, params_scope);
 
-        type_params.push(parse_quote!(PKeys));
-
-        match params_scope {
-            ParamsScope::Workspace => {
-                if scope.profile_params_supported() {
-                    type_params.push(profile_params_selection.clone());
-                }
-
-                if scope.flow_params_supported() {
-                    type_params.push(flow_params_selection.clone());
-                }
-            }
-            ParamsScope::Profile => {
-                type_params.push(workspace_params_selection.clone());
-
-                if scope.flow_params_supported() {
-                    type_params.push(flow_params_selection.clone());
-                }
-            }
-            ParamsScope::Flow => {
-                type_params.push(workspace_params_selection.clone());
-
-                if scope.profile_params_supported() {
-                    type_params.push(profile_params_selection.clone());
-                }
-            }
-        }
-
-        type_params
-    };
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
-
-        type_params.push(parse_quote!(PKeys));
-
-        type_params.push(workspace_params_selection);
-        if scope.profile_params_supported() {
-            type_params.push(profile_params_selection);
-        }
-        if scope.flow_params_supported() {
-            type_params.push(flow_params_selection);
-        }
-
-        type_params
-    };
     let params_merge_method_name = params_scope.params_merge_method_name();
     let params_deserialize_method_name = params_scope.params_deserialize_method_name();
     let p_keys_key_maybe_key = params_scope.p_keys_key_maybe_key();
+    let params_k_type_param = params_scope.params_k_type_param();
     let params_type_reg_method_name = params_scope.params_type_reg_method_name();
     let params_file_name = params_scope.params_file_name();
     let params_file_type = params_scope.params_file_type();
@@ -126,34 +57,23 @@ fn impl_params_merge_for(
     };
 
     quote! {
-        impl<
+        impl<'ctx, 'key, CmdCtxBuilderTypeParamsT, #params_k_type_param> crate::ctx::CmdCtxBuilder<
             'ctx,
-            'key,
-            E,
-            O,
-            // ProfileSelection,
-            // FlowSelection,
-            // PKeys,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #impl_type_params
+            CmdCtxBuilderTypeParamsT,
+            #scope_builder_name<CmdCtxBuilderTypeParamsT>
         >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileSelection,
-                    // FlowSelection,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_builder_type_params
-                >,
-            >
         where
-            PKeys: #params_module::ParamsKeys + 'static,
+            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
+                // WorkspaceParamsSelection = WorkspaceParamsSome<<ParamsKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                #params_selection_assoc_type = crate::scopes::type_params::#params_selection_struct<#params_k_type_param>,
+            >,
+            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys:
+            // ParamsKeys<WorkspaceParamsKMaybe = KeyKnown<WorkspaceParamsK>>
+            peace_rt_model::params::ParamsKeys<#params_keys_assoc_type = peace_rt_model::params::KeyKnown<#params_k_type_param>>,
+
+            // WorkspaceParamsK:
+            //     Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static,
+            #param_key_impl_known_predicates
         {
             #[doc = #doc_summary]
             // async fn workspace_params_merge
@@ -164,7 +84,7 @@ fn impl_params_merge_for(
             ) -> Result<(), peace_rt_model::Error> {
                 let storage = self.workspace.storage();
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
-                    // <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+                    // <ParamsKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,
                     #p_keys_key_maybe_key
                 >(
                     storage,
