@@ -1,7 +1,5 @@
 use quote::quote;
-use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
-};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Token};
 
 use crate::cmd::{
     type_params_selection::{
@@ -119,31 +117,37 @@ fn impl_build_for(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        match scope.profile_count() {
-            ProfileCount::None => {}
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(profile_selection.type_param());
-            }
+    let profile_selection_constraint = match scope.profile_count() {
+        ProfileCount::None => None,
+        ProfileCount::One | ProfileCount::Multiple => {
+            let profile_selection_type_param = profile_selection_type_param(profile_selection);
+            profile_selection_type_param.map(|profile_selection_type_param| {
+                quote! {
+                        ProfileSelection = #profile_selection_type_param,
+                }
+            })
         }
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(flow_selection.type_param());
-        }
-
-        type_params.push(parse_quote!(PKeys));
-        type_params.push(workspace_params_selection.type_param());
-        if scope.profile_params_supported() {
-            type_params.push(profile_params_selection.type_param());
-        }
-        if scope.flow_params_supported() {
-            type_params.push(flow_params_selection.type_param());
-        }
-
-        type_params
     };
+    let flow_selection_constraint = match scope.flow_count() {
+        FlowCount::None => proc_macro2::TokenStream::new(),
+        FlowCount::One => {
+            let flow_selection_type_param = flow_selection_type_param(flow_selection);
+            quote!(FlowSelection = #flow_selection_type_param,)
+        }
+    };
+    let (workspace_params_k_type_param, workspace_params_k_maybe_bound) = match profile_selection {
+        ProfileSelection::NotSelected
+        | ProfileSelection::Selected
+        | ProfileSelection::FilterFunction => (None, None),
+        ProfileSelection::FromWorkspaceParam => (
+            Some(quote!(WorkspaceParamsK,)),
+            Some(
+                quote!(<WorkspaceParamsKMaybe = peace_rt_model::params::KeyKnown<WorkspaceParamsK>>),
+            ),
+        ),
+    };
+
     let scope_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
@@ -188,25 +192,60 @@ fn impl_build_for(
         flow_params_selection,
     );
 
-    quote! {
-        impl<'ctx, 'key, CmdCtxTypeParamsT>
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<'ctx, E>,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowParamsNone,
-                    #scope_builder_type_params
-                >,
-            >
+    let impl_header_and_constraints = quote! {
+        impl<
+            'ctx,
+            CmdCtxBuilderTypeParamsT,
+            Output,
+            AppError,
+            ParamsKeysT,
+            #workspace_params_k_type_param
+        > crate::ctx::CmdCtxBuilder<
+            'ctx,
+            CmdCtxBuilderTypeParamsT,
+            #scope_builder_name<CmdCtxBuilderTypeParamsT>
+        >
         where
-            E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            PKeys: #params_module::ParamsKeys + 'static,
+            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
+                Output = Output,
+                AppError = AppError,
+                ParamsKeys = ParamsKeysT,
+                #profile_selection_constraint
+                #flow_selection_constraint
+            >,
+            Output: peace_rt_model::output::OutputWrite<AppError> + 'static,
+            AppError: peace_value_traits::AppError + From<peace_rt_model::Error>,
+            ParamsKeysT: peace_rt_model::params::ParamsKeys #workspace_params_k_maybe_bound,
+
+            // <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys:
+            //     peace_rt_model::params::ParamsKeys<peace_rt_model::params::KeyKnown<WorkspaceParamsK>>,
+
+            crate::ctx::CmdCtxTypeParamsCollector<
+                Output,
+                AppError,
+                <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys,
+            >: crate::ctx::CmdCtxTypeParamsConstrained,
+    };
+
+    let cmd_ctx_return_type = quote! {
+        crate::ctx::CmdCtx<
+            #scope_type_path<
+                'ctx,
+                crate::ctx::CmdCtxTypeParamsCollector<
+                    Output,
+                    AppError,
+                    <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys,
+                >,
+
+                // MultiProfileSingleFlow / SingleProfileSingleFlow
+                // peace_resources::resources::ts::SetUp
+                #scope_type_params
+            >,
+        >
+    };
+
+    quote! {
+        #impl_header_and_constraints
         {
             /// Builds the command context.
             ///
@@ -214,25 +253,7 @@ fn impl_build_for(
             /// given parameters
             pub async fn build(
                 mut self,
-            ) -> Result<
-                crate::ctx::CmdCtx<
-                    #scope_type_path<
-                        'ctx,
-                        E,
-                        O,
-                        #params_module::ParamsKeysImpl<
-                            PKeys::WorkspaceParamsKMaybe,
-                            PKeys::ProfileParamsKMaybe,
-                            PKeys::FlowParamsKMaybe,
-                        >,
-
-                        // MultiProfileSingleFlow / SingleProfileSingleFlow
-                        // peace_resources::resources::ts::SetUp
-                        #scope_type_params
-                    >,
-                >,
-                E,
-            >
+            ) -> Result<#cmd_ctx_return_type, CmdCtxBuilderTypeParamsT::AppError>
             {
                 use futures::stream::TryStreamExt;
 
@@ -735,24 +756,7 @@ fn impl_build_for(
             }
         }
 
-        impl<'ctx, 'key: 'ctx, CmdCtxTypeParamsT> std::future::IntoFuture
-        for crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<'ctx, E>,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowParamsNone,
-                    #scope_builder_type_params
-                >,
-            >
-        where
-            E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            PKeys: #params_module::ParamsKeys + 'static,
+        #impl_header_and_constraints
         {
             /// Future that returns the `CmdCtx`.
             ///
@@ -762,25 +766,7 @@ fn impl_build_for(
             type IntoFuture = std::pin::Pin<
                 Box<
                     dyn std::future::Future<
-                        Output = Result<
-                            crate::ctx::CmdCtx<
-                                #scope_type_path<
-                                    'ctx,
-                                    E,
-                                    O,
-                                    #params_module::ParamsKeysImpl<
-                                        PKeys::WorkspaceParamsKMaybe,
-                                        PKeys::ProfileParamsKMaybe,
-                                        PKeys::FlowParamsKMaybe,
-                                    >,
-
-                                    // MultiProfileSingleFlow / SingleProfileSingleFlow
-                                    // peace_resources::resources::ts::SetUp
-                                    #scope_type_params
-                                >,
-                            >,
-                            E,
-                        >
+                        Output = Result<#cmd_ctx_return_type, AppError>
                     >
                     + 'ctx,
                 >,
@@ -792,6 +778,27 @@ fn impl_build_for(
             }
         }
 
+    }
+}
+
+fn profile_selection_type_param(
+    profile_selection: ProfileSelection,
+) -> Option<proc_macro2::TokenStream> {
+    match profile_selection {
+        ProfileSelection::NotSelected => None, // no profile no flow will hit this.
+        ProfileSelection::Selected => Some(quote!(crate::scopes::type_params::ProfileSelected)),
+        ProfileSelection::FromWorkspaceParam => Some(quote! {
+            crate::scopes::type_params::ProfileFromWorkspaceParam<'ctx, WorkspaceParamsK>
+        }),
+        ProfileSelection::FilterFunction => {
+            Some(quote!(crate::scopes::type_params::ProfileFilterFn<'ctx>))
+        }
+    }
+}
+
+fn flow_selection_type_param(flow_selection: FlowSelection) -> proc_macro2::TokenStream {
+    match flow_selection {
+        FlowSelection::Selected => quote!(crate::scopes::type_params::FlowSelected<'ctx, AppError>),
     }
 }
 
