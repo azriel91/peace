@@ -13,6 +13,8 @@ pub use self::{
     profile_count::ProfileCount, scope::Scope, struct_definition::struct_definition,
 };
 
+pub(crate) use impl_header_builder::ImplHeaderBuilder;
+
 mod cmd_ctx_builder_type_builder;
 mod flow_count;
 mod impl_build;
@@ -32,6 +34,7 @@ mod scope_struct;
 mod struct_definition;
 
 mod impl_constructor;
+pub(crate) mod impl_header_builder;
 pub(crate) mod scope_builder_fields;
 pub(crate) mod type_params_selection;
 pub(crate) mod with_params;

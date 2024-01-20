@@ -1,4 +1,4 @@
-use syn::{parse_quote, Ident};
+use syn::{parse_quote, Ident, Path};
 
 use crate::cmd::ParamsScope;
 
@@ -65,29 +65,28 @@ pub(crate) fn params_selection_types_some(params_scope: ParamsScope) -> (Ident, 
 pub(crate) fn cmd_ctx_builder_return_type_with_params_key_some(
     scope_builder_name: Ident,
     params_scope: ParamsScope,
-) -> proc_macro2::TokenStream {
-    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name);
-    let return_type = match params_scope {
-        ParamsScope::Workspace => return_type
+) -> Path {
+    let cmd_ctx_builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name);
+    match params_scope {
+        ParamsScope::Workspace => cmd_ctx_builder_type_builder
             .with_workspace_params_k(parse_quote!(
                 peace_rt_model::params::KeyKnown<WorkspaceParamsK>
             ))
             .with_workspace_params_selection(parse_quote!(
                 crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             )),
-        ParamsScope::Profile => return_type
+        ParamsScope::Profile => cmd_ctx_builder_type_builder
             .with_profile_params_k(parse_quote!(
                 peace_rt_model::params::KeyKnown<ProfileParamsK>
             ))
             .with_profile_params_selection(parse_quote!(
                 crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
             )),
-        ParamsScope::Flow => return_type
+        ParamsScope::Flow => cmd_ctx_builder_type_builder
             .with_flow_params_k(parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>))
             .with_flow_params_selection(parse_quote!(
                 crate::scopes::type_params::FlowParamsSome<FlowParamsK>
             )),
     }
-    .build();
-    return_type
+    .build()
 }

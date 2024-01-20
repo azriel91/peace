@@ -1,17 +1,17 @@
 use quote::quote;
-use syn::{parse_quote, Ident, TypePath};
+use syn::{parse_quote, Ident, Path, TypePath};
 
 /// Collects the tokens to build the `CmdCtxBuilder` return type.
 ///
 /// By default, this references the associated types from the passed in
 /// `CmdCtxBuilderTypeParamsT`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CmdCtxBuilderTypeBuilder {
     /// Name of the scope builder struct.
     scope_builder_name: Ident,
     /// Path of the output type.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::Output`.
+    /// Defaults to `Output`.
     ///
     /// You may want to set this to be one of:
     ///
@@ -19,7 +19,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     output: TypePath,
     /// Path of the app error type.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::AppError`.
+    /// Defaults to `AppError`.
     ///
     /// You may want to set this to be one of:
     ///
@@ -67,7 +67,7 @@ pub struct CmdCtxBuilderTypeBuilder {
 
     /// Type state to track whether workspace params has been selected.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection`
+    /// Defaults to `WorkspaceParamsSelection`
     ///
     /// You may want to set this to be one of:
     ///
@@ -76,7 +76,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     workspace_params_selection: TypePath,
     /// Type state to track whether profile params has been selected.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::ProfileParamsSelection`
+    /// Defaults to `ProfileParamsSelection`
     ///
     /// You may want to set this to be one of:
     ///
@@ -86,7 +86,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     profile_params_selection: TypePath,
     /// Type state to track whether flow params has been selected.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::FlowParamsSelection`
+    /// Defaults to `FlowParamsSelection`
     ///
     /// You may want to set this to be one of:
     ///
@@ -97,7 +97,7 @@ pub struct CmdCtxBuilderTypeBuilder {
 
     /// Type state to track whether profile params has been selected.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::ProfileSelection`
+    /// Defaults to `ProfileSelection`
     ///
     /// You may want to set this to be one of:
     ///
@@ -109,7 +109,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     profile_selection: TypePath,
     /// Type state to track whether flow params has been selected.
     ///
-    /// Defaults to `CmdCtxBuilderTypeParamsT::FlowSelection`
+    /// Defaults to `FlowSelection`
     ///
     /// You may want to set this to be one of:
     ///
@@ -123,8 +123,8 @@ impl CmdCtxBuilderTypeBuilder {
     pub fn new(scope_builder_name: Ident) -> Self {
         Self {
             scope_builder_name,
-            output: parse_quote!(CmdCtxBuilderTypeParamsT::Output),
-            app_error: parse_quote!(CmdCtxBuilderTypeParamsT::AppError),
+            output: parse_quote!(Output),
+            app_error: parse_quote!(AppError),
             params_keys: None,
             workspace_params_k: parse_quote!(
                 <CmdCtxBuilderTypeParamsT::ParamsKeys
@@ -141,15 +141,11 @@ impl CmdCtxBuilderTypeBuilder {
                     as peace_rt_model::params::ParamsKeys
                 >::FlowParamsKMaybe
             ),
-            workspace_params_selection: parse_quote!(
-                CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection
-            ),
-            profile_params_selection: parse_quote!(
-                CmdCtxBuilderTypeParamsT::ProfileParamsSelection
-            ),
-            flow_params_selection: parse_quote!(CmdCtxBuilderTypeParamsT::FlowParamsSelection),
-            profile_selection: parse_quote!(CmdCtxBuilderTypeParamsT::ProfileSelection),
-            flow_selection: parse_quote!(CmdCtxBuilderTypeParamsT::FlowSelection),
+            workspace_params_selection: parse_quote!(WorkspaceParamsSelection),
+            profile_params_selection: parse_quote!(ProfileParamsSelection),
+            flow_params_selection: parse_quote!(FlowParamsSelection),
+            profile_selection: parse_quote!(ProfileSelection),
+            flow_selection: parse_quote!(FlowSelection),
         }
     }
 
@@ -208,7 +204,7 @@ impl CmdCtxBuilderTypeBuilder {
         self
     }
 
-    pub fn build(self) -> proc_macro2::TokenStream {
+    pub fn build(self) -> Path {
         let CmdCtxBuilderTypeBuilder {
             output,
             app_error,
@@ -247,7 +243,7 @@ impl CmdCtxBuilderTypeBuilder {
             >
         };
         let cmd_ctx_builder_type_params_collector = &cmd_ctx_builder_type_params_collector;
-        quote! {
+        parse_quote! {
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #cmd_ctx_builder_type_params_collector,
