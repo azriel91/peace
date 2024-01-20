@@ -30,7 +30,6 @@ mod profile_count;
 mod scope;
 mod scope_struct;
 mod struct_definition;
-mod type_parameters_impl;
 
 mod impl_constructor;
 pub(crate) mod scope_builder_fields;
