@@ -36,8 +36,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     params_keys: Option<TypePath>,
     /// Path of the workspace params key type.
     ///
-    /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
-    /// ParamsKeys>::WorkspaceParamsKMaybe`.
+    /// Defaults to `WorkspaceParamsKMaybe`.
     ///
     /// You may want to set this to be one of:
     ///
@@ -46,8 +45,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     workspace_params_k_maybe: TypePath,
     /// Path of the profile params key type.
     ///
-    /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
-    /// ParamsKeys>::ProfileParamsKMaybe`.
+    /// Defaults to `ProfileParamsKMaybe`.
     ///
     /// You may want to set this to be one of:
     ///
@@ -56,8 +54,7 @@ pub struct CmdCtxBuilderTypeBuilder {
     profile_params_k_maybe: TypePath,
     /// Path of the flow params key type.
     ///
-    /// Defaults to `<CmdCtxBuilderTypeParamsT::ParamsKeys as
-    /// ParamsKeys>::FlowParamsKMaybe`
+    /// Defaults to `FlowParamsKMaybe`
     ///
     /// You may want to set this to be one of:
     ///
@@ -126,21 +123,9 @@ impl CmdCtxBuilderTypeBuilder {
             output: parse_quote!(Output),
             app_error: parse_quote!(AppError),
             params_keys: None,
-            workspace_params_k_maybe: parse_quote!(
-                <CmdCtxBuilderTypeParamsT::ParamsKeys
-                    as peace_rt_model::params::ParamsKeys
-                >::WorkspaceParamsKMaybe
-            ),
-            profile_params_k_maybe: parse_quote!(
-                <CmdCtxBuilderTypeParamsT::ParamsKeys
-                    as peace_rt_model::params::ParamsKeys
-                >::ProfileParamsKMaybe
-            ),
-            flow_params_k_maybe: parse_quote!(
-                <CmdCtxBuilderTypeParamsT::ParamsKeys
-                    as peace_rt_model::params::ParamsKeys
-                >::FlowParamsKMaybe
-            ),
+            workspace_params_k_maybe: parse_quote!(WorkspaceParamsKMaybe),
+            profile_params_k_maybe: parse_quote!(ProfileParamsKMaybe),
+            flow_params_k_maybe: parse_quote!(FlowParamsKMaybe),
             workspace_params_selection: parse_quote!(WorkspaceParamsSelection),
             profile_params_selection: parse_quote!(ProfileParamsSelection),
             flow_params_selection: parse_quote!(FlowParamsSelection),
@@ -156,11 +141,6 @@ impl CmdCtxBuilderTypeBuilder {
 
     pub fn with_app_error(mut self, app_error: TypePath) -> Self {
         self.app_error = app_error;
-        self
-    }
-
-    pub fn with_params_keys(mut self, params_keys: TypePath) -> Self {
-        self.params_keys = Some(params_keys);
         self
     }
 

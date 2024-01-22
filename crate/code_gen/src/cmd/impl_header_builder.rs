@@ -1,6 +1,6 @@
 use quote::quote;
 use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, LifetimeParam, Path, TypePath,
+    parse_quote, punctuated::Punctuated, token::Comma, Ident, LifetimeParam, Path, TypePath,
     WherePredicate,
 };
 
@@ -16,10 +16,16 @@ pub(crate) struct ImplHeaderBuilder {
     app_error: Option<TypePath>,
     /// Defaults to `WorkspaceParamsKMaybe`.
     workspace_params_k_maybe: Option<TypePath>,
+    /// Defaults to `None`, you may wish to set this to `WorkspaceParamsK`.
+    workspace_params_k: Option<Ident>,
     /// Defaults to `ProfileParamsKMaybe`.
     profile_params_k_maybe: Option<TypePath>,
+    /// Defaults to `None`, you may wish to set this to `ProfileParamsK`.
+    profile_params_k: Option<Ident>,
     /// Defaults to `FlowParamsKMaybe`.
     flow_params_k_maybe: Option<TypePath>,
+    /// Defaults to `None`, you may wish to set this to `FlowParamsK`.
+    flow_params_k: Option<Ident>,
     /// Defaults to `WorkspaceParamsSelection`.
     workspace_params_selection: Option<TypePath>,
     /// Defaults to `ProfileParamsSelection`.
@@ -28,19 +34,10 @@ pub(crate) struct ImplHeaderBuilder {
     flow_params_selection: Option<TypePath>,
     /// Defaults to `ProfileSelection`.
     profile_selection: Option<TypePath>,
+    /// Defaults to `FlowSelection`.
+    flow_selection: Option<TypePath>,
     /// The `CtxCtxBuilder` with type parameters all filled in.
     builder_type: Path,
-    /// Defaults to `peace_rt_model::output::OutputWrite<AppError> + 'static`.
-    constraint_output: Option<WherePredicate>,
-    /// Defaults to `peace_value_traits::AppError +
-    /// From<peace_rt_model::Error>`.
-    constraint_app_error: Option<WherePredicate>,
-    /// Defaults to `peace_rt_model::params::KeyMaybe`.
-    constraint_workspace_params_k_maybe: Option<WherePredicate>,
-    /// Defaults to `peace_rt_model::params::KeyMaybe`.
-    constraint_profile_params_k_maybe: Option<WherePredicate>,
-    /// Defaults to `peace_rt_model::params::KeyMaybe`.
-    constraint_flow_params_k_maybe: Option<WherePredicate>,
 }
 
 impl ImplHeaderBuilder {
@@ -51,24 +48,17 @@ impl ImplHeaderBuilder {
             output: Some(parse_quote!(Output)),
             app_error: Some(parse_quote!(AppError)),
             workspace_params_k_maybe: Some(parse_quote!(WorkspaceParamsKMaybe)),
+            workspace_params_k: None,
             profile_params_k_maybe: Some(parse_quote!(ProfileParamsKMaybe)),
+            profile_params_k: None,
             flow_params_k_maybe: Some(parse_quote!(FlowParamsKMaybe)),
+            flow_params_k: None,
             workspace_params_selection: Some(parse_quote!(WorkspaceParamsSelection)),
             profile_params_selection: Some(parse_quote!(ProfileParamsSelection)),
             flow_params_selection: Some(parse_quote!(FlowParamsSelection)),
             profile_selection: Some(parse_quote!(ProfileSelection)),
+            flow_selection: Some(parse_quote!(FlowSelection)),
             builder_type,
-            constraint_output: Some(parse_quote!(
-                peace_rt_model::output::OutputWrite<AppError> + 'static
-            )),
-            constraint_app_error: Some(parse_quote!(
-                peace_value_traits::AppError + From<peace_rt_model::Error>
-            )),
-            constraint_workspace_params_k_maybe: Some(parse_quote!(
-                peace_rt_model::params::KeyMaybe
-            )),
-            constraint_profile_params_k_maybe: Some(parse_quote!(peace_rt_model::params::KeyMaybe)),
-            constraint_flow_params_k_maybe: Some(parse_quote!(peace_rt_model::params::KeyMaybe)),
         }
     }
 
@@ -82,16 +72,6 @@ impl ImplHeaderBuilder {
         self
     }
 
-    pub fn with_output(mut self, output: Option<TypePath>) -> Self {
-        self.output = output;
-        self
-    }
-
-    pub fn with_app_error(mut self, app_error: Option<TypePath>) -> Self {
-        self.app_error = app_error;
-        self
-    }
-
     pub fn with_workspace_params_k_maybe(
         mut self,
         workspace_params_k_maybe: Option<TypePath>,
@@ -100,13 +80,28 @@ impl ImplHeaderBuilder {
         self
     }
 
+    pub fn with_workspace_params_k(mut self, workspace_params_k: Option<Ident>) -> Self {
+        self.workspace_params_k = workspace_params_k;
+        self
+    }
+
     pub fn with_profile_params_k_maybe(mut self, profile_params_k_maybe: Option<TypePath>) -> Self {
         self.profile_params_k_maybe = profile_params_k_maybe;
         self
     }
 
+    pub fn with_profile_params_k(mut self, profile_params_k: Option<Ident>) -> Self {
+        self.profile_params_k = profile_params_k;
+        self
+    }
+
     pub fn with_flow_params_k_maybe(mut self, flow_params_k_maybe: Option<TypePath>) -> Self {
         self.flow_params_k_maybe = flow_params_k_maybe;
+        self
+    }
+
+    pub fn with_flow_params_k(mut self, flow_params_k: Option<Ident>) -> Self {
+        self.flow_params_k = flow_params_k;
         self
     }
 
@@ -136,45 +131,8 @@ impl ImplHeaderBuilder {
         self
     }
 
-    pub fn with_builder_type(mut self, builder_type: Path) -> Self {
-        self.builder_type = builder_type;
-        self
-    }
-
-    pub fn with_constraint_output(mut self, constraint_output: Option<WherePredicate>) -> Self {
-        self.constraint_output = constraint_output;
-        self
-    }
-
-    pub fn with_constraint_app_error(
-        mut self,
-        constraint_app_error: Option<WherePredicate>,
-    ) -> Self {
-        self.constraint_app_error = constraint_app_error;
-        self
-    }
-
-    pub fn with_constraint_workspace_params_k_maybe(
-        mut self,
-        constraint_workspace_params_k_maybe: Option<WherePredicate>,
-    ) -> Self {
-        self.constraint_workspace_params_k_maybe = constraint_workspace_params_k_maybe;
-        self
-    }
-
-    pub fn with_constraint_profile_params_k_maybe(
-        mut self,
-        constraint_profile_params_k_maybe: Option<WherePredicate>,
-    ) -> Self {
-        self.constraint_profile_params_k_maybe = constraint_profile_params_k_maybe;
-        self
-    }
-
-    pub fn with_constraint_flow_params_k_maybe(
-        mut self,
-        constraint_flow_params_k_maybe: Option<WherePredicate>,
-    ) -> Self {
-        self.constraint_flow_params_k_maybe = constraint_flow_params_k_maybe;
+    pub fn with_flow_selection(mut self, flow_selection: Option<TypePath>) -> Self {
+        self.flow_selection = flow_selection;
         self
     }
 
@@ -185,29 +143,74 @@ impl ImplHeaderBuilder {
             output,
             app_error,
             workspace_params_k_maybe,
+            workspace_params_k,
             profile_params_k_maybe,
+            profile_params_k,
             flow_params_k_maybe,
+            flow_params_k,
             workspace_params_selection,
             profile_params_selection,
             flow_params_selection,
             profile_selection,
+            flow_selection,
             builder_type,
-            constraint_output,
-            constraint_app_error,
-            constraint_workspace_params_k_maybe,
-            constraint_profile_params_k_maybe,
-            constraint_flow_params_k_maybe,
         } = self;
+
+        let mut where_predicates = Punctuated::<WherePredicate, Comma>::new();
+        if let Some((output, app_error)) = output.as_ref().zip(app_error.as_ref()) {
+            where_predicates.push(parse_quote!(
+                #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
+            ));
+        };
+        if let Some(app_error) = app_error.as_ref() {
+            where_predicates.push(parse_quote!(
+                #app_error: peace_value_traits::AppError + From<peace_rt_model::Error>
+            ));
+        };
+        if let Some(workspace_params_k_maybe) = workspace_params_k_maybe.as_ref() {
+            where_predicates.push(parse_quote!(
+                #workspace_params_k_maybe: peace_rt_model::params::KeyMaybe
+            ));
+        };
+        if let Some(workspace_params_k) = workspace_params_k.as_ref() {
+            where_predicates.push(parse_quote!(
+                #workspace_params_k: Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static
+            ));
+        }
+        if let Some(profile_params_k_maybe) = profile_params_k_maybe.as_ref() {
+            where_predicates.push(parse_quote!(
+                #profile_params_k_maybe: peace_rt_model::params::KeyMaybe
+            ));
+        };
+        if let Some(profile_params_k) = profile_params_k.as_ref() {
+            where_predicates.push(parse_quote!(
+                #profile_params_k: Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static
+            ));
+        }
+        if let Some(flow_params_k_maybe) = flow_params_k_maybe.as_ref() {
+            where_predicates.push(parse_quote!(
+                #flow_params_k_maybe: peace_rt_model::params::KeyMaybe
+            ));
+        };
+        if let Some(flow_params_k) = flow_params_k.as_ref() {
+            where_predicates.push(parse_quote!(
+                #flow_params_k: Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + Unpin + 'static
+            ));
+        }
 
         let trait_name_for = trait_name.map(|trait_name| quote!(#trait_name for));
         let output = output.map(|output| quote!(#output,));
         let app_error = app_error.map(|app_error| quote!(#app_error,));
         let workspace_params_k_maybe = workspace_params_k_maybe
             .map(|workspace_params_k_maybe| quote!(#workspace_params_k_maybe,));
+        let workspace_params_k =
+            workspace_params_k.map(|workspace_params_k| quote!(#workspace_params_k,));
         let profile_params_k_maybe =
             profile_params_k_maybe.map(|profile_params_k_maybe| quote!(#profile_params_k_maybe,));
+        let profile_params_k = profile_params_k.map(|profile_params_k| quote!(#profile_params_k,));
         let flow_params_k_maybe =
             flow_params_k_maybe.map(|flow_params_k_maybe| quote!(#flow_params_k_maybe,));
+        let flow_params_k = flow_params_k.map(|flow_params_k| quote!(#flow_params_k,));
         let workspace_params_selection = workspace_params_selection
             .map(|workspace_params_selection| quote!(#workspace_params_selection,));
         let profile_params_selection = profile_params_selection
@@ -216,16 +219,12 @@ impl ImplHeaderBuilder {
             flow_params_selection.map(|flow_params_selection| quote!(#flow_params_selection,));
         let profile_selection =
             profile_selection.map(|profile_selection| quote!(#profile_selection,));
+        let flow_selection = flow_selection.map(|flow_selection| quote!(#flow_selection,));
 
-        let where_ = if constraint_output.is_some()
-            || constraint_app_error.is_some()
-            || constraint_workspace_params_k_maybe.is_some()
-            || constraint_profile_params_k_maybe.is_some()
-            || constraint_flow_params_k_maybe.is_some()
-        {
-            quote!(where)
+        let where_ = if where_predicates.is_empty() {
+            None
         } else {
-            proc_macro2::TokenStream::new()
+            Some(quote!(where))
         };
 
         quote! {
@@ -234,21 +233,21 @@ impl ImplHeaderBuilder {
                 #output
                 #app_error
                 #workspace_params_k_maybe
+                #workspace_params_k
                 #profile_params_k_maybe
+                #profile_params_k
                 #flow_params_k_maybe
+                #flow_params_k
                 #workspace_params_selection
                 #profile_params_selection
                 #flow_params_selection
                 #profile_selection
+                #flow_selection
             >
             #trait_name_for
             #builder_type
             #where_
-                #constraint_output,
-                #constraint_app_error,
-                #constraint_workspace_params_k_maybe,
-                #constraint_profile_params_k_maybe,
-                #constraint_flow_params_k_maybe,
+                #where_predicates
         }
     }
 }

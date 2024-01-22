@@ -1,7 +1,9 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{
+    CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ProfileCount, Scope, ScopeStruct,
+};
 
 /// Generates the `with_flow` method for the command context builder.
 pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -37,52 +39,19 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     // ```
 
     let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
-        .with_output(parse_quote!(Output))
-        .with_app_error(parse_quote!(AppError))
-        .with_workspace_params_k_maybe(parse_quote!(WorkspaceParamsKMaybe))
-        .with_profile_params_k_maybe(parse_quote!(ProfileParamsKMaybe))
-        .with_flow_params_k_maybe(parse_quote!(FlowParamsKMaybe))
-        .with_workspace_params_selection(parse_quote!(WorkspaceParamsSelection))
-        .with_profile_params_selection(parse_quote!(ProfileParamsSelection))
-        .with_flow_params_selection(parse_quote!(FlowParamsSelection))
-        .with_profile_selection(parse_quote!(ProfileSelection))
         .with_flow_selection(parse_quote!(crate::scopes::type_params::FlowNotSelected))
         .build();
-
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_flow_selection(None)
+        .build();
     let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
-        .with_output(parse_quote!(Output))
-        .with_app_error(parse_quote!(AppError))
-        .with_workspace_params_k_maybe(parse_quote!(WorkspaceParamsKMaybe))
-        .with_profile_params_k_maybe(parse_quote!(ProfileParamsKMaybe))
-        .with_flow_params_k_maybe(parse_quote!(FlowParamsKMaybe))
-        .with_workspace_params_selection(parse_quote!(WorkspaceParamsSelection))
-        .with_profile_params_selection(parse_quote!(ProfileParamsSelection))
-        .with_flow_params_selection(parse_quote!(FlowParamsSelection))
-        .with_profile_selection(parse_quote!(ProfileSelection))
         .with_flow_selection(parse_quote!(
             crate::scopes::type_params::FlowSelected<'ctx, AppError>
         ))
         .build();
 
     quote! {
-        impl<
-            'ctx,
-            Output,
-            AppError,
-            WorkspaceParamsKMaybe,
-            ProfileParamsKMaybe,
-            FlowParamsKMaybe,
-            WorkspaceParamsSelection,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-            ProfileSelection,
-        > #builder_type
-        where
-            Output: peace_rt_model::output::OutputWrite<AppError> + 'static,
-            AppError: peace_value_traits::AppError + From<peace_rt_model::Error>,
-            WorkspaceParamsKMaybe: peace_rt_model::params::KeyMaybe,
-            ProfileParamsKMaybe: peace_rt_model::params::KeyMaybe,
-            FlowParamsKMaybe: peace_rt_model::params::KeyMaybe,
+        #impl_header
         {
             pub fn with_flow(
                 self,

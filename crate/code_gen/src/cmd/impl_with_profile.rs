@@ -2,8 +2,7 @@ use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
 use crate::cmd::{
-    param_key_impl, CmdCtxBuilderTypeBuilder, FlowCount, ParamsScope, ProfileCount, Scope,
-    ScopeStruct,
+    CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ProfileCount, Scope, ScopeStruct,
 };
 
 /// Generates the `with_profile` method for the command context builder.
@@ -20,20 +19,38 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_selected = scope_builder_fields_profile_selected(scope);
 
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe,
+    //             ProfileParamsKMaybe,
+    //             FlowParamsKMaybe,
+    //         >,
+    //         WorkspaceParamsSelection,
+    //         ProfileParamsSelection,
+    //         FlowParamsSelection,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         FlowSelection,
+    //     >,
+    // >
+    // ```
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_profile_selection(None)
+        .build();
     let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileSelected))
         .build();
 
     let mut tokens = quote! {
-        impl<'ctx, CmdCtxBuilderTypeParamsT> crate::ctx::CmdCtxBuilder<
-            'ctx,
-            CmdCtxBuilderTypeParamsT,
-            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
-        >
-        where
-            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
-                ProfileSelection = crate::scopes::type_params::ProfileNotSelected,
-            >,
+        #impl_header
         {
             pub fn with_profile(
                 self,
@@ -42,18 +59,18 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
                 //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                //         CmdCtxBuilderTypeParamsT::Output,
-                //         CmdCtxBuilderTypeParamsT::AppError,
+                //         Output,
+                //         AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe,
+                //             WorkspaceParamsKMaybe,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
                 //         >,
-                //         CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::FlowParamsSelection,
+                //         WorkspaceParamsSelection,
+                //         ProfileParamsSelection,
+                //         FlowParamsSelection,
                 //         crate::scopes::type_params::ProfileSelected,
-                //         CmdCtxBuilderTypeParamsT::FlowSelection,
+                //         FlowSelection,
                 //     >,
                 // >
                 #return_type
@@ -108,37 +125,60 @@ pub fn impl_with_profile_from_workspace_param(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
 
-    let param_key_impl_known_predicates =
-        param_key_impl::known_predicates(scope, ParamsScope::Workspace);
-
     let scope_builder_fields_profile_not_selected =
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_from_workspace =
         scope_builder_fields_profile_from_workspace(scope);
 
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe,
+    //             ProfileParamsKMaybe,
+    //             FlowParamsKMaybe,
+    //         >,
+    //         crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
+    //         ProfileParamsSelection,
+    //         FlowParamsSelection,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         FlowSelection,
+    //     >,
+    // >
+    // ```
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_workspace_params_k_maybe(parse_quote!(
+            peace_rt_model::params::KeyKnown<WorkspaceParamsK>
+        ))
+        .with_workspace_params_selection(parse_quote!(
+            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+        ))
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_workspace_params_k_maybe(None)
+        .with_workspace_params_k(Some(parse_quote!(WorkspaceParamsK)))
+        .with_workspace_params_selection(None)
+        .with_profile_selection(None)
+        .build();
     let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_workspace_params_k_maybe(parse_quote!(
+            peace_rt_model::params::KeyKnown<WorkspaceParamsK>
+        ))
+        .with_workspace_params_selection(parse_quote!(
+            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+        ))
         .with_profile_selection(parse_quote!(
             crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>
         ))
         .build();
 
     quote! {
-        impl<'ctx, CmdCtxBuilderTypeParamsT, WorkspaceParamsK> crate::ctx::CmdCtxBuilder<
-            'ctx,
-            CmdCtxBuilderTypeParamsT,
-            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
-        >
-        where
-            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
-                WorkspaceParamsSelection = crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
-                ProfileSelection = crate::scopes::type_params::ProfileNotSelected,
-            >,
-            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys:
-            peace_rt_model::params::ParamsKeys<WorkspaceParamsKMaybe = peace_rt_model::params::KeyKnown<WorkspaceParamsK>>,
-
-            // WorkspaceParamsK:
-            //     Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-            #param_key_impl_known_predicates
+        #impl_header
         {
             pub fn with_profile_from_workspace_param<'key>(
                 self,
@@ -147,18 +187,18 @@ pub fn impl_with_profile_from_workspace_param(
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
                 //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                //         CmdCtxBuilderTypeParamsT::Output,
-                //         CmdCtxBuilderTypeParamsT::AppError,
+                //         Output,
+                //         AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe,
+                //             WorkspaceParamsKMaybe = peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
                 //         >,
-                //         CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::FlowParamsSelection,
+                //         crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
+                //         ProfileParamsSelection,
+                //         FlowParamsSelection,
                 //         crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
-                //         CmdCtxBuilderTypeParamsT::FlowSelection,
+                //         FlowSelection,
                 //     >,
                 // >
                 #return_type

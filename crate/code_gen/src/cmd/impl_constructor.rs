@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ScopeStruct};
 
 /// Generates the constructor for the command context builder for a given scope.
 pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -28,7 +28,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
     //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
-    //         O,
+    //         Output,
     //         AppError,
     //         peace_rt_model::params::ParamsKeysImpl<
     //             peace_rt_model::params::KeyUnknown,
@@ -43,9 +43,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     //     >,
     // >
 
-    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
-        .with_output(parse_quote!(O))
-        .with_app_error(parse_quote!(AppError))
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_workspace_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
         .with_profile_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
         .with_flow_params_k_maybe(parse_quote!(peace_rt_model::params::KeyUnknown))
@@ -57,12 +55,23 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
         .with_flow_selection(parse_quote!(crate::scopes::type_params::FlowNotSelected))
         .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_workspace_params_k_maybe(None)
+        .with_profile_params_k_maybe(None)
+        .with_flow_params_k_maybe(None)
+        .with_workspace_params_selection(None)
+        .with_profile_params_selection(None)
+        .with_flow_params_selection(None)
+        .with_profile_selection(None)
+        .with_flow_selection(None)
+        .build();
 
     quote! {
-        impl<'ctx, O, AppError> #return_type {
+        #impl_header
+        {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
             pub fn #constructor_method_name(
-                output: &'ctx mut O,
+                output: &'ctx mut Output,
                 workspace: &'ctx peace_rt_model::Workspace,
             ) -> Self
             {

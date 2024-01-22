@@ -1,7 +1,9 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
-use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{
+    CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ProfileCount, Scope, ScopeStruct,
+};
 
 /// Generates the `with_profile_filter` method for the command context builder.
 pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -17,6 +19,32 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_filter_fn = scope_builder_fields_profile_filter_fn(scope);
 
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe,
+    //             ProfileParamsKMaybe,
+    //             FlowParamsKMaybe,
+    //         >,
+    //         WorkspaceParamsSelection,
+    //         ProfileParamsSelection,
+    //         FlowParamsSelection,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         FlowSelection,
+    //     >,
+    // >
+    // ```
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_profile_selection(None)
+        .build();
     let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
         .with_profile_selection(parse_quote!(
             crate::scopes::type_params::ProfileFilterFn<'ctx>
@@ -24,15 +52,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
         .build();
 
     quote! {
-        impl<'ctx, CmdCtxBuilderTypeParamsT> crate::ctx::CmdCtxBuilder<
-            'ctx,
-            CmdCtxBuilderTypeParamsT,
-            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
-        >
-        where
-            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams<
-                ProfileSelection = crate::scopes::type_params::ProfileNotSelected,
-            >,
+        #impl_header
         {
             pub fn with_profile_filter<F>(
                 self,
@@ -41,18 +61,18 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
                 //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                //         CmdCtxBuilderTypeParamsT::Output,
-                //         CmdCtxBuilderTypeParamsT::AppError,
+                //         Output,
+                //         AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe,
-                //             <CmdCtxBuilderTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe,
+                //             WorkspaceParamsKMaybe,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
                 //         >,
-                //         CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::FlowParamsSelection,
+                //         WorkspaceParamsSelection,
+                //         ProfileParamsSelection,
+                //         FlowParamsSelection,
                 //         crate::scopes::type_params::ProfileFilterFn<'ctx>,
-                //         CmdCtxBuilderTypeParamsT::FlowSelection,
+                //         FlowSelection,
                 //     >,
                 // >
                 #return_type

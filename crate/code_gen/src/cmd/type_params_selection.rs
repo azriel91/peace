@@ -1,4 +1,4 @@
-use syn::{parse_quote, FieldValue, GenericArgument};
+use syn::{parse_quote, FieldValue, GenericArgument, TypePath};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProfileSelection {
@@ -25,10 +25,7 @@ impl ProfileSelection {
             Self::NotSelected => parse_quote!(crate::scopes::type_params::ProfileNotSelected),
             Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
             Self::FromWorkspaceParam => parse_quote!(
-                crate::scopes::type_params::ProfileFromWorkspaceParam<
-                    'key,
-                    <ParamsKeysT::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key,
-                >
+                crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>
             ),
             Self::FilterFunction => {
                 parse_quote!(crate::scopes::type_params::ProfileFilterFn<'ctx>)
@@ -71,13 +68,15 @@ impl WorkspaceParamsSelection {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::WorkspaceParamsNone),
             Self::Some => parse_quote! {
-                crate::scopes::type_params::WorkspaceParamsSome<
-                    <
-                        ParamsKeysT::WorkspaceParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+                crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             },
+        }
+    }
+
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<WorkspaceParamsK>),
         }
     }
 
@@ -109,13 +108,15 @@ impl ProfileParamsSelection {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
             Self::Some => parse_quote! {
-                crate::scopes::type_params::ProfileParamsSome<
-                    <
-                        ParamsKeysT::ProfileParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+                crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
             },
+        }
+    }
+
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<ProfileParamsK>),
         }
     }
 
@@ -151,13 +152,15 @@ impl FlowParamsSelection {
                 parse_quote!(crate::scopes::type_params::FlowParamsNone)
             }
             Self::Some => parse_quote! {
-                crate::scopes::type_params::FlowParamsSome<
-                    <
-                        ParamsKeysT::FlowParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+                crate::scopes::type_params::FlowParamsSome<FlowParamsK>
             },
+        }
+    }
+
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>),
         }
     }
 

@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ScopeStruct};
+use crate::cmd::{CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ScopeStruct};
 
 /// Generates functions for the command context builder that are not constrained
 /// by type parameters.
@@ -44,7 +44,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             ) -> Self
             where
                 I: peace_cfg::Item,
-                <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::AppError: From<I::Error>,
+                AppError: From<I::Error>,
             {
                 self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
@@ -52,17 +52,11 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         });
     };
 
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone()).build();
+    let impl_header = ImplHeaderBuilder::new(builder_type).build();
+
     quote! {
-        impl<'ctx, CmdCtxBuilderTypeParamsT> crate::ctx::CmdCtxBuilder<
-            'ctx,
-            CmdCtxBuilderTypeParamsT,
-            #scope_builder_name<CmdCtxBuilderTypeParamsT>,
-        >
-        where
-            CmdCtxBuilderTypeParamsT: crate::ctx::CmdCtxBuilderTypeParams,
-            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::AppError: peace_value_traits::AppError + From<peace_rt_model::Error>,
-            <CmdCtxBuilderTypeParamsT as crate::ctx::CmdCtxBuilderTypeParams>::ParamsKeys:
-                peace_rt_model::params::ParamsKeys,
+        #impl_header
         {
             #common_fns
         }
