@@ -12,8 +12,12 @@ pub(crate) struct ImplHeaderBuilder {
     trait_name: Option<Path>,
     /// Defaults to `Output`.
     output: Option<TypePath>,
+    /// Whether the `OutputWrite` type param should be constrained.
+    output_constraint_enabled: bool,
     /// Defaults to `AppError`.
     app_error: Option<TypePath>,
+    /// Whether the `AppError` type param should be constrained.
+    app_error_constraint_enabled: bool,
     /// Defaults to `WorkspaceParamsKMaybe`.
     workspace_params_k_maybe: Option<TypePath>,
     /// Defaults to `None`, you may wish to set this to `WorkspaceParamsK`.
@@ -46,7 +50,9 @@ impl ImplHeaderBuilder {
             lifetimes: parse_quote!('ctx),
             trait_name: None,
             output: Some(parse_quote!(Output)),
+            output_constraint_enabled: true,
             app_error: Some(parse_quote!(AppError)),
+            app_error_constraint_enabled: true,
             workspace_params_k_maybe: Some(parse_quote!(WorkspaceParamsKMaybe)),
             workspace_params_k: None,
             profile_params_k_maybe: Some(parse_quote!(ProfileParamsKMaybe)),
@@ -60,6 +66,16 @@ impl ImplHeaderBuilder {
             flow_selection: Some(parse_quote!(FlowSelection)),
             builder_type,
         }
+    }
+
+    pub fn with_output_constraint_enabled(mut self, output_constraint_enabled: bool) -> Self {
+        self.output_constraint_enabled = output_constraint_enabled;
+        self
+    }
+
+    pub fn with_app_error_constraint_enabled(mut self, app_error_constraint_enabled: bool) -> Self {
+        self.app_error_constraint_enabled = app_error_constraint_enabled;
+        self
     }
 
     pub fn with_lifetimes(mut self, lifetimes: Punctuated<LifetimeParam, Comma>) -> Self {
@@ -141,7 +157,9 @@ impl ImplHeaderBuilder {
             lifetimes,
             trait_name,
             output,
+            output_constraint_enabled,
             app_error,
+            app_error_constraint_enabled,
             workspace_params_k_maybe,
             workspace_params_k,
             profile_params_k_maybe,
@@ -158,14 +176,18 @@ impl ImplHeaderBuilder {
 
         let mut where_predicates = Punctuated::<WherePredicate, Comma>::new();
         if let Some((output, app_error)) = output.as_ref().zip(app_error.as_ref()) {
-            where_predicates.push(parse_quote!(
-                #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
-            ));
+            if output_constraint_enabled {
+                where_predicates.push(parse_quote!(
+                    #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
+                ));
+            }
         };
         if let Some(app_error) = app_error.as_ref() {
-            where_predicates.push(parse_quote!(
-                #app_error: peace_value_traits::AppError + From<peace_rt_model::Error>
-            ));
+            if app_error_constraint_enabled {
+                where_predicates.push(parse_quote!(
+                    #app_error: peace_value_traits::AppError + From<peace_rt_model::Error>
+                ));
+            }
         };
         if let Some(workspace_params_k_maybe) = workspace_params_k_maybe.as_ref() {
             where_predicates.push(parse_quote!(

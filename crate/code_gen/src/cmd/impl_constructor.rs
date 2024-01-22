@@ -56,6 +56,8 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         .with_flow_selection(parse_quote!(crate::scopes::type_params::FlowNotSelected))
         .build();
     let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_output_constraint_enabled(false)
+        .with_app_error_constraint_enabled(false)
         .with_workspace_params_k_maybe(None)
         .with_profile_params_k_maybe(None)
         .with_flow_params_k_maybe(None)
