@@ -1,22 +1,23 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
+    scopes::SingleProfileSingleFlow,
+};
 use peace_cmd_model::CmdOutcome;
 use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
-use peace_rt_model::{params::ParamsKeys, Error};
+
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::StatesGoalReadCmd;
 
 /// Displays [`StatesGoal`]s from storage.
 #[derive(Debug)]
-pub struct StatesGoalDisplayCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
+pub struct StatesGoalDisplayCmd<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
 
 impl<CmdCtxTypeParamsT> StatesGoalDisplayCmd<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    O: OutputWrite<E>,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Displays [`StatesGoal`]s from storage.
     ///
@@ -26,7 +27,10 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StatesGoalStored, E>, E> {
+    ) -> Result<
+        CmdOutcome<StatesGoalStored, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let states_goal_stored_result = StatesGoalReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
 

@@ -3,7 +3,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use futures::{StreamExt, TryStreamExt};
 use peace_cfg::{ItemId, Profile};
 use peace_cmd::{
-    ctx::CmdCtx,
+    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
 };
 use peace_cmd_model::CmdOutcome;
@@ -19,7 +19,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
+use peace_rt_model::{Error, Flow};
 
 use crate::cmd_blocks::{
     DiffCmdBlock, DiffCmdBlockStatesTsExt, StatesCurrentReadCmdBlock, StatesDiscoverCmdBlock,
@@ -31,20 +31,18 @@ pub use self::{diff_info_spec::DiffInfoSpec, diff_state_spec::DiffStateSpec};
 mod diff_info_spec;
 mod diff_state_spec;
 
-pub struct DiffCmd<'cmd, CmdCtxTypeParamsT, Scope>(PhantomData<(E, &'cmd O, PKeys, Scope)>);
+pub struct DiffCmd<CmdCtxTypeParamsT, Scope>(PhantomData<(CmdCtxTypeParamsT, Scope)>);
 
-impl<'cmd, CmdCtxTypeParamsT, Scope> Debug for DiffCmd<'cmd, CmdCtxTypeParamsT, Scope> {
+impl<CmdCtxTypeParamsT, Scope> Debug for DiffCmd<CmdCtxTypeParamsT, Scope> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("DiffCmd").field(&self.0).finish()
     }
 }
 
-impl<'cmd, CmdCtxTypeParamsT>
-    DiffCmd<'cmd, CmdCtxTypeParamsT, SingleProfileSingleFlow<'cmd, CmdCtxTypeParamsT, SetUp>>
+impl<'ctx, CmdCtxTypeParamsT>
+    DiffCmd<CmdCtxTypeParamsT, SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    O: OutputWrite<E> + 'cmd,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
@@ -60,9 +58,12 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
-    pub async fn diff_stored<'ctx>(
+    pub async fn diff_stored(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StateDiffs, E>, E> {
+    ) -> Result<
+        CmdOutcome<StateDiffs, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         Self::diff::<CurrentStored, GoalStored>(cmd_ctx).await
     }
 
@@ -76,14 +77,17 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
-    pub async fn diff<'ctx, StatesTs0, StatesTs1>(
+    pub async fn diff<StatesTs0, StatesTs1>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StateDiffs, E>, E>
+    ) -> Result<
+        CmdOutcome<StateDiffs, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    >
     where
         StatesTs0: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
         StatesTs1: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
     {
-        let mut cmd_execution_builder = CmdExecution::<StateDiffs, _, _>::builder();
+        let mut cmd_execution_builder = CmdExecution::<StateDiffs, _>::builder();
         cmd_execution_builder = Self::states_fetch_cmd_block_append(
             cmd_execution_builder,
             StatesTs0::diff_state_spec(),
@@ -94,7 +98,7 @@ where
         );
 
         cmd_execution_builder = cmd_execution_builder.with_cmd_block(CmdBlockWrapper::new(
-            DiffCmdBlock::<_, _, StatesTs0, StatesTs1>::new(),
+            DiffCmdBlock::<_, StatesTs0, StatesTs1>::new(),
             |_state_diffs_ts0_and_ts1| StateDiffs::new(),
         ));
 
@@ -130,12 +134,10 @@ where
     }
 }
 
-impl<'cmd, CmdCtxTypeParamsT>
-    DiffCmd<'cmd, CmdCtxTypeParamsT, MultiProfileSingleFlow<'cmd, CmdCtxTypeParamsT, SetUp>>
+impl<'ctx, CmdCtxTypeParamsT>
+    DiffCmd<CmdCtxTypeParamsT, MultiProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    O: OutputWrite<E> + 'cmd,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns the [`state_diff`]`s between the stored current states of two
     /// profiles.
@@ -145,11 +147,11 @@ where
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
-    pub async fn diff_current_stored<'ctx>(
+    pub async fn diff_current_stored(
         cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         profile_a: &Profile,
         profile_b: &Profile,
-    ) -> Result<StateDiffs, E> {
+    ) -> Result<StateDiffs, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         let MultiProfileSingleFlowView {
             flow,
             profiles,
@@ -205,11 +207,9 @@ where
     }
 }
 
-impl<'cmd, CmdCtxTypeParamsT, Scope> DiffCmd<'cmd, CmdCtxTypeParamsT, Scope>
+impl<CmdCtxTypeParamsT, Scope> DiffCmd<CmdCtxTypeParamsT, Scope>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    O: OutputWrite<E> + 'cmd,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns the [`state_diff`]` for each [`Item`].
     ///
@@ -220,17 +220,17 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
-        flow: &Flow<CmdCtxTypeParamsT::AppError>,
+        flow: &Flow<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
-    ) -> Result<StateDiffs, E> {
+    ) -> Result<StateDiffs, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         let state_diffs = {
             let state_diffs_mut = flow
                 .graph()
                 .stream()
-                .map(Result::<_, E>::Ok)
+                .map(Result::<_, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>::Ok)
                 .try_filter_map(|item| async move {
                     let state_diff_opt = item
                         .state_diff_exec(params_specs, resources, states_a, states_b)
@@ -248,7 +248,7 @@ where
     }
 }
 
-impl<'cmd, CmdCtxTypeParamsT, Scope> Default for DiffCmd<'cmd, CmdCtxTypeParamsT, Scope> {
+impl<CmdCtxTypeParamsT, Scope> Default for DiffCmd<CmdCtxTypeParamsT, Scope> {
     fn default() -> Self {
         Self(PhantomData)
     }

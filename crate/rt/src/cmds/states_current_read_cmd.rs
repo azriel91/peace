@@ -1,23 +1,22 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
+    scopes::SingleProfileSingleFlow,
+};
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
-use peace_rt_model::{params::ParamsKeys, Error};
-use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmd_blocks::StatesCurrentReadCmdBlock;
 
 /// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentReadCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
+pub struct StatesCurrentReadCmd<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
 
 impl<CmdCtxTypeParamsT> StatesCurrentReadCmd<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Reads [`StatesCurrentStored`]s from storage.
     ///
@@ -28,11 +27,18 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StatesCurrentStored, E>, E> {
-        let cmd_execution_builder =
-            CmdExecution::<StatesCurrentStored, _, _>::builder().with_cmd_block(
-                CmdBlockWrapper::new(StatesCurrentReadCmdBlock::new(), std::convert::identity),
-            );
+    ) -> Result<
+        CmdOutcome<
+            StatesCurrentStored,
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
+        let cmd_execution_builder = CmdExecution::<StatesCurrentStored, _>::builder()
+            .with_cmd_block(CmdBlockWrapper::new(
+                StatesCurrentReadCmdBlock::new(),
+                std::convert::identity,
+            ));
 
         #[cfg(feature = "output_progress")]
         let cmd_execution_builder = cmd_execution_builder.with_progress_render_enabled(false);

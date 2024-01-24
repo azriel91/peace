@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -8,7 +8,7 @@ use peace_resources::{
     states::{States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{params::ParamsKeys, Error};
+use peace_rt_model::Error;
 use peace_rt_model_core::{ApplyCmdError, ItemsStateStoredStale, StateStoredAndDiscovered};
 
 cfg_if::cfg_if! {
@@ -79,8 +79,7 @@ impl<CmdCtxTypeParamsT, ApplyStoreStateSync> Debug
 
 impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncNone>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers current states.
     pub fn none() -> Self {
@@ -90,8 +89,7 @@ where
 
 impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrent>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
@@ -101,8 +99,7 @@ where
 
 impl<CmdCtxTypeParamsT> ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
@@ -113,8 +110,7 @@ where
 impl<CmdCtxTypeParamsT>
     ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrentAndGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
@@ -125,16 +121,14 @@ where
 impl<CmdCtxTypeParamsT, ApplyStoreStateSync>
     ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSync>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
         cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, SetUp>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<ItemsStateStoredStale, E>
-    where
-        E: std::error::Error + From<Error> + Send + 'static,
+    ) -> Result<ItemsStateStoredStale, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>
     {
         let items_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
             ItemsStateStoredStale::new(),
@@ -231,13 +225,11 @@ where
 impl<CmdCtxTypeParamsT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncNone>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = Self::InputT;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -256,9 +248,15 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         outcome_collate(input, OutcomeResult::Ok)
     }
 }
@@ -267,13 +265,11 @@ where
 impl<CmdCtxTypeParamsT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrent>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = (StatesCurrentStored, StatesCurrent);
     type Outcome = Self::InputT;
-    type PKeys = PKeys;
 
     fn input_fetch(
         &self,
@@ -305,9 +301,15 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let (states_current_stored, states_current) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -341,13 +343,11 @@ where
 impl<CmdCtxTypeParamsT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = (StatesGoalStored, StatesGoal);
     type Outcome = Self::InputT;
-    type PKeys = PKeys;
 
     fn input_fetch(
         &self,
@@ -379,9 +379,15 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let (states_goal_stored, states_goal) = &mut input;
 
         let state_goal_stale_result = Self::items_state_stored_stale(
@@ -415,10 +421,9 @@ where
 impl<CmdCtxTypeParamsT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypeParamsT, ApplyStoreStateSyncCurrentAndGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = (
         StatesCurrentStored,
         StatesCurrent,
@@ -426,7 +431,6 @@ where
         StatesGoal,
     );
     type Outcome = Self::InputT;
-    type PKeys = PKeys;
 
     fn input_fetch(
         &self,
@@ -472,9 +476,15 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
@@ -570,25 +580,25 @@ fn input_fetch_goal(
     Ok((states_goal_stored, states_goal))
 }
 
-fn outcome_collate<E, InputT>(
+fn outcome_collate<AppErrorT, InputT>(
     states_stored_and_discovered: InputT,
-    outcome_result: OutcomeResult<E>,
-) -> Result<CmdBlockOutcome<InputT, E>, E>
+    outcome_result: OutcomeResult<AppErrorT>,
+) -> Result<CmdBlockOutcome<InputT, AppErrorT>, AppErrorT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
+    AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
 {
     match outcome_result {
         OutcomeResult::Ok => Ok(CmdBlockOutcome::Single(states_stored_and_discovered)),
         OutcomeResult::StatesCurrentOutOfSync {
             items_state_stored_stale,
-        } => Err(E::from(Error::ApplyCmdError(
+        } => Err(AppErrorT::from(Error::ApplyCmdError(
             ApplyCmdError::StatesCurrentOutOfSync {
                 items_state_stored_stale,
             },
         ))),
         OutcomeResult::StatesGoalOutOfSync {
             items_state_stored_stale,
-        } => Err(E::from(Error::ApplyCmdError(
+        } => Err(AppErrorT::from(Error::ApplyCmdError(
             ApplyCmdError::StatesGoalOutOfSync {
                 items_state_stored_stale,
             },

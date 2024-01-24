@@ -3,14 +3,13 @@ use std::{collections::VecDeque, fmt::Debug};
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
 use interruptible::InterruptSignal;
 use peace_cmd::{
-    ctx::CmdCtx,
+    ctx::{CmdCtx, CmdCtxTypeParams, CmdCtxTypeParamsConstrained},
     scopes::{
         SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
     },
 };
 use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resources};
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 
 use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
@@ -47,8 +46,7 @@ mod cmd_execution_error_builder;
 #[derive(Debug)]
 pub struct CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
@@ -62,21 +60,20 @@ where
 impl<ExecutionOutcome, CmdCtxTypeParamsT> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT> {
         CmdExecutionBuilder::new()
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<'ctx, O>(
+    pub async fn exec<'ctx>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
-    where
-        O: OutputWrite<E>,
-    {
+    ) -> Result<
+        CmdOutcome<ExecutionOutcome, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let Self {
             cmd_blocks,
             execution_outcome_fetch,
@@ -193,15 +190,17 @@ async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, SetUp>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
-) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
+) -> Result<
+    CmdOutcome<ExecutionOutcome, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+    <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     let cmd_view_and_progress_result: Result<
-        CmdViewAndProgress<'_, '_, _, _>,
-        CmdBlockStreamBreak<'_, '_, _, _, _>,
+        CmdViewAndProgress<'_, '_, _>,
+        CmdBlockStreamBreak<'_, '_, _, _>,
     > = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
         let cmd_block_next = cmd_blocks.next();
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
@@ -301,11 +300,13 @@ fn outcome_extract<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
     >,
     cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
-) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
+) -> Result<
+    CmdOutcome<ExecutionOutcome, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+    <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     let (cmd_view_and_progress, cmd_block_index_and_error, cmd_block_index_next) =
         match cmd_view_and_progress_result {
@@ -341,13 +342,15 @@ where
 
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
-            CmdBlockError::InputFetch(resource_fetch_error) => Err(E::from(
-                peace_rt_model::Error::from(CmdExecutionErrorBuilder::build::<_, _, _, _>(
-                    cmd_blocks.iter(),
-                    cmd_block_index,
-                    resource_fetch_error,
-                )),
-            )),
+            CmdBlockError::InputFetch(resource_fetch_error) => Err(
+                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError::from(
+                    peace_rt_model::Error::from(CmdExecutionErrorBuilder::build::<_, _, _>(
+                        cmd_blocks.iter(),
+                        cmd_block_index,
+                        resource_fetch_error,
+                    )),
+                ),
+            ),
             CmdBlockError::Exec(error) => Err(error),
             CmdBlockError::Interrupt { stream_outcome } => {
                 let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
@@ -437,8 +440,7 @@ where
 
 struct CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, SetUp>,
     #[cfg(feature = "output_progress")]
@@ -449,8 +451,7 @@ where
 enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// An interruption happened between `CmdBlock` executions.
     Interrupt {
@@ -466,11 +467,13 @@ where
 struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>,
     /// Index of the `CmdBlock` that erred.
     cmd_block_index: usize,
-    cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
+    cmd_block_error: CmdBlockError<
+        ExecutionOutcome,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    >,
 }

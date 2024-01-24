@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::FutureExt;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -10,7 +10,7 @@ use peace_resources::{
     states::{ts::Clean, StatesClean},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{fn_graph::StreamOpts, params::ParamsKeys, Error};
+use peace_rt_model::fn_graph::StreamOpts;
 use peace_rt_model_core::IndexMap;
 
 cfg_if::cfg_if! {
@@ -25,12 +25,11 @@ cfg_if::cfg_if! {
 /// This calls [`Item::state_clean`] for each item, and groups them together
 /// into `StatesClean`.
 #[derive(Debug)]
-pub struct StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
+pub struct StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
 
 impl<CmdCtxTypeParamsT> StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a new `StatesCleanInsertionCmdBlock`.
     pub fn new() -> Self {
@@ -47,13 +46,11 @@ impl<CmdCtxTypeParamsT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypeParam
 #[async_trait(?Send)]
 impl<CmdCtxTypeParamsT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = StatesClean;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -66,9 +63,15 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
             flow,

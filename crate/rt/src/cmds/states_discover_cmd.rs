@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
-    ctx::CmdCtx,
+    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_cmd_model::CmdOutcome;
@@ -12,11 +12,11 @@ use peace_resources::{
     states::{StatesCurrent, StatesGoal},
     Resources,
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage};
+use peace_rt_model::{ItemGraph, Storage};
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 
-pub struct StatesDiscoverCmd<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
+pub struct StatesDiscoverCmd<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
 
 impl<CmdCtxTypeParamsT> Debug for StatesDiscoverCmd<CmdCtxTypeParamsT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -26,9 +26,7 @@ impl<CmdCtxTypeParamsT> Debug for StatesDiscoverCmd<CmdCtxTypeParamsT> {
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmd<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Runs [`try_state_current`] for each [`Item`].
     ///
@@ -50,7 +48,10 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
+    ) -> Result<
+        CmdOutcome<StatesCurrent, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         Self::current_with(cmd_ctx, true).await
     }
 
@@ -71,8 +72,11 @@ where
     pub async fn current_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
+    ) -> Result<
+        CmdOutcome<StatesCurrent, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
+        let mut cmd_execution = CmdExecution::<StatesCurrent, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current(),
@@ -118,7 +122,10 @@ where
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
+    ) -> Result<
+        CmdOutcome<StatesGoal, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         Self::goal_with(cmd_ctx, true).await
     }
 
@@ -139,8 +146,11 @@ where
     pub async fn goal_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
+    ) -> Result<
+        CmdOutcome<StatesGoal, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
+        let mut cmd_execution = CmdExecution::<StatesGoal, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::goal(),
@@ -195,7 +205,13 @@ where
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
+    ) -> Result<
+        CmdOutcome<
+            (StatesCurrent, StatesGoal),
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         Self::current_and_goal_with(cmd_ctx, true).await
     }
 
@@ -218,8 +234,14 @@ where
     pub async fn current_and_goal_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
-        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()
+    ) -> Result<
+        CmdOutcome<
+            (StatesCurrent, StatesGoal),
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
+        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current_and_goal(),
@@ -261,10 +283,10 @@ where
 
     // TODO: This duplicates a bit of code with `EnsureCmd` and `CleanCmd`.
     async fn serialize_current(
-        item_graph: &ItemGraph<E>,
+        item_graph: &ItemGraph<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
-    ) -> Result<(), E> {
+    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -283,10 +305,10 @@ where
     }
 
     async fn serialize_goal(
-        item_graph: &ItemGraph<E>,
+        item_graph: &ItemGraph<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_goal: &StatesGoal,
-    ) -> Result<(), E> {
+    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();

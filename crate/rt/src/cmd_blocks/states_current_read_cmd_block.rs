@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{FlowId, ItemId};
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -11,7 +11,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
+use peace_rt_model::{StatesSerializer, Storage};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -28,12 +28,11 @@ cfg_if::cfg_if! {
 ///
 /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
 #[derive(Debug)]
-pub struct StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>(PhantomData<(CmdCtxTypeParamsT)>);
+pub struct StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
 
 impl<CmdCtxTypeParamsT> StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a new `StatesCurrentReadCmdBlock`.
     pub fn new() -> Self {
@@ -43,7 +42,8 @@ where
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-    ) -> Result<StatesCurrentStored, E> {
+    ) -> Result<StatesCurrentStored, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>
+    {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
@@ -76,13 +76,11 @@ impl<CmdCtxTypeParamsT> Default for StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>
 #[async_trait(?Send)]
 impl<CmdCtxTypeParamsT> CmdBlock for StatesCurrentReadCmdBlock<CmdCtxTypeParamsT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = StatesCurrentStored;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -95,9 +93,15 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             states_type_reg,
             resources,

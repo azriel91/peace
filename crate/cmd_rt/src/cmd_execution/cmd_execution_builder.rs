@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fmt::Debug};
 
+use peace_cmd::ctx::CmdCtxTypeParamsConstrained;
 use peace_resources::{resources::ts::SetUp, Resource, Resources};
-use peace_rt_model::params::ParamsKeys;
 
 use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 
@@ -13,8 +13,7 @@ use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 pub struct CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
@@ -34,8 +33,7 @@ where
 impl<ExecutionOutcome, CmdCtxTypeParamsT> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
-    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     pub fn new() -> Self {
         Self::default()
@@ -53,8 +51,11 @@ where
         >,
     ) -> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
     where
-        CB: CmdBlock<CmdCtxTypeParamsT, Outcome = BlockOutcomeNext, InputT = InputT>
-            + Unpin
+        CB: CmdBlock<
+                CmdCtxTypeParams = CmdCtxTypeParamsT,
+                Outcome = BlockOutcomeNext,
+                InputT = InputT,
+            > + Unpin
             + 'static,
         ExecutionOutcome: Debug + Resource + Unpin + 'static,
         BlockOutcomeNext: Debug + Resource + Unpin + 'static,
@@ -108,7 +109,10 @@ where
     }
 
     /// Returns the `CmdExecution` to execute.
-    pub fn build(self) -> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT> {
+    pub fn build(self) -> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
+    where
+        CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    {
         let CmdExecutionBuilder {
             cmd_blocks,
             execution_outcome_fetch,
@@ -128,9 +132,8 @@ where
 impl<ExecutionOutcome, CmdCtxTypeParamsT> Default
     for CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT>
 where
-    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Resource + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     fn default() -> Self {
         Self {

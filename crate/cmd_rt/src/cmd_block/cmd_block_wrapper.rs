@@ -2,10 +2,10 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use fn_graph::StreamOutcomeState;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
 use peace_resources::{resources::ts::SetUp, Resource};
-use peace_rt_model::params::ParamsKeys;
+
 use tynm::TypeParamsFmtOpts;
 
 use crate::{CmdBlock, CmdBlockError, CmdBlockRt};
@@ -44,7 +44,7 @@ pub struct CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome
 impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
     CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParamsT, InputT = InputT>,
+    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, InputT = InputT>,
 {
     /// Returns a new `CmdBlockWrapper`.
     ///
@@ -72,22 +72,27 @@ where
 impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
     for CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParamsT, Outcome = BlockOutcome, InputT = InputT> + Unpin,
-    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
+    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, Outcome = BlockOutcome, InputT = InputT>
+        + Unpin,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcome: Debug + Unpin + Send + Sync + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type ExecutionOutcome = ExecutionOutcome;
-    type PKeys = PKeys;
 
     async fn exec(
         &self,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
-    ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
+    ) -> Result<
+        (),
+        CmdBlockError<
+            ExecutionOutcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+    > {
         let cmd_block = &self.cmd_block;
         let input = cmd_block.input_fetch(cmd_view.resources)?;
 

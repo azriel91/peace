@@ -30,6 +30,7 @@ peace_params = { workspace = true }
 peace_resources = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
+peace_value_traits = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }

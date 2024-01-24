@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use futures::join;
 use peace_cfg::{FnCtx, ItemId};
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -15,7 +15,7 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{fn_graph::StreamOpts, params::ParamsKeys, Error, ItemBoxed};
+use peace_rt_model::{fn_graph::StreamOpts, ItemBoxed};
 use peace_rt_model_core::IndexMap;
 use tokio::sync::mpsc::{self, Receiver};
 
@@ -76,8 +76,7 @@ impl<CmdCtxTypeParamsT, DiscoverFor> Debug
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
@@ -91,8 +90,7 @@ where
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
@@ -106,8 +104,7 @@ where
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
@@ -121,8 +118,7 @@ where
 
 impl<CmdCtxTypeParamsT, DiscoverFor> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
     DiscoverFor: Discover,
 {
     /// Indicate that the progress tracker should be marked complete on success.
@@ -140,8 +136,10 @@ where
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
-        outcomes_tx: &tokio::sync::mpsc::Sender<ItemDiscoverOutcome<E>>,
-        item: &ItemBoxed<E>,
+        outcomes_tx: &tokio::sync::mpsc::Sender<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >,
+        item: &ItemBoxed<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
     ) {
         let item_id = item.id();
         let fn_ctx = FnCtx::new(
@@ -218,8 +216,8 @@ where
     #[cfg(feature = "output_progress")]
     fn discover_progress_update(
         progress_complete_on_success: bool,
-        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
         progress_tx: &Sender<CmdProgressUpdate>,
         item_id: &ItemId,
     ) {
@@ -241,7 +239,7 @@ where
 }
 
 #[derive(Debug)]
-pub enum ItemDiscoverOutcome<E> {
+pub enum ItemDiscoverOutcome<AppErrorT> {
     /// Discover succeeded.
     Success {
         item_id: ItemId,
@@ -253,20 +251,18 @@ pub enum ItemDiscoverOutcome<E> {
         item_id: ItemId,
         state_current: Option<BoxDtDisplay>,
         state_goal: Option<BoxDtDisplay>,
-        error: E,
+        error: AppErrorT,
     },
 }
 
 #[async_trait(?Send)]
 impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = States<Current>;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -279,9 +275,15 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
             flow,
@@ -290,8 +292,9 @@ where
             ..
         } = cmd_view;
 
-        let (outcomes_tx, outcomes_rx) =
-            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let (outcomes_tx, outcomes_rx) = mpsc::channel::<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
@@ -341,13 +344,20 @@ where
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut outcomes_rx: Receiver<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >,
         mut states_current_mut: StatesMut<Current>,
-    ) -> Result<(States<Current>, IndexMap<ItemId, E>), E> {
+    ) -> Result<
+        (
+            States<Current>,
+            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        ),
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
             Self::outcome_collate(&mut states_current_mut, &mut errors, item_outcome)?;
@@ -360,9 +370,11 @@ where
 
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
-        errors: &mut IndexMap<ItemId, E>,
-        outcome_partial: ItemDiscoverOutcome<E>,
-    ) -> Result<(), E> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -394,13 +406,11 @@ where
 #[async_trait(?Send)]
 impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = States<Goal>;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -413,9 +423,15 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
             flow,
@@ -424,8 +440,9 @@ where
             ..
         } = cmd_view;
 
-        let (outcomes_tx, outcomes_rx) =
-            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let (outcomes_tx, outcomes_rx) = mpsc::channel::<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
@@ -475,13 +492,20 @@ where
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut outcomes_rx: Receiver<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >,
         mut states_goal_mut: StatesMut<Goal>,
-    ) -> Result<(States<Goal>, IndexMap<ItemId, E>), E> {
+    ) -> Result<
+        (
+            States<Goal>,
+            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        ),
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
             Self::outcome_collate(&mut states_goal_mut, &mut errors, item_outcome)?;
@@ -494,9 +518,11 @@ where
 
     fn outcome_collate(
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, E>,
-        outcome_partial: ItemDiscoverOutcome<E>,
-    ) -> Result<(), E> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -529,13 +555,11 @@ where
 impl<CmdCtxTypeParamsT> CmdBlock
     for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
-    type Error = E;
+    type CmdCtxTypeParams = CmdCtxTypeParamsT;
     type InputT = ();
     type Outcome = (States<Current>, States<Goal>);
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -561,9 +585,15 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
             flow,
@@ -572,8 +602,9 @@ where
             ..
         } = cmd_view;
 
-        let (outcomes_tx, outcomes_rx) =
-            mpsc::channel::<ItemDiscoverOutcome<E>>(flow.graph().node_count());
+        let (outcomes_tx, outcomes_rx) = mpsc::channel::<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
@@ -625,14 +656,22 @@ where
 
 impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<ItemDiscoverOutcome<E>>,
+        mut outcomes_rx: Receiver<
+            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        >,
         mut states_current_mut: StatesMut<Current>,
         mut states_goal_mut: StatesMut<Goal>,
-    ) -> Result<(States<Current>, States<Goal>, IndexMap<ItemId, E>), E> {
+    ) -> Result<
+        (
+            States<Current>,
+            States<Goal>,
+            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        ),
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+    > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
             Self::outcome_collate(
@@ -652,9 +691,11 @@ where
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, E>,
-        outcome_partial: ItemDiscoverOutcome<E>,
-    ) -> Result<(), E> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<
+            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -692,41 +733,41 @@ where
 /// Behaviour for each discover variant.
 #[async_trait::async_trait(?Send)]
 pub trait Discover {
-    async fn discover<E>(
-        item: &ItemBoxed<E>,
+    async fn discover<AppErrorT>(
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
-        Option<Result<Option<BoxDtDisplay>, E>>,
-        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
     )
     where
-        E: std::error::Error + From<Error> + Send + 'static;
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>;
 
     #[cfg(feature = "output_progress")]
-    fn progress_update<E>(
+    fn progress_update<AppErrorT>(
         progress_complete_on_success: bool,
-        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
     ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
     where
-        E: std::error::Error + From<Error> + Send + 'static;
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>;
 }
 
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForCurrent {
-    async fn discover<E>(
-        item: &ItemBoxed<E>,
+    async fn discover<AppErrorT>(
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
-        Option<Result<Option<BoxDtDisplay>, E>>,
-        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
     )
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_current_result = item
             .state_current_try_exec(params_specs, resources, fn_ctx)
@@ -738,11 +779,11 @@ impl Discover for DiscoverForCurrent {
     #[cfg(feature = "output_progress")]
     fn progress_update<E>(
         progress_complete_on_success: bool,
-        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        _states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        _states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
     ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         states_current_result.map(|states_current_result| match states_current_result {
             Ok(_) => {
@@ -764,17 +805,17 @@ impl Discover for DiscoverForCurrent {
 
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForGoal {
-    async fn discover<E>(
-        item: &ItemBoxed<E>,
+    async fn discover<AppErrorT>(
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
-        Option<Result<Option<BoxDtDisplay>, E>>,
-        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
     )
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_goal_result = item
             .state_goal_try_exec(params_specs, resources, fn_ctx)
@@ -786,11 +827,11 @@ impl Discover for DiscoverForGoal {
     #[cfg(feature = "output_progress")]
     fn progress_update<E>(
         progress_complete_on_success: bool,
-        _states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        _states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
     ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         states_goal_result.map(|states_goal_result| match states_goal_result {
             Ok(_) => {
@@ -812,17 +853,17 @@ impl Discover for DiscoverForGoal {
 
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForCurrentAndGoal {
-    async fn discover<E>(
-        item: &ItemBoxed<E>,
+    async fn discover<AppErrorT>(
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
-        Option<Result<Option<BoxDtDisplay>, E>>,
-        Option<Result<Option<BoxDtDisplay>, E>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
+        Option<Result<Option<BoxDtDisplay>, AppErrorT>>,
     )
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_current_result = item
             .state_current_try_exec(params_specs, resources, fn_ctx)
@@ -837,11 +878,11 @@ impl Discover for DiscoverForCurrentAndGoal {
     #[cfg(feature = "output_progress")]
     fn progress_update<E>(
         progress_complete_on_success: bool,
-        states_current_result: Option<&Result<Option<BoxDtDisplay>, E>>,
-        states_goal_result: Option<&Result<Option<BoxDtDisplay>, E>>,
+        states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
     ) -> Option<(ProgressUpdate, ProgressMsgUpdate)>
     where
-        E: std::error::Error + From<Error> + Send + 'static,
+        AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         states_current_result
             .zip(states_goal_result)

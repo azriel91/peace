@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
+use peace_cmd::ctx::CmdCtxTypeParamsConstrained;
 use peace_cmd_model::{CmdBlockDesc, CmdExecutionError};
 use peace_resources::ResourceFetchError;
-use peace_rt_model::params::ParamsKeys;
 
 use crate::CmdBlockRtBox;
 
@@ -52,8 +52,7 @@ impl CmdExecutionErrorBuilder {
         resource_fetch_error: ResourceFetchError,
     ) -> CmdExecutionError
     where
-        E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-        PKeys: ParamsKeys + 'static,
+        CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'f,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
         CmdBlockIterator: Iterator<Item = &'f CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
     {
