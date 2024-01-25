@@ -38,16 +38,20 @@ impl ProfileSelection {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FlowSelection {
+    NotSelected,
     Selected,
 }
 
 impl FlowSelection {
-    pub(crate) fn iter() -> std::array::IntoIter<Self, 1> {
-        [Self::Selected].into_iter()
+    pub(crate) fn iter() -> std::array::IntoIter<Self, 2> {
+        [Self::NotSelected, Self::Selected].into_iter()
     }
 
     pub(crate) fn type_param(&self) -> TypePath {
         match self {
+            Self::NotSelected => {
+                parse_quote!(crate::scopes::type_params::FlowNotSelected)
+            }
             Self::Selected => {
                 parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, AppError>)
             }

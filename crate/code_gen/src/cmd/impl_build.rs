@@ -26,7 +26,9 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     ProfileSelection::iter().fold(
         proc_macro2::TokenStream::new(),
         |tokens, profile_selection| {
-            match (scope_struct.scope().profile_count(), profile_selection) {
+            let scope = scope_struct.scope();
+            let profile_count = scope.profile_count();
+            match (profile_count, profile_selection) {
                 // For `ProfileCount::None` it only makes sense to have `ProfileSelection::NotSelected`
                 (
                     ProfileCount::None,
@@ -53,6 +55,35 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             }
 
             FlowSelection::iter().fold(tokens, |tokens, flow_selection| {
+                match (scope, profile_selection, flow_selection) {
+                    (
+                        Scope::NoProfileNoFlow,
+                        ProfileSelection::NotSelected,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::SingleProfileNoFlow,
+                        ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::SingleProfileSingleFlow,
+                        ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
+                        FlowSelection::Selected,
+                    )
+                    | (
+                        Scope::MultiProfileNoFlow,
+                        ProfileSelection::NotSelected | ProfileSelection::FilterFunction,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::MultiProfileSingleFlow,
+                        ProfileSelection::NotSelected | ProfileSelection::FilterFunction,
+                        FlowSelection::Selected,
+                    ) => {}
+                    _ => return tokens,
+                }
+
                 WorkspaceParamsSelection::iter().fold(
                     tokens,
                     |tokens, workspace_params_selection| {
@@ -860,6 +891,9 @@ fn scope_builder_deconstruct(
 
     if scope.flow_count() == FlowCount::One {
         match flow_selection {
+            FlowSelection::NotSelected => scope_builder_fields.push(parse_quote! {
+                flow_selection: crate::scopes::type_params::FlowNotSelected
+            }),
             FlowSelection::Selected => scope_builder_fields.push(parse_quote! {
                 flow_selection: crate::scopes::type_params::FlowSelected(flow)
             }),

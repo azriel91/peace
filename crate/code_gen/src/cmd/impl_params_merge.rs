@@ -1,7 +1,10 @@
 use quote::quote;
 use syn::parse_quote;
 
-use crate::cmd::{CmdCtxBuilderTypeBuilder, ImplHeaderBuilder, ParamsScope, ScopeStruct};
+use crate::cmd::{
+    with_params::cmd_ctx_builder_with_params_selected, ImplHeaderBuilder, ParamsScope,
+    ProfileCount, ScopeStruct,
+};
 
 /// Generates the `CmdCtxBuilder::*_params_merge` methods for each params type.
 ///
@@ -11,8 +14,10 @@ pub fn impl_params_merge(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     ParamsScope::iter().fold(
         proc_macro2::TokenStream::new(),
         |mut impl_tokens, params_scope| {
-            if (!scope_struct.scope().profile_params_supported()
-                && params_scope == ParamsScope::Profile)
+            let scope = scope_struct.scope();
+            if ((scope.profile_count() == ProfileCount::Multiple
+                && matches!(params_scope, ParamsScope::Profile | ParamsScope::Flow))
+                || !scope.profile_params_supported() && params_scope == ParamsScope::Profile)
                 || (!scope_struct.scope().flow_params_supported()
                     && params_scope == ParamsScope::Flow)
             {
@@ -48,33 +53,8 @@ fn impl_params_merge_for(
         )
     };
 
-    let builder_type = {
-        let builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone());
-        match params_scope {
-            ParamsScope::Workspace => builder_type_builder
-                .with_workspace_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<WorkspaceParamsK>
-                ))
-                .with_workspace_params_selection(parse_quote!(
-                    crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
-                )),
-            ParamsScope::Profile => builder_type_builder
-                .with_profile_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<ProfileParamsK>
-                ))
-                .with_profile_params_selection(parse_quote!(
-                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
-                )),
-            ParamsScope::Flow => builder_type_builder
-                .with_flow_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<FlowParamsK>
-                ))
-                .with_flow_params_selection(parse_quote!(
-                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
-                )),
-        }
-        .build()
-    };
+    let builder_type =
+        cmd_ctx_builder_with_params_selected(scope_builder_name, scope_struct, params_scope);
     let impl_header = {
         let impl_header_builder = ImplHeaderBuilder::new(builder_type);
         match params_scope {

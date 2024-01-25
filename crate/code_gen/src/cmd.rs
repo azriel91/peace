@@ -26,7 +26,6 @@ mod impl_with_param;
 mod impl_with_params_k;
 mod impl_with_profile;
 mod impl_with_profile_filter;
-mod param_key_impl;
 mod params_scope;
 mod profile_count;
 mod scope;

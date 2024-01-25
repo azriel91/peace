@@ -1,32 +1,37 @@
-use syn::{parse_quote, Ident};
+use syn::{parse_quote, Ident, Path};
 
-use crate::cmd::ParamsScope;
+use crate::cmd::{
+    type_params_selection::{FlowParamsSelection, ProfileParamsSelection},
+    CmdCtxBuilderTypeBuilder, ParamsScope, ScopeStruct,
+};
 
-pub(crate) fn params_selection_types_some(params_scope: ParamsScope) -> (Ident, Ident, Ident) {
-    let (params_keys_assoc_type, params_selection_assoc_type, params_selection_struct): (
-        Ident,
-        Ident,
-        Ident,
-    ) = match params_scope {
-        ParamsScope::Workspace => (
-            parse_quote!(WorkspaceParamsKMaybe),
-            parse_quote!(WorkspaceParamsSelection),
-            parse_quote!(WorkspaceParamsSome),
-        ),
-        ParamsScope::Profile => (
-            parse_quote!(ProfileParamsKMaybe),
-            parse_quote!(ProfileParamsSelection),
-            parse_quote!(ProfileParamsSome),
-        ),
-        ParamsScope::Flow => (
-            parse_quote!(FlowParamsKMaybe),
-            parse_quote!(FlowParamsSelection),
-            parse_quote!(FlowParamsSome),
-        ),
-    };
-    (
-        params_keys_assoc_type,
-        params_selection_assoc_type,
-        params_selection_struct,
-    )
+pub(crate) fn cmd_ctx_builder_with_params_selected(
+    scope_builder_name: &Ident,
+    scope_struct: &ScopeStruct,
+    params_scope: ParamsScope,
+) -> Path {
+    let builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone());
+    let profile_count = scope_struct.scope().profile_count();
+    match params_scope {
+        ParamsScope::Workspace => builder_type_builder
+            .with_workspace_params_k_maybe(parse_quote!(
+                peace_rt_model::params::KeyKnown<WorkspaceParamsK>
+            ))
+            .with_workspace_params_selection(parse_quote!(
+                crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+            )),
+        ParamsScope::Profile => {
+            let profile_params_selection = ProfileParamsSelection::Some;
+            builder_type_builder
+                .with_profile_params_k_maybe(profile_params_selection.k_maybe_type_param())
+                .with_profile_params_selection(profile_params_selection.type_param(profile_count))
+        }
+        ParamsScope::Flow => {
+            let flow_params_selection = FlowParamsSelection::Some;
+            builder_type_builder
+                .with_flow_params_k_maybe(flow_params_selection.k_maybe_type_param())
+                .with_flow_params_selection(flow_params_selection.type_param(profile_count))
+        }
+    }
+    .build()
 }

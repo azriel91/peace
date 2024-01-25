@@ -2,8 +2,8 @@ use quote::quote;
 use syn::{parse_quote, Path};
 
 use crate::cmd::{
-    scope_builder_fields, CmdCtxBuilderTypeBuilder, ImplHeaderBuilder, ParamsScope, Scope,
-    ScopeStruct,
+    scope_builder_fields, with_params::cmd_ctx_builder_with_params_selected,
+    CmdCtxBuilderTypeBuilder, ImplHeaderBuilder, ParamsScope, Scope, ScopeStruct,
 };
 
 /// Generates the `with_workspace_param_value` / `with_profile_param_value` /
@@ -138,33 +138,8 @@ fn impl_with_param_key_unknown(
         }
         .build()
     };
-    let return_type = {
-        let builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone());
-        match params_scope {
-            ParamsScope::Workspace => builder_type_builder
-                .with_workspace_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<WorkspaceParamsK>
-                ))
-                .with_workspace_params_selection(parse_quote!(
-                    crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
-                )),
-            ParamsScope::Profile => builder_type_builder
-                .with_profile_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<ProfileParamsK>
-                ))
-                .with_profile_params_selection(parse_quote!(
-                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
-                )),
-            ParamsScope::Flow => builder_type_builder
-                .with_flow_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<FlowParamsK>
-                ))
-                .with_flow_params_selection(parse_quote!(
-                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
-                )),
-        }
-        .build()
-    };
+    let return_type =
+        cmd_ctx_builder_with_params_selected(scope_builder_name, scope_struct, params_scope);
 
     quote! {
         #impl_header
@@ -304,33 +279,8 @@ fn impl_with_param_key_known(
     // >
     // ```
 
-    let builder_type = {
-        let builder_type_builder = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone());
-        match params_scope {
-            ParamsScope::Workspace => builder_type_builder
-                .with_workspace_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<WorkspaceParamsK>
-                ))
-                .with_workspace_params_selection(parse_quote!(
-                    crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
-                )),
-            ParamsScope::Profile => builder_type_builder
-                .with_profile_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<ProfileParamsK>
-                ))
-                .with_profile_params_selection(parse_quote!(
-                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
-                )),
-            ParamsScope::Flow => builder_type_builder
-                .with_flow_params_k_maybe(parse_quote!(
-                    peace_rt_model::params::KeyKnown<FlowParamsK>
-                ))
-                .with_flow_params_selection(parse_quote!(
-                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
-                )),
-        }
-        .build()
-    };
+    let builder_type =
+        cmd_ctx_builder_with_params_selected(scope_builder_name, scope_struct, params_scope);
     let return_type = builder_type.clone();
     let impl_header = {
         let impl_header_builder = ImplHeaderBuilder::new(builder_type);
