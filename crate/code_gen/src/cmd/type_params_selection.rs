@@ -1,4 +1,6 @@
-use syn::{parse_quote, FieldValue, GenericArgument, TypePath};
+use syn::{parse_quote, FieldValue, TypePath};
+
+use crate::cmd::ProfileCount;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProfileSelection {
@@ -20,7 +22,7 @@ impl ProfileSelection {
         .into_iter()
     }
 
-    pub(crate) fn type_param(self) -> GenericArgument {
+    pub(crate) fn type_param(self) -> TypePath {
         match self {
             Self::NotSelected => parse_quote!(crate::scopes::type_params::ProfileNotSelected),
             Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
@@ -44,7 +46,7 @@ impl FlowSelection {
         [Self::Selected].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self) -> TypePath {
         match self {
             Self::Selected => {
                 parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, AppError>)
@@ -64,7 +66,7 @@ impl WorkspaceParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self) -> TypePath {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::WorkspaceParamsNone),
             Self::Some => parse_quote! {
@@ -104,11 +106,19 @@ impl ProfileParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self, profile_count: ProfileCount) -> TypePath {
         match self {
-            Self::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
-            Self::Some => parse_quote! {
-                crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
+            Self::None => {
+                parse_quote!(crate::scopes::type_params::ProfileParamsNone)
+            }
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
+                ProfileCount::One => parse_quote! {
+                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    crate::scopes::type_params::ProfileParamsSomeMulti<ProfileParamsK>
+                },
             },
         }
     }
@@ -120,16 +130,23 @@ impl ProfileParamsSelection {
         }
     }
 
-    pub(crate) fn deconstruct(self) -> FieldValue {
+    pub(crate) fn deconstruct(self, profile_count: ProfileCount) -> FieldValue {
         match self {
             Self::None => {
                 parse_quote!(
                     profile_params_selection: crate::scopes::type_params::ProfileParamsNone
                 )
             }
-            Self::Some => parse_quote! {
-                profile_params_selection:
-                    crate::scopes::type_params::ProfileParamsSome(profile_params)
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote! {
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsNone
+                },
+                ProfileCount::One => parse_quote! {
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsSome(profile_params)
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsSomeMulti(profile_to_profile_params)
+                },
             },
         }
     }
@@ -146,13 +163,19 @@ impl FlowParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self, profile_count: ProfileCount) -> TypePath {
         match self {
             Self::None => {
                 parse_quote!(crate::scopes::type_params::FlowParamsNone)
             }
-            Self::Some => parse_quote! {
-                crate::scopes::type_params::FlowParamsSome<FlowParamsK>
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote!(crate::scopes::type_params::FlowParamsNone),
+                ProfileCount::One => parse_quote! {
+                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    crate::scopes::type_params::FlowParamsSomeMulti<FlowParamsK>
+                },
             },
         }
     }
@@ -164,14 +187,21 @@ impl FlowParamsSelection {
         }
     }
 
-    pub(crate) fn deconstruct(self) -> FieldValue {
+    pub(crate) fn deconstruct(self, profile_count: ProfileCount) -> FieldValue {
         match self {
             Self::None => {
                 parse_quote!(flow_params_selection: crate::scopes::type_params::FlowParamsNone)
             }
-            Self::Some => parse_quote! {
-                flow_params_selection:
-                    crate::scopes::type_params::FlowParamsSome(flow_params)
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote! {
+                    flow_params_selection: crate::scopes::type_params::FlowParamsNone
+                },
+                ProfileCount::One => parse_quote! {
+                    flow_params_selection: crate::scopes::type_params::FlowParamsSome(flow_params)
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    flow_params_selection: crate::scopes::type_params::FlowParamsSomeMulti(profile_to_flow_params)
+                },
             },
         }
     }

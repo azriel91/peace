@@ -164,8 +164,9 @@ fn impl_build_for(
     );
 
     let workspace_params_selection_type_param = workspace_params_selection.type_param();
-    let profile_params_selection_type_param = profile_params_selection.type_param();
-    let flow_params_selection_type_param = flow_params_selection.type_param();
+    let profile_params_selection_type_param =
+        profile_params_selection.type_param(scope.profile_count());
+    let flow_params_selection_type_param = flow_params_selection.type_param(scope.profile_count());
     let profile_selection_type_param = profile_selection.type_param();
     let flow_selection_type_param = flow_selection.type_param();
 
@@ -868,10 +869,10 @@ fn scope_builder_deconstruct(
     scope_builder_fields.push(parse_quote!(params_type_regs_builder));
     scope_builder_fields.push(workspace_params_selection.deconstruct());
     if scope.profile_params_supported() {
-        scope_builder_fields.push(profile_params_selection.deconstruct());
+        scope_builder_fields.push(profile_params_selection.deconstruct(scope.profile_count()));
     }
     if scope.flow_params_supported() {
-        scope_builder_fields.push(flow_params_selection.deconstruct());
+        scope_builder_fields.push(flow_params_selection.deconstruct(scope.profile_count()));
     }
 
     if scope.flow_count() == FlowCount::One {

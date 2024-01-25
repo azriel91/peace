@@ -1,7 +1,7 @@
 //! Types used for parameters type state for scopes.
 
 pub use self::{
-    flow_params_selection::{FlowParamsNone, FlowParamsSome},
+    flow_params_selection::{FlowParamsNone, FlowParamsSome, FlowParamsSomeMulti},
     flow_selection::{FlowNotSelected, FlowSelected},
     profile_params_selection::{ProfileParamsNone, ProfileParamsSome, ProfileParamsSomeMulti},
     profile_selection::{
