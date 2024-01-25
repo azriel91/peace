@@ -9,14 +9,6 @@ use syn::{parse_quote, Ident, Path, TypePath};
 pub struct CmdCtxBuilderTypeBuilder {
     /// Name of the scope builder struct.
     scope_builder_name: Ident,
-    /// Path of the output type.
-    ///
-    /// Defaults to `Output`.
-    ///
-    /// You may want to set this to be one of:
-    ///
-    /// * `O`
-    output: TypePath,
     /// Path of the app error type.
     ///
     /// Defaults to `AppError`.
@@ -25,6 +17,14 @@ pub struct CmdCtxBuilderTypeBuilder {
     ///
     /// * `AppError`
     app_error: TypePath,
+    /// Path of the output type.
+    ///
+    /// Defaults to `Output`.
+    ///
+    /// You may want to set this to be one of:
+    ///
+    /// * `O`
+    output: TypePath,
     /// Path of the params keys type.
     ///
     /// By default this is not set, and the `ParamsKeysImpl` type is used as the
@@ -186,8 +186,8 @@ impl CmdCtxBuilderTypeBuilder {
 
     pub fn build(self) -> Path {
         let CmdCtxBuilderTypeBuilder {
-            output,
             app_error,
+            output,
             params_keys,
             scope_builder_name,
             workspace_params_k_maybe,
@@ -212,8 +212,8 @@ impl CmdCtxBuilderTypeBuilder {
 
         let cmd_ctx_builder_type_params_collector = quote! {
             crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                #output,
                 #app_error,
+                #output,
                 #params_keys,
                 #workspace_params_selection,
                 #profile_params_selection,

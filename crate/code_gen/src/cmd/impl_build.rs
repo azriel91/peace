@@ -211,8 +211,8 @@ fn impl_build_for(
     };
 
     let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
-        .with_output(parse_quote!(Output))
         .with_app_error(parse_quote!(AppError))
+        .with_output(parse_quote!(Output))
         .with_workspace_params_k_maybe(workspace_params_selection_k_maybe_type_param)
         .with_profile_params_k_maybe(profile_params_selection_k_maybe_type_param)
         .with_flow_params_k_maybe(flow_params_selection_k_maybe_type_param)
@@ -269,8 +269,8 @@ fn impl_build_for(
             #scope_type_path<
                 'ctx,
                 crate::ctx::CmdCtxTypeParamsCollector<
-                    Output,
                     AppError,
+                    Output,
                     #params_keys_impl,
                 >,
 
@@ -794,10 +794,10 @@ fn impl_build_for(
         }
 
         #impl_into_future_header,
-            crate::ctx::CmdCtxTypeParamsCollector<Output, AppError, #params_keys_impl>:
+            crate::ctx::CmdCtxTypeParamsCollector<AppError, Output, #params_keys_impl>:
                 crate::ctx::CmdCtxTypeParamsConstrained<
-                    Output = Output,
                     AppError = AppError,
+                    Output = Output,
                     ParamsKeys = #params_keys_impl
                 >,
         {

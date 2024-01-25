@@ -43,61 +43,61 @@ impl<Scope> CmdCtx<Scope> {
 
 impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<'ctx, Output, AppError>(
+    pub fn builder_no_profile_no_flow<'ctx, AppError, Output>(
         output: &'ctx mut Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
-        NoProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
+        NoProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<'ctx, Output, AppError>(
+    pub fn builder_multi_profile_no_flow<'ctx, AppError, Output>(
         output: &'ctx mut Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
-        MultiProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
+        MultiProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<'ctx, Output, AppError>(
+    pub fn builder_multi_profile_single_flow<'ctx, AppError, Output>(
         output: &'ctx mut Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
-        MultiProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
+        MultiProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<'ctx, Output, AppError>(
+    pub fn builder_single_profile_no_flow<'ctx, AppError, Output>(
         output: &'ctx mut Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
-        SingleProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
+        SingleProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow<'ctx, Output, AppError>(
+    pub fn builder_single_profile_single_flow<'ctx, AppError, Output>(
         output: &'ctx mut Output,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<Output, AppError>,
-        SingleProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<Output, AppError>>,
+        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
+        SingleProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }

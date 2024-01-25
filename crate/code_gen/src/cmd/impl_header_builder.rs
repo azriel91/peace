@@ -10,14 +10,14 @@ pub(crate) struct ImplHeaderBuilder {
     lifetimes: Punctuated<LifetimeParam, Comma>,
     /// Defaults to `None`.
     trait_name: Option<Path>,
-    /// Defaults to `Output`.
-    output: Option<TypePath>,
-    /// Whether the `OutputWrite` type param should be constrained.
-    output_constraint_enabled: bool,
     /// Defaults to `AppError`.
     app_error: Option<TypePath>,
     /// Whether the `AppError` type param should be constrained.
     app_error_constraint_enabled: bool,
+    /// Defaults to `Output`.
+    output: Option<TypePath>,
+    /// Whether the `OutputWrite` type param should be constrained.
+    output_constraint_enabled: bool,
     /// Defaults to `WorkspaceParamsKMaybe`.
     workspace_params_k_maybe: Option<TypePath>,
     /// Defaults to `None`, you may wish to set this to `WorkspaceParamsK`.
@@ -49,10 +49,10 @@ impl ImplHeaderBuilder {
         Self {
             lifetimes: parse_quote!('ctx),
             trait_name: None,
-            output: Some(parse_quote!(Output)),
-            output_constraint_enabled: true,
             app_error: Some(parse_quote!(AppError)),
             app_error_constraint_enabled: true,
+            output: Some(parse_quote!(Output)),
+            output_constraint_enabled: true,
             workspace_params_k_maybe: Some(parse_quote!(WorkspaceParamsKMaybe)),
             workspace_params_k: None,
             profile_params_k_maybe: Some(parse_quote!(ProfileParamsKMaybe)),
@@ -156,10 +156,10 @@ impl ImplHeaderBuilder {
         let Self {
             lifetimes,
             trait_name,
-            output,
-            output_constraint_enabled,
             app_error,
             app_error_constraint_enabled,
+            output,
+            output_constraint_enabled,
             workspace_params_k_maybe,
             workspace_params_k,
             profile_params_k_maybe,
@@ -175,17 +175,17 @@ impl ImplHeaderBuilder {
         } = self;
 
         let mut where_predicates = Punctuated::<WherePredicate, Comma>::new();
-        if let Some((output, app_error)) = output.as_ref().zip(app_error.as_ref()) {
-            if output_constraint_enabled {
-                where_predicates.push(parse_quote!(
-                    #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
-                ));
-            }
-        };
         if let Some(app_error) = app_error.as_ref() {
             if app_error_constraint_enabled {
                 where_predicates.push(parse_quote!(
                     #app_error: peace_value_traits::AppError + From<peace_rt_model::Error>
+                ));
+            }
+        };
+        if let Some((output, app_error)) = output.as_ref().zip(app_error.as_ref()) {
+            if output_constraint_enabled {
+                where_predicates.push(parse_quote!(
+                    #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
                 ));
             }
         };
@@ -221,8 +221,8 @@ impl ImplHeaderBuilder {
         }
 
         let trait_name_for = trait_name.map(|trait_name| quote!(#trait_name for));
-        let output = output.map(|output| quote!(#output,));
         let app_error = app_error.map(|app_error| quote!(#app_error,));
+        let output = output.map(|output| quote!(#output,));
         let workspace_params_k_maybe = workspace_params_k_maybe
             .map(|workspace_params_k_maybe| quote!(#workspace_params_k_maybe,));
         let workspace_params_k =
@@ -252,8 +252,8 @@ impl ImplHeaderBuilder {
         quote! {
             impl<
                 #lifetimes,
-                #output
                 #app_error
+                #output
                 #workspace_params_k_maybe
                 #workspace_params_k
                 #profile_params_k_maybe
