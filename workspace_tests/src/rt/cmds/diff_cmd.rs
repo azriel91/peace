@@ -17,7 +17,8 @@ use peace::{
 
 use crate::{
     mock_item::{MockDest, MockDiff, MockItem, MockSrc, MockState},
-    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyState,
+    peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams,
+    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyItem, VecCopyState,
 };
 
 mod diff_info_spec;
@@ -718,9 +719,9 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", DiffCmd::<VecCopyError, (), (), ()>::default());
+    let debug_str = format!("{:?}", DiffCmd::<PeaceCmdCtxTypeParams, ()>::default());
     assert_eq!(
-        r#"DiffCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, &(), (), ())>)"#,
+        r#"DiffCmd(PhantomData<(workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams, ())>)"#,
         debug_str,
     );
 }

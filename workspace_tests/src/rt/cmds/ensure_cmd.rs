@@ -19,8 +19,9 @@ use tokio::sync::mpsc;
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
+    peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams,
     vec_copy_item::VecB,
-    NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
+    NoOpOutput, PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
 
 #[tokio::test]
@@ -1830,7 +1831,7 @@ mock: 1
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", EnsureCmd::<VecCopyError, NoOpOutput, ()>::default());
+    let debug_str = format!("{:?}", EnsureCmd::<PeaceCmdCtxTypeParams>::default());
     assert_eq!(
         r#"EnsureCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
         debug_str,

@@ -38,6 +38,7 @@ mod fn_name;
 mod fn_tracker_output;
 mod fn_tracker_presenter;
 mod no_op_output;
+mod peace_cmd_ctx_type_params;
 mod peace_test_error;
 mod test_support;
 mod vec_copy_item;

@@ -13,8 +13,9 @@ use peace::{
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
+    peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams,
     vec_copy_item::VecB,
-    NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
+    NoOpOutput, PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -1079,7 +1080,7 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesDiscoverCmd::<VecCopyError, NoOpOutput, ()>::default()
+        StatesDiscoverCmd::<PeaceCmdCtxTypeParams>::default()
     );
     assert_eq!(
         r#"StatesDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
