@@ -47,7 +47,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -69,7 +69,7 @@ where
 {
     pub(crate) fn new(
         output: &'ctx mut CmdCtxTypeParamsT::Output,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
         params_type_regs: ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
         workspace_params: WorkspaceParams<

@@ -57,7 +57,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profile this command operates on.
@@ -160,7 +160,7 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut CmdCtxTypeParamsT::Output,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,

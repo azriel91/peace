@@ -95,9 +95,8 @@ fn cmd_execution_src<ExecutionOutcome, CmdCtxTypeParamsT>(
     input_name_short: &str,
 ) -> Result<(String, Option<SourceSpan>), fmt::Error>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     let mut cmd_execution_src = String::with_capacity(2048);
 

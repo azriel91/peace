@@ -185,7 +185,7 @@ impl ImplHeaderBuilder {
         if let Some((output, app_error)) = output.as_ref().zip(app_error.as_ref()) {
             if output_constraint_enabled {
                 where_predicates.push(parse_quote!(
-                    #output: peace_rt_model::output::OutputWrite<#app_error> + 'static
+                    #output: peace_rt_model::output::OutputWrite<#app_error>
                 ));
             }
         };

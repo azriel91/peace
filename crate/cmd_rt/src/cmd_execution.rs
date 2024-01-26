@@ -16,7 +16,7 @@ use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::progress::CmdProgressUpdate;
-        use peace_rt_model::CmdProgressTracker;
+        use peace_rt_model::{output::OutputWrite, CmdProgressTracker};
         use tokio::sync::mpsc::{self, Sender};
 
         use crate::Progress;
@@ -149,7 +149,7 @@ where
 async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] O: OutputWrite<E>>(
     cmd_outcome_task: impl Future<Output = Result<CmdOutcome<ExecutionOutcome, E>, E>>,
     #[cfg(feature = "output_progress")] progress_render_enabled: bool,
-    #[cfg(feature = "output_progress")] output: &mut CmdCtxTypeParamsT::Output,
+    #[cfg(feature = "output_progress")] output: &mut O,
     #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
     #[cfg(feature = "output_progress")] mut cmd_progress_rx: mpsc::Receiver<CmdProgressUpdate>,
 ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
