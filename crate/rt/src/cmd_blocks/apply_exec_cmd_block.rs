@@ -29,6 +29,8 @@ use crate::BUFFERED_FUTURES_MAX;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use std::error::Error;
+
         use peace_cfg::{
             progress::{
                 CmdProgressUpdate,

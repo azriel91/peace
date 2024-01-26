@@ -216,8 +216,18 @@ where
     #[cfg(feature = "output_progress")]
     fn discover_progress_update(
         progress_complete_on_success: bool,
-        states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
-        states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
+        states_current_result: Option<
+            &Result<
+                Option<BoxDtDisplay>,
+                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+            >,
+        >,
+        states_goal_result: Option<
+            &Result<
+                Option<BoxDtDisplay>,
+                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+            >,
+        >,
         progress_tx: &Sender<CmdProgressUpdate>,
         item_id: &ItemId,
     ) {
@@ -777,7 +787,7 @@ impl Discover for DiscoverForCurrent {
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_update<E>(
+    fn progress_update<AppErrorT>(
         progress_complete_on_success: bool,
         states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
         _states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
@@ -825,7 +835,7 @@ impl Discover for DiscoverForGoal {
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_update<E>(
+    fn progress_update<AppErrorT>(
         progress_complete_on_success: bool,
         _states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
         states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
@@ -876,7 +886,7 @@ impl Discover for DiscoverForCurrentAndGoal {
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_update<E>(
+    fn progress_update<AppErrorT>(
         progress_complete_on_success: bool,
         states_current_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
         states_goal_result: Option<&Result<Option<BoxDtDisplay>, AppErrorT>>,
