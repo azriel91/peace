@@ -44,12 +44,12 @@ mod cmd_execution_error_builder;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
+pub struct CmdExecution<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     CmdCtxTypeParamsT: CmdCtxTypeParams,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<'ctx, CmdCtxTypeParamsT, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
@@ -57,17 +57,18 @@ where
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, CmdCtxTypeParamsT> CmdExecution<ExecutionOutcome, CmdCtxTypeParamsT>
+impl<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+    CmdExecution<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'ctx,
 {
-    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, CmdCtxTypeParamsT> {
+    pub fn builder() -> CmdExecutionBuilder<'ctx, ExecutionOutcome, CmdCtxTypeParamsT> {
         CmdExecutionBuilder::new()
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<'ctx>(
+    pub async fn exec(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
     ) -> Result<
@@ -185,8 +186,8 @@ where
     }
 }
 
-async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
-    cmd_blocks: &VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
+async fn cmd_outcome_task<'ctx: 'view, 'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
+    cmd_blocks: &VecDeque<CmdBlockRtBox<'ctx, CmdCtxTypeParamsT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, SetUp>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
@@ -293,12 +294,12 @@ where
 /// * `cmd_blocks`: `CmdBlock`s in this execution, used to build a useful error
 ///   message if needed.
 /// * `execution_outcome_fetch`: Logic to extract the `ExecutionOutcome` type.
-fn outcome_extract<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
+fn outcome_extract<'ctx: 'view, 'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>(
     cmd_view_and_progress_result: Result<
         CmdViewAndProgress<'view, 'view_ref, CmdCtxTypeParamsT>,
         CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypeParamsT>,
     >,
-    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
+    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<'ctx, CmdCtxTypeParamsT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
 ) -> Result<
     CmdOutcome<ExecutionOutcome, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
