@@ -69,6 +69,7 @@ fn impl_with_params_k_key_unknown(
     let params_scope_str = params_scope.to_str();
     let with_params_k_method_name = params_scope.params_k_method_name();
     let params_k_method_name = params_scope.params_k_method_name();
+    let params_map_type = params_scope.params_map_type();
     let params_k_type_param = params_scope.params_k_type_param();
     let scope_builder_fields_params_none = scope_builder_fields::params_none(scope, params_scope);
     let scope_builder_fields_params_some_new =
@@ -189,6 +190,9 @@ fn impl_with_params_k_key_unknown(
                 //     params_type_regs_builder.with_workspace_params_k::<WorkspaceParamsK>();
                 let mut params_type_regs_builder =
                     params_type_regs_builder.#params_k_method_name::<#params_k_type_param>();
+
+                // let mut workspace_params = WorkspaceParams::<WorkspaceParam>::new();
+                let params_map = peace_rt_model::params::#params_map_type::<#params_k_type_param>::new();
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
