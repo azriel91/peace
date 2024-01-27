@@ -51,7 +51,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCurrent, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         Self::current_with(cmd_ctx, true).await
     }
 
@@ -75,7 +78,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCurrent, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let mut cmd_execution = CmdExecution::<StatesCurrent, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
@@ -125,7 +131,10 @@ where
     ) -> Result<
         CmdOutcome<StatesGoal, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         Self::goal_with(cmd_ctx, true).await
     }
 
@@ -149,7 +158,10 @@ where
     ) -> Result<
         CmdOutcome<StatesGoal, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let mut cmd_execution = CmdExecution::<StatesGoal, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
@@ -211,7 +223,10 @@ where
             <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
         >,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         Self::current_and_goal_with(cmd_ctx, true).await
     }
 
@@ -240,7 +255,10 @@ where
             <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
         >,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]

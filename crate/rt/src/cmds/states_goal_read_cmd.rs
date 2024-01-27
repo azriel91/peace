@@ -29,7 +29,10 @@ where
     ) -> Result<
         CmdOutcome<StatesGoalStored, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let cmd_execution_builder = CmdExecution::<StatesGoalStored, _>::builder().with_cmd_block(
             CmdBlockWrapper::new(StatesGoalReadCmdBlock::new(), std::convert::identity),
         );

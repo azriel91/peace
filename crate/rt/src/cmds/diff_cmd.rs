@@ -42,7 +42,7 @@ impl<CmdCtxTypeParamsT, Scope> Debug for DiffCmd<CmdCtxTypeParamsT, Scope> {
 impl<'ctx, CmdCtxTypeParamsT>
     DiffCmd<CmdCtxTypeParamsT, SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'ctx,
 {
     /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
@@ -109,9 +109,9 @@ where
     }
 
     fn states_fetch_cmd_block_append(
-        cmd_execution_builder: CmdExecutionBuilder<StateDiffs, CmdCtxTypeParamsT>,
+        cmd_execution_builder: CmdExecutionBuilder<'ctx, StateDiffs, CmdCtxTypeParamsT>,
         diff_state_spec: DiffStateSpec,
-    ) -> CmdExecutionBuilder<StateDiffs, CmdCtxTypeParamsT> {
+    ) -> CmdExecutionBuilder<'ctx, StateDiffs, CmdCtxTypeParamsT> {
         match diff_state_spec {
             DiffStateSpec::Current => cmd_execution_builder.with_cmd_block(CmdBlockWrapper::new(
                 StatesDiscoverCmdBlock::current(),

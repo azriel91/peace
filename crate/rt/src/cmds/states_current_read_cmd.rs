@@ -33,7 +33,10 @@ where
             <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
         >,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let cmd_execution_builder = CmdExecution::<StatesCurrentStored, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 StatesCurrentReadCmdBlock::new(),

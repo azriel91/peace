@@ -32,7 +32,10 @@ where
             <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
         >,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
 

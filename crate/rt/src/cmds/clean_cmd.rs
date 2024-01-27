@@ -65,7 +65,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCleanedDry, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
@@ -81,7 +84,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCleanedDry, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
         let cmd_outcome = cmd_outcome.map(|clean_exec_change| match clean_exec_change {
@@ -136,7 +142,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCleaned, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
@@ -152,7 +161,10 @@ where
     ) -> Result<
         CmdOutcome<StatesCleaned, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    >
+    where
+        CmdCtxTypeParamsT: 'ctx,
+    {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
         let SingleProfileSingleFlowView {
@@ -200,6 +212,7 @@ where
         <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
     >
     where
+        CmdCtxTypeParamsT: 'ctx,
         StatesTs: StatesTsApplyExt + Debug + Send + Sync + Unpin + 'static,
     {
         let mut cmd_execution = {
