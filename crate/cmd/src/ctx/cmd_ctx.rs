@@ -11,12 +11,10 @@ use crate::{
             MultiProfileNoFlowBuilder, MultiProfileSingleFlowBuilder, NoProfileNoFlowBuilder,
             SingleProfileNoFlowBuilder, SingleProfileSingleFlowBuilder,
         },
-        CmdCtxBuilder, CmdCtxTypeParams,
+        CmdCtxBuilder, CmdCtxTypeParamsCollectorEmpty, CmdCtxTypeParamsConstrained,
     },
     scopes::SingleProfileSingleFlow,
 };
-
-use super::CmdCtxTypeParamsCollectorEmpty;
 
 /// Information needed to execute a command.
 ///
@@ -106,7 +104,7 @@ impl CmdCtx<()> {
 impl<'ctx, CmdCtxTypeParamsT, ResTs0>
     CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, ResTs0>>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Updates `resources` to a different type state based on the given
     /// function.

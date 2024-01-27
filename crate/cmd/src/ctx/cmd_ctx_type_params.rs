@@ -28,7 +28,6 @@ pub trait CmdCtxTypeParamsConstrained:
         ParamsKeys = <Self as CmdCtxTypeParamsConstrained>::ParamsKeys,
     > + Debug
     + Unpin
-    + 'static
 {
     /// Error type of the automation software.
     type AppError: AppError + From<peace_rt_model::Error>;
@@ -41,7 +40,7 @@ pub trait CmdCtxTypeParamsConstrained:
 
 impl<T> CmdCtxTypeParamsConstrained for T
 where
-    T: CmdCtxTypeParams + Debug + Unpin + 'static,
+    T: CmdCtxTypeParams + Debug + Unpin,
     T::AppError: AppError + From<peace_rt_model::Error>,
     T::Output: OutputWrite<T::AppError>,
     T::ParamsKeys: ParamsKeys,

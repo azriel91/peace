@@ -44,7 +44,12 @@ pub struct CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome
 impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
     CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, InputT = InputT>,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CB: CmdBlock<
+            AppError = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+            ParamsKeys = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys,
+            InputT = InputT,
+        >,
 {
     /// Returns a new `CmdBlockWrapper`.
     ///
@@ -72,27 +77,26 @@ where
 impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
     for CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, Outcome = BlockOutcome, InputT = InputT>
-        + Unpin,
     CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CB: CmdBlock<
+            AppError = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+            ParamsKeys = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys,
+            Outcome = BlockOutcome,
+            InputT = InputT,
+        > + Unpin,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcome: Debug + Unpin + Send + Sync + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type AppError = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError;
     type ExecutionOutcome = ExecutionOutcome;
+    type ParamsKeys = <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys;
 
     async fn exec(
         &self,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::AppError, Self::ParamsKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
-    ) -> Result<
-        (),
-        CmdBlockError<
-            ExecutionOutcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-    > {
+    ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::AppError>> {
         let cmd_block = &self.cmd_block;
         let input = cmd_block.input_fetch(cmd_view.resources)?;
 

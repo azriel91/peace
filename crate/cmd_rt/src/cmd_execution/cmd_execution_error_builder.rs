@@ -10,8 +10,8 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "error_reporting")] {
         use std::fmt::{self, Write};
 
-        use tynm::TypeParamsFmtOpts;
         use miette::SourceSpan;
+        use tynm::TypeParamsFmtOpts;
 
         use crate::CmdExecution;
     }
@@ -46,15 +46,22 @@ impl CmdExecutionErrorBuilder {
     ///       Input: (States<Current>, States<Goal>)
     ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
     /// ```
-    pub fn build<'f, ExecutionOutcome, CmdCtxTypeParamsT, CmdBlockIterator>(
+    pub fn build<'ctx: 'f, 'f, ExecutionOutcome, CmdCtxTypeParamsT, CmdBlockIterator>(
         cmd_blocks: CmdBlockIterator,
         cmd_block_index: usize,
         resource_fetch_error: ResourceFetchError,
     ) -> CmdExecutionError
     where
-        CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'f,
+        CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-        CmdBlockIterator: Iterator<Item = &'f CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome>>,
+        CmdBlockIterator: Iterator<
+            Item = &'f CmdBlockRtBox<
+                'ctx,
+                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys,
+                ExecutionOutcome,
+            >,
+        >,
     {
         let ResourceFetchError {
             resource_name_short: input_name_short,

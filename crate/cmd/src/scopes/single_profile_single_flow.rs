@@ -15,9 +15,10 @@ use peace_rt_model::{
     },
     Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
+use peace_value_traits::AppError;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::ctx::CmdCtxTypeParams;
+use crate::ctx::{CmdCtxTypeParams, CmdCtxTypeParamsConstrained};
 
 /// A command that works with one profile and one flow.
 ///
@@ -155,9 +156,10 @@ where
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, TS>
+pub struct SingleProfileSingleFlowView<'view, AppErrorT, ParamsKeysT, TS>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    AppErrorT: AppError,
+    ParamsKeysT: ParamsKeys,
 {
     /// Whether the `CmdExecution` is interruptible.
     ///
@@ -172,7 +174,7 @@ where
     /// Directory to store profile execution history.
     pub profile_history_dir: &'view ProfileHistoryDir,
     /// The chosen process flow.
-    pub flow: &'view Flow<CmdCtxTypeParamsT::AppError>,
+    pub flow: &'view Flow<AppErrorT>,
     /// Flow directory that stores params and states.
     pub flow_dir: &'view FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -181,19 +183,14 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub params_type_regs: &'view ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys>,
+    pub params_type_regs: &'view ParamsTypeRegs<ParamsKeysT>,
     /// Workspace params.
-    pub workspace_params: &'view WorkspaceParams<
-        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
-    >,
+    pub workspace_params:
+        &'view WorkspaceParams<<ParamsKeysT::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
-    pub profile_params: &'view ProfileParams<
-        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
-    >,
+    pub profile_params: &'view ProfileParams<<ParamsKeysT::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
-    pub flow_params: &'view FlowParams<
-        <<CmdCtxTypeParamsT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
-    >,
+    pub flow_params: &'view FlowParams<<ParamsKeysT::FlowParamsKMaybe as KeyMaybe>::Key>,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -224,7 +221,7 @@ where
 #[derive(Debug)]
 pub struct SingleProfileSingleFlowViewAndOutput<'view, CmdCtxTypeParamsT, TS>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -232,12 +229,17 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut CmdCtxTypeParamsT::Output,
+    pub output: &'view mut <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::Output,
     /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
     /// Flow and parameter related information.
-    pub cmd_view: SingleProfileSingleFlowView<'view, CmdCtxTypeParamsT, TS>,
+    pub cmd_view: SingleProfileSingleFlowView<
+        'view,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys,
+        TS,
+    >,
 }
 
 impl<'ctx, CmdCtxTypeParamsT> SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>
@@ -297,12 +299,19 @@ where
 
 impl<'ctx, CmdCtxTypeParamsT, TS> SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, TS>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, TS> {
+    pub fn view(
+        &mut self,
+    ) -> SingleProfileSingleFlowView<
+        '_,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys,
+        TS,
+    > {
         let Self {
             output: _,
             interruptibility_state,
@@ -399,12 +408,14 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &CmdCtxTypeParamsT::Output {
+    pub fn output(&self) -> &<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::Output {
         self.output
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut CmdCtxTypeParamsT::Output {
+    pub fn output_mut(
+        &mut self,
+    ) -> &mut <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::Output {
         self.output
     }
 
@@ -462,7 +473,7 @@ where
     }
 
     /// Returns a reference to the flow.
-    pub fn flow(&self) -> &Flow<CmdCtxTypeParamsT::AppError> {
+    pub fn flow(&self) -> &Flow<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
         self.flow
     }
 
@@ -478,7 +489,9 @@ where
     /// [`ItemParams`]: peace_rt_model::ItemParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypeParamsT::ParamsKeys> {
+    pub fn params_type_regs(
+        &self,
+    ) -> &ParamsTypeRegs<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::ParamsKeys> {
         &self.params_type_regs
     }
 
