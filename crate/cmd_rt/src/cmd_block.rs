@@ -1,11 +1,9 @@
 use std::fmt::Debug;
 
 use async_trait::async_trait;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_resources::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
-use peace_rt_model::params::ParamsKeys;
-use peace_value_traits::AppError;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -46,10 +44,10 @@ mod cmd_block_wrapper;
 /// [`Item::*`]: peace_cfg::Item
 #[async_trait(?Send)]
 pub trait CmdBlock: Debug {
-    /// Automation software error type.
-    type AppError: AppError + From<peace_rt_model::Error>;
-    /// Types used for params keys.
-    type ParamsKeys: ParamsKeys + 'static;
+    /// Type parameters passed to the `CmdCtx`.
+    ///
+    /// `CmdBlock` uses the `AppError` and `ParamsKeys` associated type.
+    type CmdCtxTypeParams: CmdCtxTypeParamsConstrained;
     /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
     type Outcome: Debug + Send + Sync + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
@@ -178,7 +176,13 @@ pub trait CmdBlock: Debug {
     async fn exec(
         &self,
         input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::AppError, Self::ParamsKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::AppError>, Self::AppError>;
+    ) -> Result<
+        CmdBlockOutcome<
+            Self::Outcome,
+            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        >,
+        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+    >;
 }

@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use async_trait::async_trait;
 use peace_fmt::Presentable;
 
@@ -27,7 +25,7 @@ cfg_if::cfg_if! {
 ///
 /// Progress updates sent during `ApplyFns::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
-pub trait OutputWrite<E>: Debug {
+pub trait OutputWrite<E> {
     /// Prepares this `OutputWrite` implementation for rendering progress.
     ///
     /// # Implementors

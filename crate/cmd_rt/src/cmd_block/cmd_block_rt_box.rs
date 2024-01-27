@@ -6,17 +6,11 @@ use crate::CmdBlockRt;
 ///
 /// # Type Parameters
 ///
-/// * `AppErrorT`: Automation software error type.
-/// * `ParamsKeysT`: Types of params keys.
+/// * `E`: Automation software error type.
+/// * `PKeys`: Types of params keys.
 /// * `Outcome`: [`CmdBlock`] outcome type, e.g. `(StatesCurrent, StatesGoal)`.
 ///
 /// [`CmdBlock`]: crate::CmdBlock
-pub type CmdBlockRtBox<'ctx, AppErrorT, ParamsKeysT, ExecutionOutcome> = Pin<
-    Box<
-        dyn CmdBlockRt<
-                AppError = AppErrorT,
-                ParamsKeys = ParamsKeysT,
-                ExecutionOutcome = ExecutionOutcome,
-            > + 'ctx,
-    >,
+pub type CmdBlockRtBox<CmdCtxTypeParamsT, ExecutionOutcome> = Pin<
+    Box<dyn CmdBlockRt<CmdCtxTypeParams = CmdCtxTypeParamsT, ExecutionOutcome = ExecutionOutcome>>,
 >;
