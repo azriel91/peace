@@ -1833,7 +1833,7 @@ mock: 1
 fn debug() {
     let debug_str = format!("{:?}", EnsureCmd::<PeaceCmdCtxTypeParams>::default());
     assert_eq!(
-        r#"EnsureCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"EnsureCmd(PhantomData<workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams>)"#,
         debug_str,
     );
 }

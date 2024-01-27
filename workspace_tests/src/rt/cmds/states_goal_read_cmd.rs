@@ -109,7 +109,7 @@ fn debug() {
         StatesGoalReadCmd::<PeaceCmdCtxTypeParams>::default()
     );
     assert_eq!(
-        r#"StatesGoalReadCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"StatesGoalReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams>)"#,
         debug_str,
     );
 }

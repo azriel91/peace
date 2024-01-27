@@ -112,7 +112,7 @@ fn debug() {
         StatesCurrentReadCmd::<PeaceCmdCtxTypeParams>::default()
     );
     assert_eq!(
-        r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"StatesCurrentReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams>)"#,
         debug_str,
     );
 }
