@@ -46,7 +46,7 @@ impl CmdExecutionErrorBuilder {
     ///       Input: (States<Current>, States<Goal>)
     ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
     /// ```
-    pub fn build<'ctx: 'f, 'f, ExecutionOutcome, CmdCtxTypeParamsT, CmdBlockIterator>(
+    pub fn build<'types: 'f, 'f, ExecutionOutcome, CmdCtxTypeParamsT, CmdBlockIterator>(
         cmd_blocks: CmdBlockIterator,
         cmd_block_index: usize,
         resource_fetch_error: ResourceFetchError,
@@ -55,7 +55,7 @@ impl CmdExecutionErrorBuilder {
         CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'f,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
         CmdBlockIterator:
-            Iterator<Item = &'f CmdBlockRtBox<'ctx, CmdCtxTypeParamsT, ExecutionOutcome>>,
+            Iterator<Item = &'f CmdBlockRtBox<'types, CmdCtxTypeParamsT, ExecutionOutcome>>,
     {
         let ResourceFetchError {
             resource_name_short: input_name_short,

@@ -10,13 +10,13 @@ use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 /// [`CmdBlock`]: crate::CmdBlock
 /// [`CmdExecution`]: crate::CmdExecution
 #[derive(Debug)]
-pub struct CmdExecutionBuilder<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+pub struct CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<'ctx, CmdCtxTypeParamsT, ExecutionOutcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<'types, CmdCtxTypeParamsT, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
@@ -30,11 +30,11 @@ where
     progress_render_enabled: bool,
 }
 
-impl<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
-    CmdExecutionBuilder<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+impl<'types, ExecutionOutcome, CmdCtxTypeParamsT>
+    CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'ctx,
+    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained + 'types,
 {
     pub fn new() -> Self {
         Self::default()
@@ -50,14 +50,14 @@ where
             BlockOutcomeNext,
             InputT,
         >,
-    ) -> CmdExecutionBuilder<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+    ) -> CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypeParamsT>
     where
         CB: CmdBlock<
                 CmdCtxTypeParams = CmdCtxTypeParamsT,
                 Outcome = BlockOutcomeNext,
                 InputT = InputT,
             > + Unpin
-            + 'ctx,
+            + 'types,
         ExecutionOutcome: Debug + Resource + Unpin + 'static,
         BlockOutcomeNext: Debug + Resource + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
@@ -110,7 +110,7 @@ where
     }
 
     /// Returns the `CmdExecution` to execute.
-    pub fn build(self) -> CmdExecution<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+    pub fn build(self) -> CmdExecution<'types, ExecutionOutcome, CmdCtxTypeParamsT>
     where
         CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
     {
@@ -130,8 +130,8 @@ where
     }
 }
 
-impl<'ctx, ExecutionOutcome, CmdCtxTypeParamsT> Default
-    for CmdExecutionBuilder<'ctx, ExecutionOutcome, CmdCtxTypeParamsT>
+impl<'types, ExecutionOutcome, CmdCtxTypeParamsT> Default
+    for CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypeParamsT>
 where
     ExecutionOutcome: Debug + Resource + 'static,
     CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
