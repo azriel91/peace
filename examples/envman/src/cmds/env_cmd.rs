@@ -11,11 +11,7 @@ use peace::{
     fmt::presentln,
     params::Params,
     resources::resources::ts::SetUp,
-    rt_model::{
-        output::OutputWrite,
-        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-        Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
 use crate::{
@@ -26,7 +22,7 @@ use crate::{
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
     },
     model::{EnvManError, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
-    rt_model::EnvManCmdCtx,
+    rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -108,19 +104,7 @@ impl EnvCmd {
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<
-                MultiProfileSingleFlow<
-                    '_,
-                    EnvManError,
-                    O,
-                    ParamsKeysImpl<
-                        KeyKnown<WorkspaceParamsKey>,
-                        KeyKnown<ProfileParamsKey>,
-                        KeyUnknown,
-                    >,
-                    SetUp,
-                >,
-            >,
+            &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>, SetUp>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let workspace = Workspace::new(
