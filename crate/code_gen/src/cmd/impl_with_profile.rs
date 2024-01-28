@@ -22,7 +22,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     // ```rust,ignore
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
-    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
     //         Output,
     //         AppError,
     //         peace_rt_model::params::ParamsKeysImpl<
@@ -58,7 +58,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             ) ->
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
-                //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+                //     crate::ctx::CmdCtxBuilderTypesCollector<
                 //         Output,
                 //         AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<
@@ -133,7 +133,7 @@ pub fn impl_with_profile_from_workspace_param(
     // ```rust,ignore
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
-    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
     //         Output,
     //         AppError,
     //         peace_rt_model::params::ParamsKeysImpl<
@@ -186,7 +186,7 @@ pub fn impl_with_profile_from_workspace_param(
             ) ->
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
-                //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+                //     crate::ctx::CmdCtxBuilderTypesCollector<
                 //         Output,
                 //         AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<

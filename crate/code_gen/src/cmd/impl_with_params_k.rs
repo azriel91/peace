@@ -80,7 +80,7 @@ fn impl_with_params_k_key_unknown(
     // ```rust,ignore
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
-    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
     //         Output,
     //         AppError,
     //         peace_rt_model::params::ParamsKeysImpl<
@@ -149,19 +149,19 @@ fn impl_with_params_k_key_unknown(
             ) ->
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,
-                //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
-                //         CmdCtxBuilderTypeParamsT::Output,
-                //         CmdCtxBuilderTypeParamsT::AppError,
+                //     crate::ctx::CmdCtxBuilderTypesCollector<
+                //         CmdCtxBuilderTypesT::Output,
+                //         CmdCtxBuilderTypesT::AppError,
                 //         peace_rt_model::params::ParamsKeysImpl<
                 //             peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
                 //             ProfileParamsKMaybe,
                 //             FlowParamsKMaybe,
                 //         >,
                 //         crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
-                //         CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::FlowParamsSelection,
-                //         CmdCtxBuilderTypeParamsT::ProfileSelection,
-                //         CmdCtxBuilderTypeParamsT::FlowSelection,
+                //         CmdCtxBuilderTypesT::ProfileParamsSelection,
+                //         CmdCtxBuilderTypesT::FlowParamsSelection,
+                //         CmdCtxBuilderTypesT::ProfileSelection,
+                //         CmdCtxBuilderTypesT::FlowSelection,
                 //     >,
                 // >
                 #return_type

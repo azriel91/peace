@@ -1,10 +1,10 @@
 use peace::{cmd_rt::CmdBlock, rt::cmd_blocks::StatesGoalReadCmdBlock};
 
-use crate::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams;
+use crate::peace_cmd_ctx_types::PeaceCmdCtxTypes;
 
 #[test]
 fn input_type_names_is_empty() {
-    let cmd_block = StatesGoalReadCmdBlock::<PeaceCmdCtxTypeParams>::new();
+    let cmd_block = StatesGoalReadCmdBlock::<PeaceCmdCtxTypes>::new();
 
     let input_type_names: Vec<String> = cmd_block.input_type_names();
 
@@ -13,7 +13,7 @@ fn input_type_names_is_empty() {
 
 #[test]
 fn outcome_type_names_includes_states_goal_stored() {
-    let cmd_block = StatesGoalReadCmdBlock::<PeaceCmdCtxTypeParams>::new();
+    let cmd_block = StatesGoalReadCmdBlock::<PeaceCmdCtxTypes>::new();
 
     let outcome_type_names: Vec<String> = cmd_block.outcome_type_names();
 

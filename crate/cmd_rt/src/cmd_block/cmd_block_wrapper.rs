@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use fn_graph::StreamOutcomeState;
-use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
 use peace_resources::{resources::ts::SetUp, Resource};
 
@@ -29,7 +29,7 @@ cfg_if::cfg_if! {
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
-pub struct CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> {
+pub struct CmdBlockWrapper<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT> {
     /// Underlying `CmdBlock` implementation.
     ///
     /// The trait constraints are applied on impl blocks.
@@ -38,13 +38,13 @@ pub struct CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome
     /// executing this `CmdBlock`.
     fn_partial_exec_handler: fn(BlockOutcome) -> ExecutionOutcome,
     /// Marker.
-    marker: PhantomData<(CmdCtxTypeParamsT, BlockOutcome, InputT)>,
+    marker: PhantomData<(CmdCtxTypesT, BlockOutcome, InputT)>,
 }
 
-impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
-    CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
+impl<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT>
+    CmdBlockWrapper<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, InputT = InputT>,
+    CB: CmdBlock<CmdCtxTypes = CmdCtxTypesT, InputT = InputT>,
 {
     /// Returns a new `CmdBlockWrapper`.
     ///
@@ -69,29 +69,25 @@ where
 }
 
 #[async_trait(?Send)]
-impl<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
-    for CmdBlockWrapper<CB, CmdCtxTypeParamsT, ExecutionOutcome, BlockOutcome, InputT>
+impl<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
+    for CmdBlockWrapper<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT>
 where
-    CB: CmdBlock<CmdCtxTypeParams = CmdCtxTypeParamsT, Outcome = BlockOutcome, InputT = InputT>
-        + Unpin,
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CB: CmdBlock<CmdCtxTypes = CmdCtxTypesT, Outcome = BlockOutcome, InputT = InputT> + Unpin,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcome: Debug + Unpin + Send + Sync + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type ExecutionOutcome = ExecutionOutcome;
 
     async fn exec(
         &self,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypeParamsT, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypesT, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<
         (),
-        CmdBlockError<
-            ExecutionOutcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
+        CmdBlockError<ExecutionOutcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
     > {
         let cmd_block = &self.cmd_block;
         let input = cmd_block.input_fetch(cmd_view.resources)?;

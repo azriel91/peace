@@ -3,7 +3,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::join;
 use peace_cfg::{ApplyCheck, FnCtx, ItemId};
-use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_params::ParamsSpecs;
@@ -46,17 +46,15 @@ cfg_if::cfg_if! {
 
 /// Stops a `CmdExecution` if stored states and discovered states are not in
 /// sync.
-pub struct ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>(
-    PhantomData<(CmdCtxTypeParamsT, StatesTs)>,
-);
+pub struct ApplyExecCmdBlock<CmdCtxTypesT, StatesTs>(PhantomData<(CmdCtxTypesT, StatesTs)>);
 
-impl<CmdCtxTypeParamsT, StatesTs> Debug for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
+impl<CmdCtxTypesT, StatesTs> Debug for ApplyExecCmdBlock<CmdCtxTypesT, StatesTs> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("ApplyExecCmdBlock").field(&self.0).finish()
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs> ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
+impl<CmdCtxTypesT, StatesTs> ApplyExecCmdBlock<CmdCtxTypesT, StatesTs> {
     /// Returns an `ApplyExecCmdBlock`.
     ///
     /// This is a generic constructor where `StatesTs` determines whether the
@@ -66,15 +64,15 @@ impl<CmdCtxTypeParamsT, StatesTs> ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs> Default for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs> {
+impl<CmdCtxTypesT, StatesTs> Default for ApplyExecCmdBlock<CmdCtxTypesT, StatesTs> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, Ensured>
+impl<CmdCtxTypesT> ApplyExecCmdBlock<CmdCtxTypesT, Ensured>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns an `ApplyExecCmdBlock` with the goal state as the target state.
     pub fn ensure() -> Self {
@@ -82,9 +80,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, EnsuredDry>
+impl<CmdCtxTypesT> ApplyExecCmdBlock<CmdCtxTypesT, EnsuredDry>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns an `ApplyExecCmdBlock` with the goal state as the target state.
     pub fn ensure_dry() -> Self {
@@ -92,9 +90,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, Cleaned>
+impl<CmdCtxTypesT> ApplyExecCmdBlock<CmdCtxTypesT, Cleaned>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns an `ApplyExecCmdBlock` with the clean state as the target state.
     pub fn clean() -> Self {
@@ -102,9 +100,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> ApplyExecCmdBlock<CmdCtxTypeParamsT, CleanedDry>
+impl<CmdCtxTypesT> ApplyExecCmdBlock<CmdCtxTypesT, CleanedDry>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns an `ApplyExecCmdBlock` with the clean state as the target state.
     pub fn clean_dry() -> Self {
@@ -112,9 +110,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs> ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>
+impl<CmdCtxTypesT, StatesTs> ApplyExecCmdBlock<CmdCtxTypesT, StatesTs>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
     StatesTs: StatesTsApplyExt + Debug + Send,
 {
     ///
@@ -127,20 +125,20 @@ where
     /// ```rust,ignore
     /// async fn item_apply_exec<F, Fut>(
     ///     resources: &Resources<SetUp>,
-    ///     outcomes_tx: &Sender<ItemApplyOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>>,
-    ///     item: FnRef<'_, ItemBoxed<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>>,
+    ///     outcomes_tx: &Sender<ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
+    ///     item: FnRef<'_, ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemRt<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
-    ///     Fut: Future<Output = Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>>,
+    ///     F: (Fn(&dyn ItemRt<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
+    ///     Fut: Future<Output = Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
     /// ```
     async fn item_apply_exec(
         item_apply_exec_ctx: ItemApplyExecCtx<
             '_,
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+            <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
         >,
-        item: &ItemBoxed<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), ()> {
         let ItemApplyExecCtx {
             params_specs,
@@ -320,7 +318,7 @@ where
 
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            ItemApplyOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_applied_mut: StatesMut<StatesTs>,
         mut states_target_mut: StatesMut<StatesTs::TsTarget>,
@@ -328,9 +326,9 @@ where
         (
             States<StatesTs>,
             States<StatesTs::TsTarget>,
-            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -351,11 +349,9 @@ where
     fn outcome_collate(
         states_applied_mut: &mut StatesMut<StatesTs>,
         states_target_mut: &mut StatesMut<StatesTs::TsTarget>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        outcome_partial: ItemApplyOutcome<
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let apply_for = StatesTs::apply_for();
 
         match outcome_partial {
@@ -425,12 +421,12 @@ where
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT, StatesTs> CmdBlock for ApplyExecCmdBlock<CmdCtxTypeParamsT, StatesTs>
+impl<CmdCtxTypesT, StatesTs> CmdBlock for ApplyExecCmdBlock<CmdCtxTypesT, StatesTs>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
     StatesTs: StatesTsApplyExt + Debug + Send + Sync + 'static,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
     type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
 
@@ -470,14 +466,11 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let (states_current, states_target) = input;
         let (states_previous, states_applied_mut, states_target_mut) = {
@@ -509,7 +502,7 @@ where
         };
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemApplyOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(item_graph.node_count());
 
         let stream_opts = {

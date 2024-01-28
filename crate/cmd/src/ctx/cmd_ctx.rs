@@ -11,12 +11,12 @@ use crate::{
             MultiProfileNoFlowBuilder, MultiProfileSingleFlowBuilder, NoProfileNoFlowBuilder,
             SingleProfileNoFlowBuilder, SingleProfileSingleFlowBuilder,
         },
-        CmdCtxBuilder, CmdCtxTypeParams,
+        CmdCtxBuilder, CmdCtxTypes,
     },
     scopes::SingleProfileSingleFlow,
 };
 
-use super::CmdCtxTypeParamsCollectorEmpty;
+use super::CmdCtxTypesCollectorEmpty;
 
 /// Information needed to execute a command.
 ///
@@ -48,8 +48,8 @@ impl CmdCtx<()> {
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
-        NoProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
+        CmdCtxTypesCollectorEmpty<AppError, Output>,
+        NoProfileNoFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
@@ -60,8 +60,8 @@ impl CmdCtx<()> {
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
-        MultiProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
+        CmdCtxTypesCollectorEmpty<AppError, Output>,
+        MultiProfileNoFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
@@ -72,8 +72,8 @@ impl CmdCtx<()> {
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
-        MultiProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
+        CmdCtxTypesCollectorEmpty<AppError, Output>,
+        MultiProfileSingleFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
@@ -84,8 +84,8 @@ impl CmdCtx<()> {
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
-        SingleProfileNoFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
+        CmdCtxTypesCollectorEmpty<AppError, Output>,
+        SingleProfileNoFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
@@ -96,24 +96,23 @@ impl CmdCtx<()> {
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         'ctx,
-        CmdCtxTypeParamsCollectorEmpty<AppError, Output>,
-        SingleProfileSingleFlowBuilder<CmdCtxTypeParamsCollectorEmpty<AppError, Output>>,
+        CmdCtxTypesCollectorEmpty<AppError, Output>,
+        SingleProfileSingleFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }
 }
 
-impl<'ctx, CmdCtxTypeParamsT, ResTs0>
-    CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, ResTs0>>
+impl<'ctx, CmdCtxTypesT, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs0>>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParams,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Updates `resources` to a different type state based on the given
     /// function.
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, ResTs1>>
+    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {

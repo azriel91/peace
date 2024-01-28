@@ -15,14 +15,14 @@ use crate::cmd::scope_struct::ScopeStruct;
 /// following:
 ///
 /// ```rust,ignore
-/// pub struct SingleProfileSingleFlowBuilder<CmdCtxBuilderTypeParamsT>
+/// pub struct SingleProfileSingleFlowBuilder<CmdCtxBuilderTypesT>
 /// where
-///     CmdCtxBuilderTypeParamsT: CmdCtxBuilderTypeParams
+///     CmdCtxBuilderTypesT: CmdCtxBuilderTypes
 /// {
 ///     /// The profile this command operates on.
-///     pub(crate) profile_selection: CmdCtxBuilderTypeParamsT::ProfileSelection,
+///     pub(crate) profile_selection: CmdCtxBuilderTypesT::ProfileSelection,
 ///     /// Identifier or name of the chosen process flow.
-///     pub(crate) flow_selection: CmdCtxBuilderTypeParamsT::FlowSelection,
+///     pub(crate) flow_selection: CmdCtxBuilderTypesT::FlowSelection,
 ///     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
 ///     /// [`FlowParams`] deserialization.
 ///     ///
@@ -30,13 +30,13 @@ use crate::cmd::scope_struct::ScopeStruct;
 ///     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
 ///     /// [`FlowParams`]: peace_rt_model::params::FlowParams
 ///     pub(crate) params_type_regs_builder:
-///         peace_rt_model::params::ParamsTypeRegsBuilder<CmdCtxBuilderTypeParamsT::PKeys>,
+///         peace_rt_model::params::ParamsTypeRegsBuilder<CmdCtxBuilderTypesT::PKeys>,
 ///     /// Workspace parameters.
-///     pub(crate) workspace_params_selection: CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection,
+///     pub(crate) workspace_params_selection: CmdCtxBuilderTypesT::WorkspaceParamsSelection,
 ///     /// Profile parameters.
-///     pub(crate) profile_params_selection: CmdCtxBuilderTypeParamsT::ProfileParamsSelection,
+///     pub(crate) profile_params_selection: CmdCtxBuilderTypesT::ProfileParamsSelection,
 ///     /// Flow parameters.
-///     pub(crate) flow_params_selection: CmdCtxBuilderTypeParamsT::FlowParamsSelection,
+///     pub(crate) flow_params_selection: CmdCtxBuilderTypesT::FlowParamsSelection,
 ///     /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
 ///     pub(crate) params_specs_provided: peace_params::ParamsSpecs,
 /// }
@@ -70,7 +70,7 @@ mod fields {
             ProfileCount::One | ProfileCount::Multiple => {
                 let fields: FieldsNamed = parse_quote!({
                     /// The profile this command operates on.
-                    pub(crate) profile_selection: CmdCtxBuilderTypeParamsT::ProfileSelection
+                    pub(crate) profile_selection: CmdCtxBuilderTypesT::ProfileSelection
                 });
                 fields_named.named.extend(fields.named);
             }
@@ -78,7 +78,7 @@ mod fields {
         if scope.flow_count() == FlowCount::One {
             let fields: FieldsNamed = parse_quote!({
                 /// Identifier or name of the chosen process flow.
-                pub(crate) flow_selection: CmdCtxBuilderTypeParamsT::FlowSelection
+                pub(crate) flow_selection: CmdCtxBuilderTypesT::FlowSelection
             });
             fields_named.named.extend(fields.named);
         }
@@ -96,21 +96,21 @@ mod fields {
             /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
             /// [`FlowParams`]: peace_rt_model::params::FlowParams
             pub(crate) params_type_regs_builder:
-                peace_rt_model::params::ParamsTypeRegsBuilder<CmdCtxBuilderTypeParamsT::ParamsKeys>
+                peace_rt_model::params::ParamsTypeRegsBuilder<CmdCtxBuilderTypesT::ParamsKeys>
         });
         fields_named.named.extend(fields.named);
 
         // Workspace params are supported by all scopes.
         let fields: FieldsNamed = parse_quote!({
             /// Workspace parameters.
-            pub(crate) workspace_params_selection: CmdCtxBuilderTypeParamsT::WorkspaceParamsSelection
+            pub(crate) workspace_params_selection: CmdCtxBuilderTypesT::WorkspaceParamsSelection
         });
         fields_named.named.extend(fields.named);
 
         if scope.profile_params_supported() {
             let fields: FieldsNamed = parse_quote!({
                 /// Profile parameters.
-                pub(crate) profile_params_selection: CmdCtxBuilderTypeParamsT::ProfileParamsSelection
+                pub(crate) profile_params_selection: CmdCtxBuilderTypesT::ProfileParamsSelection
             });
             fields_named.named.extend(fields.named);
         }
@@ -118,7 +118,7 @@ mod fields {
         if scope.flow_params_supported() {
             let fields: FieldsNamed = parse_quote!({
                 /// Flow parameters.
-                pub(crate) flow_params_selection: CmdCtxBuilderTypeParamsT::FlowParamsSelection
+                pub(crate) flow_params_selection: CmdCtxBuilderTypesT::FlowParamsSelection
             });
             fields_named.named.extend(fields.named);
         }

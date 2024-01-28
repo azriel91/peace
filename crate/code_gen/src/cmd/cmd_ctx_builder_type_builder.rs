@@ -4,7 +4,7 @@ use syn::{parse_quote, Ident, Path, TypePath};
 /// Collects the tokens to build the `CmdCtxBuilder` return type.
 ///
 /// By default, this references the associated types from the passed in
-/// `CmdCtxBuilderTypeParamsT`.
+/// `CmdCtxBuilderTypesT`.
 #[derive(Clone, Debug)]
 pub struct CmdCtxBuilderTypeBuilder {
     /// Name of the scope builder struct.
@@ -210,8 +210,8 @@ impl CmdCtxBuilderTypeBuilder {
             }
         });
 
-        let cmd_ctx_builder_type_params_collector = quote! {
-            crate::ctx::CmdCtxBuilderTypeParamsCollector<
+        let cmd_ctx_builder_types_collector = quote! {
+            crate::ctx::CmdCtxBuilderTypesCollector<
                 #app_error,
                 #output,
                 #params_keys,
@@ -222,12 +222,12 @@ impl CmdCtxBuilderTypeBuilder {
                 #flow_selection,
             >
         };
-        let cmd_ctx_builder_type_params_collector = &cmd_ctx_builder_type_params_collector;
+        let cmd_ctx_builder_types_collector = &cmd_ctx_builder_types_collector;
         parse_quote! {
             crate::ctx::CmdCtxBuilder<
                 'ctx,
-                #cmd_ctx_builder_type_params_collector,
-                #scope_builder_name<#cmd_ctx_builder_type_params_collector>,
+                #cmd_ctx_builder_types_collector,
+                #scope_builder_name<#cmd_ctx_builder_types_collector>,
             >
         }
     }

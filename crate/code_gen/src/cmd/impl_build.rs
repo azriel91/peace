@@ -209,7 +209,7 @@ fn impl_build_for(
     // ```rust,ignore
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
-    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
     //         Output,
     //         AppError,
     //         peace_rt_model::params::ParamsKeysImpl<
@@ -299,7 +299,7 @@ fn impl_build_for(
         crate::ctx::CmdCtx<
             #scope_type_path<
                 'ctx,
-                crate::ctx::CmdCtxTypeParamsCollector<
+                crate::ctx::CmdCtxTypesCollector<
                     AppError,
                     Output,
                     #params_keys_impl,
@@ -825,8 +825,8 @@ fn impl_build_for(
         }
 
         #impl_into_future_header,
-            crate::ctx::CmdCtxTypeParamsCollector<AppError, Output, #params_keys_impl>:
-                crate::ctx::CmdCtxTypeParamsConstrained<
+            crate::ctx::CmdCtxTypesCollector<AppError, Output, #params_keys_impl>:
+                crate::ctx::CmdCtxTypesConstrained<
                     AppError = AppError,
                     Output = Output,
                     ParamsKeys = #params_keys_impl

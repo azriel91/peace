@@ -10,7 +10,7 @@ use crate::scopes::type_params::{
 ///
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
-pub trait CmdCtxBuilderTypeParams {
+pub trait CmdCtxBuilderTypes {
     /// Error type of the automation software.
     type AppError;
     /// Output to write progress or outcome to.
@@ -66,9 +66,9 @@ pub trait CmdCtxBuilderTypeParams {
     type FlowSelection;
 }
 
-/// Concrete struct to collect `CmdCtxBuilderTypeParams`.
+/// Concrete struct to collect `CmdCtxBuilderTypes`.
 #[derive(Debug)]
-pub struct CmdCtxBuilderTypeParamsCollector<
+pub struct CmdCtxBuilderTypesCollector<
     AppError,
     Output,
     ParamsKeys,
@@ -91,11 +91,11 @@ pub struct CmdCtxBuilderTypeParamsCollector<
     )>,
 );
 
-/// `CmdCtxBuilderTypeParamsCollector` with `Output` and `AppError` needing to
+/// `CmdCtxBuilderTypesCollector` with `Output` and `AppError` needing to
 /// be specified.
 ///
 /// The remainder of the type arguments use *none* type values.
-pub type CmdCtxTypeParamsCollectorEmpty<AppError, Output> = CmdCtxBuilderTypeParamsCollector<
+pub type CmdCtxTypesCollectorEmpty<AppError, Output> = CmdCtxBuilderTypesCollector<
     AppError,
     Output,
     ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
@@ -115,8 +115,8 @@ impl<
     FlowParamsSelection,
     ProfileSelection,
     FlowSelection,
-> CmdCtxBuilderTypeParams
-    for CmdCtxBuilderTypeParamsCollector<
+> CmdCtxBuilderTypes
+    for CmdCtxBuilderTypesCollector<
         AppError,
         Output,
         ParamsKeysT,

@@ -4,7 +4,7 @@ use fn_graph::{StreamOpts, StreamOutcome};
 use futures::FutureExt;
 use peace_cfg::ItemId;
 use peace_cmd::{
-    ctx::CmdCtxTypeParamsConstrained, interruptible::InterruptibilityState,
+    ctx::CmdCtxTypesConstrained, interruptible::InterruptibilityState,
     scopes::SingleProfileSingleFlowView,
 };
 use peace_cmd_model::CmdBlockOutcome;
@@ -31,30 +31,28 @@ cfg_if::cfg_if! {
     }
 }
 
-pub struct DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>(
-    PhantomData<(CmdCtxTypeParamsT, StatesTs0, StatesTs1)>,
+pub struct DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>(
+    PhantomData<(CmdCtxTypesT, StatesTs0, StatesTs1)>,
 );
 
-impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> Debug
-    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+impl<CmdCtxTypesT, StatesTs0, StatesTs1> Debug
+    for DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("DiffCmdBlock").field(&self.0).finish()
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
-    DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
-{
+impl<CmdCtxTypesT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1> {
     /// Returns a new `DiffCmdBlock`.
     pub fn new() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+impl<CmdCtxTypesT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns the [`state_diff`]` for each [`Item`].
     ///
@@ -66,15 +64,12 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
         interruptibility_state: InterruptibilityState<'_, '_>,
-        flow: &Flow<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
-    ) -> Result<
-        StreamOutcome<StateDiffs>,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-    > {
+    ) -> Result<StreamOutcome<StateDiffs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let stream_outcome_result = flow
             .graph()
             .try_fold_async_with(
@@ -94,7 +89,9 @@ where
                             state_diffs_mut.insert_raw(item.id().clone(), state_diff);
                         }
 
-                        Result::<_, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>::Ok(state_diffs_mut)
+                        Result::<_, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>::Ok(
+                            state_diffs_mut,
+                        )
                     }
                     .boxed_local()
                 },
@@ -105,8 +102,8 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> Default
-    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+impl<CmdCtxTypesT, StatesTs0, StatesTs1> Default
+    for DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 {
     fn default() -> Self {
         Self(PhantomData)
@@ -114,14 +111,14 @@ impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> Default
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT, StatesTs0, StatesTs1> CmdBlock
-    for DiffCmdBlock<CmdCtxTypeParamsT, StatesTs0, StatesTs1>
+impl<CmdCtxTypesT, StatesTs0, StatesTs1> CmdBlock
+    for DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
     StatesTs0: Debug + Send + Sync + 'static,
     StatesTs1: Debug + Send + Sync + 'static,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (States<StatesTs0>, States<StatesTs1>);
     type Outcome = (StateDiffs, Self::InputT);
 
@@ -160,14 +157,11 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let SingleProfileSingleFlowView {
             interruptibility_state,

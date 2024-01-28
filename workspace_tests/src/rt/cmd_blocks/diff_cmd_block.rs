@@ -4,13 +4,13 @@ use peace::{
     rt::cmd_blocks::DiffCmdBlock,
 };
 
-use crate::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams;
+use crate::peace_cmd_ctx_types::PeaceCmdCtxTypes;
 
 #[test]
 fn input_type_names_includes_states_ts0_and_states_ts1() {
     macro_rules! assert_input_type_names {
         ($states_ts0:ident, $states_ts1:ident, $expected:expr) => {
-            let cmd_block = DiffCmdBlock::<PeaceCmdCtxTypeParams, $states_ts0, $states_ts1>::new();
+            let cmd_block = DiffCmdBlock::<PeaceCmdCtxTypes, $states_ts0, $states_ts1>::new();
 
             let input_type_names: Vec<String> = cmd_block.input_type_names();
 
@@ -30,7 +30,7 @@ fn input_type_names_includes_states_ts0_and_states_ts1() {
 fn outcome_type_names_includes_state_diffs_states_ts0_and_states_ts1() {
     macro_rules! assert_outcome_type_names {
         ($states_ts0:ident, $states_ts1:ident, $expected:expr) => {
-            let cmd_block = DiffCmdBlock::<PeaceCmdCtxTypeParams, $states_ts0, $states_ts1>::new();
+            let cmd_block = DiffCmdBlock::<PeaceCmdCtxTypes, $states_ts0, $states_ts1>::new();
 
             let outcome_type_names = cmd_block.outcome_type_names();
 

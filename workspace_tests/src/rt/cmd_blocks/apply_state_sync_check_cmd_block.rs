@@ -1,12 +1,12 @@
 use peace::{cmd_rt::CmdBlock, rt::cmd_blocks::ApplyStateSyncCheckCmdBlock};
 
-use crate::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams;
+use crate::peace_cmd_ctx_types::PeaceCmdCtxTypes;
 
 #[test]
 fn input_type_names_includes_states_compared() {
     macro_rules! assert_input_type_names {
         ($constructor:ident, $expected:expr) => {
-            let cmd_block = ApplyStateSyncCheckCmdBlock::<PeaceCmdCtxTypeParams, _>::$constructor();
+            let cmd_block = ApplyStateSyncCheckCmdBlock::<PeaceCmdCtxTypes, _>::$constructor();
 
             let input_type_names: Vec<String> = cmd_block.input_type_names();
 
@@ -32,7 +32,7 @@ fn input_type_names_includes_states_compared() {
 fn outcome_type_names_includes_states_compared() {
     macro_rules! assert_outcome_type_names {
         ($constructor:ident, $expected:expr) => {
-            let cmd_block = ApplyStateSyncCheckCmdBlock::<PeaceCmdCtxTypeParams, _>::$constructor();
+            let cmd_block = ApplyStateSyncCheckCmdBlock::<PeaceCmdCtxTypes, _>::$constructor();
 
             let outcome_type_names = cmd_block.outcome_type_names();
 

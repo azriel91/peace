@@ -7,7 +7,7 @@ use peace_value_traits::AppError;
 ///
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
-pub trait CmdCtxTypeParams {
+pub trait CmdCtxTypes {
     /// Error type of the automation software.
     type AppError: Debug;
     /// Output to write progress or outcome to.
@@ -21,26 +21,26 @@ pub trait CmdCtxTypeParams {
 ///
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
-pub trait CmdCtxTypeParamsConstrained:
-    CmdCtxTypeParams<
-        AppError = <Self as CmdCtxTypeParamsConstrained>::AppError,
-        Output = <Self as CmdCtxTypeParamsConstrained>::Output,
-        ParamsKeys = <Self as CmdCtxTypeParamsConstrained>::ParamsKeys,
+pub trait CmdCtxTypesConstrained:
+    CmdCtxTypes<
+        AppError = <Self as CmdCtxTypesConstrained>::AppError,
+        Output = <Self as CmdCtxTypesConstrained>::Output,
+        ParamsKeys = <Self as CmdCtxTypesConstrained>::ParamsKeys,
     > + Debug
     + Unpin
 {
     /// Error type of the automation software.
     type AppError: AppError + From<peace_rt_model::Error>;
     /// Output to write progress or outcome to.
-    type Output: OutputWrite<<Self as CmdCtxTypeParamsConstrained>::AppError>;
+    type Output: OutputWrite<<Self as CmdCtxTypesConstrained>::AppError>;
     /// Parameter key types for workspace params, profile params, and flow
     /// params.
     type ParamsKeys: ParamsKeys;
 }
 
-impl<T> CmdCtxTypeParamsConstrained for T
+impl<T> CmdCtxTypesConstrained for T
 where
-    T: CmdCtxTypeParams + Debug + Unpin,
+    T: CmdCtxTypes + Debug + Unpin,
     T::AppError: AppError + From<peace_rt_model::Error>,
     T::Output: OutputWrite<T::AppError>,
     T::ParamsKeys: ParamsKeys,
@@ -50,14 +50,14 @@ where
     type ParamsKeys = T::ParamsKeys;
 }
 
-/// Concrete struct to collect `CmdCtxTypeParams`.
+/// Concrete struct to collect `CmdCtxTypes`.
 #[derive(Debug)]
-pub struct CmdCtxTypeParamsCollector<AppError, Output, ParamsKeys>(
+pub struct CmdCtxTypesCollector<AppError, Output, ParamsKeys>(
     pub PhantomData<(AppError, Output, ParamsKeys)>,
 );
 
-impl<AppError, Output, ParamsKeysT> CmdCtxTypeParams
-    for CmdCtxTypeParamsCollector<AppError, Output, ParamsKeysT>
+impl<AppError, Output, ParamsKeysT> CmdCtxTypes
+    for CmdCtxTypesCollector<AppError, Output, ParamsKeysT>
 where
     AppError: Debug,
     ParamsKeysT: ParamsKeys,

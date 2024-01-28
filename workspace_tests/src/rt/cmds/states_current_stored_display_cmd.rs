@@ -7,7 +7,7 @@ use peace::{
 };
 
 use crate::{
-    peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams, FnInvocation, FnTrackerOutput, NoOpOutput,
+    peace_cmd_ctx_types::PeaceCmdCtxTypes, FnInvocation, FnTrackerOutput, NoOpOutput,
     PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
 
@@ -130,10 +130,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesCurrentStoredDisplayCmd::<PeaceCmdCtxTypeParams>::default()
+        StatesCurrentStoredDisplayCmd::<PeaceCmdCtxTypes>::default()
     );
     assert_eq!(
-        r#"StatesCurrentStoredDisplayCmd(PhantomData<workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams>)"#,
+        r#"StatesCurrentStoredDisplayCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
         debug_str,
     );
 }

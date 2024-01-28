@@ -13,7 +13,7 @@ use peace::{
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
-    peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams,
+    peace_cmd_ctx_types::PeaceCmdCtxTypes,
     vec_copy_item::VecB,
     NoOpOutput, PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
@@ -1075,12 +1075,9 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
 
 #[test]
 fn debug() {
-    let debug_str = format!(
-        "{:?}",
-        StatesDiscoverCmd::<PeaceCmdCtxTypeParams>::default()
-    );
+    let debug_str = format!("{:?}", StatesDiscoverCmd::<PeaceCmdCtxTypes>::default());
     assert_eq!(
-        r#"StatesDiscoverCmd(PhantomData<workspace_tests::peace_cmd_ctx_type_params::PeaceCmdCtxTypeParams>)"#,
+        r#"StatesDiscoverCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
         debug_str
     );
 }

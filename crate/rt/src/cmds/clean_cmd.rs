@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
+    ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_cmd_model::CmdOutcome;
@@ -23,11 +23,11 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct CleanCmd<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
+pub struct CleanCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<CmdCtxTypeParamsT> CleanCmd<CmdCtxTypeParamsT>
+impl<CmdCtxTypesT> CleanCmd<CmdCtxTypesT>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
     ///
@@ -61,13 +61,13 @@ where
     /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
     ) -> Result<
-        CmdOutcome<StatesCleanedDry, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<StatesCleanedDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
     {
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -79,14 +79,14 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_dry_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesCleanedDry, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<StatesCleanedDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
     {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
@@ -138,13 +138,13 @@ where
     /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
     /// [`Item`]: peace_cfg::Item
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
     ) -> Result<
-        CmdOutcome<StatesCleaned, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<StatesCleaned, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
     {
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
@@ -156,14 +156,14 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_with<'ctx, 'ctx_ref>(
-        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesCleaned, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<StatesCleaned, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
     {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
@@ -202,17 +202,14 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<'ctx, 'ctx_ref, StatesTs>(
-        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<
-            CleanExecChange<StatesTs>,
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<CleanExecChange<StatesTs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
         StatesTs: StatesTsApplyExt + Debug + Send + Sync + Unpin + 'static,
     {
         let mut cmd_execution = {
@@ -247,7 +244,7 @@ where
 
             cmd_execution_builder
                 .with_cmd_block(CmdBlockWrapper::new(
-                    ApplyExecCmdBlock::<CmdCtxTypeParamsT, StatesTs>::new(),
+                    ApplyExecCmdBlock::<CmdCtxTypesT, StatesTs>::new(),
                     |(states_previous, states_applied_mut, _states_target_mut)| {
                         CleanExecChange::Some(Box::new((states_previous, states_applied_mut)))
                     },
@@ -283,10 +280,10 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
-        item_graph: &ItemGraph<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
         states_cleaned: &StatesCleaned,
-    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -303,7 +300,7 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> Default for CleanCmd<CmdCtxTypeParamsT> {
+impl<CmdCtxTypesT> Default for CleanCmd<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }

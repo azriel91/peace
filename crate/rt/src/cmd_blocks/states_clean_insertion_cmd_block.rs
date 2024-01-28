@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::FutureExt;
-use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -25,11 +25,11 @@ cfg_if::cfg_if! {
 /// This calls [`Item::state_clean`] for each item, and groups them together
 /// into `StatesClean`.
 #[derive(Debug)]
-pub struct StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
+pub struct StatesCleanInsertionCmdBlock<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<CmdCtxTypeParamsT> StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
+impl<CmdCtxTypesT> StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns a new `StatesCleanInsertionCmdBlock`.
     pub fn new() -> Self {
@@ -37,18 +37,18 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT> {
+impl<CmdCtxTypesT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypeParamsT>
+impl<CmdCtxTypesT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = StatesClean;
 
@@ -63,14 +63,11 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let SingleProfileSingleFlowView {
             interruptibility_state,

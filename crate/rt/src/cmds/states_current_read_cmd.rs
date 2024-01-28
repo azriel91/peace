@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypeParamsConstrained},
+    ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::SingleProfileSingleFlow,
 };
 use peace_cmd_model::CmdOutcome;
@@ -12,11 +12,11 @@ use crate::cmd_blocks::StatesCurrentReadCmdBlock;
 
 /// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentReadCmd<CmdCtxTypeParamsT>(PhantomData<CmdCtxTypeParamsT>);
+pub struct StatesCurrentReadCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<CmdCtxTypeParamsT> StatesCurrentReadCmd<CmdCtxTypeParamsT>
+impl<CmdCtxTypesT> StatesCurrentReadCmd<CmdCtxTypesT>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Reads [`StatesCurrentStored`]s from storage.
     ///
@@ -26,16 +26,13 @@ where
     /// [`StatesCurrentStoredDiscoverCmd`]: crate::StatesCurrentStoredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypeParamsT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
     ) -> Result<
-        CmdOutcome<
-            StatesCurrentStored,
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
-        CmdCtxTypeParamsT: 'ctx,
+        CmdCtxTypesT: 'ctx,
     {
         let cmd_execution_builder = CmdExecution::<StatesCurrentStored, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
@@ -50,7 +47,7 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> Default for StatesCurrentReadCmd<CmdCtxTypeParamsT> {
+impl<CmdCtxTypesT> Default for StatesCurrentReadCmd<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }

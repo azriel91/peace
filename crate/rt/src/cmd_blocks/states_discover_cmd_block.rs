@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use futures::join;
 use peace_cfg::{FnCtx, ItemId};
-use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -51,17 +51,15 @@ pub struct DiscoverForGoal;
 pub struct DiscoverForCurrentAndGoal;
 
 /// Discovers [`StatesCurrent`] and/or [`StatesGoal`].
-pub struct StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor> {
+pub struct StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverFor> {
     /// Whether or not to mark progress bars complete on success.
     #[cfg(feature = "output_progress")]
     progress_complete_on_success: bool,
     /// Marker.
-    marker: PhantomData<(CmdCtxTypeParamsT, DiscoverFor)>,
+    marker: PhantomData<(CmdCtxTypesT, DiscoverFor)>,
 }
 
-impl<CmdCtxTypeParamsT, DiscoverFor> Debug
-    for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor>
-{
+impl<CmdCtxTypesT, DiscoverFor> Debug for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverFor> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("StatesDiscoverCmdBlock");
         #[cfg(feature = "output_progress")]
@@ -74,9 +72,9 @@ impl<CmdCtxTypeParamsT, DiscoverFor> Debug
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
@@ -88,9 +86,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
@@ -102,9 +100,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
@@ -116,9 +114,9 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT, DiscoverFor> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverFor>
+impl<CmdCtxTypesT, DiscoverFor> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverFor>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
     DiscoverFor: Discover,
 {
     /// Indicate that the progress tracker should be marked complete on success.
@@ -137,9 +135,9 @@ where
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::Sender<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
-        item: &ItemBoxed<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) {
         let item_id = item.id();
         let fn_ctx = FnCtx::new(
@@ -217,16 +215,10 @@ where
     fn discover_progress_update(
         progress_complete_on_success: bool,
         states_current_result: Option<
-            &Result<
-                Option<BoxDtDisplay>,
-                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-            >,
+            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         states_goal_result: Option<
-            &Result<
-                Option<BoxDtDisplay>,
-                <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-            >,
+            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         progress_tx: &Sender<CmdProgressUpdate>,
         item_id: &ItemId,
@@ -266,11 +258,11 @@ pub enum ItemDiscoverOutcome<AppErrorT> {
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
+impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = States<Current>;
 
@@ -285,14 +277,11 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -303,7 +292,7 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -352,21 +341,21 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrent>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_current_mut: StatesMut<Current>,
     ) -> Result<
         (
             States<Current>,
-            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -380,11 +369,9 @@ where
 
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -414,11 +401,11 @@ where
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
+impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = States<Goal>;
 
@@ -433,14 +420,11 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -451,7 +435,7 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -500,21 +484,21 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForGoal>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -528,11 +512,9 @@ where
 
     fn outcome_collate(
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -562,12 +544,11 @@ where
 }
 
 #[async_trait(?Send)]
-impl<CmdCtxTypeParamsT> CmdBlock
-    for StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    type CmdCtxTypeParams = CmdCtxTypeParamsT;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = (States<Current>, States<Goal>);
 
@@ -595,14 +576,11 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<
-            Self::Outcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-        <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
     > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
@@ -613,7 +591,7 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -664,13 +642,13 @@ where
     }
 }
 
-impl<CmdCtxTypeParamsT> StatesDiscoverCmdBlock<CmdCtxTypeParamsT, DiscoverForCurrentAndGoal>
+impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypeParamsT: CmdCtxTypeParamsConstrained,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_current_mut: StatesMut<Current>,
         mut states_goal_mut: StatesMut<Goal>,
@@ -678,9 +656,9 @@ where
         (
             States<Current>,
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
-        <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -701,11 +679,9 @@ where
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<
-            <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError,
-        >,
-    ) -> Result<(), <CmdCtxTypeParamsT as CmdCtxTypeParamsConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,

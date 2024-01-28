@@ -27,7 +27,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 
     // crate::ctx::CmdCtxBuilder<
     //     'ctx,
-    //     crate::ctx::CmdCtxBuilderTypeParamsCollector<
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
     //         AppError,
     //         Output,
     //         peace_rt_model::params::ParamsKeysImpl<

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 
-use peace_cmd::{ctx::CmdCtxTypeParamsConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockDesc;
 use peace_resources::resources::ts::SetUp;
 
@@ -21,20 +21,20 @@ cfg_if::cfg_if! {
 #[async_trait(?Send)]
 pub trait CmdBlockRt: Debug + Unpin {
     /// Type parameters passed to the `CmdCtx`.
-    type CmdCtxTypeParams: CmdCtxTypeParamsConstrained;
+    type CmdCtxTypes: CmdCtxTypesConstrained;
     /// Outcome type of the command execution.
     type ExecutionOutcome: Debug + 'static;
 
     /// Executes this command block.
     async fn exec(
         &self,
-        view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypeParams, SetUp>,
+        view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<
         (),
         CmdBlockError<
             Self::ExecutionOutcome,
-            <Self::CmdCtxTypeParams as CmdCtxTypeParamsConstrained>::AppError,
+            <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
         >,
     >;
 
