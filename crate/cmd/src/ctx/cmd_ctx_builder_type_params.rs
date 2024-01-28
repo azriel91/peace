@@ -78,6 +78,7 @@ pub struct CmdCtxBuilderTypeParamsCollector<
     ProfileSelection,
     FlowSelection,
 >(
+    #[allow(clippy::type_complexity)]
     pub  PhantomData<(
         AppError,
         Output,
