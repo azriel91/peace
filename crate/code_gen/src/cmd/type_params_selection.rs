@@ -146,11 +146,19 @@ impl ProfileParamsSelection {
                     profile_params_selection: crate::scopes::type_params::ProfileParamsNone
                 },
                 ProfileCount::One => parse_quote! {
-                    profile_params_selection: crate::scopes::type_params::ProfileParamsSome(profile_params)
+                    profile_params_selection:
+                        crate::scopes::type_params::ProfileParamsSome(profile_params)
                 },
-                ProfileCount::Multiple => parse_quote! {
-                    profile_params_selection: crate::scopes::type_params::ProfileParamsSomeMulti(profile_to_profile_params)
-                },
+                ProfileCount::Multiple => {
+                    // The `profile_to_profile_params` in `ProfileParamsSomeMulti` is not used.
+                    // On build, profile params are deserialized from disk.
+                    parse_quote! {
+                        profile_params_selection:
+                            crate::scopes::type_params::ProfileParamsSomeMulti(
+                                _profile_to_profile_params
+                            )
+                    }
+                }
             },
         }
     }
@@ -203,9 +211,16 @@ impl FlowParamsSelection {
                 ProfileCount::One => parse_quote! {
                     flow_params_selection: crate::scopes::type_params::FlowParamsSome(flow_params)
                 },
-                ProfileCount::Multiple => parse_quote! {
-                    flow_params_selection: crate::scopes::type_params::FlowParamsSomeMulti(profile_to_flow_params)
-                },
+                ProfileCount::Multiple => {
+                    // The `profile_to_flow_params` in `FlowParamsSomeMulti` is not used.
+                    // On build, profile params are deserialized from disk.
+                    parse_quote! {
+                        flow_params_selection:
+                            crate::scopes::type_params::FlowParamsSomeMulti(
+                                _profile_to_flow_params
+                            )
+                    }
+                }
             },
         }
     }
