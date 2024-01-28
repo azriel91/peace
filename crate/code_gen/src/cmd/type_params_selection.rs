@@ -1,4 +1,6 @@
-use syn::{parse_quote, FieldValue, GenericArgument};
+use syn::{parse_quote, FieldValue, TypePath};
+
+use crate::cmd::ProfileCount;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProfileSelection {
@@ -20,15 +22,12 @@ impl ProfileSelection {
         .into_iter()
     }
 
-    pub(crate) fn type_param(self) -> GenericArgument {
+    pub(crate) fn type_param(self) -> TypePath {
         match self {
             Self::NotSelected => parse_quote!(crate::scopes::type_params::ProfileNotSelected),
             Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
             Self::FromWorkspaceParam => parse_quote!(
-                crate::scopes::type_params::ProfileFromWorkspaceParam<
-                    'key,
-                    <PKeys::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key,
-                >
+                crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>
             ),
             Self::FilterFunction => {
                 parse_quote!(crate::scopes::type_params::ProfileFilterFn<'ctx>)
@@ -39,17 +38,23 @@ impl ProfileSelection {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FlowSelection {
+    NotSelected,
     Selected,
 }
 
 impl FlowSelection {
-    pub(crate) fn iter() -> std::array::IntoIter<Self, 1> {
-        [Self::Selected].into_iter()
+    pub(crate) fn iter() -> std::array::IntoIter<Self, 2> {
+        [Self::NotSelected, Self::Selected].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self) -> TypePath {
         match self {
-            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, E>),
+            Self::NotSelected => {
+                parse_quote!(crate::scopes::type_params::FlowNotSelected)
+            }
+            Self::Selected => {
+                parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, AppError>)
+            }
         }
     }
 }
@@ -65,17 +70,19 @@ impl WorkspaceParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self) -> TypePath {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::WorkspaceParamsNone),
             Self::Some => parse_quote! {
-                crate::scopes::type_params::WorkspaceParamsSome<
-                    <
-                        PKeys::WorkspaceParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+                crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             },
+        }
+    }
+
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<WorkspaceParamsK>),
         }
     }
 
@@ -103,30 +110,55 @@ impl ProfileParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self, profile_count: ProfileCount) -> TypePath {
         match self {
-            Self::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
-            Self::Some => parse_quote! {
-                crate::scopes::type_params::ProfileParamsSome<
-                    <
-                        PKeys::ProfileParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+            Self::None => {
+                parse_quote!(crate::scopes::type_params::ProfileParamsNone)
+            }
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
+                ProfileCount::One => parse_quote! {
+                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    crate::scopes::type_params::ProfileParamsSomeMulti<ProfileParamsK>
+                },
             },
         }
     }
 
-    pub(crate) fn deconstruct(self) -> FieldValue {
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<ProfileParamsK>),
+        }
+    }
+
+    pub(crate) fn deconstruct(self, profile_count: ProfileCount) -> FieldValue {
         match self {
             Self::None => {
                 parse_quote!(
                     profile_params_selection: crate::scopes::type_params::ProfileParamsNone
                 )
             }
-            Self::Some => parse_quote! {
-                profile_params_selection:
-                    crate::scopes::type_params::ProfileParamsSome(profile_params)
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote! {
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsNone
+                },
+                ProfileCount::One => parse_quote! {
+                    profile_params_selection:
+                        crate::scopes::type_params::ProfileParamsSome(profile_params)
+                },
+                ProfileCount::Multiple => {
+                    // The `profile_to_profile_params` in `ProfileParamsSomeMulti` is not used.
+                    // On build, profile params are deserialized from disk.
+                    parse_quote! {
+                        profile_params_selection:
+                            crate::scopes::type_params::ProfileParamsSomeMulti(
+                                _profile_to_profile_params
+                            )
+                    }
+                }
             },
         }
     }
@@ -143,30 +175,52 @@ impl FlowParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> GenericArgument {
+    pub(crate) fn type_param(&self, profile_count: ProfileCount) -> TypePath {
         match self {
             Self::None => {
                 parse_quote!(crate::scopes::type_params::FlowParamsNone)
             }
-            Self::Some => parse_quote! {
-                crate::scopes::type_params::FlowParamsSome<
-                    <
-                        PKeys::FlowParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
-                    >::Key
-                >
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote!(crate::scopes::type_params::FlowParamsNone),
+                ProfileCount::One => parse_quote! {
+                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
+                },
+                ProfileCount::Multiple => parse_quote! {
+                    crate::scopes::type_params::FlowParamsSomeMulti<FlowParamsK>
+                },
             },
         }
     }
 
-    pub(crate) fn deconstruct(self) -> FieldValue {
+    pub(crate) fn k_maybe_type_param(&self) -> TypePath {
+        match self {
+            Self::None => parse_quote!(peace_rt_model::params::KeyUnknown),
+            Self::Some => parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>),
+        }
+    }
+
+    pub(crate) fn deconstruct(self, profile_count: ProfileCount) -> FieldValue {
         match self {
             Self::None => {
                 parse_quote!(flow_params_selection: crate::scopes::type_params::FlowParamsNone)
             }
-            Self::Some => parse_quote! {
-                flow_params_selection:
-                    crate::scopes::type_params::FlowParamsSome(flow_params)
+            Self::Some => match profile_count {
+                ProfileCount::None => parse_quote! {
+                    flow_params_selection: crate::scopes::type_params::FlowParamsNone
+                },
+                ProfileCount::One => parse_quote! {
+                    flow_params_selection: crate::scopes::type_params::FlowParamsSome(flow_params)
+                },
+                ProfileCount::Multiple => {
+                    // The `profile_to_flow_params` in `FlowParamsSomeMulti` is not used.
+                    // On build, profile params are deserialized from disk.
+                    parse_quote! {
+                        flow_params_selection:
+                            crate::scopes::type_params::FlowParamsSomeMulti(
+                                _profile_to_flow_params
+                            )
+                    }
+                }
             },
         }
     }

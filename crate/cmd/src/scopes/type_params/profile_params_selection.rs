@@ -15,6 +15,16 @@ where
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
 
+impl<ProfileParamsK> Default for ProfileParamsSome<ProfileParamsK>
+where
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    fn default() -> Self {
+        ProfileParamsSome(ProfileParams::default())
+    }
+}
+
 /// The application has profile parameters from multiple profiles.
 #[derive(Debug)]
 pub struct ProfileParamsSomeMulti<ProfileParamsK>(
@@ -23,3 +33,13 @@ pub struct ProfileParamsSomeMulti<ProfileParamsK>(
 where
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
+
+impl<ProfileParamsK> Default for ProfileParamsSomeMulti<ProfileParamsK>
+where
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    fn default() -> Self {
+        ProfileParamsSomeMulti(BTreeMap::default())
+    }
+}

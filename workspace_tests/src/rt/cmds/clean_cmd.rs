@@ -15,8 +15,9 @@ use peace::{
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
+    peace_cmd_ctx_types::PeaceCmdCtxTypes,
     vec_copy_item::VecB,
-    NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
+    NoOpOutput, PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
 
 #[tokio::test]
@@ -978,9 +979,9 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", CleanCmd::<VecCopyError, NoOpOutput, ()>::default());
+    let debug_str = format!("{:?}", CleanCmd::<PeaceCmdCtxTypes>::default());
     assert_eq!(
-        r#"CleanCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"CleanCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
         debug_str,
     );
 }

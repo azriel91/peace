@@ -10,11 +10,7 @@ use peace::{
     fmt::{presentable::CodeInline, presentln},
     resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
-    rt_model::{
-        output::OutputWrite,
-        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-        Flow, Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Flow, Workspace, WorkspaceSpec},
 };
 use peace_items::{file_download::FileDownloadItem, tar_x::TarXItem};
 use semver::Version;
@@ -30,6 +26,7 @@ use crate::{
     model::{
         EnvManError, EnvManFlow, EnvType, ProfileParamsKey, RepoSlug, WebApp, WorkspaceParamsKey,
     },
+    rt_model::EnvmanCmdCtxTypes,
 };
 
 /// Flow to initialize and set the default profile.
@@ -202,18 +199,7 @@ async fn app_upload_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<
-    CmdCtx<
-        SingleProfileSingleFlow<
-            'f,
-            EnvManError,
-            O,
-            ParamsKeysImpl<KeyKnown<WorkspaceParamsKey>, KeyKnown<ProfileParamsKey>, KeyUnknown>,
-            SetUp,
-        >,
-    >,
-    EnvManError,
->
+) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>, SetUp>>, EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {
@@ -251,18 +237,7 @@ async fn env_deploy_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<
-    CmdCtx<
-        SingleProfileSingleFlow<
-            'f,
-            EnvManError,
-            O,
-            ParamsKeysImpl<KeyKnown<WorkspaceParamsKey>, KeyKnown<ProfileParamsKey>, KeyUnknown>,
-            SetUp,
-        >,
-    >,
-    EnvManError,
->
+) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>, SetUp>>, EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {

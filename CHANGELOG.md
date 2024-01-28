@@ -7,12 +7,15 @@
 * Remove requirement to import `peace::cfg::FlowId` when using `flow_id!("..")` macro. ([#157], [#176])
 * Remove requirement to import `peace::cfg::ItemId` when using `item_id!("..")` macro. ([#157], [#176])
 * Remove requirement to import `peace::cfg::Profile` when using `profile!("..")` macro. ([#157], [#176])
+* Add `CmdCtxTypes` to group error, output, and params keys into one type parameter. ([#166], [#177])
 
 
 [#172]: https://github.com/azriel91/peace/issues/172
 [#173]: https://github.com/azriel91/peace/pull/173
 [#157]: https://github.com/azriel91/peace/issues/157
 [#176]: https://github.com/azriel91/peace/pull/176
+[#166]: https://github.com/azriel91/peace/issues/166
+[#177]: https://github.com/azriel91/peace/pull/177
 
 
 ## 0.0.12 (2023-12-30)

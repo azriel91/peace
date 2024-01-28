@@ -3,21 +3,20 @@ use std::{collections::VecDeque, fmt::Debug};
 use futures::{future, stream, Future, StreamExt, TryStreamExt};
 use interruptible::InterruptSignal;
 use peace_cmd::{
-    ctx::CmdCtx,
+    ctx::{CmdCtx, CmdCtxTypes, CmdCtxTypesConstrained},
     scopes::{
         SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
     },
 };
 use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resources};
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys};
 
 use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::progress::CmdProgressUpdate;
-        use peace_rt_model::CmdProgressTracker;
+        use peace_rt_model::{output::OutputWrite, CmdProgressTracker};
         use tokio::sync::mpsc::{self, Sender};
 
         use crate::Progress;
@@ -45,13 +44,12 @@ mod cmd_execution_error_builder;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<ExecutionOutcome, E, PKeys>
+pub struct CmdExecution<'types, ExecutionOutcome, CmdCtxTypesT>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
     /// Logic to extract the `ExecutionOutcome` from `Resources`.
     execution_outcome_fetch: fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
     /// Whether or not to render progress.
@@ -59,24 +57,23 @@ where
     progress_render_enabled: bool,
 }
 
-impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
+impl<'types, ExecutionOutcome, CmdCtxTypesT> CmdExecution<'types, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained + 'types,
 {
-    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys> {
+    pub fn builder() -> CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypesT> {
         CmdExecutionBuilder::new()
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<'ctx, O>(
+    pub async fn exec<'ctx>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
-    where
-        O: OutputWrite<E>,
-    {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    > {
         let Self {
             cmd_blocks,
             execution_outcome_fetch,
@@ -188,26 +185,28 @@ where
     }
 }
 
-async fn cmd_outcome_task<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
-    cmd_blocks: &VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+async fn cmd_outcome_task<'types: 'view, 'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>(
+    cmd_blocks: &VecDeque<CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
-    cmd_view: &mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
+    cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypesT, SetUp>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
-) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
+) -> Result<
+    CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     let cmd_view_and_progress_result: Result<
-        CmdViewAndProgress<'_, '_, _, _>,
-        CmdBlockStreamBreak<'_, '_, _, _, _>,
+        CmdViewAndProgress<'_, '_, _>,
+        CmdBlockStreamBreak<'_, '_, _, _>,
     > = stream::unfold(cmd_blocks.iter(), |mut cmd_blocks| {
         let cmd_block_next = cmd_blocks.next();
         future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
     })
     .enumerate()
-    .map(Result::<_, CmdBlockStreamBreak<'_, '_, ExecutionOutcome, E, PKeys>>::Ok)
+    .map(Result::<_, CmdBlockStreamBreak<'_, '_, ExecutionOutcome, CmdCtxTypesT>>::Ok)
     .try_fold(
         CmdViewAndProgress {
             cmd_view,
@@ -277,7 +276,7 @@ where
     )
     .await;
 
-    outcome_extract::<ExecutionOutcome, E, PKeys>(
+    outcome_extract::<ExecutionOutcome, CmdCtxTypesT>(
         cmd_view_and_progress_result,
         cmd_blocks,
         execution_outcome_fetch,
@@ -294,18 +293,20 @@ where
 /// * `cmd_blocks`: `CmdBlock`s in this execution, used to build a useful error
 ///   message if needed.
 /// * `execution_outcome_fetch`: Logic to extract the `ExecutionOutcome` type.
-fn outcome_extract<'view, 'view_ref, ExecutionOutcome, E, PKeys>(
+fn outcome_extract<'types: 'view, 'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>(
     cmd_view_and_progress_result: Result<
-        CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
-        CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>,
+        CmdViewAndProgress<'view, 'view_ref, CmdCtxTypesT>,
+        CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>,
     >,
-    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    cmd_blocks: &'view_ref VecDeque<CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
-) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
+) -> Result<
+    CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+    <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     let (cmd_view_and_progress, cmd_block_index_and_error, cmd_block_index_next) =
         match cmd_view_and_progress_result {
@@ -341,13 +342,15 @@ where
 
     if let Some((cmd_block_index, cmd_block_error)) = cmd_block_index_and_error {
         match cmd_block_error {
-            CmdBlockError::InputFetch(resource_fetch_error) => Err(E::from(
-                peace_rt_model::Error::from(CmdExecutionErrorBuilder::build::<_, _, _, _>(
-                    cmd_blocks.iter(),
-                    cmd_block_index,
-                    resource_fetch_error,
-                )),
-            )),
+            CmdBlockError::InputFetch(resource_fetch_error) => {
+                Err(<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError::from(
+                    peace_rt_model::Error::from(CmdExecutionErrorBuilder::build::<_, _, _>(
+                        cmd_blocks.iter(),
+                        cmd_block_index,
+                        resource_fetch_error,
+                    )),
+                ))
+            }
             CmdBlockError::Exec(error) => Err(error),
             CmdBlockError::Interrupt { stream_outcome } => {
                 let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
@@ -435,42 +438,40 @@ where
     }
 }
 
-struct CmdViewAndProgress<'view, 'view_ref, E, PKeys>
+struct CmdViewAndProgress<'view, 'view_ref, CmdCtxTypesT>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
+    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, CmdCtxTypesT, SetUp>,
     #[cfg(feature = "output_progress")]
     cmd_progress_tx: Sender<CmdProgressUpdate>,
 }
 
 /// Reasons to stop processing `CmdBlock`s.
-enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, E, PKeys>
+enum CmdBlockStreamBreak<'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// An interruption happened between `CmdBlock` executions.
     Interrupt {
-        cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+        cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, CmdCtxTypesT>,
         /// Index of the next `CmdBlock` that hasn't been processed.
         cmd_block_index_next: usize,
         interrupt_signal: InterruptSignal,
     },
     /// A `CmdBlockError` was returned from `CmdBlockRt::exec`.
-    BlockErr(CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>),
+    BlockErr(CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>),
 }
 
-struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, E, PKeys>
+struct CmdViewAndErr<'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug,
-    E: Debug + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, E, PKeys>,
+    cmd_view_and_progress: CmdViewAndProgress<'view, 'view_ref, CmdCtxTypesT>,
     /// Index of the `CmdBlock` that erred.
     cmd_block_index: usize,
-    cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
+    cmd_block_error:
+        CmdBlockError<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
 }

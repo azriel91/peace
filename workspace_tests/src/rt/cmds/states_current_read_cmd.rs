@@ -6,7 +6,10 @@ use peace::{
     rt_model::{Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState};
+use crate::{
+    peace_cmd_ctx_types::PeaceCmdCtxTypes, NoOpOutput, PeaceTestError, VecA, VecCopyItem,
+    VecCopyState,
+};
 
 #[tokio::test]
 async fn reads_states_current_stored_from_disk_when_present()
@@ -104,12 +107,9 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn debug() {
-    let debug_str = format!(
-        "{:?}",
-        StatesCurrentReadCmd::<VecCopyError, NoOpOutput, ()>::default()
-    );
+    let debug_str = format!("{:?}", StatesCurrentReadCmd::<PeaceCmdCtxTypes>::default());
     assert_eq!(
-        r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"StatesCurrentReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
         debug_str,
     );
 }

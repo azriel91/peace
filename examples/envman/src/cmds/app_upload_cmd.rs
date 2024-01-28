@@ -11,11 +11,7 @@ use peace::{
     fmt::presentln,
     params::Params,
     resources::resources::ts::SetUp,
-    rt_model::{
-        output::OutputWrite,
-        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-        Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
 use crate::{
@@ -26,7 +22,7 @@ use crate::{
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
     model::{EnvManError, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
-    rt_model::EnvManCmdCtx,
+    rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
 };
 
 /// Runs a `*Cmd` that interacts with the application upload.
@@ -104,19 +100,7 @@ impl AppUploadCmd {
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<
-                MultiProfileSingleFlow<
-                    '_,
-                    EnvManError,
-                    O,
-                    ParamsKeysImpl<
-                        KeyKnown<WorkspaceParamsKey>,
-                        KeyKnown<ProfileParamsKey>,
-                        KeyUnknown,
-                    >,
-                    SetUp,
-                >,
-            >,
+            &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>, SetUp>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let workspace = Workspace::new(

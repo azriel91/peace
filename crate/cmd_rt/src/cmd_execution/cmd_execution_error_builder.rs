@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
+use peace_cmd::ctx::CmdCtxTypesConstrained;
 use peace_cmd_model::{CmdBlockDesc, CmdExecutionError};
 use peace_resources::ResourceFetchError;
-use peace_rt_model::params::ParamsKeys;
 
 use crate::CmdBlockRtBox;
 
@@ -46,16 +46,16 @@ impl CmdExecutionErrorBuilder {
     ///       Input: (States<Current>, States<Goal>)
     ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
     /// ```
-    pub fn build<'f, ExecutionOutcome, E, PKeys, CmdBlockIterator>(
+    pub fn build<'types: 'f, 'f, ExecutionOutcome, CmdCtxTypesT, CmdBlockIterator>(
         cmd_blocks: CmdBlockIterator,
         cmd_block_index: usize,
         resource_fetch_error: ResourceFetchError,
     ) -> CmdExecutionError
     where
-        E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-        PKeys: ParamsKeys + 'static,
+        CmdCtxTypesT: CmdCtxTypesConstrained + 'f,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-        CmdBlockIterator: Iterator<Item = &'f CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+        CmdBlockIterator:
+            Iterator<Item = &'f CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
     {
         let ResourceFetchError {
             resource_name_short: input_name_short,
@@ -67,9 +67,11 @@ impl CmdExecutionErrorBuilder {
             .collect::<Vec<CmdBlockDesc>>();
 
         #[cfg(feature = "error_reporting")]
-        let (cmd_execution_src, input_span) =
-            cmd_execution_src::<ExecutionOutcome, E, PKeys>(&cmd_block_descs, &input_name_short)
-                .expect("Failed to write to `cmd_execution_src` buffer.");
+        let (cmd_execution_src, input_span) = cmd_execution_src::<ExecutionOutcome, CmdCtxTypesT>(
+            &cmd_block_descs,
+            &input_name_short,
+        )
+        .expect("Failed to write to `cmd_execution_src` buffer.");
         #[cfg(feature = "error_reporting")]
         let full_span = SourceSpan::from((0, cmd_execution_src.len()));
 
@@ -89,19 +91,19 @@ impl CmdExecutionErrorBuilder {
 }
 
 #[cfg(feature = "error_reporting")]
-fn cmd_execution_src<ExecutionOutcome, E, PKeys>(
+fn cmd_execution_src<ExecutionOutcome, CmdCtxTypesT>(
     cmd_block_descs: &[CmdBlockDesc],
     input_name_short: &str,
 ) -> Result<(String, Option<SourceSpan>), fmt::Error>
 where
-    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     let mut cmd_execution_src = String::with_capacity(2048);
 
-    let cmd_execution_name =
-        tynm::type_name_opts::<CmdExecution<ExecutionOutcome, E, PKeys>>(TypeParamsFmtOpts::Std);
+    let cmd_execution_name = tynm::type_name_opts::<CmdExecution<ExecutionOutcome, CmdCtxTypesT>>(
+        TypeParamsFmtOpts::Std,
+    );
     let execution_outcome_types_name =
         tynm::type_name_opts::<ExecutionOutcome>(TypeParamsFmtOpts::All);
 

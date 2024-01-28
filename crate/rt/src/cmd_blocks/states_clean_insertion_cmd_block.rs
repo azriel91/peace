@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::FutureExt;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
@@ -10,7 +10,7 @@ use peace_resources::{
     states::{ts::Clean, StatesClean},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{fn_graph::StreamOpts, params::ParamsKeys, Error};
+use peace_rt_model::fn_graph::StreamOpts;
 use peace_rt_model_core::IndexMap;
 
 cfg_if::cfg_if! {
@@ -25,12 +25,11 @@ cfg_if::cfg_if! {
 /// This calls [`Item::state_clean`] for each item, and groups them together
 /// into `StatesClean`.
 #[derive(Debug)]
-pub struct StatesCleanInsertionCmdBlock<E, PKeys>(PhantomData<(E, PKeys)>);
+pub struct StatesCleanInsertionCmdBlock<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<E, PKeys> StatesCleanInsertionCmdBlock<E, PKeys>
+impl<CmdCtxTypesT> StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Returns a new `StatesCleanInsertionCmdBlock`.
     pub fn new() -> Self {
@@ -38,22 +37,20 @@ where
     }
 }
 
-impl<E, PKeys> Default for StatesCleanInsertionCmdBlock<E, PKeys> {
+impl<CmdCtxTypesT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
 #[async_trait(?Send)]
-impl<E, PKeys> CmdBlock for StatesCleanInsertionCmdBlock<E, PKeys>
+impl<CmdCtxTypesT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    type Error = E;
+    type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = StatesClean;
-    type PKeys = PKeys;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -66,9 +63,12 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<CmdBlockOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+    > {
         let SingleProfileSingleFlowView {
             interruptibility_state,
             flow,

@@ -53,8 +53,6 @@ pub(crate) fn passthrough(
         field_values.push(parse_quote!(params_specs_provided));
     }
 
-    field_values.push(parse_quote!(marker));
-
     field_values
 }
 
@@ -115,8 +113,6 @@ pub(crate) fn params_none(
         field_values.push(parse_quote!(params_specs_provided));
     }
 
-    field_values.push(parse_quote!(marker));
-
     field_values
 }
 
@@ -168,8 +164,6 @@ pub(crate) fn params_some(scope: Scope, params_scope: ParamsScope) -> Punctuated
         field_values.push(parse_quote!(params_specs_provided));
     }
 
-    field_values.push(parse_quote!(marker));
-
     field_values
 }
 
@@ -206,10 +200,21 @@ pub(crate) fn params_some_new(
         ParamsScope::Profile => {
             field_values.push(parse_quote!(workspace_params_selection));
             if scope.profile_params_supported() {
-                field_values.push(parse_quote! {
-                    profile_params_selection:
-                        crate::scopes::type_params::ProfileParamsSome(params_map)
-                });
+                match scope.profile_count() {
+                    ProfileCount::None => {}
+                    ProfileCount::One => {
+                        field_values.push(parse_quote! {
+                            profile_params_selection:
+                                crate::scopes::type_params::ProfileParamsSome(params_map)
+                        });
+                    }
+                    ProfileCount::Multiple => {
+                        field_values.push(parse_quote! {
+                            profile_params_selection:
+                                crate::scopes::type_params::ProfileParamsSomeMulti(Default::default())
+                        });
+                    }
+                }
             }
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
@@ -221,10 +226,21 @@ pub(crate) fn params_some_new(
                 field_values.push(parse_quote!(profile_params_selection));
             }
             if scope.flow_params_supported() {
-                field_values.push(parse_quote! {
-                    flow_params_selection:
-                        crate::scopes::type_params::FlowParamsSome(params_map)
-                });
+                match scope.profile_count() {
+                    ProfileCount::None => {}
+                    ProfileCount::One => {
+                        field_values.push(parse_quote! {
+                            flow_params_selection:
+                                crate::scopes::type_params::FlowParamsSome(params_map)
+                        });
+                    }
+                    ProfileCount::Multiple => {
+                        field_values.push(parse_quote! {
+                            flow_params_selection:
+                                crate::scopes::type_params::FlowParamsSomeMulti(Default::default())
+                        });
+                    }
+                }
             }
         }
     }
@@ -232,8 +248,6 @@ pub(crate) fn params_some_new(
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-
-    field_values.push(parse_quote!(marker));
 
     field_values
 }

@@ -7,20 +7,19 @@ use peace::{
         CleanCmd, DiffCmd, EnsureCmd, StatesCurrentStoredDisplayCmd, StatesDiscoverCmd,
         StatesGoalDisplayCmd,
     },
-    rt_model::{
-        output::OutputWrite,
-        params::{KeyUnknown, ParamsKeysImpl},
-        Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::file_download::{FileDownloadItem, FileDownloadParams};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::download_args::{DownloadArgs, DownloadCommand};
-pub use crate::{download_error::DownloadError, file_id::FileId};
+pub use crate::{
+    download_cmd_ctx_types::DownloadCmdCtxTypes, download_error::DownloadError, file_id::FileId,
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod download_args;
+mod download_cmd_ctx_types;
 mod download_error;
 mod file_id;
 
@@ -72,15 +71,8 @@ pub async fn workspace_and_flow_setup(
     Ok(workspace_and_flow)
 }
 
-pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
-    SingleProfileSingleFlow<
-        'ctx,
-        DownloadError,
-        O,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-        SetUp,
-    >,
->;
+pub type DownloadCmdCtx<'ctx, O> =
+    CmdCtx<SingleProfileSingleFlow<'ctx, DownloadCmdCtxTypes<O>, SetUp>>;
 
 /// Returns a `CmdCtx` initialized from the workspace and item graph
 pub async fn cmd_ctx<'ctx, O>(

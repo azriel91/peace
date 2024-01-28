@@ -1,12 +1,8 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
+use syn::parse_quote;
 
 use crate::cmd::{
-    type_parameters_impl,
-    type_params_selection::{
-        FlowParamsSelection, ProfileParamsSelection, WorkspaceParamsSelection,
-    },
-    ParamsScope, ScopeStruct,
+    with_params::cmd_ctx_builder_with_params_selected, ImplHeaderBuilder, ParamsScope, ScopeStruct,
 };
 
 /// Generates the `CmdCtxBuilder::*_params_deserialize` methods for each params
@@ -37,79 +33,8 @@ fn impl_params_deserialize_for(
     scope_struct: &ScopeStruct,
     params_scope: ParamsScope,
 ) -> proc_macro2::TokenStream {
-    let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
-    let (workspace_params_selection, profile_params_selection, flow_params_selection) =
-        match params_scope {
-            ParamsScope::Workspace => (
-                WorkspaceParamsSelection::Some.type_param(),
-                parse_quote!(ProfileParamsSelection),
-                parse_quote!(FlowParamsSelection),
-            ),
-            ParamsScope::Profile => (
-                parse_quote!(WorkspaceParamsSelection),
-                ProfileParamsSelection::Some.type_param(),
-                parse_quote!(FlowParamsSelection),
-            ),
-            ParamsScope::Flow => (
-                parse_quote!(WorkspaceParamsSelection),
-                parse_quote!(ProfileParamsSelection),
-                FlowParamsSelection::Some.type_param(),
-            ),
-        };
-
-    let impl_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
-
-        type_params.push(parse_quote!(PKeys));
-
-        match params_scope {
-            ParamsScope::Workspace => {
-                if scope.profile_params_supported() {
-                    type_params.push(profile_params_selection.clone());
-                }
-
-                if scope.flow_params_supported() {
-                    type_params.push(flow_params_selection.clone());
-                }
-            }
-            ParamsScope::Profile => {
-                type_params.push(workspace_params_selection.clone());
-
-                if scope.flow_params_supported() {
-                    type_params.push(flow_params_selection.clone());
-                }
-            }
-            ParamsScope::Flow => {
-                type_params.push(workspace_params_selection.clone());
-
-                if scope.profile_params_supported() {
-                    type_params.push(profile_params_selection.clone());
-                }
-            }
-        }
-
-        type_params
-    };
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
-
-        type_params.push(parse_quote!(PKeys));
-
-        type_params.push(workspace_params_selection);
-        if scope.profile_params_supported() {
-            type_params.push(profile_params_selection);
-        }
-        if scope.flow_params_supported() {
-            type_params.push(flow_params_selection);
-        }
-
-        type_params
-    };
     let params_deserialize_method_name = params_scope.params_deserialize_method_name();
     let params_map_type = params_scope.params_map_type();
     let p_keys_key_maybe_key = params_scope.p_keys_key_maybe_key();
@@ -124,47 +49,63 @@ fn impl_params_deserialize_for(
         )
     };
 
+    let builder_type =
+        cmd_ctx_builder_with_params_selected(scope_builder_name, scope_struct, params_scope);
+    let impl_header = {
+        let impl_header_builder = ImplHeaderBuilder::new(builder_type);
+        match params_scope {
+            ParamsScope::Workspace => impl_header_builder
+                .with_workspace_params_k_maybe(None)
+                .with_workspace_params_k(parse_quote!(WorkspaceParamsK))
+                .with_workspace_params_selection(None),
+            ParamsScope::Profile => impl_header_builder
+                .with_profile_params_k_maybe(None)
+                .with_profile_params_k(parse_quote!(ProfileParamsK))
+                .with_profile_params_selection(None),
+            ParamsScope::Flow => impl_header_builder
+                .with_flow_params_k_maybe(None)
+                .with_flow_params_k(parse_quote!(FlowParamsK))
+                .with_flow_params_selection(None),
+        }
+        .build()
+    };
+
+    let params_keys_impl_type_params = match params_scope {
+        ParamsScope::Workspace => quote!(
+            peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        ),
+        ParamsScope::Profile => quote!(
+            WorkspaceParamsKMaybe,
+            peace_rt_model::params::KeyKnown<ProfileParamsK>,
+            FlowParamsKMaybe,
+        ),
+        ParamsScope::Flow => quote!(
+            WorkspaceParamsKMaybe,
+            ProfileParamsKMaybe,
+            peace_rt_model::params::KeyKnown<FlowParamsK>,
+        ),
+    };
+
     quote! {
-        impl<
-            'ctx,
-            'key,
-            E,
-            O,
-            // ProfileSelection,
-            // FlowSelection,
-            // PKeys,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #impl_type_params
-        >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileSelection,
-                    // FlowSelection,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_builder_type_params
-                >,
-            >
-        where
-            PKeys: #params_module::ParamsKeys + 'static,
+        #impl_header
         {
             #[doc = #doc_summary]
             // async fn workspace_params_deserialize
             async fn #params_deserialize_method_name(
                 storage: &peace_rt_model::Storage,
-                params_type_regs_builder: &#params_module::ParamsTypeRegsBuilder<PKeys>,
+                params_type_regs_builder: &peace_rt_model::params::ParamsTypeRegsBuilder<
+                    peace_rt_model::params::ParamsKeysImpl<
+                        #params_keys_impl_type_params
+                    >,
+                >,
                 // workspace_params_file: &peace_resources::internal::WorkspaceParamsFile,
                 #params_file_name: &peace_resources::internal::#params_file_type,
             // ) -> Result<Option<WorkspaceParams<K>, peace_rt_model::Error> {
-            ) -> Result<Option<#params_module::#params_map_type<#p_keys_key_maybe_key>>, peace_rt_model::Error> {
+            ) -> Result<Option<peace_rt_model::params::#params_map_type<#p_keys_key_maybe_key>>, peace_rt_model::Error> {
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
-                    // <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+                    // <ParamsKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,
                     #p_keys_key_maybe_key
                 >(
                     storage,

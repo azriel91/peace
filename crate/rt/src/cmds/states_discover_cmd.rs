@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
-    ctx::CmdCtx,
+    ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_cmd_model::CmdOutcome;
@@ -12,23 +12,21 @@ use peace_resources::{
     states::{StatesCurrent, StatesGoal},
     Resources,
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage};
+use peace_rt_model::{ItemGraph, Storage};
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 
-pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesDiscoverCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<E, O, PKeys> Debug for StatesDiscoverCmd<E, O, PKeys> {
+impl<CmdCtxTypesT> Debug for StatesDiscoverCmd<CmdCtxTypesT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("StatesDiscoverCmd").field(&self.0).finish()
     }
 }
 
-impl<E, O, PKeys> StatesDiscoverCmd<E, O, PKeys>
+impl<CmdCtxTypesT> StatesDiscoverCmd<CmdCtxTypesT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Runs [`try_state_current`] for each [`Item`].
     ///
@@ -49,8 +47,14 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
         Self::current_with(cmd_ctx, true).await
     }
 
@@ -69,10 +73,16 @@ where
     ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesCurrent, _, _>::builder()
+    ) -> Result<
+        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
+        let mut cmd_execution = CmdExecution::<StatesCurrent, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current(),
@@ -117,8 +127,14 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
         Self::goal_with(cmd_ctx, true).await
     }
 
@@ -137,10 +153,16 @@ where
     ///
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        let mut cmd_execution = CmdExecution::<StatesGoal, _, _>::builder()
+    ) -> Result<
+        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
+        let mut cmd_execution = CmdExecution::<StatesGoal, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::goal(),
@@ -194,8 +216,14 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
         Self::current_and_goal_with(cmd_ctx, true).await
     }
 
@@ -216,10 +244,16 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
         serialize_to_storage: bool,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
-        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _, _>::builder()
+    ) -> Result<
+        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
+        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current_and_goal(),
@@ -261,10 +295,10 @@ where
 
     // TODO: This duplicates a bit of code with `EnsureCmd` and `CleanCmd`.
     async fn serialize_current(
-        item_graph: &ItemGraph<E>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
-    ) -> Result<(), E> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -283,10 +317,10 @@ where
     }
 
     async fn serialize_goal(
-        item_graph: &ItemGraph<E>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_goal: &StatesGoal,
-    ) -> Result<(), E> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -304,7 +338,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesDiscoverCmd<E, O, PKeys> {
+impl<CmdCtxTypesT> Default for StatesDiscoverCmd<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }

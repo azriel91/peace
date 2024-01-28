@@ -1,14 +1,13 @@
 use quote::quote;
-use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
-};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Token};
 
 use crate::cmd::{
     type_params_selection::{
         FlowParamsSelection, FlowSelection, ProfileParamsSelection, ProfileSelection,
         WorkspaceParamsSelection,
     },
-    FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
+    CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ParamsScope, ProfileCount, Scope,
+    ScopeStruct,
 };
 
 /// Generates the `CmdCtxBuilder::build` methods for each type param selection.
@@ -27,7 +26,9 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     ProfileSelection::iter().fold(
         proc_macro2::TokenStream::new(),
         |tokens, profile_selection| {
-            match (scope_struct.scope().profile_count(), profile_selection) {
+            let scope = scope_struct.scope();
+            let profile_count = scope.profile_count();
+            match (profile_count, profile_selection) {
                 // For `ProfileCount::None` it only makes sense to have `ProfileSelection::NotSelected`
                 (
                     ProfileCount::None,
@@ -54,6 +55,35 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             }
 
             FlowSelection::iter().fold(tokens, |tokens, flow_selection| {
+                match (scope, profile_selection, flow_selection) {
+                    (
+                        Scope::NoProfileNoFlow,
+                        ProfileSelection::NotSelected,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::SingleProfileNoFlow,
+                        ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::SingleProfileSingleFlow,
+                        ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
+                        FlowSelection::Selected,
+                    )
+                    | (
+                        Scope::MultiProfileNoFlow,
+                        ProfileSelection::NotSelected | ProfileSelection::FilterFunction,
+                        FlowSelection::NotSelected,
+                    )
+                    | (
+                        Scope::MultiProfileSingleFlow,
+                        ProfileSelection::NotSelected | ProfileSelection::FilterFunction,
+                        FlowSelection::Selected,
+                    ) => {}
+                    _ => return tokens,
+                }
+
                 WorkspaceParamsSelection::iter().fold(
                     tokens,
                     |tokens, workspace_params_selection| {
@@ -119,31 +149,7 @@ fn impl_build_for(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
-    let scope_builder_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        match scope.profile_count() {
-            ProfileCount::None => {}
-            ProfileCount::One | ProfileCount::Multiple => {
-                type_params.push(profile_selection.type_param());
-            }
-        }
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(flow_selection.type_param());
-        }
-
-        type_params.push(parse_quote!(PKeys));
-        type_params.push(workspace_params_selection.type_param());
-        if scope.profile_params_supported() {
-            type_params.push(profile_params_selection.type_param());
-        }
-        if scope.flow_params_supported() {
-            type_params.push(flow_params_selection.type_param());
-        }
-
-        type_params
-    };
     let scope_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
@@ -188,25 +194,126 @@ fn impl_build_for(
         flow_params_selection,
     );
 
-    quote! {
-        impl<'ctx, 'key, E, O, PKeys>
-            crate::ctx::CmdCtxBuilder<
+    let workspace_params_selection_type_param = workspace_params_selection.type_param();
+    let profile_params_selection_type_param =
+        profile_params_selection.type_param(scope.profile_count());
+    let flow_params_selection_type_param = flow_params_selection.type_param(scope.profile_count());
+    let profile_selection_type_param = profile_selection.type_param();
+    let flow_selection_type_param = flow_selection.type_param();
+
+    let workspace_params_selection_k_maybe_type_param =
+        workspace_params_selection.k_maybe_type_param();
+    let profile_params_selection_k_maybe_type_param = profile_params_selection.k_maybe_type_param();
+    let flow_params_selection_k_maybe_type_param = flow_params_selection.k_maybe_type_param();
+
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe = ??,
+    //             ProfileParamsKMaybe = ??,
+    //             FlowParamsKMaybe = ??,
+    //         >,
+    //         crate::scopes::type_params::WorkspaceParams??,
+    //         crate::scopes::type_params::ProfileParamsSome<
+    //             <ParamsKeysT::ProfileParamsKMaybe as KeyMaybe>::Key
+    //         >,
+    //         crate::scopes::type_params::FlowParamsSome<
+    //             <ParamsKeysT::FlowParamsKMaybe as KeyMaybe>::Key
+    //         >,
+    //         crate::scopes::type_params::ProfileFromWorkspaceParam<
+    //             'key,
+    //             <ParamsKeysT::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key,
+    //         >,
+    //         crate::scopes::type_params::FlowNotSelected,
+    //     >,
+    // >
+    // ```
+
+    let params_keys_impl = quote! {
+        peace_rt_model::params::ParamsKeysImpl<
+            #workspace_params_selection_k_maybe_type_param,
+            #profile_params_selection_k_maybe_type_param,
+            #flow_params_selection_k_maybe_type_param,
+        >
+    };
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_app_error(parse_quote!(AppError))
+        .with_output(parse_quote!(Output))
+        .with_workspace_params_k_maybe(workspace_params_selection_k_maybe_type_param)
+        .with_profile_params_k_maybe(profile_params_selection_k_maybe_type_param)
+        .with_flow_params_k_maybe(flow_params_selection_k_maybe_type_param)
+        .with_workspace_params_selection(parse_quote!(#workspace_params_selection_type_param))
+        .with_profile_params_selection(parse_quote!(#profile_params_selection_type_param))
+        .with_flow_params_selection(parse_quote!(#flow_params_selection_type_param))
+        .with_profile_selection(parse_quote!(#profile_selection_type_param))
+        .with_flow_selection(parse_quote!(#flow_selection_type_param))
+        .build();
+
+    let (impl_header, impl_into_future_header) = {
+        let mut impl_header_builder = ImplHeaderBuilder::new(builder_type)
+            .with_lifetimes(parse_quote!('ctx, 'key))
+            .with_workspace_params_k_maybe(None)
+            .with_profile_params_k_maybe(None)
+            .with_flow_params_k_maybe(None)
+            .with_workspace_params_selection(None)
+            .with_profile_params_selection(None)
+            .with_flow_params_selection(None)
+            .with_profile_selection(None)
+            .with_flow_selection(None);
+
+        impl_header_builder = match workspace_params_selection {
+            WorkspaceParamsSelection::None => impl_header_builder,
+            WorkspaceParamsSelection::Some => {
+                impl_header_builder.with_workspace_params_k(parse_quote!(WorkspaceParamsK))
+            }
+        };
+        impl_header_builder = match profile_params_selection {
+            ProfileParamsSelection::None => impl_header_builder,
+            ProfileParamsSelection::Some => {
+                impl_header_builder.with_profile_params_k(parse_quote!(ProfileParamsK))
+            }
+        };
+        impl_header_builder = match flow_params_selection {
+            FlowParamsSelection::None => impl_header_builder,
+            FlowParamsSelection::Some => {
+                impl_header_builder.with_flow_params_k(parse_quote!(FlowParamsK))
+            }
+        };
+
+        let impl_into_future_builder = impl_header_builder
+            .clone()
+            .with_lifetimes(parse_quote!('ctx, 'key: 'ctx))
+            .with_trait_name(Some(parse_quote!(std::future::IntoFuture)));
+        (
+            impl_header_builder.build(),
+            impl_into_future_builder.build(),
+        )
+    };
+
+    let cmd_ctx_return_type = quote! {
+        crate::ctx::CmdCtx<
+            #scope_type_path<
                 'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<'ctx, E>,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowParamsNone,
-                    #scope_builder_type_params
+                crate::ctx::CmdCtxTypesCollector<
+                    AppError,
+                    Output,
+                    #params_keys_impl,
                 >,
-            >
-        where
-            E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            PKeys: #params_module::ParamsKeys + 'static,
+
+                // MultiProfileSingleFlow / SingleProfileSingleFlow
+                // peace_resources::resources::ts::SetUp
+                #scope_type_params
+            >,
+        >
+    };
+
+    quote! {
+        #impl_header
         {
             /// Builds the command context.
             ///
@@ -214,25 +321,7 @@ fn impl_build_for(
             /// given parameters
             pub async fn build(
                 mut self,
-            ) -> Result<
-                crate::ctx::CmdCtx<
-                    #scope_type_path<
-                        'ctx,
-                        E,
-                        O,
-                        #params_module::ParamsKeysImpl<
-                            PKeys::WorkspaceParamsKMaybe,
-                            PKeys::ProfileParamsKMaybe,
-                            PKeys::FlowParamsKMaybe,
-                        >,
-
-                        // MultiProfileSingleFlow / SingleProfileSingleFlow
-                        // peace_resources::resources::ts::SetUp
-                        #scope_type_params
-                    >,
-                >,
-                E,
-            >
+            ) -> Result<#cmd_ctx_return_type, AppError>
             {
                 use futures::stream::TryStreamExt;
 
@@ -425,8 +514,6 @@ fn impl_build_for(
                 //
                 //         // === SingleProfileSingleFlow === //
                 //         params_specs_provided,
-                //
-                //         marker: std::marker::PhantomData,
                 //     },
                 // } = self;
                 #scope_builder_deconstruct
@@ -737,24 +824,13 @@ fn impl_build_for(
             }
         }
 
-        impl<'ctx, 'key: 'ctx, E, O, PKeys> std::future::IntoFuture
-        for crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<'ctx, E>,
-                    // PKeys,
-                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowParamsNone,
-                    #scope_builder_type_params
+        #impl_into_future_header,
+            crate::ctx::CmdCtxTypesCollector<AppError, Output, #params_keys_impl>:
+                crate::ctx::CmdCtxTypesConstrained<
+                    AppError = AppError,
+                    Output = Output,
+                    ParamsKeys = #params_keys_impl
                 >,
-            >
-        where
-            E: std::error::Error + From<peace_rt_model::Error> + 'static,
-            PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Future that returns the `CmdCtx`.
             ///
@@ -764,25 +840,7 @@ fn impl_build_for(
             type IntoFuture = std::pin::Pin<
                 Box<
                     dyn std::future::Future<
-                        Output = Result<
-                            crate::ctx::CmdCtx<
-                                #scope_type_path<
-                                    'ctx,
-                                    E,
-                                    O,
-                                    #params_module::ParamsKeysImpl<
-                                        PKeys::WorkspaceParamsKMaybe,
-                                        PKeys::ProfileParamsKMaybe,
-                                        PKeys::FlowParamsKMaybe,
-                                    >,
-
-                                    // MultiProfileSingleFlow / SingleProfileSingleFlow
-                                    // peace_resources::resources::ts::SetUp
-                                    #scope_type_params
-                                >,
-                            >,
-                            E,
-                        >
+                        Output = Result<#cmd_ctx_return_type, AppError>
                     >
                     + 'ctx,
                 >,
@@ -833,6 +891,9 @@ fn scope_builder_deconstruct(
 
     if scope.flow_count() == FlowCount::One {
         match flow_selection {
+            FlowSelection::NotSelected => scope_builder_fields.push(parse_quote! {
+                flow_selection: crate::scopes::type_params::FlowNotSelected
+            }),
             FlowSelection::Selected => scope_builder_fields.push(parse_quote! {
                 flow_selection: crate::scopes::type_params::FlowSelected(flow)
             }),
@@ -842,10 +903,10 @@ fn scope_builder_deconstruct(
     scope_builder_fields.push(parse_quote!(params_type_regs_builder));
     scope_builder_fields.push(workspace_params_selection.deconstruct());
     if scope.profile_params_supported() {
-        scope_builder_fields.push(profile_params_selection.deconstruct());
+        scope_builder_fields.push(profile_params_selection.deconstruct(scope.profile_count()));
     }
     if scope.flow_params_supported() {
-        scope_builder_fields.push(flow_params_selection.deconstruct());
+        scope_builder_fields.push(flow_params_selection.deconstruct(scope.profile_count()));
     }
 
     if scope.flow_count() == FlowCount::One {
@@ -853,10 +914,6 @@ fn scope_builder_deconstruct(
             params_specs_provided
         });
     }
-
-    scope_builder_fields.push(parse_quote! {
-        marker: std::marker::PhantomData
-    });
 
     quote! {
         let crate::ctx::CmdCtxBuilder {
@@ -874,7 +931,6 @@ fn scope_builder_deconstruct(
                 // // === SingleProfileSingleFlow === //
                 // params_specs_provided,
 
-                // marker: std::marker::PhantomData,
                 #scope_builder_fields,
             },
         } = self;
@@ -892,11 +948,14 @@ fn workspace_params_load_save(
 ) {
     match workspace_params_selection {
         WorkspaceParamsSelection::None => {
+            let workspace_params_k_maybe_type_param =
+                workspace_params_selection.k_maybe_type_param();
+
             let workspace_params_deserialize = quote! {
                 let workspace_params = peace_rt_model::params::WorkspaceParams::<
                     <
-                        PKeys::WorkspaceParamsKMaybe
-                        as peace_rt_model::params::KeyMaybe
+                        #workspace_params_k_maybe_type_param as
+                        peace_rt_model::params::KeyMaybe
                     >::Key
                 >::new();
             };
@@ -954,11 +1013,13 @@ fn profile_params_load_save(
         ),
         ProfileCount::One => match profile_params_selection {
             ProfileParamsSelection::None => {
+                let profile_params_k_maybe_type_param =
+                    profile_params_selection.k_maybe_type_param();
                 let profile_params_deserialize = quote! {
                     let profile_params = peace_rt_model::params::ProfileParams::<
                         <
-                            PKeys::ProfileParamsKMaybe
-                            as peace_rt_model::params::KeyMaybe
+                            #profile_params_k_maybe_type_param as
+                            peace_rt_model::params::KeyMaybe
                         >::Key
                     >::new();
                 };
@@ -997,13 +1058,15 @@ fn profile_params_load_save(
             }
         },
         ProfileCount::Multiple => {
+            let profile_params_k_maybe_type_param = profile_params_selection.k_maybe_type_param();
+
             let profile_params_deserialize = match profile_params_selection {
                 ProfileParamsSelection::None => quote! {
                     let profile_to_profile_params = std::collections::BTreeMap::<
                         peace_core::Profile,
                         peace_rt_model::params::ProfileParams<
                             <
-                                PKeys::ProfileParamsKMaybe as
+                                #profile_params_k_maybe_type_param as
                                 peace_rt_model::params::KeyMaybe
                             >::Key
                         >
@@ -1040,7 +1103,7 @@ fn profile_params_load_save(
                                     peace_core::Profile,
                                     peace_rt_model::params::ProfileParams<
                                         <
-                                            PKeys::ProfileParamsKMaybe as
+                                            #profile_params_k_maybe_type_param as
                                             peace_rt_model::params::KeyMaybe
                                         >::Key
                                     >
@@ -1084,10 +1147,11 @@ fn flow_params_load_save(
         ),
         ProfileCount::One => match flow_params_selection {
             FlowParamsSelection::None => {
+                let flow_params_k_maybe_type_param = flow_params_selection.k_maybe_type_param();
                 let flow_params_deserialize = quote! {
                     let flow_params = peace_rt_model::params::FlowParams::<
                         <
-                            PKeys::FlowParamsKMaybe as
+                            #flow_params_k_maybe_type_param as
                             peace_rt_model::params::KeyMaybe
                         >::Key
                     >::new();
@@ -1127,13 +1191,15 @@ fn flow_params_load_save(
             }
         },
         ProfileCount::Multiple => {
+            let flow_params_k_maybe_type_param = flow_params_selection.k_maybe_type_param();
+
             let flow_params_deserialize = match flow_params_selection {
                 FlowParamsSelection::None => quote! {
                     let profile_to_flow_params = std::collections::BTreeMap::<
                         peace_core::Profile,
                         peace_rt_model::params::FlowParams<
                             <
-                                PKeys::FlowParamsKMaybe as
+                                #flow_params_k_maybe_type_param as
                                 peace_rt_model::params::KeyMaybe
                             >::Key
                         >
@@ -1169,7 +1235,7 @@ fn flow_params_load_save(
                                     peace_core::Profile,
                                     peace_rt_model::params::FlowParams<
                                         <
-                                            PKeys::FlowParamsKMaybe as
+                                            #flow_params_k_maybe_type_param as
                                             peace_rt_model::params::KeyMaybe
                                         >::Key
                                     >

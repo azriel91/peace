@@ -1,5 +1,6 @@
 use leptos::{
-    component, create_signal, view, IntoView, ServerFnError, SignalGet, SignalUpdate, Transition,
+    component, create_signal, server_fn::error::NoCustomError, view, IntoView, ServerFnError,
+    SignalGet, SignalUpdate, Transition,
 };
 
 /// Renders the flow graph.
@@ -77,11 +78,11 @@ pub fn FlowGraph() -> impl IntoView {
 }
 
 #[leptos::server(FlowGraphSrc, "/flow_graph")]
-pub async fn flow_graph_src() -> Result<String, ServerFnError> {
+pub async fn flow_graph_src() -> Result<String, ServerFnError<NoCustomError>> {
     use crate::{flows::AppUploadFlow, web::FlowDotRenderer};
-    let flow = AppUploadFlow::flow()
-        .await
-        .map_err(|envman_error| ServerFnError::ServerError(format!("{}", envman_error)))?;
+    let flow = AppUploadFlow::flow().await.map_err(|envman_error| {
+        ServerFnError::<NoCustomError>::ServerError(format!("{}", envman_error))
+    })?;
 
     // use peace::rt_model::fn_graph::daggy::petgraph::dot::{Config, Dot};
     // let dot_source = Dot::with_config(cx.props.flow.graph().graph(),

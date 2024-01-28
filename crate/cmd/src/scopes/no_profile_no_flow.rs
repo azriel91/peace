@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
@@ -7,6 +7,8 @@ use peace_rt_model::{
     Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
+
+use crate::ctx::CmdCtxTypes;
 
 /// A command that only works with workspace parameters.
 ///
@@ -28,12 +30,12 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write profile parameters -- see `SingleProfileNoFlow` or
 ///   `MultiProfileNoFlow`.
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
-/// * Read or write flow state -- see `SingleProfileSingleFlow` or
+/// * Read or write flow state -- see `NoProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct NoProfileNoFlow<'ctx, E, O, PKeys>
+pub struct NoProfileNoFlow<'ctx, CmdCtxTypesT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -41,11 +43,11 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypesT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -54,23 +56,25 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    params_type_regs: ParamsTypeRegs<PKeys>,
+    params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
     /// Workspace params.
-    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-    /// Marker.
-    marker: PhantomData<E>,
+    workspace_params: WorkspaceParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
 }
 
-impl<'ctx, E, O, PKeys> NoProfileNoFlow<'ctx, E, O, PKeys>
+impl<'ctx, CmdCtxTypesT> NoProfileNoFlow<'ctx, CmdCtxTypesT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     pub(crate) fn new(
-        output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        output: &'ctx mut CmdCtxTypesT::Output,
+        interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
-        params_type_regs: ParamsTypeRegs<PKeys>,
-        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
+        workspace_params: WorkspaceParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+        >,
     ) -> Self {
         Self {
             output,
@@ -78,17 +82,16 @@ where
             workspace,
             params_type_regs,
             workspace_params,
-            marker: PhantomData,
         }
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypesT::Output {
         self.output
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut O {
+    pub fn output_mut(&mut self) -> &mut CmdCtxTypesT::Output {
         self.output
     }
 
@@ -123,19 +126,21 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypesT::ParamsKeys> {
         &self.params_type_regs
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    NoProfileNoFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-    >
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    NoProfileNoFlow<'ctx, CmdCtxTypesT>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,

@@ -1,22 +1,22 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxTypesConstrained},
+    scopes::SingleProfileSingleFlow,
+};
 use peace_cmd_model::CmdOutcome;
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
-use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::StatesCurrentReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentStoredDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesCurrentStoredDisplayCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<E, O, PKeys> StatesCurrentStoredDisplayCmd<E, O, PKeys>
+impl<CmdCtxTypesT> StatesCurrentStoredDisplayCmd<CmdCtxTypesT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    PKeys: ParamsKeys + 'static,
-    O: OutputWrite<E>,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Displays [`StatesCurrentStored`]s from storage.
     ///
@@ -25,8 +25,14 @@ where
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<StatesCurrentStored, E>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
         let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
 
@@ -45,7 +51,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesCurrentStoredDisplayCmd<E, O, PKeys> {
+impl<CmdCtxTypesT> Default for StatesCurrentStoredDisplayCmd<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }

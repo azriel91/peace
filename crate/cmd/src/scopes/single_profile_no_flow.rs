@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
 use peace_core::Profile;
@@ -11,6 +11,8 @@ use peace_rt_model::{
     Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
+
+use crate::ctx::CmdCtxTypes;
 
 /// A command that works with a single profile, without any items.
 ///
@@ -36,14 +38,14 @@ use serde::{de::DeserializeOwned, Serialize};
 ///
 /// This kind of command cannot:
 ///
-/// * Read or write flow parameters -- see `SingleProfileSingleFlow` or
+/// * Read or write flow parameters -- see `SingleProfileNoFlow` or
 ///   `MultiProfileSingleFlow`.
-/// * Read or write flow state -- see `SingleProfileSingleFlow` or
+/// * Read or write flow state -- see `SingleProfileNoFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileNoFlow<'ctx, E, O, PKeys>
+pub struct SingleProfileNoFlow<'ctx, CmdCtxTypesT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -51,11 +53,11 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypesT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+    interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// The profile this command operates on.
@@ -70,13 +72,15 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    params_type_regs: ParamsTypeRegs<PKeys>,
+    params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
     /// Workspace params.
-    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    workspace_params: WorkspaceParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-    /// Marker.
-    marker: PhantomData<E>,
+    profile_params: ProfileParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
 }
 
 /// A command that works with a single profile, without any items.
@@ -103,14 +107,14 @@ where
 ///
 /// This kind of command cannot:
 ///
-/// * Read or write flow parameters -- see `SingleProfileSingleFlow` or
+/// * Read or write flow parameters -- see `SingleProfileNoFlow` or
 ///   `MultiProfileSingleFlow`.
-/// * Read or write flow state -- see `SingleProfileSingleFlow` or
+/// * Read or write flow state -- see `SingleProfileNoFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileNoFlowView<'view, O, PKeys>
+pub struct SingleProfileNoFlowView<'view, CmdCtxTypesT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -118,7 +122,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut O,
+    pub output: &'view mut CmdCtxTypesT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -137,29 +141,37 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+    pub params_type_regs: &'view ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
     /// Workspace params.
-    pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    pub workspace_params: &'view WorkspaceParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+    pub profile_params: &'view ProfileParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
 }
 
-impl<'ctx, E, O, PKeys> SingleProfileNoFlow<'ctx, E, O, PKeys>
+impl<'ctx, CmdCtxTypesT> SingleProfileNoFlow<'ctx, CmdCtxTypesT>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a new `SingleProfileNoFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
-        output: &'ctx mut O,
-        interruptibility_state: InterruptibilityState<'ctx, 'ctx>,
+        output: &'ctx mut CmdCtxTypesT::Output,
+        interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        params_type_regs: ParamsTypeRegs<PKeys>,
-        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+        params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
+        workspace_params: WorkspaceParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+        >,
+        profile_params: ProfileParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+        >,
     ) -> Self {
         Self {
             output,
@@ -171,12 +183,11 @@ where
             params_type_regs,
             workspace_params,
             profile_params,
-            marker: PhantomData,
         }
     }
 
     /// Returns a view struct of this scope.
-    pub fn view(&mut self) -> SingleProfileNoFlowView<'_, O, PKeys> {
+    pub fn view(&mut self) -> SingleProfileNoFlowView<'_, CmdCtxTypesT> {
         let Self {
             output,
             interruptibility_state,
@@ -187,7 +198,6 @@ where
             params_type_regs,
             workspace_params,
             profile_params,
-            marker: PhantomData,
         } = self;
 
         let interruptibility_state = interruptibility_state.reborrow();
@@ -206,12 +216,12 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypesT::Output {
         self.output
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut O {
+    pub fn output_mut(&mut self) -> &mut CmdCtxTypesT::Output {
         self.output
     }
 
@@ -261,19 +271,21 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypesT::ParamsKeys> {
         &self.params_type_regs
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    SingleProfileNoFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-    >
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileNoFlow<'ctx, CmdCtxTypesT>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
@@ -285,14 +297,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    SingleProfileNoFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
-    >
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileNoFlow<'ctx, CmdCtxTypesT>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            WorkspaceParamsKMaybe,
+            KeyKnown<ProfileParamsK>,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,

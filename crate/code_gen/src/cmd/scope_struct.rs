@@ -47,12 +47,6 @@ impl Parse for ScopeStruct {
             return Err(input.error(format!("expected `{struct_ident}` to be a unit struct.")));
         }
 
-        if item_struct.generics.lt_token.is_some() {
-            return Err(input.error(format!(
-                "expected `{struct_ident}` to not have any generics."
-            )));
-        }
-
         let scope = if struct_ident == "MultiProfileNoFlowBuilder" {
             Scope::MultiProfileNoFlow
         } else if struct_ident == "MultiProfileSingleFlowBuilder" {

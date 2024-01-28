@@ -13,8 +13,9 @@ use peace::{
 
 use crate::{
     mock_item::{MockItem, MockItemError, MockSrc, MockState},
+    peace_cmd_ctx_types::PeaceCmdCtxTypes,
     vec_copy_item::VecB,
-    NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
+    NoOpOutput, PeaceTestError, VecA, VecCopyItem, VecCopyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -926,8 +927,7 @@ async fn current_with_sets_progress_complete_for_successful_items()
         )
         .await?;
 
-    let _cmd_outcome =
-        StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(&mut cmd_ctx, false).await;
+    let _cmd_outcome = StatesDiscoverCmd::<_>::current_with(&mut cmd_ctx, false).await;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
     let vec_copy_progress_tracker = cmd_progress_tracker
@@ -984,8 +984,7 @@ async fn goal_with_sets_progress_complete_for_successful_items()
         )
         .await?;
 
-    let _cmd_outcome =
-        StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(&mut cmd_ctx, false).await?;
+    let _cmd_outcome = StatesDiscoverCmd::<_>::goal_with(&mut cmd_ctx, false).await?;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
     let vec_copy_progress_tracker = cmd_progress_tracker
@@ -1042,8 +1041,7 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
         )
         .await?;
 
-    let _cmd_outcome =
-        StatesDiscoverCmd::<_, NoOpOutput, _>::current_and_goal_with(&mut cmd_ctx, false).await?;
+    let _cmd_outcome = StatesDiscoverCmd::<_>::current_and_goal_with(&mut cmd_ctx, false).await?;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
     let vec_copy_progress_tracker = cmd_progress_tracker
@@ -1077,12 +1075,9 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
 
 #[test]
 fn debug() {
-    let debug_str = format!(
-        "{:?}",
-        StatesDiscoverCmd::<VecCopyError, NoOpOutput, ()>::default()
-    );
+    let debug_str = format!("{:?}", StatesDiscoverCmd::<PeaceCmdCtxTypes>::default());
     assert_eq!(
-        r#"StatesDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        r#"StatesDiscoverCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
         debug_str
     );
 }

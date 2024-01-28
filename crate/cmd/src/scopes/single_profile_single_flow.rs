@@ -17,6 +17,8 @@ use peace_rt_model::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::ctx::CmdCtxTypes;
+
 /// A command that works with one profile and one flow.
 ///
 /// ```bash
@@ -50,10 +52,9 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlow<'ctx, E, O, PKeys, TS>
+pub struct SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -61,7 +62,7 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxTypesT::Output,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -78,7 +79,7 @@ where
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
     /// The chosen process flow.
-    flow: &'ctx Flow<E>,
+    flow: &'ctx Flow<CmdCtxTypesT::AppError>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -87,13 +88,18 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    params_type_regs: ParamsTypeRegs<PKeys>,
+    params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
     /// Workspace params.
-    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    workspace_params: WorkspaceParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+    profile_params: ProfileParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Flow params for the selected flow.
-    flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    flow_params:
+        FlowParams<<<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key>,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -148,10 +154,9 @@ where
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowView<'view, E, PKeys, TS>
+pub struct SingleProfileSingleFlowView<'view, CmdCtxTypesT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Whether the `CmdExecution` is interruptible.
     ///
@@ -166,7 +171,7 @@ where
     /// Directory to store profile execution history.
     pub profile_history_dir: &'view ProfileHistoryDir,
     /// The chosen process flow.
-    pub flow: &'view Flow<E>,
+    pub flow: &'view Flow<CmdCtxTypesT::AppError>,
     /// Flow directory that stores params and states.
     pub flow_dir: &'view FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -175,13 +180,19 @@ where
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+    pub params_type_regs: &'view ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
     /// Workspace params.
-    pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    pub workspace_params: &'view WorkspaceParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Profile params for the profile.
-    pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+    pub profile_params: &'view ProfileParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Flow params for the selected flow.
-    pub flow_params: &'view FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    pub flow_params: &'view FlowParams<
+        <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
+    >,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -210,10 +221,9 @@ where
 /// `cmd_progress_tracker` mutably, while the flow information is passed through
 /// to sub commands..
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowViewAndOutput<'view, E, O, PKeys, TS>
+pub struct SingleProfileSingleFlowViewAndOutput<'view, CmdCtxTypesT, TS>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
@@ -221,22 +231,22 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut O,
+    pub output: &'view mut CmdCtxTypesT::Output,
     /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
     /// Flow and parameter related information.
-    pub cmd_view: SingleProfileSingleFlowView<'view, E, PKeys, TS>,
+    pub cmd_view: SingleProfileSingleFlowView<'view, CmdCtxTypesT, TS>,
 }
 
-impl<'ctx, E, O, PKeys> SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>
+impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a new `SingleProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
-        output: &'ctx mut O,
+        output: &'ctx mut CmdCtxTypesT::Output,
         interruptibility_state: InterruptibilityState<'static, 'static>,
         workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
@@ -244,12 +254,18 @@ where
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        flow: &'ctx Flow<E>,
+        flow: &'ctx Flow<CmdCtxTypesT::AppError>,
         flow_dir: FlowDir,
-        params_type_regs: ParamsTypeRegs<PKeys>,
-        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-        flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
+        workspace_params: WorkspaceParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::WorkspaceParamsKMaybe as KeyMaybe>::Key,
+        >,
+        profile_params: ProfileParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::ProfileParamsKMaybe as KeyMaybe>::Key,
+        >,
+        flow_params: FlowParams<
+            <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
+        >,
         params_specs_type_reg: ParamsSpecsTypeReg,
         params_specs: ParamsSpecs,
         states_type_reg: StatesTypeReg,
@@ -278,14 +294,14 @@ where
     }
 }
 
-impl<'ctx, E, O, PKeys, TS> SingleProfileSingleFlow<'ctx, E, O, PKeys, TS>
+impl<'ctx, CmdCtxTypesT, TS> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
 where
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
+    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, CmdCtxTypesT, TS> {
         let Self {
             output: _,
             interruptibility_state,
@@ -331,7 +347,9 @@ where
     /// Returns a view and output struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, E, O, PKeys, TS> {
+    pub fn view_and_output(
+        &mut self,
+    ) -> SingleProfileSingleFlowViewAndOutput<'_, CmdCtxTypesT, TS> {
         let Self {
             output,
             interruptibility_state,
@@ -380,12 +398,12 @@ where
     }
 
     /// Returns a reference to the output.
-    pub fn output(&self) -> &O {
+    pub fn output(&self) -> &CmdCtxTypesT::Output {
         self.output
     }
 
     /// Returns a mutable reference to the output.
-    pub fn output_mut(&mut self) -> &mut O {
+    pub fn output_mut(&mut self) -> &mut CmdCtxTypesT::Output {
         self.output
     }
 
@@ -443,7 +461,7 @@ where
     }
 
     /// Returns a reference to the flow.
-    pub fn flow(&self) -> &Flow<E> {
+    pub fn flow(&self) -> &Flow<CmdCtxTypesT::AppError> {
         self.flow
     }
 
@@ -459,7 +477,7 @@ where
     /// [`ItemParams`]: peace_rt_model::ItemParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypesT::ParamsKeys> {
         &self.params_type_regs
     }
 
@@ -504,7 +522,7 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>
+    ) -> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs1>
     where
         F: FnOnce(Resources<TS>) -> Resources<ResTs1>,
     {
@@ -554,15 +572,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsK>,
+            ProfileParamsKMaybe,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
@@ -574,15 +593,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            WorkspaceParamsKMaybe,
+            KeyKnown<ProfileParamsK>,
+            FlowParamsKMaybe,
+        >,
+    >,
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
@@ -594,21 +614,22 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
-    SingleProfileSingleFlow<
-        'ctx,
-        E,
-        O,
-        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
-        TS,
-    >
+impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
 where
+    CmdCtxTypesT: CmdCtxTypes<
+        ParamsKeys = ParamsKeysImpl<
+            WorkspaceParamsKMaybe,
+            ProfileParamsKMaybe,
+            KeyKnown<FlowParamsK>,
+        >,
+    >,
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
 {
-    /// Returns the flow params for the selected flow.
+    /// Returns the flow params.
     pub fn flow_params(&self) -> &FlowParams<FlowParamsK> {
         &self.flow_params
     }

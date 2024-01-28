@@ -1,23 +1,22 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxTypesConstrained},
+    scopes::SingleProfileSingleFlow,
+};
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
-use peace_rt_model::{params::ParamsKeys, Error};
-use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmd_blocks::StatesCurrentReadCmdBlock;
 
 /// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesCurrentReadCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
-impl<E, O, PKeys> StatesCurrentReadCmd<E, O, PKeys>
+impl<CmdCtxTypesT> StatesCurrentReadCmd<CmdCtxTypesT>
 where
-    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
+    CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     /// Reads [`StatesCurrentStored`]s from storage.
     ///
@@ -27,12 +26,19 @@ where
     /// [`StatesCurrentStoredDiscoverCmd`]: crate::StatesCurrentStoredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<StatesCurrentStored, E>, E> {
-        let cmd_execution_builder =
-            CmdExecution::<StatesCurrentStored, _, _>::builder().with_cmd_block(
-                CmdBlockWrapper::new(StatesCurrentReadCmdBlock::new(), std::convert::identity),
-            );
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+    ) -> Result<
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+    >
+    where
+        CmdCtxTypesT: 'ctx,
+    {
+        let cmd_execution_builder = CmdExecution::<StatesCurrentStored, _>::builder()
+            .with_cmd_block(CmdBlockWrapper::new(
+                StatesCurrentReadCmdBlock::new(),
+                std::convert::identity,
+            ));
 
         #[cfg(feature = "output_progress")]
         let cmd_execution_builder = cmd_execution_builder.with_progress_render_enabled(false);
@@ -41,7 +47,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesCurrentReadCmd<E, O, PKeys> {
+impl<CmdCtxTypesT> Default for StatesCurrentReadCmd<CmdCtxTypesT> {
     fn default() -> Self {
         Self(PhantomData)
     }

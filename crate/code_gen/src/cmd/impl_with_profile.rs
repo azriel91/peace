@@ -1,82 +1,80 @@
 use quote::quote;
-use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
-};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
 use crate::cmd::{
-    param_key_impl, type_parameters_impl, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
+    CmdCtxBuilderTypeBuilder, FlowCount, ImplHeaderBuilder, ProfileCount, Scope, ScopeStruct,
 };
 
 /// Generates the `with_profile` method for the command context builder.
 pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     if scope_struct.scope().profile_count() != ProfileCount::One {
         // `with_profile` is not supported.
         return proc_macro2::TokenStream::new();
     };
 
-    let scope_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(FlowSelection));
-        }
-        type_parameters_impl::params_selection_push(&mut type_params, scope);
-        type_params
-    };
-
     let scope_builder_fields_profile_not_selected =
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_selected = scope_builder_fields_profile_selected(scope);
 
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe,
+    //             ProfileParamsKMaybe,
+    //             FlowParamsKMaybe,
+    //         >,
+    //         WorkspaceParamsSelection,
+    //         ProfileParamsSelection,
+    //         FlowParamsSelection,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         FlowSelection,
+    //     >,
+    // >
+    // ```
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_profile_selection(None)
+        .build();
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileSelected))
+        .build();
+
     let mut tokens = quote! {
-        impl<
-            'ctx,
-            E,
-            O,
-            // FlowSelection,
-            // PKeys,
-            // WorkspaceParamsSelection,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            #scope_params,
-        >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    crate::scopes::type_params::ProfileNotSelected,
-                    // FlowSelection,
-                    // PKeys,
-                    // WorkspaceParamsSelection,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_params
-                >,
-            >
-        where
-            PKeys: #params_module::ParamsKeys + 'static,
+        #impl_header
         {
             pub fn with_profile(
                 self,
                 profile: peace_core::Profile,
-            ) -> crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    crate::scopes::type_params::ProfileSelected,
-                    // FlowSelection,
-                    // PKeys,
-                    // WorkspaceParamsSelection,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_params
-                >,
-            > {
+            ) ->
+                // crate::ctx::CmdCtxBuilder<
+                //     'ctx,
+                //     crate::ctx::CmdCtxBuilderTypesCollector<
+                //         Output,
+                //         AppError,
+                //         peace_rt_model::params::ParamsKeysImpl<
+                //             WorkspaceParamsKMaybe,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
+                //         >,
+                //         WorkspaceParamsSelection,
+                //         ProfileParamsSelection,
+                //         FlowParamsSelection,
+                //         crate::scopes::type_params::ProfileSelected,
+                //         FlowSelection,
+                //     >,
+                // >
+                #return_type
+            {
                 let Self {
                     output,
                     interruptibility,
@@ -90,7 +88,6 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                             // profile_params_selection,
                             // flow_params_selection,
                             // params_specs_provided,
-                            // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
                 } = self;
@@ -103,7 +100,6 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                     // profile_params_selection,
                     // flow_params_selection,
                     // params_specs_provided,
-                    // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_selected
                 };
 
@@ -129,130 +125,84 @@ pub fn impl_with_profile_from_workspace_param(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
 
-    let impl_params_with_workspace_params_k = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(FlowSelection));
-        }
-        if scope.profile_params_supported() {
-            type_params.push(parse_quote!(ProfileParamsSelection));
-        }
-        if scope.flow_params_supported() {
-            type_params.push(parse_quote!(FlowParamsSelection));
-        }
-
-        type_params.push(parse_quote!(WorkspaceParamsK));
-
-        if scope.profile_params_supported() {
-            type_params.push(parse_quote!(ProfileParamsKMaybe));
-        }
-        if scope.flow_params_supported() {
-            type_params.push(parse_quote!(FlowParamsKMaybe));
-        }
-        type_params
-    };
-
-    let scope_params_with_workspace_params_k = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(FlowSelection));
-        }
-
-        let impl_params_key_known_params = {
-            let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-            type_parameters_impl::params_key_known_push(
-                &mut type_params,
-                scope,
-                ParamsScope::Workspace,
-            );
-            type_params
-        };
-        type_params.push(parse_quote! {
-            peace_rt_model::params::ParamsKeysImpl<
-                // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                #impl_params_key_known_params
-            >
-        });
-
-        type_params.push(parse_quote! {
-            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
-        });
-        if scope.profile_params_supported() {
-            type_params.push(parse_quote!(ProfileParamsSelection));
-        }
-        if scope.flow_params_supported() {
-            type_params.push(parse_quote!(FlowParamsSelection));
-        }
-        type_params
-    };
-
-    let param_key_impl_known_predicates =
-        param_key_impl::known_predicates(scope, ParamsScope::Workspace);
-
     let scope_builder_fields_profile_not_selected =
         scope_builder_fields_profile_not_selected(scope);
     let scope_builder_fields_profile_from_workspace =
         scope_builder_fields_profile_from_workspace(scope);
 
+    // ```rust,ignore
+    // crate::ctx::CmdCtxBuilder<
+    //     'ctx,
+    //     crate::ctx::CmdCtxBuilderTypesCollector<
+    //         Output,
+    //         AppError,
+    //         peace_rt_model::params::ParamsKeysImpl<
+    //             WorkspaceParamsKMaybe,
+    //             ProfileParamsKMaybe,
+    //             FlowParamsKMaybe,
+    //         >,
+    //         crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
+    //         ProfileParamsSelection,
+    //         FlowParamsSelection,
+    //         crate::scopes::type_params::ProfileNotSelected,
+    //         FlowSelection,
+    //     >,
+    // >
+    // ```
+
+    let builder_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_workspace_params_k_maybe(parse_quote!(
+            peace_rt_model::params::KeyKnown<WorkspaceParamsK>
+        ))
+        .with_workspace_params_selection(parse_quote!(
+            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+        ))
+        .with_profile_selection(parse_quote!(crate::scopes::type_params::ProfileNotSelected))
+        .build();
+    let impl_header = ImplHeaderBuilder::new(builder_type)
+        .with_workspace_params_k_maybe(None)
+        .with_workspace_params_k(Some(parse_quote!(WorkspaceParamsK)))
+        .with_workspace_params_selection(None)
+        .with_profile_selection(None)
+        .build();
+    let return_type = CmdCtxBuilderTypeBuilder::new(scope_builder_name.clone())
+        .with_workspace_params_k_maybe(parse_quote!(
+            peace_rt_model::params::KeyKnown<WorkspaceParamsK>
+        ))
+        .with_workspace_params_selection(parse_quote!(
+            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
+        ))
+        .with_profile_selection(parse_quote!(
+            crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>
+        ))
+        .build();
+
     quote! {
-        impl<
-            'ctx,
-            E,
-            O,
-            // FlowSelection,
-            // ProfileParamsSelection,
-            // FlowParamsSelection,
-            // WorkspaceParamsK,
-            // ProfileParamsKMaybe,
-            // FlowParamsKMaybe,
-            #impl_params_with_workspace_params_k
-        >
-            crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    crate::scopes::type_params::ProfileNotSelected,
-                    // FlowSelection,
-
-                    // peace_rt_model::params::ParamsKeysImpl<
-                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    // >,
-
-                    // WorkspaceParamsSome<WorkspaceParamsK>,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_params_with_workspace_params_k
-                >,
-            >
-        where
-            // WorkspaceParamsK:
-            //     Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-            // ProfileParamsKMaybe: KeyMaybe,
-            // FlowParamsKMaybe: KeyMaybe,
-            #param_key_impl_known_predicates
+        #impl_header
         {
             pub fn with_profile_from_workspace_param<'key>(
                 self,
                 workspace_param_k: &'key WorkspaceParamsK,
-            ) -> crate::ctx::CmdCtxBuilder<
-                'ctx,
-                O,
-                #scope_builder_name<
-                    E,
-                    crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
-                    // FlowSelection,
-
-                    // peace_rt_model::params::ParamsKeysImpl<
-                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    // >,
-
-                    // WorkspaceParamsSome<WorkspaceParamsK>,
-                    // ProfileParamsSelection,
-                    // FlowParamsSelection,
-                    #scope_params_with_workspace_params_k
-                >,
-            > {
+            ) ->
+                // crate::ctx::CmdCtxBuilder<
+                //     'ctx,
+                //     crate::ctx::CmdCtxBuilderTypesCollector<
+                //         Output,
+                //         AppError,
+                //         peace_rt_model::params::ParamsKeysImpl<
+                //             WorkspaceParamsKMaybe = peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
+                //         >,
+                //         crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>,
+                //         ProfileParamsSelection,
+                //         FlowParamsSelection,
+                //         crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
+                //         FlowSelection,
+                //     >,
+                // >
+                #return_type
+            {
                 let Self {
                     output,
                     interruptibility,
@@ -266,7 +216,6 @@ pub fn impl_with_profile_from_workspace_param(
                             // profile_params_selection,
                             // flow_params_selection,
                             // params_specs_provided,
-                            // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
                 } = self;
@@ -279,7 +228,6 @@ pub fn impl_with_profile_from_workspace_param(
                     // profile_params_selection,
                     // flow_params_selection,
                     // params_specs_provided,
-                    // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_from_workspace
                 };
 
@@ -342,5 +290,4 @@ fn scope_builder_fields_remainder_push(
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
-    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 }

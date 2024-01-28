@@ -15,8 +15,8 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemGraph, ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage,
-    Workspace, WorkspaceInitializer,
+    Flow, ItemGraph, ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage, Workspace,
+    WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -28,6 +28,8 @@ pub use self::{
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
 };
 
+use crate::ctx::CmdCtxBuilderTypes;
+
 mod multi_profile_no_flow_builder;
 mod multi_profile_single_flow_builder;
 mod no_profile_no_flow_builder;
@@ -36,14 +38,17 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
+pub struct CmdCtxBuilder<'ctx, CmdCtxBuilderTypesT, ScopeBuilder>
+where
+    CmdCtxBuilderTypesT: CmdCtxBuilderTypes,
+{
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut O,
+    output: &'ctx mut CmdCtxBuilderTypesT::Output,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
@@ -57,7 +62,7 @@ async fn workspace_params_serialize<WorkspaceParamsK>(
     workspace_params: &WorkspaceParams<WorkspaceParamsK>,
     storage: &Storage,
     workspace_params_file: &WorkspaceParamsFile,
-) -> Result<(), Error>
+) -> Result<(), peace_rt_model::Error>
 where
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
@@ -94,7 +99,7 @@ async fn profile_params_serialize<ProfileParamsK>(
     profile_params: &ProfileParams<ProfileParamsK>,
     storage: &Storage,
     profile_params_file: &ProfileParamsFile,
-) -> Result<(), Error>
+) -> Result<(), peace_rt_model::Error>
 where
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
@@ -125,7 +130,7 @@ async fn flow_params_serialize<FlowParamsK>(
     flow_params: &FlowParams<FlowParamsK>,
     storage: &Storage,
     flow_params_file: &FlowParamsFile,
-) -> Result<(), Error>
+) -> Result<(), peace_rt_model::Error>
 where
     FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
@@ -139,7 +144,7 @@ async fn params_specs_serialize(
     params_specs: &ParamsSpecs,
     storage: &Storage,
     params_specs_file: &ParamsSpecsFile,
-) -> Result<(), Error> {
+) -> Result<(), peace_rt_model::Error> {
     ParamsSpecsSerializer::serialize(storage, params_specs, params_specs_file).await
 }
 
@@ -267,9 +272,9 @@ fn params_specs_merge<E>(
     flow: &Flow<E>,
     mut params_specs_provided: ParamsSpecs,
     params_specs_stored: Option<ParamsSpecs>,
-) -> Result<ParamsSpecs, Error>
+) -> Result<ParamsSpecs, peace_rt_model::Error>
 where
-    E: From<Error> + 'static,
+    E: From<peace_rt_model::Error> + 'static,
 {
     // Combine provided and stored params specs. Provided params specs take
     // precedence.
@@ -364,7 +369,7 @@ where
     if params_no_issues {
         Ok(params_specs)
     } else {
-        Err(Error::ParamsSpecsMismatch {
+        Err(peace_rt_model::Error::ParamsSpecsMismatch {
             item_ids_with_no_params_specs,
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,

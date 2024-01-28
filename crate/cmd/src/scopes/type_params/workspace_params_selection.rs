@@ -13,3 +13,13 @@ pub struct WorkspaceParamsSome<WorkspaceParamsK>(pub(crate) WorkspaceParams<Work
 where
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
+
+impl<WorkspaceParamsK> Default for WorkspaceParamsSome<WorkspaceParamsK>
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    fn default() -> Self {
+        WorkspaceParamsSome(WorkspaceParams::default())
+    }
+}

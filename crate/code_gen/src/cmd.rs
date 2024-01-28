@@ -4,15 +4,18 @@ use syn::parse_macro_input;
 use crate::cmd::scope_struct::ScopeStruct;
 
 pub use self::{
-    flow_count::FlowCount, impl_build::impl_build, impl_common_fns::impl_common_fns,
-    impl_constructor::impl_constructor, impl_params_deserialize::impl_params_deserialize,
-    impl_params_merge::impl_params_merge, impl_with_flow::impl_with_flow,
-    impl_with_param::impl_with_param, impl_with_params_k::impl_with_params_k,
-    impl_with_profile::impl_with_profile, impl_with_profile_filter::impl_with_profile_filter,
-    params_scope::ParamsScope, profile_count::ProfileCount, scope::Scope,
-    struct_definition::struct_definition,
+    cmd_ctx_builder_type_builder::CmdCtxBuilderTypeBuilder, flow_count::FlowCount,
+    impl_build::impl_build, impl_common_fns::impl_common_fns, impl_constructor::impl_constructor,
+    impl_params_deserialize::impl_params_deserialize, impl_params_merge::impl_params_merge,
+    impl_with_flow::impl_with_flow, impl_with_param::impl_with_param,
+    impl_with_params_k::impl_with_params_k, impl_with_profile::impl_with_profile,
+    impl_with_profile_filter::impl_with_profile_filter, params_scope::ParamsScope,
+    profile_count::ProfileCount, scope::Scope, struct_definition::struct_definition,
 };
 
+pub(crate) use impl_header_builder::ImplHeaderBuilder;
+
+mod cmd_ctx_builder_type_builder;
 mod flow_count;
 mod impl_build;
 mod impl_common_fns;
@@ -23,17 +26,17 @@ mod impl_with_param;
 mod impl_with_params_k;
 mod impl_with_profile;
 mod impl_with_profile_filter;
-mod param_key_impl;
 mod params_scope;
 mod profile_count;
 mod scope;
 mod scope_struct;
 mod struct_definition;
-mod type_parameters_impl;
 
 mod impl_constructor;
+pub(crate) mod impl_header_builder;
 pub(crate) mod scope_builder_fields;
 pub(crate) mod type_params_selection;
+pub(crate) mod with_params;
 
 /// Generates the command context builder implementation for the given scope.
 pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

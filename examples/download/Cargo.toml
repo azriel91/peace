@@ -24,17 +24,17 @@ thiserror = "1.0.56"
 url = { version = "2.5.0", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.4.12", features = ["derive"] }
+clap = { version = "4.4.18", features = ["derive"] }
 tokio = { version = "1.35.1", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.6.3"
 tokio = "1.35.1"
-wasm-bindgen = "0.2.89"
-wasm-bindgen-futures = "0.4.39"
-js-sys = "0.3.66"
-web-sys = "0.3.66"
+wasm-bindgen = "0.2.90"
+wasm-bindgen-futures = "0.4.40"
+js-sys = "0.3.67"
+web-sys = "0.3.67"
 
 [features]
 default = []

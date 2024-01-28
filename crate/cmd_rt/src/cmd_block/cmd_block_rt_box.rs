@@ -11,5 +11,6 @@ use crate::CmdBlockRt;
 /// * `Outcome`: [`CmdBlock`] outcome type, e.g. `(StatesCurrent, StatesGoal)`.
 ///
 /// [`CmdBlock`]: crate::CmdBlock
-pub type CmdBlockRtBox<E, PKeys, ExecutionOutcome> =
-    Pin<Box<dyn CmdBlockRt<Error = E, PKeys = PKeys, ExecutionOutcome = ExecutionOutcome>>>;
+pub type CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome> = Pin<
+    Box<dyn CmdBlockRt<CmdCtxTypes = CmdCtxTypesT, ExecutionOutcome = ExecutionOutcome> + 'types>,
+>;

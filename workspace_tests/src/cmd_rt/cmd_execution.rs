@@ -75,7 +75,7 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
 
 #[tokio::test]
 async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _, _>::builder()
+    let mut cmd_execution = CmdExecution::<StateDiffs, _>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             StatesDiscoverCmdBlock::current_and_goal(),
             // Should we support diffing the accumulated states?
@@ -83,7 +83,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
             |_states_current_and_goal_mut| StateDiffs::new(),
         ))
         .with_cmd_block(CmdBlockWrapper::new(
-            DiffCmdBlock::<_, _, Current, Goal>::new(),
+            DiffCmdBlock::<_, Current, Goal>::new(),
             |_state_diffs_ts0_and_ts1| StateDiffs::new(),
         ))
         .build();

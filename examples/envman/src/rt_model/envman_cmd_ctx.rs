@@ -1,17 +1,7 @@
-use peace::{
-    cmd::scopes::SingleProfileSingleFlow,
-    rt_model::params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-};
+use peace::cmd::scopes::SingleProfileSingleFlow;
 
-use crate::model::{EnvManError, ProfileParamsKey, WorkspaceParamsKey};
+use crate::rt_model::EnvmanCmdCtxTypes;
 
 /// Alias to simplify naming the `CmdCtx` type.
-pub type EnvManCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
-    SingleProfileSingleFlow<
-        'ctx,
-        EnvManError,
-        O,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsKey>, KeyKnown<ProfileParamsKey>, KeyUnknown>,
-        TS,
-    >,
->;
+pub type EnvManCmdCtx<'ctx, Output, TS> =
+    peace::cmd::ctx::CmdCtx<SingleProfileSingleFlow<'ctx, EnvmanCmdCtxTypes<Output>, TS>>;
