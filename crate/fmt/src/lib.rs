@@ -7,9 +7,14 @@
 // Re-exports
 pub use async_trait::async_trait;
 
-pub use crate::{presentable::Presentable, presenter::Presenter};
+pub use crate::{
+    either::Either, presentable::Presentable, presentable_ext::PresentableExt, presenter::Presenter,
+};
 
 pub mod presentable;
+
+mod either;
+mod presentable_ext;
 mod presenter;
 
 /// Ergonomically present multiple [`Presentable`]s.
