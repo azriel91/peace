@@ -177,4 +177,34 @@ impl Presenter<'static> for FnTrackerPresenter {
 
         Ok(())
     }
+
+    async fn list_bulleted_aligned<'f, P0, P1, I>(&mut self, _iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>,
+    {
+        self.fn_invocations
+            .push(FnInvocation::new(fn_name_short!(), vec![None]));
+
+        Ok(())
+    }
+
+    async fn list_bulleted_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        _iter: I,
+        _f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1),
+    {
+        self.fn_invocations
+            .push(FnInvocation::new(fn_name_short!(), vec![None, None]));
+
+        Ok(())
+    }
 }
