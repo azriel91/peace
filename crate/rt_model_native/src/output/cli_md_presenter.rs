@@ -1,3 +1,4 @@
+use futures::stream::{self, TryStreamExt};
 use peace_fmt::{async_trait, presentable::HeadingLevel, Presentable, Presenter};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
@@ -193,20 +194,7 @@ where
         P: Presentable + 'f,
         I: IntoIterator<Item = &'f P>,
     {
-        let iterator = iter.into_iter();
-        let number_column_count = Self::number_column_count(&iterator);
-        for (index, entry) in iterator.enumerate() {
-            let list_number = index + 1;
-
-            let style = &console::Style::new().color256(15); // white
-            self.colorize_list_number(style, number_column_count, list_number)
-                .await?;
-
-            entry.present(self).await?;
-            self.output.writer.write_all(b"\n").await?;
-        }
-
-        Ok(())
+        self.list_numbered_with(iter, std::convert::identity).await
     }
 
     async fn list_numbered_with<'f, P, I, T, F>(&mut self, iter: I, f: F) -> Result<(), Self::Error>
@@ -227,6 +215,92 @@ where
 
             let presentable = f(entry);
             presentable.present(self).await?;
+            self.output.writer.write_all(b"\n").await?;
+        }
+
+        Ok(())
+    }
+
+    async fn list_numbered_aligned<'f, P0, P1, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>,
+    {
+        self.list_numbered_aligned_with(iter, std::convert::identity)
+            .await
+    }
+
+    async fn list_numbered_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1),
+    {
+        let iterator = iter.into_iter();
+        let number_column_count = Self::number_column_count(&iterator);
+
+        let mut buffer = Vec::<u8>::with_capacity(256);
+        let mut cli_output_in_memory = CliOutput::new_with_writer(&mut buffer);
+        let mut width_buffer_presenter = CliMdPresenter::new(&mut cli_output_in_memory);
+
+        let (entries, max_width, _width_buffer_presenter, _f) =
+            stream::iter(iterator.map(Result::<_, Self::Error>::Ok))
+                .try_fold(
+                    (Vec::new(), None, &mut width_buffer_presenter, f),
+                    |(mut entries, mut max_width, width_buffer_presenter, f), entry| async move {
+                        let (presentable_0, presentable_1) = f(entry);
+
+                        presentable_0.present(width_buffer_presenter).await?;
+                        let rendered_0 = &width_buffer_presenter.output.writer;
+                        let rendered_0_lossy = String::from_utf8_lossy(rendered_0);
+                        let width = console::measure_text_width(&rendered_0_lossy);
+
+                        width_buffer_presenter.output.writer.clear();
+
+                        if let Some(current_max) = max_width {
+                            if current_max < width {
+                                max_width = Some(width);
+                            }
+                        } else {
+                            max_width = Some(width);
+                        }
+
+                        entries.push(((presentable_0, width), presentable_1));
+
+                        Ok((entries, max_width, width_buffer_presenter, f))
+                    },
+                )
+                .await?;
+
+        let max_width = max_width.unwrap_or(0);
+        let padding_bytes = " ".repeat(max_width);
+        for (index, ((presentable_0, presentable_0_width), presentable_1)) in
+            entries.into_iter().enumerate()
+        {
+            let list_number = index + 1;
+
+            let style = &console::Style::new().color256(15); // white
+            self.colorize_list_number(style, number_column_count, list_number)
+                .await?;
+
+            presentable_0.present(self).await?;
+
+            // +1 for space between the name and description
+            let padding = max_width.saturating_sub(presentable_0_width) + 1;
+            self.output
+                .writer
+                .write_all(padding_bytes[0..padding].as_bytes())
+                .await?;
+
+            presentable_1.present(self).await?;
+
             self.output.writer.write_all(b"\n").await?;
         }
 
