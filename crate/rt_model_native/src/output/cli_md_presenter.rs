@@ -207,11 +207,14 @@ where
         P1: Presentable,
     {
         presentable_0.present(self).await?;
-        let padding = max_width.saturating_sub(presentable_0_width) + 1;
-        self.output
-            .writer
-            .write_all(padding_bytes[0..padding].as_bytes())
-            .await?;
+        let padding = max_width.saturating_sub(presentable_0_width);
+        if padding > 0 {
+            self.output
+                .writer
+                .write_all(padding_bytes[0..padding].as_bytes())
+                .await?;
+        }
+        self.output.writer.write_all(b": ").await?;
         presentable_1.present(self).await?;
         self.output.writer.write_all(b"\n").await?;
         Ok(())
