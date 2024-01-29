@@ -220,7 +220,7 @@ where
         Ok(())
     }
 
-    async fn list_bullet_write(self: &mut Self, style_white: &Style) -> Result<(), std::io::Error> {
+    async fn list_bullet_write(&mut self, style_white: &Style) -> Result<(), std::io::Error> {
         self.colorize_maybe("*", style_white).await?;
         self.output.writer.write_all(b" ").await?;
 
@@ -228,7 +228,7 @@ where
     }
 
     async fn list_number_write(
-        self: &mut Self,
+        &mut self,
         style_white: &Style,
         index: usize,
         number_column_count: usize,
