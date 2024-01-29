@@ -2,7 +2,10 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     cmd_model::CmdOutcome,
-    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    fmt::{
+        presentable::{Heading, HeadingLevel, ListNumberedAligned},
+        PresentableExt,
+    },
     resources::resources::ts::SetUp,
     rt::cmds::StatesCurrentReadCmd,
     rt_model::output::OutputWrite,
@@ -34,8 +37,8 @@ impl EnvStatusCmd {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
-            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd),
         }
 
         Ok(())
@@ -43,18 +46,15 @@ impl EnvStatusCmd {
 }
 
 macro_rules! run {
-    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+    ($output:ident, $flow_cmd:ident) => {{
         $flow_cmd::run($output, CmdOpts::default(), |cmd_ctx| {
-            run_with_ctx(cmd_ctx, $padding).boxed_local()
+            run_with_ctx(cmd_ctx).boxed_local()
         })
         .await?;
     }};
 }
 
-async fn run_with_ctx<O>(
-    cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
-    padding_count: usize,
-) -> Result<(), EnvManError>
+async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>) -> Result<(), EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {
@@ -68,26 +68,22 @@ where
     if let Some(states_current_stored) = states_current_stored_outcome.value() {
         let states_current_stored_raw_map = &***states_current_stored;
 
-        let states_current_stored_presentables = {
-            let states_current_stored_presentables = flow
-                .graph()
-                .iter_insertion()
-                .map(|item| {
-                    let item_id = item.id();
-                    // Hack: for alignment
-                    let padding =
-                        " ".repeat(padding_count.saturating_sub(format!("{item_id}").len() + 2));
-                    match states_current_stored_raw_map.get(item_id) {
-                        Some(state_current_stored) => {
-                            (item_id, format!("{padding}: {state_current_stored}"))
-                        }
-                        None => (item_id, format!("{padding}: <unknown>")),
+        let states_current_stored_presentables: ListNumberedAligned<_, _> = flow
+            .graph()
+            .iter_insertion()
+            .map(|item| {
+                let item_id = item.id();
+                let state_presentable = match states_current_stored_raw_map.get(item_id) {
+                    Some(state_current_stored) => {
+                        format!("{state_current_stored}").left_presentable()
                     }
-                })
-                .collect::<Vec<_>>();
+                    None => "<unknown>".right_presentable(),
+                };
 
-            ListNumbered::new(states_current_stored_presentables)
-        };
+                (item_id, state_presentable)
+            })
+            .collect::<Vec<_>>()
+            .into();
 
         output
             .present(&(
