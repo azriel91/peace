@@ -25,3 +25,12 @@ where
         presenter.list_numbered(&self.0).await
     }
 }
+
+impl<P> From<Vec<P>> for ListNumbered<P>
+where
+    P: Presentable,
+{
+    fn from(presentables: Vec<P>) -> Self {
+        Self(presentables)
+    }
+}
