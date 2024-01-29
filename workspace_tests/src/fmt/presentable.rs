@@ -1,6 +1,13 @@
+mod bold;
 mod code_inline;
+mod heading;
+mod list_numbered;
+mod list_numbered_aligned;
 
-use peace::fmt::Presentable;
+use peace::{
+    fmt::Presentable,
+    rt_model::output::{CliColorizeOpt, CliOutput, CliOutputBuilder, OutputFormat},
+};
 
 use crate::{FnInvocation, FnTrackerPresenter};
 
@@ -86,4 +93,11 @@ async fn array_t_is_presentable_when_t_is_presentable() -> Result<(), Box<dyn st
     );
 
     Ok(())
+}
+
+fn cli_output(buffer: &mut Vec<u8>, colorize: CliColorizeOpt) -> CliOutput<&mut Vec<u8>> {
+    CliOutputBuilder::new_with_writer(buffer)
+        .with_outcome_format(OutputFormat::Text)
+        .with_colorize(colorize)
+        .build()
 }
