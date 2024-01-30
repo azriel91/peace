@@ -94,7 +94,7 @@ impl Presenter<'static> for FnTrackerPresenter {
 
     async fn list_numbered<'f, P, I>(&mut self, _iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
         self.fn_invocations
@@ -152,7 +152,7 @@ impl Presenter<'static> for FnTrackerPresenter {
 
     async fn list_bulleted<'f, P, I>(&mut self, _iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
         self.fn_invocations
@@ -207,4 +207,68 @@ impl Presenter<'static> for FnTrackerPresenter {
 
         Ok(())
     }
+}
+
+#[tokio::test]
+async fn coverage() -> Result<(), std::io::Error> {
+    let mut fn_tracker_presenter = FnTrackerPresenter::new();
+    fn_tracker_presenter
+        .heading(HeadingLevel::Level1, "")
+        .await?;
+    fn_tracker_presenter.id("the_id").await?;
+    fn_tracker_presenter.name("the_name").await?;
+    fn_tracker_presenter.text("the_text").await?;
+    fn_tracker_presenter.bold("").await?;
+    fn_tracker_presenter.tag("the_tag").await?;
+    fn_tracker_presenter.code_inline("the_code_inline").await?;
+    fn_tracker_presenter
+        .list_numbered(std::iter::once("abc"))
+        .await?;
+    fn_tracker_presenter
+        .list_numbered_with(std::iter::once("abc"), std::convert::identity)
+        .await?;
+    fn_tracker_presenter
+        .list_numbered_aligned(std::iter::once(&("abc", "def")))
+        .await?;
+    fn_tracker_presenter
+        .list_numbered_aligned_with(std::iter::once(&("abc", "def")), std::convert::identity)
+        .await?;
+    fn_tracker_presenter
+        .list_bulleted(std::iter::once("abc"))
+        .await?;
+    fn_tracker_presenter
+        .list_bulleted_with(std::iter::once("abc"), std::convert::identity)
+        .await?;
+    fn_tracker_presenter
+        .list_bulleted_aligned(std::iter::once(&("abc", "def")))
+        .await?;
+    fn_tracker_presenter
+        .list_bulleted_aligned_with(std::iter::once(&("abc", "def")), std::convert::identity)
+        .await?;
+
+    [
+        FnInvocation::new("heading", vec![Some(String::from("Level1")), None]),
+        FnInvocation::new("id", vec![Some(String::from("\"the_id\""))]),
+        FnInvocation::new("name", vec![Some(String::from("\"the_name\""))]),
+        FnInvocation::new("text", vec![Some(String::from("\"the_text\""))]),
+        FnInvocation::new("bold", vec![None]),
+        FnInvocation::new("tag", vec![Some(String::from("\"the_tag\""))]),
+        FnInvocation::new(
+            "code_inline",
+            vec![Some(String::from("\"the_code_inline\""))],
+        ),
+        FnInvocation::new("list_numbered", vec![None]),
+        FnInvocation::new("list_numbered_with", vec![None, None]),
+        FnInvocation::new("list_numbered_aligned", vec![None]),
+        FnInvocation::new("list_numbered_aligned_with", vec![None, None]),
+        FnInvocation::new("list_bulleted", vec![None]),
+        FnInvocation::new("list_bulleted_with", vec![None, None]),
+        FnInvocation::new("list_bulleted_aligned", vec![None]),
+        FnInvocation::new("list_bulleted_aligned_with", vec![None, None]),
+    ]
+    .into_iter()
+    .zip(fn_tracker_presenter.fn_invocations().iter())
+    .for_each(|(expected, actual)| assert_eq!(&expected, actual));
+
+    Ok(())
 }
