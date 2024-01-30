@@ -10,7 +10,6 @@ use peace::{
     },
     fmt::presentln,
     params::Params,
-    resources::resources::ts::SetUp,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
@@ -41,7 +40,7 @@ impl EnvCmd {
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
+            &'fn_once mut EnvManCmdCtx<'_, O>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let workspace = Workspace::new(
@@ -104,7 +103,7 @@ impl EnvCmd {
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>, SetUp>>,
+            &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let workspace = Workspace::new(
@@ -130,7 +129,7 @@ impl EnvCmd {
         Ok(t)
     }
 
-    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>) -> Result<(), EnvManError>
+    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError>,
     {

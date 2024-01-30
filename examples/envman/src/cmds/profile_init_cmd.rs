@@ -8,7 +8,6 @@ use peace::{
     },
     cmd_model::CmdOutcome,
     fmt::{presentable::CodeInline, presentln},
-    resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Flow, Workspace, WorkspaceSpec},
 };
@@ -199,7 +198,7 @@ async fn app_upload_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>, SetUp>>, EnvManError>
+) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {
@@ -237,7 +236,7 @@ async fn env_deploy_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>, SetUp>>, EnvManError>
+) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {

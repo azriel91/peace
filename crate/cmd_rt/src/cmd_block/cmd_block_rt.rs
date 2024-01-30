@@ -4,7 +4,6 @@ use async_trait::async_trait;
 
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockDesc;
-use peace_resources::resources::ts::SetUp;
 
 use crate::CmdBlockError;
 
@@ -28,7 +27,7 @@ pub trait CmdBlockRt: Debug + Unpin {
     /// Executes this command block.
     async fn exec(
         &self,
-        view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
+        view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<
         (),

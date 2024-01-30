@@ -39,7 +39,7 @@ impl<CmdCtxTypesT, Scope> Debug for DiffCmd<CmdCtxTypesT, Scope> {
     }
 }
 
-impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>
+impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained + 'ctx,
 {
@@ -58,7 +58,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff_stored(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
         CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -77,7 +77,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff<StatesTs0, StatesTs1>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
         CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -133,7 +133,7 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, MultiProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>
+impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, MultiProfileSingleFlow<'ctx, CmdCtxTypesT>>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
@@ -146,7 +146,7 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_current_stored(
-        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         profile_a: &Profile,
         profile_b: &Profile,
     ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {

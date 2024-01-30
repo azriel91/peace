@@ -2,7 +2,6 @@ use peace::{
     cfg::{app_name, item_id, FlowId, ItemId, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     cmd_model::CmdOutcome,
-    resources::resources::ts::SetUp,
     rt::cmds::{
         CleanCmd, DiffCmd, EnsureCmd, StatesCurrentStoredDisplayCmd, StatesDiscoverCmd,
         StatesGoalDisplayCmd,
@@ -71,8 +70,7 @@ pub async fn workspace_and_flow_setup(
     Ok(workspace_and_flow)
 }
 
-pub type DownloadCmdCtx<'ctx, O> =
-    CmdCtx<SingleProfileSingleFlow<'ctx, DownloadCmdCtxTypes<O>, SetUp>>;
+pub type DownloadCmdCtx<'ctx, O> = CmdCtx<SingleProfileSingleFlow<'ctx, DownloadCmdCtxTypes<O>>>;
 
 /// Returns a `CmdCtx` initialized from the workspace and item graph
 pub async fn cmd_ctx<'ctx, O>(

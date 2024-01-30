@@ -5,7 +5,7 @@ use peace_cmd::{
     scopes::SingleProfileSingleFlow,
 };
 use peace_cmd_model::CmdOutcome;
-use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
+use peace_resources::states::StatesGoalStored;
 
 use peace_rt_model_core::output::OutputWrite;
 
@@ -26,7 +26,7 @@ where
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
         CmdOutcome<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,

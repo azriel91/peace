@@ -73,7 +73,7 @@ use crate::ctx::CmdCtxTypes;
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+pub struct MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -143,13 +143,13 @@ where
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
-    resources: Resources<TS>,
+    resources: Resources<SetUp>,
 }
 
 /// Access to fields in `MultiProfileSingleFlow` so that multiple borrows can
 /// happen simultaneously.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlowView<'view, CmdCtxTypesT, TS>
+pub struct MultiProfileSingleFlowView<'view, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -219,10 +219,10 @@ where
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
-    pub resources: &'view mut Resources<TS>,
+    pub resources: &'view mut Resources<SetUp>,
 }
 
-impl<'ctx, CmdCtxTypesT> MultiProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>
+impl<'ctx, CmdCtxTypesT> MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -282,14 +282,14 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS> MultiProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT> MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> MultiProfileSingleFlowView<'_, CmdCtxTypesT, TS> {
+    pub fn view(&mut self) -> MultiProfileSingleFlowView<'_, CmdCtxTypesT> {
         let Self {
             output,
             interruptibility_state,
@@ -445,18 +445,18 @@ where
     }
 
     /// Returns a reference to the `Resources` for flow execution.
-    pub fn resources(&self) -> &Resources<TS> {
+    pub fn resources(&self) -> &Resources<SetUp> {
         &self.resources
     }
 
     /// Returns a reference to the `Resources` for flow execution.
-    pub fn resources_mut(&mut self) -> &mut Resources<TS> {
+    pub fn resources_mut(&mut self) -> &mut Resources<SetUp> {
         &mut self.resources
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    MultiProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -476,8 +476,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    MultiProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -497,8 +497,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
-    MultiProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    MultiProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
