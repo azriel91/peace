@@ -1,7 +1,7 @@
 pub use self::{
     bold::Bold, code_inline::CodeInline, heading::Heading, heading_level::HeadingLevel,
-    list_bulleted::ListBulleted, list_numbered::ListNumbered,
-    list_numbered_aligned::ListNumberedAligned,
+    list_bulleted::ListBulleted, list_bulleted_aligned::ListBulletedAligned,
+    list_numbered::ListNumbered, list_numbered_aligned::ListNumberedAligned,
 };
 
 use serde::Serialize;
@@ -13,6 +13,7 @@ mod code_inline;
 mod heading;
 mod heading_level;
 mod list_bulleted;
+mod list_bulleted_aligned;
 mod list_numbered;
 mod list_numbered_aligned;
 mod tuple_impl;
