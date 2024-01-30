@@ -11,6 +11,7 @@
 * Add `Presenter::list_numbered_aligned` and `list_bulleted_aligned`. ([#151], [#178])
 * Add `ListNumberedAligned`, `ListBulleted`, `ListBulletedAligned`. ([#151], [#178])
 * Add `Either`, `PresentableExt`. ([#151], [#178])
+* Remove `TS` type parameter from `SingleProfileSingleFlow` and `MultiProfileSingleFlow` scopes. ([#179], [#180])
 
 
 [#172]: https://github.com/azriel91/peace/issues/172
@@ -21,6 +22,8 @@
 [#177]: https://github.com/azriel91/peace/pull/177
 [#151]: https://github.com/azriel91/peace/issues/151
 [#178]: https://github.com/azriel91/peace/pull/178
+[#179]: https://github.com/azriel91/peace/issues/179
+[#180]: https://github.com/azriel91/peace/pull/180
 
 
 ## 0.0.12 (2023-12-30)
