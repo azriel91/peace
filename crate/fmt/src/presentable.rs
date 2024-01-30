@@ -118,7 +118,7 @@ pub trait Presentable: Serialize {
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for &T
 where
-    T: Presentable,
+    T: Presentable + ?Sized,
 {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
@@ -130,7 +130,7 @@ where
 }
 
 #[async_trait::async_trait(?Send)]
-impl Presentable for &str {
+impl Presentable for str {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,

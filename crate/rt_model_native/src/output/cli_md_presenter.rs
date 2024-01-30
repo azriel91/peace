@@ -330,7 +330,7 @@ where
 
     async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
         self.list_numbered_with(iter, std::convert::identity).await
@@ -387,7 +387,7 @@ where
 
     async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
         self.list_bulleted_with(iter, std::convert::identity).await

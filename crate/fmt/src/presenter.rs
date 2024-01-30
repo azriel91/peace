@@ -98,7 +98,7 @@ pub trait Presenter<'output> {
     /// * A list of steps.
     async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>;
 
     /// Presents a numbered list, computing the `Presentable` with the provided
@@ -176,7 +176,7 @@ pub trait Presenter<'output> {
     /// * A list of items.
     async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>;
 
     /// Presents a bulleted list, computing the `Presentable` with the provided
