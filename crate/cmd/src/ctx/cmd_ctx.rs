@@ -2,21 +2,15 @@
 
 use std::ops::{Deref, DerefMut};
 
-use peace_resources::Resources;
 use peace_rt_model::Workspace;
 
-use crate::{
-    ctx::{
-        cmd_ctx_builder::{
-            MultiProfileNoFlowBuilder, MultiProfileSingleFlowBuilder, NoProfileNoFlowBuilder,
-            SingleProfileNoFlowBuilder, SingleProfileSingleFlowBuilder,
-        },
-        CmdCtxBuilder, CmdCtxTypes,
+use crate::ctx::{
+    cmd_ctx_builder::{
+        MultiProfileNoFlowBuilder, MultiProfileSingleFlowBuilder, NoProfileNoFlowBuilder,
+        SingleProfileNoFlowBuilder, SingleProfileSingleFlowBuilder,
     },
-    scopes::SingleProfileSingleFlow,
+    CmdCtxBuilder, CmdCtxTypesCollectorEmpty,
 };
-
-use super::CmdCtxTypesCollectorEmpty;
 
 /// Information needed to execute a command.
 ///
@@ -100,27 +94,6 @@ impl CmdCtx<()> {
         SingleProfileSingleFlowBuilder<CmdCtxTypesCollectorEmpty<AppError, Output>>,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
-    }
-}
-
-impl<'ctx, CmdCtxTypesT, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs0>>
-where
-    CmdCtxTypesT: CmdCtxTypes,
-{
-    /// Updates `resources` to a different type state based on the given
-    /// function.
-    pub fn resources_update<ResTs1, F>(
-        self,
-        f: F,
-    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs1>>
-    where
-        F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
-    {
-        let CmdCtx { scope } = self;
-
-        let scope = scope.resources_update(f);
-
-        CmdCtx { scope }
     }
 }
 

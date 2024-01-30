@@ -52,7 +52,7 @@ use crate::ctx::CmdCtxTypes;
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+pub struct SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -118,7 +118,7 @@ where
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
-    resources: Resources<TS>,
+    resources: Resources<SetUp>,
 }
 
 /// A command that works with one profile and one flow.
@@ -154,7 +154,7 @@ where
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowView<'view, CmdCtxTypesT, TS>
+pub struct SingleProfileSingleFlowView<'view, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -211,7 +211,7 @@ where
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
-    pub resources: &'view mut Resources<TS>,
+    pub resources: &'view mut Resources<SetUp>,
 }
 
 /// Split the output related parameters and the flow information.
@@ -221,7 +221,7 @@ where
 /// `cmd_progress_tracker` mutably, while the flow information is passed through
 /// to sub commands..
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowViewAndOutput<'view, CmdCtxTypesT, TS>
+pub struct SingleProfileSingleFlowViewAndOutput<'view, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -236,10 +236,10 @@ where
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
     /// Flow and parameter related information.
-    pub cmd_view: SingleProfileSingleFlowView<'view, CmdCtxTypesT, TS>,
+    pub cmd_view: SingleProfileSingleFlowView<'view, CmdCtxTypesT>,
 }
 
-impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>
+impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -294,14 +294,14 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, CmdCtxTypesT, TS> {
+    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, CmdCtxTypesT> {
         let Self {
             output: _,
             interruptibility_state,
@@ -347,9 +347,7 @@ where
     /// Returns a view and output struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view_and_output(
-        &mut self,
-    ) -> SingleProfileSingleFlowViewAndOutput<'_, CmdCtxTypesT, TS> {
+    pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, CmdCtxTypesT> {
         let Self {
             output,
             interruptibility_state,
@@ -508,72 +506,18 @@ where
     }
 
     /// Returns a reference to the `Resources` for flow execution.
-    pub fn resources(&self) -> &Resources<TS> {
+    pub fn resources(&self) -> &Resources<SetUp> {
         &self.resources
     }
 
     /// Returns a reference to the `Resources` for flow execution.
-    pub fn resources_mut(&mut self) -> &mut Resources<TS> {
+    pub fn resources_mut(&mut self) -> &mut Resources<SetUp> {
         &mut self.resources
-    }
-
-    /// Updates `resources` to a different type state based on the given
-    /// function.
-    pub fn resources_update<ResTs1, F>(
-        self,
-        f: F,
-    ) -> SingleProfileSingleFlow<'ctx, CmdCtxTypesT, ResTs1>
-    where
-        F: FnOnce(Resources<TS>) -> Resources<ResTs1>,
-    {
-        let SingleProfileSingleFlow {
-            output,
-            interruptibility_state,
-            workspace,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            profile,
-            profile_dir,
-            profile_history_dir,
-            flow,
-            flow_dir,
-            params_type_regs,
-            workspace_params,
-            profile_params,
-            flow_params,
-            params_specs_type_reg,
-            params_specs,
-            states_type_reg,
-            resources,
-        } = self;
-
-        let resources = f(resources);
-
-        SingleProfileSingleFlow {
-            output,
-            interruptibility_state,
-            workspace,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            profile,
-            profile_dir,
-            profile_history_dir,
-            flow,
-            flow_dir,
-            params_type_regs,
-            workspace_params,
-            profile_params,
-            flow_params,
-            params_specs_type_reg,
-            params_specs,
-            states_type_reg,
-            resources,
-        }
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -593,8 +537,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -614,8 +558,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT, TS>
+impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<

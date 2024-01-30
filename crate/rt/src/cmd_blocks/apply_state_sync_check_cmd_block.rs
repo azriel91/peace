@@ -123,7 +123,7 @@ where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
-        cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypesT, SetUp>,
+        cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
@@ -245,7 +245,7 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
+        _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
         CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
@@ -295,7 +295,7 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
         CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
@@ -369,7 +369,7 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
         CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
@@ -463,7 +463,7 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
         CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,

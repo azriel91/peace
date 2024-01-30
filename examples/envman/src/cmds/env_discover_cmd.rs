@@ -6,7 +6,6 @@ use peace::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
         PresentableExt,
     },
-    resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
     rt_model::output::OutputWrite,
 };
@@ -55,11 +54,7 @@ macro_rules! run {
     }};
 }
 
-async fn run_with_ctx<O>(
-    cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
-
-    debug: bool,
-) -> Result<(), EnvManError>
+async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>, debug: bool) -> Result<(), EnvManError>
 where
     O: OutputWrite<EnvManError>,
 {

@@ -69,7 +69,7 @@ where
     /// Returns the result of executing the command.
     pub async fn exec<'ctx>(
         &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT, SetUp>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
         CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -188,7 +188,7 @@ where
 async fn cmd_outcome_task<'types: 'view, 'view, 'view_ref, ExecutionOutcome, CmdCtxTypesT>(
     cmd_blocks: &VecDeque<CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
     execution_outcome_fetch: &mut fn(&mut Resources<SetUp>) -> Option<ExecutionOutcome>,
-    cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypesT, SetUp>,
+    cmd_view: &mut SingleProfileSingleFlowView<'view, CmdCtxTypesT>,
     #[cfg(feature = "output_progress")] cmd_progress_tx: Sender<CmdProgressUpdate>,
 ) -> Result<
     CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
@@ -442,7 +442,7 @@ struct CmdViewAndProgress<'view, 'view_ref, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, CmdCtxTypesT, SetUp>,
+    cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, CmdCtxTypesT>,
     #[cfg(feature = "output_progress")]
     cmd_progress_tx: Sender<CmdProgressUpdate>,
 }

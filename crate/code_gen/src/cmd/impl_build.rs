@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Token};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Token};
 
 use crate::cmd::{
     type_params_selection::{
@@ -150,19 +150,6 @@ fn impl_build_for(
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
 
-    let scope_type_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-
-        match scope {
-            Scope::SingleProfileSingleFlow | Scope::MultiProfileSingleFlow => {
-                type_params.push(parse_quote!(peace_resources::resources::ts::SetUp));
-            }
-            Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
-        }
-
-        type_params
-    };
-
     let workspace_dirs_and_storage_borrow = quote! {
         let workspace_dirs = self.workspace.dirs();
         let storage = self.workspace.storage();
@@ -304,10 +291,6 @@ fn impl_build_for(
                     Output,
                     #params_keys_impl,
                 >,
-
-                // MultiProfileSingleFlow / SingleProfileSingleFlow
-                // peace_resources::resources::ts::SetUp
-                #scope_type_params
             >,
         >
     };

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use fn_graph::StreamOutcomeState;
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
-use peace_resources::{resources::ts::SetUp, Resource};
+use peace_resources::Resource;
 
 use tynm::TypeParamsFmtOpts;
 
@@ -83,7 +83,7 @@ where
 
     async fn exec(
         &self,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypesT, SetUp>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
     ) -> Result<
         (),
