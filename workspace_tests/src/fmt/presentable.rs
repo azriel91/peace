@@ -1,6 +1,7 @@
 mod bold;
 mod code_inline;
 mod heading;
+mod list_bulleted;
 mod list_numbered;
 mod list_numbered_aligned;
 
