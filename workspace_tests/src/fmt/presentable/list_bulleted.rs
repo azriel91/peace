@@ -3,7 +3,7 @@ use peace::{
     rt_model::output::{CliColorizeOpt, CliMdPresenter},
 };
 
-use crate::fmt::presentable::cli_output;
+use crate::fmt::cli_output;
 
 #[tokio::test]
 async fn present() -> Result<(), Box<dyn std::error::Error>> {
