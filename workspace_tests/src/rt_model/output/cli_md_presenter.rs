@@ -1,7 +1,7 @@
 use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
     fmt::{
-        presentable::{CodeInline, HeadingLevel},
+        presentable::{Bold, CodeInline, HeadingLevel},
         Presenter,
     },
     rt_model::output::{CliMdPresenter, CliOutput, CliOutputBuilder, OutputFormat},
@@ -95,6 +95,36 @@ async fn presents_bold_with_double_asterisk_color_disabled()
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
+    presenter.bold(&String::from("bold")).await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!("**bold**", output);
+    assert_eq!("**bold**", console::strip_ansi_codes(&output));
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter.bold(&String::from("bold")).await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!("**\u{1b}[1mbold\u{1b}[0m**", output);
+    assert_eq!("**bold**", console::strip_ansi_codes(&output));
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
     presenter.bold(&CodeInline::new("code".into())).await?;
 
     let output = String::from_utf8(buffer)?;
@@ -104,8 +134,8 @@ async fn presents_bold_with_double_asterisk_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_enabled()
+-> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -309,8 +339,7 @@ async fn presents_list_numbered_white_text_color_enabled() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_padding_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_padding_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -343,8 +372,7 @@ async fn presents_list_numbered_with_padding_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_padding_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_padding_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -454,7 +482,7 @@ async fn presents_list_numbered_with_white_text_color_enabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_with_padding_color_disabled()
+async fn presents_list_numbered_with_padding_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
@@ -484,7 +512,7 @@ async fn presents_list_numbered_with_with_padding_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_with_padding_color_enabled()
+async fn presents_list_numbered_with_padding_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
@@ -523,6 +551,185 @@ async fn presents_list_numbered_with_with_padding_color_enabled()
 10. Item 10
 11. Item 11
 "#,
+        console::strip_ansi_codes(&output)
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_numbered_aligned_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_numbered_aligned(&[
+            (
+                Bold::new(String::from("Short")),
+                (
+                    String::from("description with "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+            (
+                Bold::new(String::from("Long Name")),
+                (
+                    String::from("another description "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+        ])
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "\
+            1. **Short**    : description with `code`\n\
+            2. **Long Name**: another description `code`\n\
+        ",
+        output
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_numbered_aligned_white_text_color_enabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_numbered_aligned(&[
+            (
+                Bold::new(String::from("Short")),
+                (
+                    String::from("description with "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+            (
+                Bold::new(String::from("Long Name")),
+                (
+                    String::from("another description "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+        ])
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "\
+            \u{1b}[38;5;15m1.\u{1b}[0m **\u{1b}[1mShort\u{1b}[0m**    : description with \u{1b}[38;5;75m`code`\u{1b}[0m\n\
+            \u{1b}[38;5;15m2.\u{1b}[0m **\u{1b}[1mLong Name\u{1b}[0m**: another description \u{1b}[38;5;75m`code`\u{1b}[0m\n\
+        ",
+        output
+    );
+    assert_eq!(
+        "\
+            1. **Short**    : description with `code`\n\
+            2. **Long Name**: another description `code`\n\
+        ",
+        console::strip_ansi_codes(&output)
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_numbered_aligned_padding_color_disabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_numbered_aligned(
+            &(1..=11)
+                .map(|n| {
+                    (
+                        Bold::new(format!("Item {n}")),
+                        (
+                            String::from("description with "),
+                            CodeInline::new("code".into()),
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        " 1. **Item 1** : description with `code`
+ 2. **Item 2** : description with `code`
+ 3. **Item 3** : description with `code`
+ 4. **Item 4** : description with `code`
+ 5. **Item 5** : description with `code`
+ 6. **Item 6** : description with `code`
+ 7. **Item 7** : description with `code`
+ 8. **Item 8** : description with `code`
+ 9. **Item 9** : description with `code`
+10. **Item 10**: description with `code`
+11. **Item 11**: description with `code`
+",
+        output
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_numbered_aligned_padding_color_enabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_numbered_aligned(
+            &(1..=11)
+                .map(|n| {
+                    (
+                        Bold::new(format!("Item {n}")),
+                        (
+                            String::from("description with "),
+                            CodeInline::new("code".into()),
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        " \u{1b}[38;5;15m1.\u{1b}[0m **\u{1b}[1mItem 1\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m2.\u{1b}[0m **\u{1b}[1mItem 2\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m3.\u{1b}[0m **\u{1b}[1mItem 3\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m4.\u{1b}[0m **\u{1b}[1mItem 4\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m5.\u{1b}[0m **\u{1b}[1mItem 5\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m6.\u{1b}[0m **\u{1b}[1mItem 6\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m7.\u{1b}[0m **\u{1b}[1mItem 7\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m8.\u{1b}[0m **\u{1b}[1mItem 8\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+ \u{1b}[38;5;15m9.\u{1b}[0m **\u{1b}[1mItem 9\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m10.\u{1b}[0m **\u{1b}[1mItem 10\u{1b}[0m**: description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m11.\u{1b}[0m **\u{1b}[1mItem 11\u{1b}[0m**: description with \u{1b}[38;5;75m`code`\u{1b}[0m
+",
+        output
+    );
+    assert_eq!(
+        " 1. **Item 1** : description with `code`
+ 2. **Item 2** : description with `code`
+ 3. **Item 3** : description with `code`
+ 4. **Item 4** : description with `code`
+ 5. **Item 5** : description with `code`
+ 6. **Item 6** : description with `code`
+ 7. **Item 7** : description with `code`
+ 8. **Item 8** : description with `code`
+ 9. **Item 9** : description with `code`
+10. **Item 10**: description with `code`
+11. **Item 11**: description with `code`
+",
         console::strip_ansi_codes(&output)
     );
     Ok(())
@@ -635,6 +842,185 @@ async fn presents_list_bulleted_with_white_text_color_enabled()
             * Item 1\n\
             * Item 2\n\
         ",
+        console::strip_ansi_codes(&output)
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_bulleted_aligned_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_bulleted_aligned(&[
+            (
+                Bold::new(String::from("Short")),
+                (
+                    String::from("description with "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+            (
+                Bold::new(String::from("Long Name")),
+                (
+                    String::from("another description "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+        ])
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "\
+            * **Short**    : description with `code`\n\
+            * **Long Name**: another description `code`\n\
+        ",
+        output
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_bulleted_aligned_white_text_color_enabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_bulleted_aligned(&[
+            (
+                Bold::new(String::from("Short")),
+                (
+                    String::from("description with "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+            (
+                Bold::new(String::from("Long Name")),
+                (
+                    String::from("another description "),
+                    CodeInline::new("code".into()),
+                ),
+            ),
+        ])
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "\
+            \u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mShort\u{1b}[0m**    : description with \u{1b}[38;5;75m`code`\u{1b}[0m\n\
+            \u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mLong Name\u{1b}[0m**: another description \u{1b}[38;5;75m`code`\u{1b}[0m\n\
+        ",
+        output
+    );
+    assert_eq!(
+        "\
+            * **Short**    : description with `code`\n\
+            * **Long Name**: another description `code`\n\
+        ",
+        console::strip_ansi_codes(&output)
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_bulleted_aligned_padding_color_disabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_bulleted_aligned(
+            &(1..=11)
+                .map(|n| {
+                    (
+                        Bold::new(format!("Item {n}")),
+                        (
+                            String::from("description with "),
+                            CodeInline::new("code".into()),
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "* **Item 1** : description with `code`
+* **Item 2** : description with `code`
+* **Item 3** : description with `code`
+* **Item 4** : description with `code`
+* **Item 5** : description with `code`
+* **Item 6** : description with `code`
+* **Item 7** : description with `code`
+* **Item 8** : description with `code`
+* **Item 9** : description with `code`
+* **Item 10**: description with `code`
+* **Item 11**: description with `code`
+",
+        output
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn presents_list_bulleted_aligned_padding_color_enabled()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter
+        .list_bulleted_aligned(
+            &(1..=11)
+                .map(|n| {
+                    (
+                        Bold::new(format!("Item {n}")),
+                        (
+                            String::from("description with "),
+                            CodeInline::new("code".into()),
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!(
+        "\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 1\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 2\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 3\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 4\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 5\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 6\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 7\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 8\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 9\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 10\u{1b}[0m**: description with \u{1b}[38;5;75m`code`\u{1b}[0m
+\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 11\u{1b}[0m**: description with \u{1b}[38;5;75m`code`\u{1b}[0m
+",
+        output
+    );
+    assert_eq!(
+        "* **Item 1** : description with `code`
+* **Item 2** : description with `code`
+* **Item 3** : description with `code`
+* **Item 4** : description with `code`
+* **Item 5** : description with `code`
+* **Item 6** : description with `code`
+* **Item 7** : description with `code`
+* **Item 8** : description with `code`
+* **Item 9** : description with `code`
+* **Item 10**: description with `code`
+* **Item 11**: description with `code`
+",
         console::strip_ansi_codes(&output)
     );
     Ok(())

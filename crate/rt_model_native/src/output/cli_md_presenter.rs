@@ -1,3 +1,5 @@
+use console::Style;
+use futures::stream::{self, TryStreamExt};
 use peace_fmt::{async_trait, presentable::HeadingLevel, Presentable, Presenter};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
@@ -99,6 +101,144 @@ where
 
         Ok(())
     }
+
+    async fn list_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        list_type: ListType,
+        iter: I,
+        f: F,
+    ) -> Result<(), std::io::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1),
+    {
+        let iterator = iter.into_iter();
+        let number_column_count = Self::number_column_count(&iterator);
+
+        let mut buffer = Vec::<u8>::with_capacity(256);
+        let mut cli_output_in_memory = CliOutput::new_with_writer(&mut buffer);
+        let mut width_buffer_presenter = CliMdPresenter::new(&mut cli_output_in_memory);
+
+        // Render the first presentable of all items, so we can determine the maximum
+        // width.
+        let (entries, max_width, _width_buffer_presenter, _f) =
+            stream::iter(iterator.map(Result::<_, std::io::Error>::Ok))
+                .try_fold(
+                    (Vec::new(), None, &mut width_buffer_presenter, f),
+                    |(mut entries, mut max_width, width_buffer_presenter, f), entry| async move {
+                        let (presentable_0, presentable_1) = f(entry);
+
+                        presentable_0.present(width_buffer_presenter).await?;
+                        let rendered_0 = &width_buffer_presenter.output.writer;
+                        let rendered_0_lossy = String::from_utf8_lossy(rendered_0);
+                        let width = console::measure_text_width(&rendered_0_lossy);
+
+                        width_buffer_presenter.output.writer.clear();
+
+                        if let Some(current_max) = max_width {
+                            if current_max < width {
+                                max_width = Some(width);
+                            }
+                        } else {
+                            max_width = Some(width);
+                        }
+
+                        entries.push(((presentable_0, width), presentable_1));
+
+                        Ok((entries, max_width, width_buffer_presenter, f))
+                    },
+                )
+                .await?;
+
+        let style_white = &console::Style::new().color256(15); // white
+        let max_width = max_width.unwrap_or(0);
+        let padding_bytes = " ".repeat(max_width);
+
+        match list_type {
+            ListType::Numbered => {
+                for (index, ((presentable_0, presentable_0_width), presentable_1)) in
+                    entries.into_iter().enumerate()
+                {
+                    self.list_number_write(style_white, index, number_column_count)
+                        .await?;
+
+                    self.list_aligned_item_write(
+                        max_width,
+                        &padding_bytes,
+                        presentable_0,
+                        presentable_0_width,
+                        presentable_1,
+                    )
+                    .await?;
+                }
+            }
+            ListType::Bulleted => {
+                for ((presentable_0, presentable_0_width), presentable_1) in entries.into_iter() {
+                    self.list_bullet_write(style_white).await?;
+
+                    self.list_aligned_item_write(
+                        max_width,
+                        &padding_bytes,
+                        presentable_0,
+                        presentable_0_width,
+                        presentable_1,
+                    )
+                    .await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn list_aligned_item_write<P0, P1>(
+        &mut self,
+        max_width: usize,
+        padding_bytes: &str,
+        presentable_0: &P0,
+        presentable_0_width: usize,
+        presentable_1: &P1,
+    ) -> Result<(), std::io::Error>
+    where
+        P0: Presentable,
+        P1: Presentable,
+    {
+        presentable_0.present(self).await?;
+        let padding = max_width.saturating_sub(presentable_0_width);
+        if padding > 0 {
+            self.output
+                .writer
+                .write_all(padding_bytes[0..padding].as_bytes())
+                .await?;
+        }
+        self.output.writer.write_all(b": ").await?;
+        presentable_1.present(self).await?;
+        self.output.writer.write_all(b"\n").await?;
+        Ok(())
+    }
+
+    async fn list_bullet_write(&mut self, style_white: &Style) -> Result<(), std::io::Error> {
+        self.colorize_maybe("*", style_white).await?;
+        self.output.writer.write_all(b" ").await?;
+
+        Ok(())
+    }
+
+    async fn list_number_write(
+        &mut self,
+        style_white: &Style,
+        index: usize,
+        number_column_count: usize,
+    ) -> Result<(), std::io::Error> {
+        let list_number = index + 1;
+        self.colorize_list_number(style_white, number_column_count, list_number)
+            .await?;
+
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -190,23 +330,10 @@ where
 
     async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
-        let iterator = iter.into_iter();
-        let number_column_count = Self::number_column_count(&iterator);
-        for (index, entry) in iterator.enumerate() {
-            let list_number = index + 1;
-
-            let style = &console::Style::new().color256(15); // white
-            self.colorize_list_number(style, number_column_count, list_number)
-                .await?;
-
-            entry.present(self).await?;
-            self.output.writer.write_all(b"\n").await?;
-        }
-
-        Ok(())
+        self.list_numbered_with(iter, std::convert::identity).await
     }
 
     async fn list_numbered_with<'f, P, I, T, F>(&mut self, iter: I, f: F) -> Result<(), Self::Error>
@@ -233,21 +360,37 @@ where
         Ok(())
     }
 
+    async fn list_numbered_aligned<'f, P0, P1, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>,
+    {
+        self.list_numbered_aligned_with(iter, std::convert::identity)
+            .await
+    }
+
+    async fn list_numbered_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1),
+    {
+        self.list_aligned_with(ListType::Numbered, iter, f).await
+    }
+
     async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>,
     {
-        for entry in iter.into_iter() {
-            let style = &console::Style::new().color256(15); // white
-            self.colorize_maybe("*", style).await?;
-            self.output.writer.write_all(b" ").await?;
-
-            entry.present(self).await?;
-            self.output.writer.write_all(b"\n").await?;
-        }
-
-        Ok(())
+        self.list_bulleted_with(iter, std::convert::identity).await
     }
 
     async fn list_bulleted_with<'f, P, I, T, F>(&mut self, iter: I, f: F) -> Result<(), Self::Error>
@@ -269,6 +412,31 @@ where
 
         Ok(())
     }
+
+    async fn list_bulleted_aligned<'f, P0, P1, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>,
+    {
+        self.list_bulleted_aligned_with(iter, std::convert::identity)
+            .await
+    }
+
+    async fn list_bulleted_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1),
+    {
+        self.list_aligned_with(ListType::Bulleted, iter, f).await
+    }
 }
 
 /// Whether to render text in ANSI bold.
@@ -288,4 +456,10 @@ impl CliBold {
     fn decrement(&mut self) {
         self.0 = self.0.saturating_sub(1);
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum ListType {
+    Numbered,
+    Bulleted,
 }

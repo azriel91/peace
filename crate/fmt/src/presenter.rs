@@ -98,7 +98,7 @@ pub trait Presenter<'output> {
     /// * A list of steps.
     async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>;
 
     /// Presents a numbered list, computing the `Presentable` with the provided
@@ -118,6 +118,57 @@ pub trait Presenter<'output> {
         T: 'f,
         F: Fn(T) -> P;
 
+    /// Presents an aligned numbered list.
+    ///
+    /// Each item in the list has two parts: the "name", and the "description".
+    ///
+    /// The list will be rendered with all items' descriptions aligned to the
+    /// item with the longest name. i.e.
+    ///
+    /// ```md
+    /// 1. Short name:     Description 1.
+    /// 2. Longer name:    Description 2.
+    /// 3. Very long name: Another description.
+    /// ```
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_numbered_aligned<'f, P0, P1, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>;
+
+    /// Presents an aligned numbered list, computing the `Presentable` with the
+    /// provided function.
+    ///
+    /// Each item in the list has two parts: the "name", and the "description".
+    ///
+    /// The list will be rendered with all items' descriptions aligned to the
+    /// item with the longest name. i.e.
+    ///
+    /// ```md
+    /// 1. Short name:     Description 1.
+    /// 2. Longer name:    Description 2.
+    /// 3. Very long name: Another description.
+    /// ```
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_numbered_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1);
+
     /// Presents a bulleted list.
     ///
     /// # Purposes
@@ -125,7 +176,7 @@ pub trait Presenter<'output> {
     /// * A list of items.
     async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        P: Presentable + 'f,
+        P: Presentable + ?Sized + 'f,
         I: IntoIterator<Item = &'f P>;
 
     /// Presents a bulleted list, computing the `Presentable` with the provided
@@ -144,4 +195,55 @@ pub trait Presenter<'output> {
         I: IntoIterator<Item = T>,
         T: 'f,
         F: Fn(T) -> P;
+
+    /// Presents an aligned bulleted list.
+    ///
+    /// Each item in the list has two parts: the "name", and the "description".
+    ///
+    /// The list will be rendered with all items' descriptions aligned to the
+    /// item with the longest name. i.e.
+    ///
+    /// ```md
+    /// * Short name:     Description 1.
+    /// * Longer name:    Description 2.
+    /// * Very long name: Another description.
+    /// ```
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_bulleted_aligned<'f, P0, P1, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = &'f (P0, P1)>;
+
+    /// Presents an aligned bulleted list, computing the `Presentable` with the
+    /// provided function.
+    ///
+    /// Each item in the list has two parts: the "name", and the "description".
+    ///
+    /// The list will be rendered with all items' descriptions aligned to the
+    /// item with the longest name. i.e.
+    ///
+    /// ```md
+    /// * Short name:     Description 1.
+    /// * Longer name:    Description 2.
+    /// * Very long name: Another description.
+    /// ```
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_bulleted_aligned_with<'f, P0, P1, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P0: Presentable + 'f,
+        P1: Presentable + 'f,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> &'f (P0, P1);
 }

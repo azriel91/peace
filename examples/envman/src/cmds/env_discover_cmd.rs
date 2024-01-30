@@ -2,7 +2,10 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     cmd_model::CmdOutcome,
-    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    fmt::{
+        presentable::{Heading, HeadingLevel, ListNumberedAligned},
+        PresentableExt,
+    },
     resources::resources::ts::SetUp,
     rt::cmds::StatesDiscoverCmd,
     rt_model::output::OutputWrite,
@@ -35,8 +38,8 @@ impl EnvDiscoverCmd {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize, debug),
-            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize, debug),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, debug),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd, debug),
         }
 
         Ok(())
@@ -44,9 +47,9 @@ impl EnvDiscoverCmd {
 }
 
 macro_rules! run {
-    ($output:ident, $flow_cmd:ident, $padding:expr, $debug:expr) => {{
+    ($output:ident, $flow_cmd:ident, $debug:expr) => {{
         $flow_cmd::run($output, CmdOpts::default(), |cmd_ctx| {
-            run_with_ctx(cmd_ctx, $padding, $debug).boxed_local()
+            run_with_ctx(cmd_ctx, $debug).boxed_local()
         })
         .await?;
     }};
@@ -54,7 +57,7 @@ macro_rules! run {
 
 async fn run_with_ctx<O>(
     cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>,
-    padding_count: usize,
+
     debug: bool,
 ) -> Result<(), EnvManError>
 where
@@ -74,42 +77,36 @@ where
         let states_current_raw_map = &***states_current;
         let states_goal_raw_map = &***states_goal;
 
-        let states_current_presentables = {
-            let states_current_presentables = flow
-                .graph()
-                .iter_insertion()
-                .map(|item| {
-                    let item_id = item.id();
-                    // Hack: for alignment
-                    let padding =
-                        " ".repeat(padding_count.saturating_sub(format!("{item_id}").len() + 2));
-                    match states_current_raw_map.get(item_id) {
-                        Some(state_current) => (item_id, format!("{padding}: {state_current}")),
-                        None => (item_id, format!("{padding}: <unknown>")),
-                    }
-                })
-                .collect::<Vec<_>>();
+        let states_current_presentables: ListNumberedAligned<_, _> = flow
+            .graph()
+            .iter_insertion()
+            .map(|item| {
+                let item_id = item.id();
 
-            ListNumbered::new(states_current_presentables)
-        };
-        let states_goal_presentables = {
-            let states_goal_presentables = flow
-                .graph()
-                .iter_insertion()
-                .map(|item| {
-                    let item_id = item.id();
-                    // Hack: for alignment
-                    let padding =
-                        " ".repeat(padding_count.saturating_sub(format!("{item_id}").len() + 2));
-                    match states_goal_raw_map.get(item_id) {
-                        Some(state_goal) => (item_id, format!("{padding}: {state_goal}")),
-                        None => (item_id, format!("{padding}: <unknown>")),
-                    }
-                })
-                .collect::<Vec<_>>();
+                let state_current_presentable = match states_current_raw_map.get(item_id) {
+                    Some(state_current) => format!("{state_current}").left_presentable(),
+                    None => "<unknown>".right_presentable(),
+                };
 
-            ListNumbered::new(states_goal_presentables)
-        };
+                (item_id, state_current_presentable)
+            })
+            .collect::<Vec<_>>()
+            .into();
+        let states_goal_presentables: ListNumberedAligned<_, _> = flow
+            .graph()
+            .iter_insertion()
+            .map(|item| {
+                let item_id = item.id();
+
+                let state_goal_presentable = match states_goal_raw_map.get(item_id) {
+                    Some(state_goal) => format!("{state_goal}").left_presentable(),
+                    None => "<unknown>".right_presentable(),
+                };
+
+                (item_id, state_goal_presentable)
+            })
+            .collect::<Vec<_>>()
+            .into();
 
         output
             .present(&(

@@ -8,6 +8,9 @@
 * Remove requirement to import `peace::cfg::ItemId` when using `item_id!("..")` macro. ([#157], [#176])
 * Remove requirement to import `peace::cfg::Profile` when using `profile!("..")` macro. ([#157], [#176])
 * Add `CmdCtxTypes` to group error, output, and params keys into one type parameter. ([#166], [#177])
+* Add `Presenter::list_numbered_aligned` and `list_bulleted_aligned`. ([#151], [#178])
+* Add `ListNumberedAligned`, `ListBulleted`, `ListBulletedAligned`. ([#151], [#178])
+* Add `Either`, `PresentableExt`. ([#151], [#178])
 
 
 [#172]: https://github.com/azriel91/peace/issues/172
@@ -16,6 +19,8 @@
 [#176]: https://github.com/azriel91/peace/pull/176
 [#166]: https://github.com/azriel91/peace/issues/166
 [#177]: https://github.com/azriel91/peace/pull/177
+[#151]: https://github.com/azriel91/peace/issues/151
+[#178]: https://github.com/azriel91/peace/pull/178
 
 
 ## 0.0.12 (2023-12-30)

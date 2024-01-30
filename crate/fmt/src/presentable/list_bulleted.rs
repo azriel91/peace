@@ -2,19 +2,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Presentable, Presenter};
 
-/// Presents the given iterator as a numbered list.
+/// Presents the given iterator as a bulleted list.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ListNumbered<P>(Vec<P>);
+pub struct ListBulleted<P>(Vec<P>);
 
-impl<P> ListNumbered<P> {
-    /// Returns a new `ListNumbered` wrapper.
+impl<P> ListBulleted<P> {
+    /// Returns a new `ListBulleted` wrapper.
     pub fn new(presentables: Vec<P>) -> Self {
         Self(presentables)
     }
 }
 
 #[async_trait::async_trait(?Send)]
-impl<P> Presentable for ListNumbered<P>
+impl<P> Presentable for ListBulleted<P>
 where
     P: Presentable,
 {
@@ -22,11 +22,11 @@ where
     where
         PR: Presenter<'output>,
     {
-        presenter.list_numbered(&self.0).await
+        presenter.list_bulleted(&self.0).await
     }
 }
 
-impl<P> From<Vec<P>> for ListNumbered<P>
+impl<P> From<Vec<P>> for ListBulleted<P>
 where
     P: Presentable,
 {

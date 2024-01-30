@@ -5,7 +5,10 @@ use peace::{
         MultiProfileSingleFlowView, SingleProfileSingleFlowView,
         SingleProfileSingleFlowViewAndOutput,
     },
-    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    fmt::{
+        presentable::{Heading, HeadingLevel, ListNumberedAligned},
+        PresentableExt,
+    },
     resources::states::StateDiffs,
     rt::cmds::DiffCmd,
     rt_model::{output::OutputWrite, Flow},
@@ -58,8 +61,8 @@ impl EnvDiffCmd {
         O: OutputWrite<EnvManError> + Send,
     {
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
-            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd),
         }
     }
 
@@ -74,9 +77,9 @@ impl EnvDiffCmd {
     {
         match env_man_flow {
             EnvManFlow::AppUpload => {
-                run_multi!(output, AppUploadCmd, 14usize, profile_a, profile_b)
+                run_multi!(output, AppUploadCmd, profile_a, profile_b)
             }
-            EnvManFlow::EnvDeploy => run_multi!(output, EnvCmd, 18usize, profile_a, profile_b),
+            EnvManFlow::EnvDeploy => run_multi!(output, EnvCmd, profile_a, profile_b),
         };
 
         Ok(())
@@ -86,36 +89,32 @@ impl EnvDiffCmd {
         output: &mut O,
         flow: &Flow<EnvManError>,
         state_diffs: &StateDiffs,
-        padding: usize,
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
         let state_diffs_raw_map = &***state_diffs;
 
-        let state_diffs_presentables = {
-            let state_diffs_presentables = flow
-                .graph()
-                .iter_insertion()
-                .map(|item| {
-                    let item_id = item.id();
-                    // Hack: for alignment
-                    let padding =
-                        " ".repeat(padding.saturating_sub(format!("{item_id}").len() + 2));
-                    match state_diffs_raw_map.get(item_id) {
-                        Some(state_current) => (item_id, format!("{padding}: {state_current}")),
-                        None => (item_id, format!("{padding}: <unknown>")),
-                    }
-                })
-                .collect::<Vec<_>>();
+        let states_diffs_presentables: ListNumberedAligned<_, _> = flow
+            .graph()
+            .iter_insertion()
+            .map(|item| {
+                let item_id = item.id();
 
-            ListNumbered::new(state_diffs_presentables)
-        };
+                let state_diff_presentable = match state_diffs_raw_map.get(item_id) {
+                    Some(state_diff) => format!("{state_diff}").left_presentable(),
+                    None => "<unknown>".right_presentable(),
+                };
+
+                (item_id, state_diff_presentable)
+            })
+            .collect::<Vec<_>>()
+            .into();
 
         output
             .present(&(
-                Heading::new(HeadingLevel::Level1, "State Diffs"),
-                state_diffs_presentables,
+                Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                states_diffs_presentables,
                 "\n",
             ))
             .await?;
@@ -125,7 +124,7 @@ impl EnvDiffCmd {
 }
 
 macro_rules! run {
-    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+    ($output:ident, $flow_cmd:ident) => {{
         $flow_cmd::run($output, CmdOpts::default(), |ctx| {
             async {
                 let state_diffs_outcome = DiffCmd::diff_stored(ctx).await?;
@@ -137,7 +136,7 @@ macro_rules! run {
                 } = ctx.view_and_output();
 
                 if let Some(state_diffs) = state_diffs_outcome.value() {
-                    Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+                    Self::state_diffs_present(output, flow, &state_diffs).await?;
                 }
 
                 Ok(())
@@ -149,14 +148,14 @@ macro_rules! run {
 }
 
 macro_rules! run_multi {
-    ($output:ident, $flow_cmd:ident, $padding:expr, $profile_a:ident, $profile_b:ident) => {{
+    ($output:ident, $flow_cmd:ident, $profile_a:ident, $profile_b:ident) => {{
         $flow_cmd::multi_profile($output, move |ctx| {
             async move {
                 let state_diffs =
                     DiffCmd::diff_current_stored(ctx, &$profile_a, &$profile_b).await?;
                 let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
 
-                Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+                Self::state_diffs_present(output, flow, &state_diffs).await?;
 
                 Ok(())
             }

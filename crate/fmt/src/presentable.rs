@@ -1,6 +1,7 @@
 pub use self::{
     bold::Bold, code_inline::CodeInline, heading::Heading, heading_level::HeadingLevel,
-    list_numbered::ListNumbered,
+    list_bulleted::ListBulleted, list_bulleted_aligned::ListBulletedAligned,
+    list_numbered::ListNumbered, list_numbered_aligned::ListNumberedAligned,
 };
 
 use serde::Serialize;
@@ -11,7 +12,10 @@ mod bold;
 mod code_inline;
 mod heading;
 mod heading_level;
+mod list_bulleted;
+mod list_bulleted_aligned;
 mod list_numbered;
+mod list_numbered_aligned;
 mod tuple_impl;
 
 /// A type that is presentable to a user.
@@ -114,7 +118,7 @@ pub trait Presentable: Serialize {
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for &T
 where
-    T: Presentable,
+    T: Presentable + ?Sized,
 {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
@@ -126,7 +130,7 @@ where
 }
 
 #[async_trait::async_trait(?Send)]
-impl Presentable for &str {
+impl Presentable for str {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,
