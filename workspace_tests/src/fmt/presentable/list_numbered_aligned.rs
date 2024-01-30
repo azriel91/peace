@@ -90,3 +90,11 @@ fn deserialize() -> Result<(), serde_yaml::Error> {
     );
     Ok(())
 }
+
+#[test]
+fn from() {
+    assert_eq!(
+        ListNumberedAligned::new(vec![("abc", "def")]),
+        ListNumberedAligned::from(vec![("abc", "def")])
+    );
+}

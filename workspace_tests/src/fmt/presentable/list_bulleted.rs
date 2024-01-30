@@ -74,3 +74,11 @@ fn deserialize() -> Result<(), serde_yaml::Error> {
     );
     Ok(())
 }
+
+#[test]
+fn from() {
+    assert_eq!(
+        ListBulleted::new(vec!["abc"]),
+        ListBulleted::from(vec!["abc"])
+    );
+}
