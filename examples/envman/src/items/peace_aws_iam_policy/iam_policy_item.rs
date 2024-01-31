@@ -30,7 +30,7 @@ use crate::items::peace_aws_iam_policy::{
 #[derive(Debug)]
 pub struct IamPolicyItem<Id> {
     /// ID of the instance profile item.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Marker for unique instance profile parameters type.
     marker: PhantomData<Id>,
 }

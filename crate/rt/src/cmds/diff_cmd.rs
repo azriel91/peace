@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
-use peace_cfg::{ItemId, Profile};
+use peace_cfg::{ItemIdT, Profile};
 use peace_cmd::{
     ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
@@ -221,8 +221,8 @@ where
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemId, BoxDtDisplay>,
-        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+        states_a: &TypeMap<ItemIdT, BoxDtDisplay>,
+        states_b: &TypeMap<ItemIdT, BoxDtDisplay>,
     ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let state_diffs = {
             let state_diffs_mut = flow

@@ -7,7 +7,7 @@ use peace_core::ItemId;
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// `State`s for all `Item`s. `TypeMap<ItemId, BoxDtDisplay>` newtype.
+/// `State`s for all `Item`s. `TypeMap<ItemIdT, BoxDtDisplay>` newtype.
 ///
 /// # Implementors
 ///
@@ -26,7 +26,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
 #[derive(Debug, Serialize)]
-pub struct StatesMut<TS>(TypeMap<ItemId, BoxDtDisplay>, PhantomData<TS>);
+pub struct StatesMut<TS>(TypeMap<ItemIdT, BoxDtDisplay>, PhantomData<TS>);
 
 impl<TS> StatesMut<TS> {
     /// Returns a new `StatesMut` map.
@@ -43,7 +43,7 @@ impl<TS> StatesMut<TS> {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemIdT, BoxDtDisplay> {
         self.0
     }
 }
@@ -55,7 +55,7 @@ impl<TS> Default for StatesMut<TS> {
 }
 
 impl<TS> Deref for StatesMut<TS> {
-    type Target = TypeMap<ItemId, BoxDtDisplay>;
+    type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -68,14 +68,14 @@ impl<TS> DerefMut for StatesMut<TS> {
     }
 }
 
-impl<TS> From<TypeMap<ItemId, BoxDtDisplay>> for StatesMut<TS> {
-    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
+impl<TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for StatesMut<TS> {
+    fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
 
-impl<TS> Extend<(ItemId, BoxDtDisplay)> for StatesMut<TS> {
-    fn extend<T: IntoIterator<Item = (ItemId, BoxDtDisplay)>>(&mut self, iter: T) {
+impl<TS> Extend<(ItemIdT, BoxDtDisplay)> for StatesMut<TS> {
+    fn extend<T: IntoIterator<Item = (ItemIdT, BoxDtDisplay)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(item_id, state)| {
             self.insert_raw(item_id, state);
         });

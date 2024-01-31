@@ -121,7 +121,7 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             for #name #ty_generics
             #where_clause
         {
-            fn borrow(item_id: & #impl_borrow_lt #peace_cfg_path::ItemId, resources: & #impl_borrow_lt #peace_data_path::Resources) -> Self {
+            fn borrow(item_id: & #impl_borrow_lt #peace_cfg_path::ItemIdT, resources: & #impl_borrow_lt #peace_data_path::Resources) -> Self {
                 #borrow_return
             }
         }

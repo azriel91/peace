@@ -221,7 +221,7 @@ where
             &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         progress_tx: &Sender<CmdProgressUpdate>,
-        item_id: &ItemId,
+        item_id: &ItemIdT,
     ) {
         if let Some((progress_update, msg_update)) = DiscoverFor::progress_update(
             progress_complete_on_success,
@@ -244,13 +244,13 @@ where
 pub enum ItemDiscoverOutcome<AppErrorT> {
     /// Discover succeeded.
     Success {
-        item_id: ItemId,
+        item_id: ItemIdT,
         state_current: Option<BoxDtDisplay>,
         state_goal: Option<BoxDtDisplay>,
     },
     /// Discover failed.
     Fail {
-        item_id: ItemId,
+        item_id: ItemIdT,
         state_current: Option<BoxDtDisplay>,
         state_goal: Option<BoxDtDisplay>,
         error: AppErrorT,
@@ -353,7 +353,7 @@ where
     ) -> Result<
         (
             States<Current>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
@@ -369,7 +369,7 @@ where
 
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
@@ -496,7 +496,7 @@ where
     ) -> Result<
         (
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
@@ -512,7 +512,7 @@ where
 
     fn outcome_collate(
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
@@ -656,7 +656,7 @@ where
         (
             States<Current>,
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
@@ -679,7 +679,7 @@ where
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {

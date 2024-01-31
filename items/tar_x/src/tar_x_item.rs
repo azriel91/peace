@@ -29,7 +29,7 @@ use crate::{
 #[derive(Debug)]
 pub struct TarXItem<Id> {
     /// ID of the item to extract the tar.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Marker for unique tar extraction parameters type.
     marker: PhantomData<Id>,
 }

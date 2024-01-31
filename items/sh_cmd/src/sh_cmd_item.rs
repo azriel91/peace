@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId, State},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemIdT, State},
     params::Params,
     resources::{resources::ts::Empty, Resources},
 };
@@ -23,7 +23,7 @@ use crate::{
 #[derive(Debug)]
 pub struct ShCmdItem<Id> {
     /// ID to easily tell what the item command is for.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }

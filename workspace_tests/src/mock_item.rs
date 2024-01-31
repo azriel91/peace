@@ -27,7 +27,7 @@ where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
     /// ID of the item.
-    id: ItemId,
+    id: ItemIdT,
     /// Marker.
     mock_fns: MockFns<Id>,
 }

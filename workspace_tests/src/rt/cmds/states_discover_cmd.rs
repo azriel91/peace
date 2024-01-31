@@ -736,7 +736,7 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
         let states_goal_file = resources.borrow::<StatesGoalFile>();
         let states_slice = std::fs::read(&*states_goal_file)?;
 
-        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        let mut type_reg = TypeReg::<ItemIdT, BoxDtDisplay>::new_typed();
         type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);

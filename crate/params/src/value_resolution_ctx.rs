@@ -11,7 +11,7 @@ pub struct ValueResolutionCtx {
     /// `Goal<T>`.
     value_resolution_mode: ValueResolutionMode,
     /// ID of the item whose params are being resolved.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Name of the `Item::Params` type.
     params_type_name: String,
     /// Hierarchy of fields traversed to resolve this value.
@@ -21,7 +21,7 @@ pub struct ValueResolutionCtx {
 impl ValueResolutionCtx {
     pub fn new(
         value_resolution_mode: ValueResolutionMode,
-        item_id: ItemId,
+        item_id: ItemIdT,
         params_type_name: String,
     ) -> Self {
         Self {

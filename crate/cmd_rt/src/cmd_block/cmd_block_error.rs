@@ -44,7 +44,7 @@ where
         /// The outcome value.
         stream_outcome: StreamOutcome<T>,
         /// Item error(s) from the last command block's execution.
-        errors: IndexMap<ItemId, E>,
+        errors: IndexMap<ItemIdT, E>,
     },
     /// An interrupt signal was received while the `CmdBlock` was executing.
     #[error("`CmdBlock` item logic failed.")]

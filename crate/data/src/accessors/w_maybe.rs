@@ -4,7 +4,6 @@ use fn_graph::{
     resman::{BorrowFail, RefMut},
     DataAccess, DataAccessDyn, Resources, TypeIds,
 };
-use peace_core::ItemId;
 
 use crate::Data;
 
@@ -51,7 +50,9 @@ impl<'borrow, T> Data<'borrow> for WMaybe<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(_item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
+    type ItemId = ();
+
+    fn borrow(_item_id: &'borrow Self::ItemId, resources: &'borrow Resources) -> Self {
         resources
             .try_borrow_mut::<T>()
             .map_err(|borrow_fail| match borrow_fail {

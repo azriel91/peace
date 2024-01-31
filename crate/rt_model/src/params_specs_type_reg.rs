@@ -16,7 +16,7 @@ use peace_resources::type_reg::untagged::TypeReg;
 /// [`Params`]: peace_cfg::Item::Params
 /// [`StatesTypeReg`]: crate::StatesTypeReg
 #[derive(Debug, Default)]
-pub struct ParamsSpecsTypeReg(TypeReg<ItemId, AnySpecRtBoxed>);
+pub struct ParamsSpecsTypeReg(TypeReg<ItemIdT, AnySpecRtBoxed>);
 
 impl ParamsSpecsTypeReg {
     /// Returns a new `ParamsSpecsTypeReg`.
@@ -26,7 +26,7 @@ impl ParamsSpecsTypeReg {
 }
 
 impl Deref for ParamsSpecsTypeReg {
-    type Target = TypeReg<ItemId, AnySpecRtBoxed>;
+    type Target = TypeReg<ItemIdT, AnySpecRtBoxed>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

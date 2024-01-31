@@ -30,7 +30,7 @@ use crate::items::peace_aws_s3_bucket::{
 #[derive(Debug)]
 pub struct S3BucketItem<Id> {
     /// ID of the S3 bucket item.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Marker for unique S3 bucket parameters type.
     marker: PhantomData<Id>,
 }

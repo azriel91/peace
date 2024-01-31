@@ -18,14 +18,14 @@ pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     pub multi_progress: MultiProgress,
     /// Tracks progress for each item.
-    pub progress_trackers: IndexMap<ItemId, ProgressTracker>,
+    pub progress_trackers: IndexMap<ItemIdT, ProgressTracker>,
 }
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_trackers: IndexMap<ItemId, ProgressTracker>,
+        progress_trackers: IndexMap<ItemIdT, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
@@ -45,13 +45,13 @@ impl CmdProgressTracker {
     }
 
     /// Returns the `ProgressTracker`s for each item.
-    pub fn progress_trackers(&self) -> &IndexMap<ItemId, ProgressTracker> {
+    pub fn progress_trackers(&self) -> &IndexMap<ItemIdT, ProgressTracker> {
         &self.progress_trackers
     }
 
     /// Returns a mutable reference to the `ProgressTracker`s for each item
     /// spec.
-    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemId, ProgressTracker> {
+    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemIdT, ProgressTracker> {
         &mut self.progress_trackers
     }
 }

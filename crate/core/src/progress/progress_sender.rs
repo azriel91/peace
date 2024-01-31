@@ -4,21 +4,21 @@ use crate::{
     progress::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId,
     },
-    ItemId,
+    ItemIdT,
 };
 
 /// Submits progress for an item's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'exec> {
     /// ID of the item this belongs to.
-    item_id: &'exec ItemId,
+    item_id: &'exec ItemIdT,
     /// Channel sender to send progress updates to.
     progress_tx: &'exec Sender<CmdProgressUpdate>,
 }
 
 impl<'exec> ProgressSender<'exec> {
     /// Returns a new `ProgressSender`.
-    pub fn new(item_id: &'exec ItemId, progress_tx: &'exec Sender<CmdProgressUpdate>) -> Self {
+    pub fn new(item_id: &'exec ItemIdT, progress_tx: &'exec Sender<CmdProgressUpdate>) -> Self {
         Self {
             item_id,
             progress_tx,

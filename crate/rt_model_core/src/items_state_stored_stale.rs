@@ -7,11 +7,11 @@ use crate::StateStoredAndDiscovered;
 
 /// Items whose stored and discovered state are not equal.
 ///
-/// `IndexMap<ItemId, StateStoredAndDiscovered>` newtype.
+/// `IndexMap<ItemIdT, StateStoredAndDiscovered>` newtype.
 ///
 /// This can be used for either current state or goal state.
 #[derive(Clone, Debug, Default)]
-pub struct ItemsStateStoredStale(IndexMap<ItemId, StateStoredAndDiscovered>);
+pub struct ItemsStateStoredStale(IndexMap<ItemIdT, StateStoredAndDiscovered>);
 
 impl ItemsStateStoredStale {
     /// Returns a new `ItemsStateStoredStale` map.
@@ -26,7 +26,7 @@ impl ItemsStateStoredStale {
     }
 
     /// Returns the underlying map.
-    pub fn into_inner(self) -> IndexMap<ItemId, StateStoredAndDiscovered> {
+    pub fn into_inner(self) -> IndexMap<ItemIdT, StateStoredAndDiscovered> {
         self.0
     }
 
@@ -37,7 +37,7 @@ impl ItemsStateStoredStale {
 }
 
 impl Deref for ItemsStateStoredStale {
-    type Target = IndexMap<ItemId, StateStoredAndDiscovered>;
+    type Target = IndexMap<ItemIdT, StateStoredAndDiscovered>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -50,8 +50,8 @@ impl DerefMut for ItemsStateStoredStale {
     }
 }
 
-impl FromIterator<(ItemId, StateStoredAndDiscovered)> for ItemsStateStoredStale {
-    fn from_iter<I: IntoIterator<Item = (ItemId, StateStoredAndDiscovered)>>(iter: I) -> Self {
+impl FromIterator<(ItemIdT, StateStoredAndDiscovered)> for ItemsStateStoredStale {
+    fn from_iter<I: IntoIterator<Item = (ItemIdT, StateStoredAndDiscovered)>>(iter: I) -> Self {
         Self(IndexMap::from_iter(iter))
     }
 }

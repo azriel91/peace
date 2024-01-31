@@ -326,7 +326,7 @@ where
         (
             States<StatesTs>,
             States<StatesTs::TsTarget>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
@@ -349,7 +349,7 @@ where
     fn outcome_collate(
         states_applied_mut: &mut StatesMut<StatesTs>,
         states_target_mut: &mut StatesMut<StatesTs::TsTarget>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         outcome_partial: ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let apply_for = StatesTs::apply_for();
@@ -591,18 +591,18 @@ pub enum ItemApplyOutcome<E> {
     /// Error occurred when discovering current state, goal states, state
     /// diff, or `ApplyCheck`.
     PrepareFail {
-        item_id: ItemId,
+        item_id: ItemIdT,
         item_apply_partial: ItemApplyPartialBoxed,
         error: E,
     },
     /// Ensure execution succeeded.
     Success {
-        item_id: ItemId,
+        item_id: ItemIdT,
         item_apply: ItemApplyBoxed,
     },
     /// Ensure execution failed.
     Fail {
-        item_id: ItemId,
+        item_id: ItemIdT,
         item_apply: ItemApplyBoxed,
         error: E,
     },

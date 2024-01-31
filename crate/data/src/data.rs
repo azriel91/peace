@@ -11,6 +11,9 @@ use peace_core::ItemId;
 ///
 /// [`Data` derive]: peace_data_derive::Data
 pub trait Data<'borrow>: DataAccess + DataAccessDyn + Send {
+    /// The `ItemId` enum defined by the application software.
+    type ItemId: ItemId;
+
     /// Borrows each of `Self`'s fields from the provided [`Resources`].
     ///
     /// This takes in the `item_id`, so that the type that implements this
@@ -21,15 +24,19 @@ pub trait Data<'borrow>: DataAccess + DataAccessDyn + Send {
     ///
     /// * `item_id`: ID of the item this borrow is used for.
     /// * `resources`: `Any` map to borrow the data from.
-    fn borrow(item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self;
+    fn borrow(item_id: &'borrow Self::ItemId, resources: &'borrow Resources) -> Self;
 }
 
 impl<'borrow> Data<'borrow> for () {
-    fn borrow(_item_id: &'borrow ItemId, _resources: &'borrow Resources) -> Self {}
+    type ItemId = ();
+
+    fn borrow(_item_id: &'borrow Self::ItemId, _resources: &'borrow Resources) -> Self {}
 }
 
 impl<'borrow> Data<'borrow> for &'borrow () {
-    fn borrow(_item_id: &'borrow ItemId, _resources: &'borrow Resources) -> Self {
+    type ItemId = ();
+
+    fn borrow(_item_id: &'borrow Self::ItemId, _resources: &'borrow Resources) -> Self {
         &()
     }
 }
@@ -38,7 +45,9 @@ impl<'borrow, T> Data<'borrow> for R<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(_item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
+    type ItemId = ();
+
+    fn borrow(_item_id: &'borrow Self::ItemId, resources: &'borrow Resources) -> Self {
         <Self as DataBorrow>::borrow(resources)
     }
 }
@@ -47,7 +56,9 @@ impl<'borrow, T> Data<'borrow> for W<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(_item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
+    type ItemId = ();
+
+    fn borrow(_item_id: &'borrow Self::ItemId, resources: &'borrow Resources) -> Self {
         <Self as DataBorrow>::borrow(resources)
     }
 }

@@ -20,7 +20,7 @@ use crate::{BlankApplyFns, BlankData, BlankError, BlankParams, BlankState, Blank
 #[derive(Debug)]
 pub struct BlankItem<Id> {
     /// ID of the blank item.
-    item_id: ItemId,
+    item_id: ItemIdT,
     /// Marker for unique blank parameters type.
     marker: PhantomData<Id>,
 }

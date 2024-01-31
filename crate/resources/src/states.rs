@@ -33,7 +33,7 @@ mod states_goal_stored;
 mod states_previous;
 mod states_serde;
 
-/// Map of `State`s for all `Item`s. `TypeMap<ItemId, Item::State>` newtype.
+/// Map of `State`s for all `Item`s. `TypeMap<ItemIdT, Item::State>` newtype.
 ///
 /// # Type Parameters
 ///
@@ -51,7 +51,7 @@ mod states_serde;
 ///    regardless of whether a `State` is recorded for that item.
 ///
 /// 2. Inserting an `Option<_>` layer around the `Item::State` turns the map
-///    into a `Map<ItemId, Option<Item::State>>`.
+///    into a `Map<ItemIdT, Option<Item::State>>`.
 ///
 /// 3. Calling `states.get(item_id)` returns `Option<Option<Item::State>>`, the
 ///    outer layer for whether the item had an entry, and the inner layer for
@@ -92,7 +92,7 @@ mod states_serde;
 ///
 /// ## `StatesSerde` Separate Type
 ///
-/// Newtype for `Map<ItemId, Option<Item::State>>`.
+/// Newtype for `Map<ItemIdT, Option<Item::State>>`.
 ///
 /// ### Item Additions
 ///
@@ -146,7 +146,7 @@ mod states_serde;
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct States<TS>(
-    pub(crate) TypeMap<ItemId, BoxDtDisplay>,
+    pub(crate) TypeMap<ItemIdT, BoxDtDisplay>,
     pub(crate) PhantomData<TS>,
 );
 
@@ -165,7 +165,7 @@ impl<TS> States<TS> {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemIdT, BoxDtDisplay> {
         self.0
     }
 }
@@ -190,15 +190,15 @@ impl<TS> Default for States<TS> {
 }
 
 impl<TS> Deref for States<TS> {
-    type Target = TypeMap<ItemId, BoxDtDisplay>;
+    type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<TS> From<TypeMap<ItemId, BoxDtDisplay>> for States<TS> {
-    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
+impl<TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for States<TS> {
+    fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }

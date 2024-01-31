@@ -6,7 +6,7 @@ use peace_cfg::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker,
         ProgressUpdate, ProgressUpdateAndId,
     },
-    ItemId,
+    ItemIdT,
 };
 use peace_rt_model::{output::OutputWrite, IndexMap};
 use tokio::sync::mpsc::Receiver;
@@ -18,7 +18,7 @@ impl Progress {
     // TODO: write test for this
     pub async fn progress_render<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemIdT, ProgressTracker>,
         mut cmd_progress_rx: Receiver<CmdProgressUpdate>,
     ) where
         O: OutputWrite<E>,
@@ -32,7 +32,7 @@ impl Progress {
 
     async fn handle_cmd_progress_update<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemIdT, ProgressTracker>,
         cmd_progress_update: CmdProgressUpdate,
     ) -> ControlFlow<()>
     where
@@ -102,7 +102,7 @@ impl Progress {
 
     async fn handle_progress_update_and_id<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemIdT, ProgressTracker>,
         progress_update_and_id: ProgressUpdateAndId,
     ) where
         O: OutputWrite<E>,

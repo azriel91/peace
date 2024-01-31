@@ -67,7 +67,7 @@ where
     pub async fn deserialize_stored(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
     ) -> Result<StatesCurrentStored, E> {
         let states = Self::deserialize_internal::<CurrentStored>(
@@ -96,7 +96,7 @@ where
     pub async fn deserialize_goal(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_goal_file: &StatesGoalFile,
     ) -> Result<StatesGoalStored, E> {
         let states = Self::deserialize_internal::<GoalStored>(
@@ -126,7 +126,7 @@ where
     pub async fn deserialize_stored_opt(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
     ) -> Result<Option<StatesCurrentStored>, E> {
         Self::deserialize_internal(
@@ -162,7 +162,7 @@ where
         thread_name: String,
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
@@ -229,7 +229,7 @@ where
     async fn deserialize_internal<TS>(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
