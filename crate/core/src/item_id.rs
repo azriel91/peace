@@ -1,24 +1,59 @@
-use std::borrow::Cow;
+use std::{fmt::Debug, hash::Hash};
 
-use serde::{Deserialize, Serialize};
+use serde::{de::Deserialize, Serialize};
 
-/// Unique identifier for an `ItemId`, `Cow<'static, str>` newtype.
+/// Unique identifier for an `Item`.
 ///
-/// Must begin with a letter or underscore, and contain only letters, numbers,
-/// and underscores.
+/// This is a flat enum, where each variant represents an item managed by the
+/// automation software.
 ///
 /// # Examples
 ///
-/// The following are all examples of valid `ItemId`s:
+/// The following
 ///
 /// ```rust
-/// # use peace_core::{item_id, ItemId};
-/// #
-/// let _snake = item_id!("snake_case");
-/// let _camel = item_id!("camelCase");
-/// let _pascal = item_id!("PascalCase");
+/// use peace_core::ItemId;
+/// use serde::{Deserialize, Serialize};
+///
+/// #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
+/// #[serde(rename_all = "snake_case")]
+/// pub enum EnvmanItemId {
+///     AppDownload,
+///     AppExtract,
+///     IamPolicy,
+///     IamRole,
+///     InstanceProfile,
+///     S3Bucket,
+///     S3Object,
+/// }
 /// ```
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ItemId(Cow<'static, str>);
+///
+/// # Design Note
+///
+/// TODO: Experiment with upgrades.
+///
+/// For compatibility and migrating item IDs deployed with old versions of
+/// the automation software, experiment with the following:
+///
+/// * developers should provide a `#[serde(from = "FromType")]` implementation,
+///   where the `FromType` contains the `ItemId`s from previous automation
+///   software versions.
+/// * the `ItemId` implementation is a hierarchical enum, with a variant for
+///   each version of the automation software's items.
+pub trait ItemId:
+    Clone + Copy + Debug + Hash + PartialEq + Eq + for<'de> Deserialize<'de> + Serialize + 'static
+{
+}
 
-crate::id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);
+impl<T> ItemId for T where
+    T: Clone
+        + Copy
+        + Debug
+        + Hash
+        + PartialEq
+        + Eq
+        + for<'de> Deserialize<'de>
+        + Serialize
+        + 'static
+{
+}
