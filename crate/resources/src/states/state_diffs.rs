@@ -7,7 +7,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
 use crate::internal::StateDiffsMut;
 
-/// Diffs of `State`s for each `Item`s. `TypeMap<ItemIdT, BoxDtDisplay>`
+/// Diffs of `State`s for each `Item`s. `TypeMap<ItemId, BoxDtDisplay>`
 /// newtype.
 ///
 /// [`External`] fields are not necessarily used in `StateDiff` computations.
@@ -20,7 +20,7 @@ use crate::internal::StateDiffsMut;
 /// [`External`]: peace_cfg::state::External
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StateDiffs(TypeMap<ItemIdT, BoxDtDisplay>);
+pub struct StateDiffs(TypeMap<ItemId, BoxDtDisplay>);
 
 impl StateDiffs {
     /// Returns a new `StateDiffs` map.
@@ -37,21 +37,21 @@ impl StateDiffs {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemIdT, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
         self.0
     }
 }
 
 impl Deref for StateDiffs {
-    type Target = TypeMap<ItemIdT, BoxDtDisplay>;
+    type Target = TypeMap<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<TypeMap<ItemIdT, BoxDtDisplay>> for StateDiffs {
-    fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
+impl From<TypeMap<ItemId, BoxDtDisplay>> for StateDiffs {
+    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }

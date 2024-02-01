@@ -25,7 +25,7 @@ pub type VecCopyItemWrapper = ItemWrapper<VecCopyItem, VecCopyError>;
 #[derive(Clone, Debug)]
 pub struct VecCopyItem {
     /// ID of the item.
-    id: ItemIdT,
+    id: ItemId,
 }
 
 impl VecCopyItem {

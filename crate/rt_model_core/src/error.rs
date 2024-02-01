@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace_cmd_model::CmdExecutionError;
-use peace_core::{FlowId, ItemIdT, Profile};
+use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::ParamsSpecsFile;
 
@@ -102,7 +102,7 @@ pub enum Error {
     )]
     ParamsSpecNotFound {
         /// Item ID for which the params spec was not found.
-        item_id: ItemIdT,
+        item_id: ItemId,
     },
 
     /// Item params specs do not match with the items in the flow.

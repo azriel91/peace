@@ -243,8 +243,8 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemIdT, BoxDtDisplay>,
-        states_b: &TypeMap<ItemIdT, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<Option<I::StateDiff>, E> {
         let item_id = <I as Item>::id(self);
         let state_base = states_a.get::<I::State, _>(item_id);
@@ -666,8 +666,8 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemIdT, BoxDtDisplay>,
-        states_b: &TypeMap<ItemIdT, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
         self.state_diff_exec(params_specs, resources, states_a, states_b)
             .await

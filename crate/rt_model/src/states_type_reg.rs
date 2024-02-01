@@ -17,7 +17,7 @@ use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
 /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
 #[derive(Debug, Default)]
-pub struct StatesTypeReg(TypeReg<ItemIdT, BoxDtDisplay>);
+pub struct StatesTypeReg(TypeReg<ItemId, BoxDtDisplay>);
 
 impl StatesTypeReg {
     /// Returns new `StatesTypeReg`.
@@ -27,7 +27,7 @@ impl StatesTypeReg {
 }
 
 impl Deref for StatesTypeReg {
-    type Target = TypeReg<ItemIdT, BoxDtDisplay>;
+    type Target = TypeReg<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

@@ -41,7 +41,7 @@ where
 
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
     ) -> Result<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();

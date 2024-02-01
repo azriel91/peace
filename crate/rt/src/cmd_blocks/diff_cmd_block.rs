@@ -67,8 +67,8 @@ where
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemIdT, BoxDtDisplay>,
-        states_b: &TypeMap<ItemIdT, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<StreamOutcome<StateDiffs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let stream_outcome_result = flow
             .graph()

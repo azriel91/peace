@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, item_id, FlowId, ItemIdT, Profile},
+    cfg::{app_name, item_id, FlowId, ItemId, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     cmd_model::CmdOutcome,
     rt::cmds::{

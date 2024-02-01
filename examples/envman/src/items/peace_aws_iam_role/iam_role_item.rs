@@ -30,7 +30,7 @@ use crate::items::peace_aws_iam_role::{
 #[derive(Debug)]
 pub struct IamRoleItem<Id> {
     /// ID of the instance profile item.
-    item_id: ItemIdT,
+    item_id: ItemId,
     /// Marker for unique instance profile parameters type.
     marker: PhantomData<Id>,
 }

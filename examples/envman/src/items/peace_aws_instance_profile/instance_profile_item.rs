@@ -31,7 +31,7 @@ use crate::items::peace_aws_instance_profile::{
 #[derive(Debug)]
 pub struct InstanceProfileItem<Id> {
     /// ID of the instance profile item.
-    item_id: ItemIdT,
+    item_id: ItemId,
     /// Marker for unique instance profile parameters type.
     marker: PhantomData<Id>,
 }

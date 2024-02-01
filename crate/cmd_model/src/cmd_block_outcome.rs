@@ -39,7 +39,7 @@ pub enum CmdBlockOutcome<T, E> {
         /// The values returned per item.
         stream_outcome: StreamOutcome<T>,
         /// Errors from the command execution.
-        errors: IndexMap<ItemIdT, E>,
+        errors: IndexMap<ItemId, E>,
     },
 }
 

@@ -17,35 +17,31 @@ use serde::Serialize;
 
 /// The previously stored `T` state, if any.
 #[derive(Debug)]
-pub struct Stored<'borrow, ItemIdT, T> {
+pub struct Stored<'borrow, T> {
     /// ID of the item the state should be retrieved for.
-    item_id: ItemIdT,
+    item_id: &'borrow ItemId,
     /// The borrowed `StatesCurrentStored`.
     states_current_stored: Option<Ref<'borrow, StatesCurrentStored>>,
     /// Marker.
     marker: PhantomData<T>,
 }
 
-impl<'borrow, ItemIdT, T> Stored<'borrow, ItemIdT, T>
+impl<'borrow, T> Stored<'borrow, T>
 where
-    ItemIdT: ItemId,
     T: Clone + Debug + DataType + Display + Serialize + Send + Sync + 'static,
 {
     pub fn get(&'borrow self) -> Option<&'borrow T> {
         self.states_current_stored
             .as_ref()
-            .and_then(|states_current_stored| states_current_stored.get(&self.item_id))
+            .and_then(|states_current_stored| states_current_stored.get(self.item_id))
     }
 }
 
-impl<'borrow, ItemIdT, T> Data<'borrow> for Stored<'borrow, ItemIdT, T>
+impl<'borrow, T> Data<'borrow> for Stored<'borrow, T>
 where
-    ItemIdT: ItemId,
     T: Debug + Send + Sync + 'static,
 {
-    type ItemId = ItemIdT;
-
-    fn borrow(item_id: &'borrow ItemIdT, resources: &'borrow Resources) -> Self {
+    fn borrow(item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
         let states_current_stored = resources
             .try_borrow::<StatesCurrentStored>()
             .map_err(|borrow_fail| match borrow_fail {
@@ -64,7 +60,7 @@ where
     }
 }
 
-impl<'borrow, ItemIdT, T> DataAccess for Stored<'borrow, ItemIdT, T> {
+impl<'borrow, T> DataAccess for Stored<'borrow, T> {
     fn borrows() -> TypeIds
     where
         Self: Sized,
@@ -82,7 +78,7 @@ impl<'borrow, ItemIdT, T> DataAccess for Stored<'borrow, ItemIdT, T> {
     }
 }
 
-impl<'borrow, ItemIdT, T> DataAccessDyn for Stored<'borrow, ItemIdT, T> {
+impl<'borrow, T> DataAccessDyn for Stored<'borrow, T> {
     fn borrows(&self) -> TypeIds
     where
         Self: Sized,

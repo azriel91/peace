@@ -9,7 +9,7 @@ use peace_core::progress::ProgressSender;
 #[derive(Clone, Copy, Debug)]
 pub struct FnCtx<'exec> {
     /// ID of the item this belongs to.
-    pub item_id: &'exec ItemIdT,
+    pub item_id: &'exec ItemId,
     /// For items to submit progress updates.
     #[cfg(feature = "output_progress")]
     pub progress_sender: ProgressSender<'exec>,
@@ -20,7 +20,7 @@ pub struct FnCtx<'exec> {
 impl<'exec> FnCtx<'exec> {
     /// Returns a new `OpCtx`.
     pub fn new(
-        item_id: &'exec ItemIdT,
+        item_id: &'exec ItemId,
         #[cfg(feature = "output_progress")] progress_sender: ProgressSender<'exec>,
     ) -> Self {
         Self {

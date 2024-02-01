@@ -156,8 +156,8 @@ pub trait ItemRt<E>:
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemIdT, BoxDtDisplay>,
-        states_b: &TypeMap<ItemIdT, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;

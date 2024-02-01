@@ -1,7 +1,7 @@
 use std::{borrow::Cow, str::FromStr};
 
 use peace::{
-    cfg::{ItemIdInvalidFmt, ItemIdT},
+    cfg::{ItemId, ItemIdInvalidFmt},
     fmt::Presentable,
 };
 

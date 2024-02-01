@@ -1,4 +1,4 @@
-use peace::{cfg::ItemIdT, rt_model::Flow};
+use peace::{cfg::ItemId, rt_model::Flow};
 
 /// Renders a `Flow` as a GraphViz Dot diagram.
 ///
@@ -157,7 +157,7 @@ impl FlowDotRenderer {
         )
     }
 
-    fn edge(&self, src_item_id: &ItemIdT, target_item_id: &ItemId) -> String {
+    fn edge(&self, src_item_id: &ItemId, target_item_id: &ItemId) -> String {
         format!(r#"{src_item_id} -> {target_item_id} [minlen = 9]"#)
     }
 }

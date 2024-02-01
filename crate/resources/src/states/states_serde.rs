@@ -9,10 +9,10 @@ use type_reg::{
     untagged::{BoxDtDisplay, TypeMapOpt},
 };
 
-/// Map of `State`s for all `Item`s. `TypeMapOpt<ItemIdT, Item::State>`
+/// Map of `State`s for all `Item`s. `TypeMapOpt<ItemId, Item::State>`
 /// newtype.
 ///
-/// Conceptually you can think of this as a `Map<ItemIdT, Option<Item::State>>`.
+/// Conceptually you can think of this as a `Map<ItemId, Option<Item::State>>`.
 ///
 /// This map should:
 ///
@@ -23,12 +23,12 @@ use type_reg::{
 ///
 /// * Deserialization.
 /// * `From<&ItemGraph<E>>`: All states are initialized to `None`.
-/// * [`FromIterator::<(ItemIdT, Option<BoxDtDisplay>)>::from_iter`].
+/// * [`FromIterator::<(ItemId, Option<BoxDtDisplay>)>::from_iter`].
 ///
-/// [`FromIterator::<(ItemIdT, Option<BoxDtDisplay>)>::from_iter`]: std::iter::FromIterator
+/// [`FromIterator::<(ItemId, Option<BoxDtDisplay>)>::from_iter`]: std::iter::FromIterator
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct StatesSerde<ValueT>(TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>)
+pub struct StatesSerde<ValueT>(TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>)
 where
     ValueT: Clone + Debug + PartialEq + Eq;
 
@@ -45,7 +45,7 @@ where
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>> {
+    pub fn into_inner(self) -> TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>> {
         self.0
     }
 }
@@ -70,18 +70,18 @@ impl<ValueT> Deref for StatesSerde<ValueT>
 where
     ValueT: Clone + Debug + PartialEq + Eq,
 {
-    type Target = TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>;
+    type Target = TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<ValueT> FromIterator<(ItemIdT, Option<BoxDtDisplay>)> for StatesSerde<ValueT>
+impl<ValueT> FromIterator<(ItemId, Option<BoxDtDisplay>)> for StatesSerde<ValueT>
 where
     ValueT: Clone + Debug + PartialEq + Eq,
 {
-    fn from_iter<T: IntoIterator<Item = (ItemIdT, Option<BoxDtDisplay>)>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = (ItemId, Option<BoxDtDisplay>)>>(iter: T) -> Self {
         iter.into_iter().fold(
             Self(TypeMapOpt::new_typed()),
             |mut states_serde, (item_id, state_boxed)| {
@@ -92,12 +92,12 @@ where
     }
 }
 
-impl<ValueT> From<TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>>
+impl<ValueT> From<TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>>
     for StatesSerde<ValueT>
 where
     ValueT: Clone + Debug + PartialEq + Eq,
 {
-    fn from(type_map_opt: TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>) -> Self {
+    fn from(type_map_opt: TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>) -> Self {
         Self(type_map_opt)
     }
 }

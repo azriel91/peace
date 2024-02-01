@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemIdT, State},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId, State},
     params::Params,
     resources::{resources::ts::Empty, Resources},
 };
@@ -24,7 +24,7 @@ use crate::{
 #[derive(Debug)]
 pub struct FileDownloadItem<Id> {
     /// ID of the item to download the file.
-    item_id: ItemIdT,
+    item_id: ItemId,
     /// Marker for unique download parameters type.
     marker: PhantomData<Id>,
 }

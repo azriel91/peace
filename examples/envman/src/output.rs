@@ -1,5 +1,5 @@
 use peace::{
-    cfg::ItemIdT,
+    cfg::ItemId,
     cmd_model::CmdOutcome,
     fmt::{
         presentable::{Heading, HeadingLevel},
@@ -67,7 +67,7 @@ where
 /// Presents item errors.
 pub async fn item_errors_present<O>(
     output: &mut O,
-    errors: &IndexMap<ItemIdT, EnvManError>,
+    errors: &IndexMap<ItemId, EnvManError>,
 ) -> Result<(), EnvManError>
 where
     O: OutputWrite<EnvManError>,

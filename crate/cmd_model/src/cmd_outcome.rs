@@ -60,7 +60,7 @@ pub enum CmdOutcome<T, E> {
         /// The first block in this list is the one that erred.
         cmd_blocks_not_processed: Vec<CmdBlockDesc>,
         /// Item error(s) from the last command block's execution.
-        errors: IndexMap<ItemIdT, E>,
+        errors: IndexMap<ItemId, E>,
     },
 }
 
