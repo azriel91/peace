@@ -18,6 +18,18 @@ use serde::{Deserialize, Serialize};
 /// let _camel = item_id!("camelCase");
 /// let _pascal = item_id!("PascalCase");
 /// ```
+///
+/// # Design Note
+///
+/// TODO: Experiment with upgrades.
+///
+/// For backward compatibility and migrating items from old IDs to new IDs, e.g.
+/// when they were deployed with an old version of the automation software,
+/// there needs to be a way to:
+///
+/// * Read state using the old ID.
+/// * Either clean up that state, or migrate that state into an Item with the
+///   new ID.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ItemId(Cow<'static, str>);
 
