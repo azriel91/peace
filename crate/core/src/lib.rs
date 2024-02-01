@@ -19,7 +19,7 @@ pub use crate::{
     app_name::{AppName, AppNameInvalidFmt},
     apply_check::ApplyCheck,
     flow_id::{FlowId, FlowIdInvalidFmt},
-    item_id::ItemId,
+    item_id::{ItemId, ItemIdInvalidFmt},
     profile::{Profile, ProfileInvalidFmt},
 };
 
