@@ -13,4 +13,4 @@ use crate::states::{ts::Clean, States};
 ///
 /// You may reference [`StatesClean`] after `CleanCmd::exec` has been run,
 /// unless it is the `ExecutionOutcome`.
-pub type StatesClean<ItemIdT> = States<ItemIdT, Clean>;
+pub type StatesClean = States<Clean>;

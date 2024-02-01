@@ -53,8 +53,8 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Dry-ensured states.
-    // The returned states are currently the same as `StatesCurrentStored<ItemIdT>`,
-    // but it would be useful to return simulated ensured states.
+    // The returned states are currently the same as `StatesCurrentStored`, but it
+    // would be useful to return simulated ensured states.
     let CmdOutcome::Complete {
         value: states_ensured_dry,
         cmd_blocks_processed: _,
@@ -67,8 +67,8 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // was discovered.
     //
     // ```rust,ignore
-    // let states = resources.borrow::<StatesCurrent<ItemIdT>>();
-    // let states_goal = resources.borrow::<StatesGoal<ItemIdT>>();
+    // let states = resources.borrow::<StatesCurrent>();
+    // let states_goal = resources.borrow::<StatesGoal>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     states.get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
@@ -154,8 +154,8 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
     // was discovered.
     //
     // ```rust,ignore
-    // let ensured_states_before = resources_ensured.borrow::<StatesCurrent<ItemIdT>>();
-    // let ensured_states_goal = resources_ensured.borrow::<StatesGoal<ItemIdT>>();
+    // let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
+    // let ensured_states_goal = resources_ensured.borrow::<StatesGoal>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     ensured_states_before.get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)

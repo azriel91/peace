@@ -14,15 +14,10 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 ///
 /// [`StateDiffs`]: crate::StateDiffs
 /// [`Resources`]: crate::Resources
-#[derive(Debug, Serialize)]
-pub struct StateDiffsMut<ItemIdT>(TypeMap<ItemIdT, BoxDtDisplay>)
-where
-    ItemIdT: ItemId;
+#[derive(Debug, Default, Serialize)]
+pub struct StateDiffsMut(TypeMap<ItemIdT, BoxDtDisplay>);
 
-impl<ItemIdT> StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl StateDiffsMut {
     /// Returns a new `StateDiffsMut` map.
     pub fn new() -> Self {
         Self::default()
@@ -42,19 +37,7 @@ where
     }
 }
 
-impl<ItemIdT> Default for StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
-    fn default() -> Self {
-        Self(TypeMap::default())
-    }
-}
-
-impl<ItemIdT> Deref for StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl Deref for StateDiffsMut {
     type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
@@ -62,28 +45,19 @@ where
     }
 }
 
-impl<ItemIdT> DerefMut for StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl DerefMut for StateDiffsMut {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<ItemIdT> From<TypeMap<ItemIdT, BoxDtDisplay>> for StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl From<TypeMap<ItemIdT, BoxDtDisplay>> for StateDiffsMut {
     fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }
 
-impl<ItemIdT> Extend<(ItemIdT, BoxDtDisplay)> for StateDiffsMut<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl Extend<(ItemIdT, BoxDtDisplay)> for StateDiffsMut {
     fn extend<T: IntoIterator<Item = (ItemIdT, BoxDtDisplay)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(item_id, state_diff)| {
             self.insert_raw(item_id, state_diff);

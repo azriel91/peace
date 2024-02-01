@@ -17,5 +17,5 @@ fn outcome_type_names_includes_states_clean() {
 
     let outcome_type_names: Vec<String> = cmd_block.outcome_type_names();
 
-    assert_eq!(&["States<ItemIdT, Clean>"], outcome_type_names.as_slice());
+    assert_eq!(&["States<Clean>"], outcome_type_names.as_slice());
 }

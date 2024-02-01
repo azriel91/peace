@@ -43,10 +43,7 @@ impl<E> ItemGraph<E> {
     ///
     /// This will contain an entry for all items, in order of flow item
     /// insertion, whether or not a state exists in the provided `states` map.
-    pub fn states_serde<ValueT, TS>(
-        &self,
-        states: &States<ItemIdT, TS>,
-    ) -> StatesSerde<ItemIdT, ValueT>
+    pub fn states_serde<ValueT, TS>(&self, states: &States<TS>) -> StatesSerde<ValueT>
     where
         ValueT: Clone + Debug + PartialEq + Eq,
         E: 'static,
@@ -78,7 +75,7 @@ impl<E> From<FnGraph<ItemBoxed<E>>> for ItemGraph<E> {
     }
 }
 
-impl<'graph, ValueT, E> From<&'graph ItemGraph<E>> for StatesSerde<ItemIdT, ValueT>
+impl<'graph, ValueT, E> From<&'graph ItemGraph<E>> for StatesSerde<ValueT>
 where
     ValueT: Clone + Debug + PartialEq + Eq,
     E: 'static,

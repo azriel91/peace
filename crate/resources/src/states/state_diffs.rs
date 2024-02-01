@@ -19,24 +19,10 @@ use crate::internal::StateDiffsMut;
 ///
 /// [`External`]: peace_cfg::state::External
 /// [`Resources`]: crate::Resources
-#[derive(Debug, Serialize)]
-pub struct StateDiffs<ItemIdT>(TypeMap<ItemIdT, BoxDtDisplay>)
-where
-    ItemIdT: ItemId;
+#[derive(Debug, Default, Serialize)]
+pub struct StateDiffs(TypeMap<ItemIdT, BoxDtDisplay>);
 
-impl<ItemIdT> Default for StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
-    fn default() -> Self {
-        Self(TypeMap::<ItemIdT, BoxDtDisplay>::default())
-    }
-}
-
-impl<ItemIdT> StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl StateDiffs {
     /// Returns a new `StateDiffs` map.
     pub fn new() -> Self {
         Self::default()
@@ -56,10 +42,7 @@ where
     }
 }
 
-impl<ItemIdT> Deref for StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl Deref for StateDiffs {
     type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
@@ -67,29 +50,20 @@ where
     }
 }
 
-impl<ItemIdT> From<TypeMap<ItemIdT, BoxDtDisplay>> for StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl From<TypeMap<ItemIdT, BoxDtDisplay>> for StateDiffs {
     fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }
 
-impl<ItemIdT> From<StateDiffsMut<ItemIdT>> for StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
-    fn from(state_diffs_mut: StateDiffsMut<ItemIdT>) -> Self {
+impl From<StateDiffsMut> for StateDiffs {
+    fn from(state_diffs_mut: StateDiffsMut) -> Self {
         Self(state_diffs_mut.into_inner())
     }
 }
 
 #[peace_fmt::async_trait(?Send)]
-impl<ItemIdT> Presentable for StateDiffs<ItemIdT>
-where
-    ItemIdT: ItemId + Presentable,
-{
+impl Presentable for StateDiffs {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,

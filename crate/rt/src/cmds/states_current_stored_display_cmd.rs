@@ -18,7 +18,7 @@ impl<CmdCtxTypesT> StatesCurrentStoredDisplayCmd<CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Displays [`StatesCurrentStored<ItemIdT>`]s from storage.
+    /// Displays [`StatesCurrentStored`]s from storage.
     ///
     /// [`StatesDiscoverCmd`] must have run prior to this command to read the
     /// state.
@@ -27,10 +27,7 @@ where
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<
-            StatesCurrentStored<ItemIdT>,
-            <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
-        >,
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where

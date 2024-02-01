@@ -145,17 +145,12 @@ mod states_serde;
 /// [`flatten()`]: std::option::Option::flatten
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct States<ItemIdT, TS>(
+pub struct States<TS>(
     pub(crate) TypeMap<ItemIdT, BoxDtDisplay>,
     pub(crate) PhantomData<TS>,
-)
-where
-    ItemIdT: ItemId;
+);
 
-impl<ItemIdT, TS> States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
+impl<TS> States<TS> {
     /// Returns a new `States` map.
     pub fn new() -> Self {
         Self::default()
@@ -175,10 +170,7 @@ where
     }
 }
 
-impl<ItemIdT, TS> Clone for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
+impl<TS> Clone for States<TS> {
     fn clone(&self) -> Self {
         let mut clone = Self(TypeMap::with_capacity_typed(self.0.len()), PhantomData);
         clone.0.extend(
@@ -191,19 +183,13 @@ where
     }
 }
 
-impl<ItemIdT, TS> Default for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
+impl<TS> Default for States<TS> {
     fn default() -> Self {
         Self(TypeMap::default(), PhantomData)
     }
 }
 
-impl<ItemIdT, TS> Deref for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
+impl<TS> Deref for States<TS> {
     type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
@@ -211,29 +197,20 @@ where
     }
 }
 
-impl<ItemIdT, TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
+impl<TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for States<TS> {
     fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
 
-impl<ItemIdT, TS> From<StatesMut<ItemIdT, TS>> for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId,
-{
-    fn from(states_mut: StatesMut<ItemIdT, TS>) -> Self {
+impl<TS> From<StatesMut<TS>> for States<TS> {
+    fn from(states_mut: StatesMut<TS>) -> Self {
         Self(states_mut.into_inner(), PhantomData)
     }
 }
 
 #[peace_fmt::async_trait(?Send)]
-impl<ItemIdT, TS> Presentable for States<ItemIdT, TS>
-where
-    ItemIdT: ItemId + Presentable,
-{
+impl<TS> Presentable for States<TS> {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,

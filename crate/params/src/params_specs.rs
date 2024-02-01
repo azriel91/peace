@@ -24,16 +24,11 @@ use crate::AnySpecRtBoxed;
 ///
 /// The information may not be of the same type across flows, as flows are
 /// different in what they are doing.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct ParamsSpecs<ItemIdT>(TypeMap<ItemIdT, AnySpecRtBoxed>)
-where
-    ItemIdT: ItemId;
+pub struct ParamsSpecs(TypeMap<ItemIdT, AnySpecRtBoxed>);
 
-impl<ItemIdT> ParamsSpecs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl ParamsSpecs {
     /// Returns a new `ParamsSpecs` map.
     pub fn new() -> Self {
         Self::default()
@@ -54,19 +49,7 @@ where
     }
 }
 
-impl<ItemIdT> Default for ParamsSpecs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
-    fn default() -> Self {
-        Self(TypeMap::default())
-    }
-}
-
-impl<ItemIdT> Deref for ParamsSpecs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl Deref for ParamsSpecs {
     type Target = TypeMap<ItemIdT, AnySpecRtBoxed>;
 
     fn deref(&self) -> &Self::Target {
@@ -74,19 +57,13 @@ where
     }
 }
 
-impl<ItemIdT> DerefMut for ParamsSpecs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl DerefMut for ParamsSpecs {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<ItemIdT> From<TypeMap<ItemIdT, AnySpecRtBoxed>> for ParamsSpecs<ItemIdT>
-where
-    ItemIdT: ItemId,
-{
+impl From<TypeMap<ItemIdT, AnySpecRtBoxed>> for ParamsSpecs {
     fn from(type_map: TypeMap<ItemIdT, AnySpecRtBoxed>) -> Self {
         Self(type_map)
     }

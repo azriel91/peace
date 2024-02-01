@@ -116,18 +116,18 @@ where
     pub fn resolve(
         &self,
         resources: &Resources<peace_resources::resources::ts::SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<T, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T, ParamsResolveError> {
         match self {
             ValueSpec::Value { value } => Ok(value.clone()),
             ValueSpec::Stored | ValueSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok((*value).clone()),
                 Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Err(ParamsResolveError::<ItemIdT>::InMemory {
+                    BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
                         value_resolution_ctx: value_resolution_ctx.clone(),
                     }),
                     BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
+                        Err(ParamsResolveError::InMemoryBorrowConflict {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                         })
                     }
@@ -140,8 +140,8 @@ where
     pub fn resolve_partial(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Option<T>, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<T>, ParamsResolveError> {
         match self {
             ValueSpec::Value { value } => Ok(Some((*value).clone())),
             ValueSpec::Stored | ValueSpec::InMemory => match resources.try_borrow::<T>() {
@@ -149,7 +149,7 @@ where
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Ok(None),
                     BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
+                        Err(ParamsResolveError::InMemoryBorrowConflict {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                         })
                     }
@@ -206,16 +206,16 @@ where
     fn resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<T, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T, ParamsResolveError> {
         ValueSpec::<T>::resolve(self, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Option<T>, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<T>, ParamsResolveError> {
         ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
     }
 }

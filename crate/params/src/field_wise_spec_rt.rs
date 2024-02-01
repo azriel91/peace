@@ -27,14 +27,14 @@ pub trait FieldWiseSpecRt: AnySpecRt {
     fn resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Self::ValueType, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Self::ValueType, ParamsResolveError>;
     /// Resolves the values to construct the item `Params`.
     ///
     /// Values that are not present in `Resources` will be `None`.
     fn resolve_partial(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Self::Partial, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Self::Partial, ParamsResolveError>;
 }

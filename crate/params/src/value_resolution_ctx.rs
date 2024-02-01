@@ -6,7 +6,7 @@ use crate::{FieldNameAndType, ValueResolutionMode};
 
 /// Collects information about how a value is resolved.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ValueResolutionCtx<ItemIdT> {
+pub struct ValueResolutionCtx {
     /// When resolving `Value`s, whether to look up `Current<T>` or
     /// `Goal<T>`.
     value_resolution_mode: ValueResolutionMode,
@@ -18,7 +18,7 @@ pub struct ValueResolutionCtx<ItemIdT> {
     resolution_chain: Vec<FieldNameAndType>,
 }
 
-impl ValueResolutionCtx<ItemIdT> {
+impl ValueResolutionCtx {
     pub fn new(
         value_resolution_mode: ValueResolutionMode,
         item_id: ItemIdT,
@@ -59,7 +59,7 @@ impl ValueResolutionCtx<ItemIdT> {
     }
 }
 
-impl fmt::Display for ValueResolutionCtx<ItemIdT> {
+impl fmt::Display for ValueResolutionCtx {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_type_name = self.params_type_name();
         write!(f, "{params_type_name} {{")?;

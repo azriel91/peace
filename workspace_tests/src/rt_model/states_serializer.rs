@@ -36,7 +36,7 @@ async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
         let mut states_mut = StatesMut::new();
         states_mut.insert(item_one.clone(), VecCopyState::from(vec![1u8]));
         states_mut.insert(item_two.clone(), MockState(2u8));
-        StatesCurrentStored::<ItemIdT>::from(states_mut)
+        StatesCurrentStored::from(states_mut)
     };
     StatesSerializer::<PeaceTestError>::serialize(
         &storage,
@@ -83,7 +83,7 @@ async fn deserialize_stored() -> Result<(), Box<dyn std::error::Error>> {
         let mut states_mut = StatesMut::new();
         states_mut.insert(item_one.clone(), VecCopyState::from(vec![1u8]));
         states_mut.insert(item_two.clone(), MockState(2u8));
-        StatesCurrentStored::<ItemIdT>::from(states_mut)
+        StatesCurrentStored::from(states_mut)
     };
     let mut states_type_reg = TypeReg::new_typed();
     states_type_reg.register::<VecCopyState>(item_one.clone());

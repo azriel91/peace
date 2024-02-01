@@ -17,8 +17,5 @@ fn outcome_type_names_includes_states_current_stored() {
 
     let outcome_type_names: Vec<String> = cmd_block.outcome_type_names();
 
-    assert_eq!(
-        &["States<ItemIdT, CurrentStored>"],
-        outcome_type_names.as_slice()
-    );
+    assert_eq!(&["States<CurrentStored>"], outcome_type_names.as_slice());
 }

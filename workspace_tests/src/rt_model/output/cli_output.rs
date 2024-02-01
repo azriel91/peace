@@ -38,7 +38,7 @@ async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesCurrentStored::<ItemIdT>::from(states)
+        StatesCurrentStored::from(states)
     };
 
     <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
@@ -99,7 +99,7 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesCurrentStored::<ItemIdT>::from(states)
+        StatesCurrentStored::from(states)
     };
 
     <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
@@ -174,7 +174,7 @@ async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesCurrentStored::<ItemIdT>::from(states)
+        StatesCurrentStored::from(states)
     };
 
     <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
@@ -238,7 +238,7 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesCurrentStored::<ItemIdT>::from(states)
+        StatesCurrentStored::from(states)
     };
 
     <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;

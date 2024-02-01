@@ -25,8 +25,8 @@ pub trait MappingFn: Debug + DataType {
     fn map(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Self::Output, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Self::Output, ParamsResolveError>;
 
     /// Maps data in resources to the output type.
     ///
@@ -40,8 +40,8 @@ pub trait MappingFn: Debug + DataType {
     fn try_map(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Option<Self::Output>, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<Self::Output>, ParamsResolveError>;
 
     /// Returns whether this mapping function actually holds the function logic.
     ///

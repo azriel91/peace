@@ -23,14 +23,14 @@ pub trait ValueSpecRt: AnySpecRt {
     fn resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Self::ValueType, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Self::ValueType, ParamsResolveError>;
 
     /// Resolves the value from resources, returning `None` if it is not
     /// present.
     fn try_resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Option<Self::ValueType>, ParamsResolveError<ItemIdT>>;
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<Self::ValueType>, ParamsResolveError>;
 }

@@ -8,8 +8,7 @@ use crate::CmdBlockRt;
 ///
 /// * `E`: Automation software error type.
 /// * `PKeys`: Types of params keys.
-/// * `Outcome`: [`CmdBlock`] outcome type, e.g. `(StatesCurrent<ItemIdT>,
-///   StatesGoal<ItemIdT>)`.
+/// * `Outcome`: [`CmdBlock`] outcome type, e.g. `(StatesCurrent, StatesGoal)`.
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 pub type CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome> = Pin<

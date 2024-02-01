@@ -20,8 +20,8 @@ use serde::Serialize;
 pub struct Stored<'borrow, ItemIdT, T> {
     /// ID of the item the state should be retrieved for.
     item_id: ItemIdT,
-    /// The borrowed `StatesCurrentStored<ItemIdT>`.
-    states_current_stored: Option<Ref<'borrow, StatesCurrentStored<ItemIdT>>>,
+    /// The borrowed `StatesCurrentStored`.
+    states_current_stored: Option<Ref<'borrow, StatesCurrentStored>>,
     /// Marker.
     marker: PhantomData<T>,
 }
@@ -47,7 +47,7 @@ where
 
     fn borrow(item_id: &'borrow ItemIdT, resources: &'borrow Resources) -> Self {
         let states_current_stored = resources
-            .try_borrow::<StatesCurrentStored<ItemIdT>>()
+            .try_borrow::<StatesCurrentStored>()
             .map_err(|borrow_fail| match borrow_fail {
                 e @ BorrowFail::ValueNotFound => e,
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
@@ -70,7 +70,7 @@ impl<'borrow, ItemIdT, T> DataAccess for Stored<'borrow, ItemIdT, T> {
         Self: Sized,
     {
         let mut type_ids = TypeIds::new();
-        type_ids.push(TypeId::of::<StatesCurrentStored<ItemIdT>>());
+        type_ids.push(TypeId::of::<StatesCurrentStored>());
         type_ids
     }
 
@@ -88,7 +88,7 @@ impl<'borrow, ItemIdT, T> DataAccessDyn for Stored<'borrow, ItemIdT, T> {
         Self: Sized,
     {
         let mut type_ids = TypeIds::new();
-        type_ids.push(TypeId::of::<StatesCurrentStored<ItemIdT>>());
+        type_ids.push(TypeId::of::<StatesCurrentStored>());
         type_ids
     }
 

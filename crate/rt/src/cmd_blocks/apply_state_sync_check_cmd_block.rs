@@ -124,8 +124,8 @@ where
 {
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
         cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
-        states_stored: &States<ItemIdT, StatesTsStored>,
-        states_discovered: &States<ItemIdT, StatesTs>,
+        states_stored: &States<StatesTsStored>,
+        states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<ItemsStateStoredStale, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let items_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
@@ -262,7 +262,7 @@ where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     type CmdCtxTypes = CmdCtxTypesT;
-    type InputT = (StatesCurrentStored<ItemIdT>, StatesCurrent<ItemIdT>);
+    type InputT = (StatesCurrentStored, StatesCurrent);
     type Outcome = Self::InputT;
 
     fn input_fetch(
@@ -274,8 +274,8 @@ where
 
     fn input_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrentStored<ItemIdT>>(),
-            tynm::type_name::<StatesCurrent<ItemIdT>>(),
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
         ]
     }
 
@@ -287,8 +287,8 @@ where
 
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrentStored<ItemIdT>>(),
-            tynm::type_name::<StatesCurrent<ItemIdT>>(),
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
         ]
     }
 
@@ -336,7 +336,7 @@ where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
     type CmdCtxTypes = CmdCtxTypesT;
-    type InputT = (StatesGoalStored<ItemIdT>, StatesGoal<ItemIdT>);
+    type InputT = (StatesGoalStored, StatesGoal);
     type Outcome = Self::InputT;
 
     fn input_fetch(
@@ -348,8 +348,8 @@ where
 
     fn input_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesGoalStored<ItemIdT>>(),
-            tynm::type_name::<StatesGoal<ItemIdT>>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
         ]
     }
 
@@ -361,8 +361,8 @@ where
 
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesGoalStored<ItemIdT>>(),
-            tynm::type_name::<StatesGoal<ItemIdT>>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
         ]
     }
 
@@ -412,10 +412,10 @@ where
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (
-        StatesCurrentStored<ItemIdT>,
-        StatesCurrent<ItemIdT>,
-        StatesGoalStored<ItemIdT>,
-        StatesGoal<ItemIdT>,
+        StatesCurrentStored,
+        StatesCurrent,
+        StatesGoalStored,
+        StatesGoal,
     );
     type Outcome = Self::InputT;
 
@@ -436,10 +436,10 @@ where
 
     fn input_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrentStored<ItemIdT>>(),
-            tynm::type_name::<StatesCurrent<ItemIdT>>(),
-            tynm::type_name::<StatesGoalStored<ItemIdT>>(),
-            tynm::type_name::<StatesGoal<ItemIdT>>(),
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
         ]
     }
 
@@ -453,10 +453,10 @@ where
 
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrentStored<ItemIdT>>(),
-            tynm::type_name::<StatesCurrent<ItemIdT>>(),
-            tynm::type_name::<StatesGoalStored<ItemIdT>>(),
-            tynm::type_name::<StatesGoal<ItemIdT>>(),
+            tynm::type_name::<StatesCurrentStored>(),
+            tynm::type_name::<StatesCurrent>(),
+            tynm::type_name::<StatesGoalStored>(),
+            tynm::type_name::<StatesGoal>(),
         ]
     }
 
@@ -548,18 +548,18 @@ enum OutcomeResult<E> {
 
 fn input_fetch_current(
     resources: &mut Resources<SetUp>,
-) -> Result<(StatesCurrentStored<ItemIdT>, StatesCurrent<ItemIdT>), ResourceFetchError> {
-    let states_current_stored = resources.try_remove::<StatesCurrentStored<ItemIdT>>()?;
-    let states_current = resources.try_remove::<StatesCurrent<ItemIdT>>()?;
+) -> Result<(StatesCurrentStored, StatesCurrent), ResourceFetchError> {
+    let states_current_stored = resources.try_remove::<StatesCurrentStored>()?;
+    let states_current = resources.try_remove::<StatesCurrent>()?;
 
     Ok((states_current_stored, states_current))
 }
 
 fn input_fetch_goal(
     resources: &mut Resources<SetUp>,
-) -> Result<(StatesGoalStored<ItemIdT>, StatesGoal<ItemIdT>), ResourceFetchError> {
-    let states_goal_stored = resources.try_remove::<StatesGoalStored<ItemIdT>>()?;
-    let states_goal = resources.try_remove::<StatesGoal<ItemIdT>>()?;
+) -> Result<(StatesGoalStored, StatesGoal), ResourceFetchError> {
+    let states_goal_stored = resources.try_remove::<StatesGoalStored>()?;
+    let states_goal = resources.try_remove::<StatesGoal>()?;
 
     Ok((states_goal_stored, states_goal))
 }

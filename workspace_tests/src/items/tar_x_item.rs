@@ -572,7 +572,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let tar_x_params_spec = params_specs
         .get::<ParamsSpec<TarXParams<TarXTest>>, _>(TarXTest::ID)
         .unwrap();
-    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
         TarXTest::ID.clone(),
         tynm::type_name::<TarXParams<TarXTest>>(),

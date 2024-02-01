@@ -118,19 +118,19 @@ where
     pub fn resolve(
         &self,
         resources: &Resources<peace_resources::resources::ts::SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<T, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T, ParamsResolveError> {
         match self {
             ParamsSpecFieldless::Value { value } => Ok(value.clone()),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::InMemory => {
                 match resources.try_borrow::<T>() {
                     Ok(value) => Ok((*value).clone()),
                     Err(borrow_fail) => match borrow_fail {
-                        BorrowFail::ValueNotFound => Err(ParamsResolveError::<ItemIdT>::InMemory {
+                        BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                         }),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            Err(ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
+                            Err(ParamsResolveError::InMemoryBorrowConflict {
                                 value_resolution_ctx: value_resolution_ctx.clone(),
                             })
                         }
@@ -146,8 +146,8 @@ where
     pub fn resolve_partial(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<T::Partial, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T::Partial, ParamsResolveError> {
         match self {
             ParamsSpecFieldless::Value { value } => Ok(T::Partial::from((*value).clone())),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::InMemory => {
@@ -156,7 +156,7 @@ where
                     Err(borrow_fail) => match borrow_fail {
                         BorrowFail::ValueNotFound => Ok(T::Partial::default()),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            Err(ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
+                            Err(ParamsResolveError::InMemoryBorrowConflict {
                                 value_resolution_ctx: value_resolution_ctx.clone(),
                             })
                         }
@@ -230,16 +230,16 @@ where
     fn resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<T, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T, ParamsResolveError> {
         ParamsSpecFieldless::<T>::resolve(self, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-    ) -> Result<Option<T>, ParamsResolveError<ItemIdT>> {
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<T>, ParamsResolveError> {
         ParamsSpecFieldless::<T>::resolve_partial(self, resources, value_resolution_ctx)
             .map(T::try_from)
             .map(Result::ok)

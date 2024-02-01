@@ -115,8 +115,8 @@ macro_rules! impl_mapping_fn_impl {
             pub fn map(
                 &self,
                 resources: &Resources<SetUp>,
-                value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-            ) -> Result<T, ParamsResolveError<ItemIdT>> {
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<T, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -144,7 +144,7 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::ApplyDry => {
                         $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError<ItemIdT>::FromMap {
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
@@ -152,7 +152,7 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Current => {
                         $(arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError<ItemIdT>::FromMap {
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
@@ -160,7 +160,7 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Goal => {
                         $(arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError<ItemIdT>::FromMap {
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
@@ -168,7 +168,7 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Clean => {
                         $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError<ItemIdT>::FromMap {
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
@@ -179,8 +179,8 @@ macro_rules! impl_mapping_fn_impl {
             pub fn try_map(
                 &self,
                 resources: &Resources<SetUp>,
-                value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-            ) -> Result<Option<T>, ParamsResolveError<ItemIdT>> {
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<Option<T>, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -271,16 +271,16 @@ macro_rules! impl_mapping_fn_impl {
             fn map(
                 &self,
                 resources: &Resources<SetUp>,
-                value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-            ) -> Result<<Self as MappingFn>::Output, ParamsResolveError<ItemIdT>> {
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
                 MappingFnImpl::<T, F, ($($Arg,)+)>::map(self, resources, value_resolution_ctx)
             }
 
             fn try_map(
                 &self,
                 resources: &Resources<SetUp>,
-                value_resolution_ctx: &mut ValueResolutionCtx<ItemIdT>,
-            ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError<ItemIdT>> {
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
                 MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx)
             }
 
@@ -326,13 +326,13 @@ macro_rules! arg_resolve {
                         //   by any item, or
                         // * There is a bug in Peace.
                         BorrowFail::ValueNotFound => {
-                            return Err(ParamsResolveError<ItemIdT>::FromMap {
+                            return Err(ParamsResolveError::FromMap {
                                 value_resolution_ctx: $value_resolution_ctx.clone(),
                                 from_type_name: tynm::type_name::<$Arg>(),
                             });
                         }
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            return Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {
+                            return Err(ParamsResolveError::FromMapBorrowConflict {
                                 value_resolution_ctx: $value_resolution_ctx.clone(),
                                 from_type_name: tynm::type_name::<$Arg>(),
                             });
@@ -340,7 +340,7 @@ macro_rules! arg_resolve {
                     },
                 },
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                    return Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {
+                    return Err(ParamsResolveError::FromMapBorrowConflict {
                         value_resolution_ctx: $value_resolution_ctx.clone(),
                         from_type_name: tynm::type_name::<$Arg>(),
                     });
@@ -351,7 +351,7 @@ macro_rules! arg_resolve {
             BorrowedData::Marked(marked_data) => match marked_data.as_ref() {
                 Some(data) => data,
                 None => {
-                    return Err(ParamsResolveError<ItemIdT>::FromMap {
+                    return Err(ParamsResolveError::FromMap {
                         value_resolution_ctx: $value_resolution_ctx.clone(),
                         from_type_name: tynm::type_name::<$Arg>(),
                     });
@@ -392,7 +392,7 @@ macro_rules! try_arg_resolve {
                         // * There is a bug in Peace.
                         BorrowFail::ValueNotFound => return Ok(None),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            return Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {
+                            return Err(ParamsResolveError::FromMapBorrowConflict {
                                 value_resolution_ctx: $value_resolution_ctx.clone(),
                                 from_type_name: tynm::type_name::<$Arg>(),
                             });
@@ -400,7 +400,7 @@ macro_rules! try_arg_resolve {
                     },
                 },
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                    return Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {
+                    return Err(ParamsResolveError::FromMapBorrowConflict {
                         value_resolution_ctx: $value_resolution_ctx.clone(),
                         from_type_name: tynm::type_name::<$Arg>(),
                     });

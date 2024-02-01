@@ -31,7 +31,7 @@ use crate::ctx::CmdCtxTypes;
 /// |   |- 🌊 deploy                # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored<ItemIdT>`
+/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored`
 /// |   |
 /// |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 /// |
@@ -133,7 +133,7 @@ where
 /// |   |- 🌊 deploy                   # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml     # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_current.yaml    # ✅ can read or write `StatesCurrentStored<ItemIdT>`
+/// |   |   |- 📋 states_current.yaml    # ✅ can read or write `StatesCurrentStored`
 /// |   |
 /// |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 /// |

@@ -18,22 +18,10 @@ fn input_type_names_includes_states_current_and_states_target() {
         };
     }
 
-    assert_input_type_names!(
-        Ensured,
-        &["States<ItemIdT, Current>", "States<ItemIdT, Goal>"]
-    );
-    assert_input_type_names!(
-        EnsuredDry,
-        &["States<ItemIdT, Current>", "States<ItemIdT, Goal>"]
-    );
-    assert_input_type_names!(
-        Cleaned,
-        &["States<ItemIdT, Current>", "States<ItemIdT, Clean>"]
-    );
-    assert_input_type_names!(
-        CleanedDry,
-        &["States<ItemIdT, Current>", "States<ItemIdT, Clean>"]
-    );
+    assert_input_type_names!(Ensured, &["States<Current>", "States<Goal>"]);
+    assert_input_type_names!(EnsuredDry, &["States<Current>", "States<Goal>"]);
+    assert_input_type_names!(Cleaned, &["States<Current>", "States<Clean>"]);
+    assert_input_type_names!(CleanedDry, &["States<Current>", "States<Clean>"]);
 }
 
 #[test]
@@ -50,34 +38,18 @@ fn outcome_type_names_includes_states_previous_states_target() {
 
     assert_outcome_type_names!(
         Ensured,
-        &[
-            "States<ItemIdT, Previous>",
-            "States<ItemIdT, Ensured>",
-            "States<ItemIdT, Goal>"
-        ]
+        &["States<Previous>", "States<Ensured>", "States<Goal>"]
     );
     assert_outcome_type_names!(
         EnsuredDry,
-        &[
-            "States<ItemIdT, Previous>",
-            "States<ItemIdT, EnsuredDry>",
-            "States<ItemIdT, Goal>"
-        ]
+        &["States<Previous>", "States<EnsuredDry>", "States<Goal>"]
     );
     assert_outcome_type_names!(
         Cleaned,
-        &[
-            "States<ItemIdT, Previous>",
-            "States<ItemIdT, Cleaned>",
-            "States<ItemIdT, Clean>"
-        ]
+        &["States<Previous>", "States<Cleaned>", "States<Clean>"]
     );
     assert_outcome_type_names!(
         CleanedDry,
-        &[
-            "States<ItemIdT, Previous>",
-            "States<ItemIdT, CleanedDry>",
-            "States<ItemIdT, Clean>"
-        ]
+        &["States<Previous>", "States<CleanedDry>", "States<Clean>"]
     );
 }

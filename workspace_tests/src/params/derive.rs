@@ -134,7 +134,7 @@ mod struct_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_from_field_wise_builder"),
             String::from("StructParams"),
@@ -345,7 +345,7 @@ mod struct_with_type_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_from_field_wise_builder"),
             String::from("StructWithTypeParams<()>"),
@@ -547,7 +547,7 @@ mod tuple_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_from_field_wise_builder"),
             String::from("TupleParams"),
@@ -727,7 +727,7 @@ mod tuple_with_type_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_from_field_wise_builder"),
             String::from("TupleWithTypeParams<()>"),
@@ -1011,7 +1011,7 @@ mod enum_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_named_from_field_wise_builder"),
             String::from("EnumParams<()>"),
@@ -1046,7 +1046,7 @@ mod enum_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_tuple_from_field_wise_builder"),
             String::from("EnumParams<()>"),
@@ -1080,7 +1080,7 @@ mod enum_params {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_tuple_marker_from_field_wise_builder"),
             String::from("EnumParams<()>"),
@@ -1585,7 +1585,7 @@ mod struct_recursive_value {
             resources.insert(1u32);
             Resources::from(resources)
         };
-        let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
             item_id!("field_wise_from_field_wise_builder"),
             String::from("StructRecursiveValue<()>"),

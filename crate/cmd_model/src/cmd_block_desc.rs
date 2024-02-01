@@ -43,7 +43,7 @@ impl CmdBlockDesc {
     }
 
     /// Returns the short type names of `CmdBlock::InputT`, e.g.
-    /// `["States<ItemIdT, Current>", "States<ItemIdT, Goal>"]`.
+    /// `["States<Current>", "States<Goal>"]`.
     ///
     /// * If `InputT` is the unit struct `()`, this should be empty.
     /// * If `InputT` is a named struct, this should contain just one `String`.

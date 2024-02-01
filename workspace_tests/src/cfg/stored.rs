@@ -16,7 +16,7 @@ fn retrieves_state_for_item() {
         let mut states_mut = StatesMut::new();
         states_mut.insert(ITEM_SPEC_ID_TEST.clone(), 123u8);
 
-        StatesCurrentStored::<ItemIdT>::from(states_mut)
+        StatesCurrentStored::from(states_mut)
     };
     resources.insert(states_current_stored);
 
@@ -32,7 +32,7 @@ fn does_not_retrieve_state_for_item_other() {
         let mut states_mut = StatesMut::new();
         states_mut.insert(ITEM_SPEC_ID_OTHER.clone(), 123u8);
 
-        StatesCurrentStored::<ItemIdT>::from(states_mut)
+        StatesCurrentStored::from(states_mut)
     };
     resources.insert(states_current_stored);
 
@@ -44,7 +44,7 @@ fn does_not_retrieve_state_for_item_other() {
 #[test]
 fn data_access_borrows_returns_states_current_stored_type_id() {
     let mut type_ids = TypeIds::new();
-    type_ids.push(TypeId::of::<StatesCurrentStored<ItemIdT>>());
+    type_ids.push(TypeId::of::<StatesCurrentStored>());
 
     assert_eq!(type_ids, <Stored::<'_, u8> as DataAccess>::borrows());
 }
@@ -59,12 +59,12 @@ fn data_access_borrow_muts_is_empty() {
 #[test]
 fn data_access_dyn_borrows_returns_states_current_stored_type_id() {
     let mut resources = Resources::new();
-    let states_current_stored = StatesCurrentStored::<ItemIdT>::from(StatesMut::new());
+    let states_current_stored = StatesCurrentStored::from(StatesMut::new());
     resources.insert(states_current_stored);
     let stored = Stored::<'_, u8>::borrow(ITEM_SPEC_ID_TEST, &resources);
 
     let mut type_ids = TypeIds::new();
-    type_ids.push(TypeId::of::<StatesCurrentStored<ItemIdT>>());
+    type_ids.push(TypeId::of::<StatesCurrentStored>());
 
     assert_eq!(
         type_ids,
@@ -75,7 +75,7 @@ fn data_access_dyn_borrows_returns_states_current_stored_type_id() {
 #[test]
 fn data_access_dyn_borrow_muts_is_empty() {
     let mut resources = Resources::new();
-    let states_current_stored = StatesCurrentStored::<ItemIdT>::from(StatesMut::new());
+    let states_current_stored = StatesCurrentStored::from(StatesMut::new());
     resources.insert(states_current_stored);
     let stored = Stored::<'_, u8>::borrow(ITEM_SPEC_ID_TEST, &resources);
 
@@ -94,7 +94,7 @@ fn debug() {
         let mut states_mut = StatesMut::new();
         states_mut.insert(ITEM_SPEC_ID_TEST.clone(), 123u8);
 
-        StatesCurrentStored::<ItemIdT>::from(states_mut)
+        StatesCurrentStored::from(states_mut)
     };
     resources.insert(states_current_stored);
 

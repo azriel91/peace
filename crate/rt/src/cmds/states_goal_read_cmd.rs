@@ -10,7 +10,7 @@ use peace_resources::states::StatesGoalStored;
 
 use crate::cmd_blocks::StatesGoalReadCmdBlock;
 
-/// Reads [`StatesGoalStored<ItemIdT>`]s from storage.
+/// Reads [`StatesGoalStored`]s from storage.
 #[derive(Debug)]
 pub struct StatesGoalReadCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
@@ -18,7 +18,7 @@ impl<CmdCtxTypesT> StatesGoalReadCmd<CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Reads [`StatesGoalStored<ItemIdT>`]s from storage.
+    /// Reads [`StatesGoalStored`]s from storage.
     ///
     /// [`StatesDiscoverCmd`] must have run prior to this command to read the
     /// state.
@@ -27,16 +27,15 @@ where
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesGoalStored<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
     {
-        let cmd_execution_builder =
-            CmdExecution::<StatesGoalStored<ItemIdT>, _>::builder().with_cmd_block(
-                CmdBlockWrapper::new(StatesGoalReadCmdBlock::new(), std::convert::identity),
-            );
+        let cmd_execution_builder = CmdExecution::<StatesGoalStored, _>::builder().with_cmd_block(
+            CmdBlockWrapper::new(StatesGoalReadCmdBlock::new(), std::convert::identity),
+        );
 
         #[cfg(feature = "output_progress")]
         let cmd_execution_builder = cmd_execution_builder.with_progress_render_enabled(false);

@@ -6,7 +6,7 @@ use crate::{FieldNameAndType, ValueResolutionCtx};
 // struct, enum -- instead of assuming it's always a named fields struct.
 #[derive(Debug, thiserror::Error)]
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
-pub enum ParamsResolveError<ItemIdT> {
+pub enum ParamsResolveError {
     /// Failed to resolve a field value from `resources`.
     #[cfg_attr(
         feature = "error_reporting",
@@ -33,7 +33,7 @@ pub enum ParamsResolveError<ItemIdT> {
             .unwrap_or(value_resolution_ctx.params_type_name()))]
     InMemory {
         /// Hierarchy of fields traversed to resolve the value.
-        value_resolution_ctx: ValueResolutionCtx<ItemIdT>,
+        value_resolution_ctx: ValueResolutionCtx,
     },
 
     /// Failed to borrow a field value from `resources`.
@@ -64,7 +64,7 @@ pub enum ParamsResolveError<ItemIdT> {
     ]
     InMemoryBorrowConflict {
         /// Hierarchy of fields traversed to resolve the value.
-        value_resolution_ctx: ValueResolutionCtx<ItemIdT>,
+        value_resolution_ctx: ValueResolutionCtx,
     },
 
     /// Failed to resolve a from value from `resources`.
@@ -88,7 +88,7 @@ pub enum ParamsResolveError<ItemIdT> {
     )]
     FromMap {
         /// Hierarchy of fields traversed to resolve the value.
-        value_resolution_ctx: ValueResolutionCtx<ItemIdT>,
+        value_resolution_ctx: ValueResolutionCtx,
         /// Name of the type from which to map the field value from.
         ///
         /// Corresponds to `U` in `Fn(&U) -> T`.
@@ -112,7 +112,7 @@ pub enum ParamsResolveError<ItemIdT> {
     )]
     FromMapBorrowConflict {
         /// Hierarchy of fields traversed to resolve the value.
-        value_resolution_ctx: ValueResolutionCtx<ItemIdT>,
+        value_resolution_ctx: ValueResolutionCtx,
         /// Name of the type from which to map the field value from.
         ///
         /// Corresponds to `U` in `Fn(&U) -> T`.
