@@ -36,6 +36,6 @@ fn resources_set_up_from_resources_empty() {
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
 
     // no default resources
-    assert!(!resources_set_up.contains::<StatesCurrent>());
-    assert!(!resources_set_up.contains::<StatesGoal>());
+    assert!(!resources_set_up.contains::<StatesCurrent<ItemIdT>>());
+    assert!(!resources_set_up.contains::<StatesGoal<ItemIdT>>());
 }

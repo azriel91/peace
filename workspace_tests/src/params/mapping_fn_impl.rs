@@ -43,7 +43,7 @@ macro_rules! mapping_tests {
                 data::marker::$value_resolution_mode,
                 cfg::{item_id},
                 params::{
-                    MappingFn, MappingFnImpl, ParamsResolveError,
+                    MappingFn, MappingFnImpl, ParamsResolveError<ItemIdT>,
                     ValueResolutionCtx, ValueResolutionMode,
                 },
                 resources::{resources::ts::SetUp, Resources},
@@ -51,7 +51,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_map_returns_ok_when_referenced_values_are_present_directly()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -64,7 +64,7 @@ macro_rules! mapping_tests {
                     resources.insert(2u64);
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -82,7 +82,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_map_returns_ok_when_referenced_values_are_present_through_data_marker()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -95,7 +95,7 @@ macro_rules! mapping_tests {
                     resources.insert($value_resolution_mode(Some(2u64)));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -113,7 +113,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_map_returns_err_when_referenced_value_is_none()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -126,7 +126,7 @@ macro_rules! mapping_tests {
                     resources.insert($value_resolution_mode(None::<u64>));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -143,7 +143,7 @@ macro_rules! mapping_tests {
                         assert!(
                             matches!(
                                 &sum_result,
-                                Err(ParamsResolveError::FromMap {
+                                Err(ParamsResolveError::<ItemIdT>::FromMap {
                                     value_resolution_ctx,
                                     from_type_name
                                 })
@@ -160,7 +160,7 @@ macro_rules! mapping_tests {
                                 && from_type_name == "u64" // u64 is missing from `resources`
                             ),
                             "expected `sum_result` to be \
-                            `Err(ParamsResolveError::FromMap {{ .. }}`,\n\
+                            `Err(ParamsResolveError::<ItemIdT>::FromMap {{ .. }}`,\n\
                             but was {sum_result:?}"
                         );
                     }
@@ -171,7 +171,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_map_returns_err_when_referenced_value_is_absent()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -184,7 +184,7 @@ macro_rules! mapping_tests {
                     // resources.insert($value_resolution_mode(Some(2u64)));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -202,7 +202,7 @@ macro_rules! mapping_tests {
                         assert!(
                             matches!(
                                 &sum_result,
-                                Err(ParamsResolveError::FromMap {
+                                Err(ParamsResolveError::<ItemIdT>::FromMap {
                                     value_resolution_ctx,
                                     from_type_name
                                 })
@@ -219,7 +219,7 @@ macro_rules! mapping_tests {
                                 && from_type_name == "u64" // u64 is missing from `resources`
                             ),
                             "expected `sum_result` to be \
-                            `Err(ParamsResolveError::FromMap {{ .. }}`,\n\
+                            `Err(ParamsResolveError::<ItemIdT>::FromMap {{ .. }}`,\n\
                             but was {sum_result:?}"
                         );
                     }
@@ -230,7 +230,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_try_map_returns_ok_some_when_referenced_values_are_present()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -243,7 +243,7 @@ macro_rules! mapping_tests {
                     resources.insert($value_resolution_mode(Some(2u64)));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -261,7 +261,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_none()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -274,7 +274,7 @@ macro_rules! mapping_tests {
                     resources.insert($value_resolution_mode(None::<u64>));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
@@ -292,7 +292,7 @@ macro_rules! mapping_tests {
 
             #[test]
             fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_absent()
-            -> Result<(), ParamsResolveError> {
+            -> Result<(), ParamsResolveError<ItemIdT>> {
                 let mapping_fn_impl =
                     MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
@@ -305,7 +305,7 @@ macro_rules! mapping_tests {
                     // resources.insert($value_resolution_mode(Some(2u64)));
                     Resources::<SetUp>::from(resources)
                 };
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
                     ValueResolutionMode::$value_resolution_mode,
                     item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),

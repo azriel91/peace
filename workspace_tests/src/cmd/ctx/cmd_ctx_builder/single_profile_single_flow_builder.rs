@@ -418,7 +418,7 @@ async fn build_with_item_params_returns_ok_when_params_provided()
     let resources = scope.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),
@@ -518,7 +518,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
     let resources = scope.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),
@@ -571,7 +571,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
     let resources = scope.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),
@@ -779,7 +779,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
     let resources = scope.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),
@@ -1066,7 +1066,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     let resources = scope.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),

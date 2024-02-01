@@ -12,16 +12,16 @@ use peace_resources::{
 
 use crate::{Error, ItemGraph, Storage};
 
-/// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
-/// from storage.
+/// Reads and writes [`StatesCurrentStored<ItemIdT>`] and
+/// [`StatesGoalStored<ItemIdT>`] to and from storage.
 pub struct StatesSerializer<E>(PhantomData<E>);
 
 impl<E> StatesSerializer<E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
 {
-    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesCurrentStored<ItemIdT>`] of all [`Item`]s if it
+    /// exists on disk.
     ///
     /// # Parameters:
     ///
@@ -30,10 +30,10 @@ where
     /// * `states_file_path`: Path to save the serialized states to.
     ///
     /// [`Item`]: peace_cfg::Item
-    pub async fn serialize<TS>(
+    pub async fn serialize<ItemIdT, TS>(
         storage: &Storage,
         item_graph: &ItemGraph<E>,
-        states: &States<TS>,
+        states: &States<ItemIdT, TS>,
         states_file_path: &Path,
     ) -> Result<(), E>
     where
@@ -53,8 +53,8 @@ where
         Ok(())
     }
 
-    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesCurrentStored<ItemIdT>`] of all [`Item`]s if it
+    /// exists on disk.
     ///
     /// # Parameters:
     ///
@@ -69,7 +69,7 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
-    ) -> Result<StatesCurrentStored, E> {
+    ) -> Result<StatesCurrentStored<ItemIdT>, E> {
         let states = Self::deserialize_internal::<CurrentStored>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_stored".to_string(),
@@ -83,7 +83,8 @@ where
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
     }
 
-    /// Returns the [`StatesGoalStored`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`StatesGoalStored<ItemIdT>`] of all [`Item`]s if it exists
+    /// on disk.
     ///
     /// # Parameters:
     ///
@@ -98,7 +99,7 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_goal_file: &StatesGoalFile,
-    ) -> Result<StatesGoalStored, E> {
+    ) -> Result<StatesGoalStored<ItemIdT>, E> {
         let states = Self::deserialize_internal::<GoalStored>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_goal".to_string(),
@@ -112,8 +113,8 @@ where
         states.ok_or_else(|| E::from(Error::StatesGoalDiscoverRequired))
     }
 
-    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesCurrentStored<ItemIdT>`] of all [`Item`]s if it
+    /// exists on disk.
     ///
     /// # Parameters:
     ///
@@ -128,7 +129,7 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
-    ) -> Result<Option<StatesCurrentStored>, E> {
+    ) -> Result<Option<StatesCurrentStored<ItemIdT>>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_stored_opt".to_string(),
@@ -158,13 +159,13 @@ where
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(not(target_arch = "wasm32"))]
-    async fn deserialize_internal<TS>(
+    async fn deserialize_internal<ItemIdT, TS>(
         thread_name: String,
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_file_path: &Path,
-    ) -> Result<Option<States<TS>>, E>
+    ) -> Result<Option<States<ItemIdT, TS>>, E>
     where
         TS: Send + Sync,
     {
@@ -226,12 +227,12 @@ where
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(target_arch = "wasm32")]
-    async fn deserialize_internal<TS>(
+    async fn deserialize_internal<ItemIdT, TS>(
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
         states_file_path: &Path,
-    ) -> Result<Option<States<TS>>, E>
+    ) -> Result<Option<States<ItemIdT, TS>>, E>
     where
         TS: Send + Sync,
     {

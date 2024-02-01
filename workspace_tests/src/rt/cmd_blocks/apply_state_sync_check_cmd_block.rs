@@ -15,15 +15,21 @@ fn input_type_names_includes_states_compared() {
     }
 
     assert_input_type_names!(none, &[]);
-    assert_input_type_names!(current, &["States<CurrentStored>", "States<Current>"]);
-    assert_input_type_names!(goal, &["States<GoalStored>", "States<Goal>"]);
+    assert_input_type_names!(
+        current,
+        &["States<ItemIdT, CurrentStored>", "States<ItemIdT, Current>"]
+    );
+    assert_input_type_names!(
+        goal,
+        &["States<ItemIdT, GoalStored>", "States<ItemIdT, Goal>"]
+    );
     assert_input_type_names!(
         current_and_goal,
         &[
-            "States<CurrentStored>",
-            "States<Current>",
-            "States<GoalStored>",
-            "States<Goal>"
+            "States<ItemIdT, CurrentStored>",
+            "States<ItemIdT, Current>",
+            "States<ItemIdT, GoalStored>",
+            "States<ItemIdT, Goal>"
         ]
     );
 }
@@ -41,15 +47,21 @@ fn outcome_type_names_includes_states_compared() {
     }
 
     assert_outcome_type_names!(none, &[]);
-    assert_outcome_type_names!(current, &["States<CurrentStored>", "States<Current>"]);
-    assert_outcome_type_names!(goal, &["States<GoalStored>", "States<Goal>"]);
+    assert_outcome_type_names!(
+        current,
+        &["States<ItemIdT, CurrentStored>", "States<ItemIdT, Current>"]
+    );
+    assert_outcome_type_names!(
+        goal,
+        &["States<ItemIdT, GoalStored>", "States<ItemIdT, Goal>"]
+    );
     assert_outcome_type_names!(
         current_and_goal,
         &[
-            "States<CurrentStored>",
-            "States<Current>",
-            "States<GoalStored>",
-            "States<Goal>"
+            "States<ItemIdT, CurrentStored>",
+            "States<ItemIdT, Current>",
+            "States<ItemIdT, GoalStored>",
+            "States<ItemIdT, Goal>"
         ]
     );
 }

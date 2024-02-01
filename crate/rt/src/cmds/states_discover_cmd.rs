@@ -49,7 +49,7 @@ where
     pub async fn current<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesCurrent<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -76,13 +76,13 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesCurrent<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
     {
-        let mut cmd_execution = CmdExecution::<StatesCurrent, _>::builder()
+        let mut cmd_execution = CmdExecution::<StatesCurrent<ItemIdT>, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::current(),
@@ -129,7 +129,7 @@ where
     pub async fn goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesGoal<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -156,13 +156,13 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesGoal<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
     {
-        let mut cmd_execution = CmdExecution::<StatesGoal, _>::builder()
+        let mut cmd_execution = CmdExecution::<StatesGoal<ItemIdT>, _>::builder()
             .with_cmd_block(CmdBlockWrapper::new(
                 #[cfg(not(feature = "output_progress"))]
                 StatesDiscoverCmdBlock::goal(),
@@ -218,7 +218,10 @@ where
     pub async fn current_and_goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<
+            (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>),
+            <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        >,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -247,34 +250,38 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<
+            (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>),
+            <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        >,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
     {
-        let mut cmd_execution = CmdExecution::<(StatesCurrent, StatesGoal), _>::builder()
-            .with_cmd_block(CmdBlockWrapper::new(
-                #[cfg(not(feature = "output_progress"))]
-                StatesDiscoverCmdBlock::current_and_goal(),
-                #[cfg(feature = "output_progress")]
-                StatesDiscoverCmdBlock::current_and_goal().progress_complete_on_success(),
-                |states_current_and_goal_mut| {
-                    let (states_current_mut, states_goal_mut) = states_current_and_goal_mut;
+        let mut cmd_execution =
+            CmdExecution::<(StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>), _>::builder()
+                .with_cmd_block(CmdBlockWrapper::new(
+                    #[cfg(not(feature = "output_progress"))]
+                    StatesDiscoverCmdBlock::current_and_goal(),
+                    #[cfg(feature = "output_progress")]
+                    StatesDiscoverCmdBlock::current_and_goal().progress_complete_on_success(),
+                    |states_current_and_goal_mut| {
+                        let (states_current_mut, states_goal_mut) = states_current_and_goal_mut;
 
-                    (
-                        StatesCurrent::from(states_current_mut),
-                        StatesGoal::from(states_goal_mut),
-                    )
-                },
-            ))
-            .with_execution_outcome_fetch(|resources| {
-                let states_current = resources.try_remove::<StatesCurrent>();
-                let states_goal = resources.try_remove::<StatesGoal>();
+                        (
+                            StatesCurrent::from(states_current_mut),
+                            StatesGoal::from(states_goal_mut),
+                        )
+                    },
+                ))
+                .with_execution_outcome_fetch(|resources| {
+                    let states_current = resources.try_remove::<StatesCurrent<ItemIdT>>();
+                    let states_goal = resources.try_remove::<StatesGoal<ItemIdT>>();
 
-                states_current.ok().zip(states_goal.ok())
-            })
-            .build();
+                    states_current.ok().zip(states_goal.ok())
+                })
+                .build();
 
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
@@ -297,7 +304,7 @@ where
     async fn serialize_current(
         item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
-        states_current: &StatesCurrent,
+        states_current: &StatesCurrent<ItemIdT>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
@@ -319,7 +326,7 @@ where
     async fn serialize_goal(
         item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
-        states_goal: &StatesGoal,
+        states_goal: &StatesGoal<ItemIdT>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 

@@ -17,5 +17,8 @@ fn outcome_type_names_includes_states_goal_stored() {
 
     let outcome_type_names: Vec<String> = cmd_block.outcome_type_names();
 
-    assert_eq!(&["States<GoalStored>"], outcome_type_names.as_slice());
+    assert_eq!(
+        &["States<ItemIdT, GoalStored>"],
+        outcome_type_names.as_slice()
+    );
 }

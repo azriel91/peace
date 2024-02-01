@@ -20,7 +20,7 @@ cfg_if::cfg_if! {
     }
 }
 
-/// Reads [`StatesCurrentStored`]s from storage.
+/// Reads [`StatesCurrentStored<ItemIdT>`]s from storage.
 ///
 /// Either [`StatesDiscoverCmdBlock::current`] or
 /// [`StatesDiscoverCmdBlock::current_and_goal`] must have run prior to this
@@ -42,7 +42,8 @@ where
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemIdT, BoxDtDisplay>,
-    ) -> Result<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<StatesCurrentStored<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>
+    {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
@@ -79,7 +80,7 @@ where
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
-    type Outcome = StatesCurrentStored;
+    type Outcome = StatesCurrentStored<ItemIdT>;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())

@@ -119,23 +119,23 @@ where
     StatesTs1: Debug + Send + Sync + 'static,
 {
     type CmdCtxTypes = CmdCtxTypesT;
-    type InputT = (States<StatesTs0>, States<StatesTs1>);
+    type InputT = (States<ItemIdT, StatesTs0>, States<ItemIdT, StatesTs1>);
     type Outcome = (StateDiffs, Self::InputT);
 
     fn input_fetch(
         &self,
         resources: &mut Resources<SetUp>,
     ) -> Result<Self::InputT, ResourceFetchError> {
-        let states_ts0 = resources.try_remove::<States<StatesTs0>>()?;
-        let states_ts1 = resources.try_remove::<States<StatesTs1>>()?;
+        let states_ts0 = resources.try_remove::<States<ItemIdT, StatesTs0>>()?;
+        let states_ts1 = resources.try_remove::<States<ItemIdT, StatesTs1>>()?;
 
         Ok((states_ts0, states_ts1))
     }
 
     fn input_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<States<StatesTs0>>(),
-            tynm::type_name::<States<StatesTs1>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs0>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs1>>(),
         ]
     }
 
@@ -149,8 +149,8 @@ where
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
             tynm::type_name::<StateDiffs>(),
-            tynm::type_name::<States<StatesTs0>>(),
-            tynm::type_name::<States<StatesTs1>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs0>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs1>>(),
         ]
     }
 

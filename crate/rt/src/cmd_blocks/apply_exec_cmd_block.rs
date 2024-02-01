@@ -324,8 +324,8 @@ where
         mut states_target_mut: StatesMut<StatesTs::TsTarget>,
     ) -> Result<
         (
-            States<StatesTs>,
-            States<StatesTs::TsTarget>,
+            States<ItemIdT, StatesTs>,
+            States<ItemIdT, StatesTs::TsTarget>,
             IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -427,24 +427,28 @@ where
     StatesTs: StatesTsApplyExt + Debug + Send + Sync + 'static,
 {
     type CmdCtxTypes = CmdCtxTypesT;
-    type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
-    type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
+    type InputT = (StatesCurrent<ItemIdT>, States<ItemIdT, StatesTs::TsTarget>);
+    type Outcome = (
+        StatesPrevious<ItemIdT>,
+        States<ItemIdT, StatesTs>,
+        States<ItemIdT, StatesTs::TsTarget>,
+    );
 
     fn input_fetch(
         &self,
         resources: &mut Resources<SetUp>,
     ) -> Result<Self::InputT, ResourceFetchError> {
-        let states_current = resources.try_remove::<StatesCurrent>()?;
+        let states_current = resources.try_remove::<StatesCurrent<ItemIdT>>()?;
 
-        let states_target = resources.try_remove::<States<StatesTs::TsTarget>>()?;
+        let states_target = resources.try_remove::<States<ItemIdT, StatesTs::TsTarget>>()?;
 
         Ok((states_current, states_target))
     }
 
     fn input_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrent>(),
-            tynm::type_name::<States<StatesTs::TsTarget>>(),
+            tynm::type_name::<StatesCurrent<ItemIdT>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs::TsTarget>>(),
         ]
     }
 
@@ -457,9 +461,9 @@ where
 
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesPrevious>(),
-            tynm::type_name::<States<StatesTs>>(),
-            tynm::type_name::<States<StatesTs::TsTarget>>(),
+            tynm::type_name::<StatesPrevious<ItemIdT>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs>>(),
+            tynm::type_name::<States<ItemIdT, StatesTs::TsTarget>>(),
         ]
     }
 
@@ -474,7 +478,7 @@ where
     > {
         let (states_current, states_target) = input;
         let (states_previous, states_applied_mut, states_target_mut) = {
-            let states_previous = StatesPrevious::from(states_current.clone());
+            let states_previous = StatesPrevious::<ItemIdT>::from(states_current.clone());
             // `Ensured`, `EnsuredDry`, `Cleaned`, `CleanedDry` states start as the current
             // state, and are altered.
             let states_applied_mut =

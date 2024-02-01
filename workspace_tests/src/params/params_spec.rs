@@ -240,7 +240,7 @@ marker: null
 #[test]
 fn deserialize_field_wise_value() -> Result<(), Box<dyn std::error::Error>> {
     let resources = Resources::<SetUp>::from(Resources::new());
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::ApplyDry,
         item_id!("deserialize_field_wise"),
         tynm::type_name::<VecA>(),
@@ -402,13 +402,13 @@ field_wise_spec: !MappingFn
 }
 
 #[test]
-fn resolve_stored_param() -> Result<(), ParamsResolveError> {
+fn resolve_stored_param() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_stored_param"),
         tynm::type_name::<MockSrc>(),
@@ -422,13 +422,13 @@ fn resolve_stored_param() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn resolve_in_memory() -> Result<(), ParamsResolveError> {
+fn resolve_in_memory() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_in_memory"),
         tynm::type_name::<MockSrc>(),
@@ -442,9 +442,9 @@ fn resolve_in_memory() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveError> {
+fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = Resources::<SetUp>::from(Resources::new());
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_in_memory_returns_err_when_not_found"),
         tynm::type_name::<MockSrc>(),
@@ -460,14 +460,14 @@ fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveErr
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::InMemory { value_resolution_ctx })
+                    Err(ParamsResolveError<ItemIdT>::InMemory { value_resolution_ctx })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("resolve_in_memory_returns_err_when_not_found")
                     && value_resolution_ctx.params_type_name() == "MockSrc"
                     && value_resolution_ctx.resolution_chain().is_empty()
                 ),
-                "expected `mock_src_result` to be `Err(ParamsResolveError::InMemory {{ .. }})`\n\
+                "expected `mock_src_result` to be `Err(ParamsResolveError<ItemIdT>::InMemory {{ .. }})`\n\
                 but was `{mock_src_result:?}`"
             );
         }
@@ -476,13 +476,14 @@ fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveErr
 }
 
 #[test]
-fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError<ItemIdT>>
+{
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_in_memory_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -499,7 +500,7 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict { value_resolution_ctx })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("resolve_in_memory_returns_err_when_mutably_borrowed")
@@ -507,7 +508,7 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
                     && value_resolution_ctx.resolution_chain().is_empty()
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[]`,\n\
                 but was `{mock_src_result:?}`"
             );
@@ -517,9 +518,9 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
 }
 
 #[test]
-fn resolve_value() -> Result<(), ParamsResolveError> {
+fn resolve_value() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = Resources::<SetUp>::from(Resources::new());
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_value"),
         tynm::type_name::<MockSrc>(),
@@ -533,13 +534,13 @@ fn resolve_value() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+fn resolve_mapping_fn() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
@@ -553,14 +554,15 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError<ItemIdT>>
+{
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         resources.insert(2u16);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_mapping_fn_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -578,7 +580,7 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
+                    Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("resolve_mapping_fn_returns_err_when_mutably_borrowed")
@@ -587,7 +589,7 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
                     && from_type_name == "u16"
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::FromMapBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[]`,\n\
                 but was `{mock_src_result:?}`"
             );
@@ -597,13 +599,13 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
 }
 
 #[test]
-fn resolve_field_wise() -> Result<(), ParamsResolveError> {
+fn resolve_field_wise() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_field_wise"),
         tynm::type_name::<MockSrc>(),
@@ -617,13 +619,14 @@ fn resolve_field_wise() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError<ItemIdT>>
+{
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("resolve_field_wise_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -640,7 +643,7 @@ fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict { value_resolution_ctx })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("resolve_field_wise_returns_err_when_mutably_borrowed")
@@ -650,7 +653,7 @@ fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
                     ]
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[(0, u8)]`,\n\
                 but was `{mock_src_result:?}`"
             );
@@ -660,13 +663,13 @@ fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
 }
 
 #[test]
-fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
+fn try_resolve_stored_param() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_stored_param"),
         tynm::type_name::<MockSrc>(),
@@ -680,13 +683,13 @@ fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
+fn try_resolve_in_memory() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_in_memory"),
         tynm::type_name::<MockSrc>(),
@@ -700,9 +703,9 @@ fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResolveError> {
+fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = Resources::<SetUp>::from(Resources::new());
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_in_memory_returns_none_when_not_found"),
         tynm::type_name::<MockSrc>(),
@@ -716,13 +719,14 @@ fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResol
 }
 
 #[test]
-fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn try_resolve_in_memory_returns_err_when_mutably_borrowed()
+-> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_in_memory_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -739,7 +743,7 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict { value_resolution_ctx })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("try_resolve_in_memory_returns_err_when_mutably_borrowed")
@@ -747,7 +751,7 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
                     && value_resolution_ctx.resolution_chain().is_empty()
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[]`,\n\
                 but was `{mock_src_result:?}`"
             );
@@ -757,9 +761,9 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
 }
 
 #[test]
-fn try_resolve_value() -> Result<(), ParamsResolveError> {
+fn try_resolve_value() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = Resources::<SetUp>::from(Resources::new());
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_value"),
         tynm::type_name::<MockSrc>(),
@@ -773,13 +777,13 @@ fn try_resolve_value() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
@@ -793,14 +797,15 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed()
+-> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         resources.insert(2u16);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_mapping_fn_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -818,7 +823,7 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
+                    Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("try_resolve_mapping_fn_returns_err_when_mutably_borrowed")
@@ -827,7 +832,7 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
                     && from_type_name == "u16"
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::FromMapBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::FromMapBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[]`,\n\
                 but was `{mock_src_result:?}`"
             );
@@ -837,13 +842,13 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
 }
 
 #[test]
-fn try_resolve_field_wise() -> Result<(), ParamsResolveError> {
+fn try_resolve_field_wise() -> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_field_wise"),
         tynm::type_name::<MockSrc>(),
@@ -857,13 +862,14 @@ fn try_resolve_field_wise() -> Result<(), ParamsResolveError> {
 }
 
 #[test]
-fn try_resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+fn try_resolve_field_wise_returns_err_when_mutably_borrowed()
+-> Result<(), ParamsResolveError<ItemIdT>> {
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
         Resources::<SetUp>::from(resources)
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("try_resolve_field_wise_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
@@ -880,7 +886,7 @@ fn try_resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), Para
             assert!(
                 matches!(
                     &mock_src_result,
-                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict { value_resolution_ctx })
                     if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
                     && value_resolution_ctx.item_id()
                         == &item_id!("try_resolve_field_wise_returns_err_when_mutably_borrowed")
@@ -890,7 +896,7 @@ fn try_resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), Para
                     ]
                 ),
                 "expected `mock_src_result` to be \
-                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                `Err(ParamsResolveError<ItemIdT>::InMemoryBorrowConflict {{ .. }})`\n\
                 with `resolution_chain`: `[(0, u8)]`,\n\
                 but was `{mock_src_result:?}`"
             );

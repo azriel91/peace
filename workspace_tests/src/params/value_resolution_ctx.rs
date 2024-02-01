@@ -1,20 +1,20 @@
 use peace::{
     cfg::item_id,
-    params::{FieldNameAndType, ValueResolutionCtx, ValueResolutionMode},
+    params::{FieldNameAndType, ValueResolutionCtx<ItemIdT>, ValueResolutionMode},
 };
 
 use crate::mock_item::MockSrc;
 
 #[test]
 fn debug() {
-    let value_resolution_ctx = ValueResolutionCtx::new(
+    let value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("item_id"),
         tynm::type_name::<MockSrc>(),
     );
 
     assert_eq!(
-        "ValueResolutionCtx { \
+        "ValueResolutionCtx<ItemIdT> { \
             value_resolution_mode: Current, \
             item_id: ItemId(\"item_id\"), \
             params_type_name: \"MockSrc\", \
@@ -26,13 +26,13 @@ fn debug() {
 
 #[test]
 fn partial_eq() {
-    let value_resolution_ctx_0 = ValueResolutionCtx::new(
+    let value_resolution_ctx_0 = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("item_id_0"),
         tynm::type_name::<MockSrc>(),
     );
 
-    let value_resolution_ctx_1 = ValueResolutionCtx::new(
+    let value_resolution_ctx_1 = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("item_id_1"),
         tynm::type_name::<MockSrc>(),
@@ -44,7 +44,7 @@ fn partial_eq() {
 
 #[test]
 fn display_no_resolution_chain() {
-    let value_resolution_ctx = ValueResolutionCtx::new(
+    let value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("item_id"),
         tynm::type_name::<MockSrc>(),
@@ -55,7 +55,7 @@ fn display_no_resolution_chain() {
 
 #[test]
 fn display_with_resolution_chain() {
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
+    let mut value_resolution_ctx = ValueResolutionCtx::<ItemIdT>::new(
         ValueResolutionMode::Current,
         item_id!("item_id"),
         tynm::type_name::<MockSrc>(),

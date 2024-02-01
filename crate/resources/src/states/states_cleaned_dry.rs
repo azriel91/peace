@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use peace_core::ItemId;
+
 use crate::states::{ts::CleanedDry, States, StatesCurrent};
 
 /// Dry-run ensured `State`s for all `Item`s.
@@ -9,14 +11,17 @@ use crate::states::{ts::CleanedDry, States, StatesCurrent};
 ///
 /// # Implementors
 ///
-/// You may reference [`StatesCleanedDry`] after `CleanCmd::exec_dry` has been
-/// run.
+/// You may reference [`StatesCleanedDry<ItemIdT>`] after `CleanCmd::exec_dry`
+/// has been run.
 ///
 /// [`Data`]: peace_data::Data
-pub type StatesCleanedDry = States<CleanedDry>;
+pub type StatesCleanedDry<ItemIdT> = States<ItemIdT, CleanedDry>;
 
-impl From<StatesCurrent> for StatesCleanedDry {
-    fn from(states: StatesCurrent) -> Self {
+impl<ItemIdT> From<StatesCurrent<ItemIdT>> for StatesCleanedDry<ItemIdT>
+where
+    ItemIdT: ItemId,
+{
+    fn from(states: StatesCurrent<ItemIdT>) -> Self {
         Self(states.into_inner(), PhantomData)
     }
 }

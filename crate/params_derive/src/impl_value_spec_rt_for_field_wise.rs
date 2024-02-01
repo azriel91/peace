@@ -100,16 +100,16 @@ pub fn impl_value_spec_rt_for_field_wise(
             fn resolve(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 #resolve_body
             }
 
             fn try_resolve(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<Option<#params_name #ty_generics>, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<Option<#params_name #ty_generics>, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 #try_resolve_body
             }
         }

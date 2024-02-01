@@ -12,10 +12,10 @@ use crate::CmdBlockDesc;
 pub enum CmdExecutionError {
     /// Error fetching `CmdBlock::InputT` from `resources`.
     ///
-    /// If `CmdBlock::InputT` is a tuple, such as `(StatesCurrent, StatesGoal)`,
-    /// and `states_current` and `states_goal` are inserted individually in
-    /// `Resources`, then `CmdBlock::input_fetch` should be implemented to call
-    /// `Resources::remove` for each of them.
+    /// If `CmdBlock::InputT` is a tuple, such as `(StatesCurrent<ItemIdT>,
+    /// StatesGoal<ItemIdT>)`, and `states_current` and `states_goal` are
+    /// inserted individually in `Resources`, then `CmdBlock::input_fetch`
+    /// should be implemented to call `Resources::remove` for each of them.
     #[error(
         "Error in `CmdExecution` or `CmdBlock` logic, usually due to incorrect `Resource` insertion or removal."
     )]
@@ -44,23 +44,23 @@ pub enum CmdExecutionError {
         ///
         /// ```yaml
         /// CmdExecution:
-        ///   ExecutionOutcome: (States<Previous>, States<Ensured>, States<Goal>)
+        ///   ExecutionOutcome: (States<ItemIdT, Previous>, States<ItemIdT, Ensured>, States<ItemIdT, Goal>)
         /// CmdBlocks:
         ///   - StatesCurrentReadCmdBlock:
-        ///       Input: States<Current>
-        ///       Outcome: States<Goal>
+        ///       Input: States<ItemIdT, Current>
+        ///       Outcome: States<ItemIdT, Goal>
         ///   - StatesGoalReadCmdBlock:
-        ///       Input: States<Current>
-        ///       Outcome: States<Goal>
+        ///       Input: States<ItemIdT, Current>
+        ///       Outcome: States<ItemIdT, Goal>
         ///   - StatesDiscoverCmdBlock:
         ///       Input: ()
-        ///       Outcome: (States<Current>, States<Goal>)
+        ///       Outcome: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
         ///   - ApplyStateSyncCheckCmdBlock:
-        ///       Input: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
-        ///       Outcome: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
+        ///       Input: (States<ItemIdT, CurrentStored>, States<ItemIdT, Current>, States<ItemIdT, GoalStored>, States<ItemIdT, Goal>)
+        ///       Outcome: (States<ItemIdT, CurrentStored>, States<ItemIdT, Current>, States<ItemIdT, GoalStored>, States<ItemIdT, Goal>)
         ///   - ApplyExecCmdBlock:
-        ///       Input: (States<Current>, States<Goal>)
-        ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
+        ///       Input: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
+        ///       Outcome: (States<ItemIdT, Previous>, States<ItemIdT, Ensured>, States<ItemIdT, Goal>)
         /// ```
         #[cfg(feature = "error_reporting")]
         #[source_code]

@@ -194,7 +194,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
     // Writes to states_current_file.yaml
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
-    // Execute again to ensure StatesCurrentStored is included
+    // Execute again to ensure StatesCurrentStored<ItemIdT> is included
     //
     // Note: The actual logic is part of `CmdCtxBuilder::build`, implemented by
     // `impl_build.rs`.
@@ -208,7 +208,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
-    let states_current_stored_from_cmd_ctx = resources.borrow::<StatesCurrentStored>();
+    let states_current_stored_from_cmd_ctx = resources.borrow::<StatesCurrentStored<ItemIdT>>();
 
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)

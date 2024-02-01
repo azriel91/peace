@@ -102,16 +102,16 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             fn resolve(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 #resolve_body
             }
 
             fn resolve_partial(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 #resolve_partial_body
             }
         }

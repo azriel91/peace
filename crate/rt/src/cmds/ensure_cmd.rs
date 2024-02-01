@@ -55,7 +55,7 @@ where
     pub async fn exec_dry<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesEnsuredDry<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -74,7 +74,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesEnsuredDry<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -89,7 +89,7 @@ where
                 cmd_ctx
                     .view()
                     .resources
-                    .insert::<StatesPrevious>(states_previous);
+                    .insert::<StatesPrevious<ItemIdT>>(states_previous);
 
                 states_applied_dry
             }
@@ -124,7 +124,7 @@ where
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesEnsured<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -143,7 +143,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesEnsured<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -167,7 +167,7 @@ where
                         Self::serialize_current(item_graph, resources, &states_applied).await?;
                         Self::serialize_goal(item_graph, resources, &states_goal).await?;
 
-                        resources.insert::<StatesPrevious>(states_previous);
+                        resources.insert::<StatesPrevious<ItemIdT>>(states_previous);
 
                         Ok(states_applied)
                     }
@@ -181,7 +181,7 @@ where
     /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesEnsured`].
+    /// [`StatesEnsured<ItemIdT>`].
     ///
     /// [`exec`]: peace_cfg::ApplyFns::exec
     /// [`Item`]: peace_cfg::Item
@@ -241,9 +241,9 @@ where
                 .with_cmd_block(CmdBlockWrapper::new(
                     ApplyExecCmdBlock::<CmdCtxTypesT, StatesTs>::new(),
                     |(states_previous, states_applied, states_target): (
-                        StatesPrevious,
-                        States<StatesTs>,
-                        States<StatesTs::TsTarget>,
+                        StatesPrevious<ItemIdT>,
+                        States<ItemIdT, StatesTs>,
+                        States<ItemIdT, StatesTs::TsTarget>,
                     )| {
                         EnsureExecChange::Some(Box::new((
                             states_previous,
@@ -253,9 +253,9 @@ where
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
-                    let states_previous = resources.try_remove::<StatesPrevious>();
-                    let states_applied = resources.try_remove::<States<StatesTs>>();
-                    let states_goal = resources.try_remove::<StatesGoal>();
+                    let states_previous = resources.try_remove::<StatesPrevious<ItemIdT>>();
+                    let states_applied = resources.try_remove::<States<ItemIdT, StatesTs>>();
+                    let states_goal = resources.try_remove::<StatesGoal<ItemIdT>>();
 
                     if let Some(((states_previous, states_applied), states_goal)) = states_previous
                         .ok()
@@ -294,7 +294,7 @@ where
     async fn serialize_current(
         item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
-        states_applied: &StatesEnsured,
+        states_applied: &StatesEnsured<ItemIdT>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
@@ -314,7 +314,7 @@ where
     async fn serialize_goal(
         item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
-        states_goal: &StatesGoal,
+        states_goal: &StatesGoal<ItemIdT>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         use peace_rt_model::StatesSerializer;
 
@@ -345,5 +345,11 @@ enum EnsureExecChange<StatesTs> {
     ///
     /// This variant is used for both partial and complete execution, as long as
     /// some state was altered.
-    Some(Box<(StatesPrevious, States<StatesTs>, StatesGoal)>),
+    Some(
+        Box<(
+            StatesPrevious<ItemIdT>,
+            States<ItemIdT, StatesTs>,
+            StatesGoal<ItemIdT>,
+        )>,
+    ),
 }

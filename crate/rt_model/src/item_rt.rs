@@ -199,7 +199,7 @@ pub trait ItemRt<E>:
     /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
     async fn clean_prepare(
         &self,
-        states_current: &StatesCurrent,
+        states_current: &StatesCurrent<ItemIdT>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>

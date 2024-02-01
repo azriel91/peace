@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use peace_core::ItemId;
+
 use crate::states::{ts::Cleaned, States, StatesCurrent};
 
 /// Cleaned `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
@@ -14,10 +16,13 @@ use crate::states::{ts::Cleaned, States, StatesCurrent};
 ///
 /// You may reference [`StatesCleaned`] after `CleanCmd::exec` has been run,
 /// unless it is the `ExecutionOutcome`.
-pub type StatesCleaned = States<Cleaned>;
+pub type StatesCleaned<ItemIdT> = States<ItemIdT, Cleaned>;
 
-impl From<StatesCurrent> for StatesCleaned {
-    fn from(states: StatesCurrent) -> Self {
+impl<ItemIdT> From<StatesCurrent<ItemIdT>> for StatesCleaned<ItemIdT>
+where
+    ItemIdT: ItemId,
+{
+    fn from(states: StatesCurrent<ItemIdT>) -> Self {
         Self(states.into_inner(), PhantomData)
     }
 }

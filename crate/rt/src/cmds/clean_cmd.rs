@@ -63,7 +63,7 @@ where
     pub async fn exec_dry<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesCleanedDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesCleanedDry<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -82,7 +82,7 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesCleanedDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesCleanedDry<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where
@@ -97,7 +97,7 @@ where
                 cmd_ctx
                     .view()
                     .resources
-                    .insert::<StatesPrevious>(states_previous);
+                    .insert::<StatesPrevious<ItemIdT>>(states_previous);
 
                 states_cleaned
             }
@@ -182,7 +182,7 @@ where
                         let (states_previous, states_cleaned) = *states_previous_and_cleaned;
                         Self::serialize_current(item_graph, resources, &states_cleaned).await?;
 
-                        resources.insert::<StatesPrevious>(states_previous);
+                        resources.insert::<StatesPrevious<ItemIdT>>(states_previous);
 
                         Ok(states_cleaned)
                     }
@@ -250,8 +250,8 @@ where
                     },
                 ))
                 .with_execution_outcome_fetch(|resources| {
-                    let states_previous = resources.try_remove::<StatesPrevious>();
-                    let states_cleaned = resources.try_remove::<States<StatesTs>>();
+                    let states_previous = resources.try_remove::<StatesPrevious<ItemIdT>>();
+                    let states_cleaned = resources.try_remove::<States<ItemIdT, StatesTs>>();
 
                     states_previous.ok().zip(states_cleaned.ok()).map(
                         |(states_previous, states_cleaned)| {
@@ -315,5 +315,5 @@ enum CleanExecChange<StatesTs> {
     ///
     /// This variant is used for both partial and complete execution, as long as
     /// some state was altered.
-    Some(Box<(StatesPrevious, States<StatesTs>)>),
+    Some(Box<(StatesPrevious<ItemIdT>, States<ItemIdT, StatesTs>)>),
 }

@@ -649,14 +649,14 @@ fn impl_build_for(
                 //             &states_current_file,
                 //         )
                 //         .await?
-                //         .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                //         .map(Into::<peace_resources::states::StatesCurrentStored::<ItemIdT>>::into);
                 //
                 //         Ok((profile.clone(), states_current_stored))
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
                 //             peace_core::Profile,
-                //             Option<peace_resources::states::StatesCurrentStored>
+                //             Option<peace_resources::states::StatesCurrentStored<ItemIdT>>
                 //         >
                 //     >()
                 //     .await?;
@@ -715,7 +715,7 @@ fn impl_build_for(
                 //     &states_current_file,
                 // )
                 // .await?
-                // .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                // .map(Into::<peace_resources::states::StatesCurrentStored::<ItemIdT>>::into);
                 // if let Some(states_current_stored) = states_current_stored {
                 //     resources.insert(states_current_stored);
                 // }
@@ -1542,7 +1542,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
         Scope::MultiProfileSingleFlow => {
             // * Reads previous item params and stores them in a `Map<Profile, ItemParams>`.
             // * Reads previously stored current states and stores them in a `Map<Profile,
-            //   StatesCurrentStored>`.
+            //   StatesCurrentStored<ItemIdT>>`.
             //
             // These are then held in the scope for easy access for consumers.
             quote! {
@@ -1617,14 +1617,14 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                             &states_current_file,
                         )
                         .await?
-                        .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                        .map(Into::<peace_resources::states::StatesCurrentStored::<ItemIdT>>::into);
 
                         Ok((profile.clone(), states_current_stored))
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
                             peace_core::Profile,
-                            Option<peace_resources::states::StatesCurrentStored>
+                            Option<peace_resources::states::StatesCurrentStored<ItemIdT>>
                         >
                     >()
                     .await?;
@@ -1701,7 +1701,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     &states_current_file,
                 )
                 .await?
-                .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                .map(Into::<peace_resources::states::StatesCurrentStored::<ItemIdT>>::into);
                 if let Some(states_current_stored) = states_current_stored {
                     resources.insert(states_current_stored);
                 }

@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use peace_core::ItemId;
+
 use crate::states::{
     ts::{Current, CurrentStored},
     States,
@@ -45,17 +47,20 @@ use crate::states::{
 /// }
 /// ```
 ///
-/// You may reference [`StatesCurrentStored`] in `ApplyFns::Data` for reading.
-/// It is not mutable as `StatesCurrentStored` must remain unchanged so that all
-/// `Item`s operate over consistent data.
+/// You may reference [`StatesCurrentStored<ItemIdT>`] in `ApplyFns::Data` for
+/// reading. It is not mutable as `StatesCurrentStored<ItemIdT>` must remain
+/// unchanged so that all `Item`s operate over consistent data.
 ///
 /// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesCurrentStored = States<CurrentStored>;
+pub type StatesCurrentStored<ItemIdT> = States<ItemIdT, CurrentStored>;
 
-impl From<States<Current>> for States<CurrentStored> {
-    fn from(states_current: States<Current>) -> Self {
+impl<ItemIdT> From<States<ItemIdT, Current>> for States<ItemIdT, CurrentStored>
+where
+    ItemIdT: ItemId,
+{
+    fn from(states_current: States<ItemIdT, Current>) -> Self {
         let States(type_map, PhantomData) = states_current;
 
         Self(type_map, PhantomData)

@@ -48,7 +48,8 @@ pub trait CmdBlock: Debug {
     ///
     /// `CmdBlock` uses the `AppError` and `ParamsKeys` associated type.
     type CmdCtxTypes: CmdCtxTypesConstrained;
-    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
+    /// Outcome type of the command block, e.g. `(StatesCurrent<ItemIdT>,
+    /// StatesGoal<ItemIdT>)`.
     type Outcome: Debug + Send + Sync + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
@@ -91,20 +92,20 @@ pub trait CmdBlock: Debug {
     /// Within the `peace` framework:
     ///
     /// ```rust,ignore
-    /// // type InputT = (StatesCurrent, StatesGoal);
+    /// // type InputT = (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>);
     ///
-    /// vec![tynm::type_name::<StatesCurrent>(),
-    /// tynm::type_name::<StatesGoal>()]
+    /// vec![tynm::type_name::<StatesCurrent<ItemIdT>>(),
+    /// tynm::type_name::<StatesGoal<ItemIdT>>()]
     /// ```
     ///
     /// Outside the `peace` framework:
     ///
     /// ```rust,ignore
-    /// // type InputT = (StatesCurrent, StatesGoal);
+    /// // type InputT = (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>);
     ///
     /// vec![
-    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent>(),
-    ///     peace::cmd_rt::tynm::type_name::<StatesGoal>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent<ItemIdT>>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesGoal<ItemIdT>>(),
     /// ]
     /// ```
     fn input_type_names(&self) -> Vec<String> {
@@ -140,20 +141,20 @@ pub trait CmdBlock: Debug {
     /// Within the `peace` framework:
     ///
     /// ```rust,ignore
-    /// // type Outcome = (StatesCurrent, StatesGoal);
+    /// // type Outcome = (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>);
     ///
-    /// vec![tynm::type_name::<StatesCurrent>(),
-    /// tynm::type_name::<StatesGoal>()]
+    /// vec![tynm::type_name::<StatesCurrent<ItemIdT>>(),
+    /// tynm::type_name::<StatesGoal<ItemIdT>>()]
     /// ```
     ///
     /// Outside the `peace` framework:
     ///
     /// ```rust,ignore
-    /// // type Outcome = (StatesCurrent, StatesGoal);
+    /// // type Outcome = (StatesCurrent<ItemIdT>, StatesGoal<ItemIdT>);
     ///
     /// vec![
-    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent>(),
-    ///     peace::cmd_rt::tynm::type_name::<StatesGoal>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesCurrent<ItemIdT>>(),
+    ///     peace::cmd_rt::tynm::type_name::<StatesGoal<ItemIdT>>(),
     /// ]
     /// ```
     fn outcome_type_names(&self) -> Vec<String> {

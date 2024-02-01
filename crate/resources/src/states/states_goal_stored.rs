@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use peace_core::ItemId;
+
 use crate::states::{
     ts::{Goal, GoalStored},
     States,
@@ -21,10 +23,13 @@ use crate::states::{
 /// [`StatesGoalFile`]: crate::paths::StatesGoalFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesGoalStored = States<GoalStored>;
+pub type StatesGoalStored<ItemIdT> = States<ItemIdT, GoalStored>;
 
-impl From<States<Goal>> for States<GoalStored> {
-    fn from(states_goal: States<Goal>) -> Self {
+impl<ItemIdT> From<States<ItemIdT, Goal>> for States<ItemIdT, GoalStored>
+where
+    ItemIdT: ItemId,
+{
+    fn from(states_goal: States<ItemIdT, Goal>) -> Self {
         let States(type_map, PhantomData) = states_goal;
 
         Self(type_map, PhantomData)

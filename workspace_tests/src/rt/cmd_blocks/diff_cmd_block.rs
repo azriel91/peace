@@ -18,11 +18,18 @@ fn input_type_names_includes_states_ts0_and_states_ts1() {
         };
     }
 
-    assert_input_type_names!(Current, Goal, &["States<Current>", "States<Goal>"]);
+    assert_input_type_names!(
+        Current,
+        Goal,
+        &["States<ItemIdT, Current>", "States<ItemIdT, Goal>"]
+    );
     assert_input_type_names!(
         CurrentStored,
         GoalStored,
-        &["States<CurrentStored>", "States<GoalStored>"]
+        &[
+            "States<ItemIdT, CurrentStored>",
+            "States<ItemIdT, GoalStored>"
+        ]
     );
 }
 
@@ -41,11 +48,19 @@ fn outcome_type_names_includes_state_diffs_states_ts0_and_states_ts1() {
     assert_outcome_type_names!(
         Current,
         Goal,
-        &["StateDiffs", "States<Current>", "States<Goal>"]
+        &[
+            "StateDiffs",
+            "States<ItemIdT, Current>",
+            "States<ItemIdT, Goal>"
+        ]
     );
     assert_outcome_type_names!(
         CurrentStored,
         GoalStored,
-        &["StateDiffs", "States<CurrentStored>", "States<GoalStored>"]
+        &[
+            "StateDiffs",
+            "States<ItemIdT, CurrentStored>",
+            "States<ItemIdT, GoalStored>"
+        ]
     );
 }

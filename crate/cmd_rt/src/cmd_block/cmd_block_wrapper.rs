@@ -143,8 +143,8 @@ where
                     // If possible, `CmdBlock` outcomes with item errors need to be mapped to
                     // the `CmdExecution` outcome type, so we still return the item errors.
                     //
-                    // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
-                    // items fail to be ensured.
+                    // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured<ItemIdT>` when
+                    // some items fail to be ensured.
                     //
                     // Note, when discovering current and goal states for diffing, and an item
                     // error occurs, mapping the partially accumulated `(StatesCurrentMut,

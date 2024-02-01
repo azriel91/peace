@@ -264,7 +264,7 @@ where
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
-    type Outcome = States<Current>;
+    type Outcome = States<ItemIdT, Current>;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -352,7 +352,7 @@ where
         mut states_current_mut: StatesMut<Current>,
     ) -> Result<
         (
-            States<Current>,
+            States<ItemIdT, Current>,
             IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -407,7 +407,7 @@ where
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
-    type Outcome = States<Goal>;
+    type Outcome = States<ItemIdT, Goal>;
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -495,7 +495,7 @@ where
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
-            States<Goal>,
+            States<ItemIdT, Goal>,
             IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
@@ -550,7 +550,7 @@ where
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
-    type Outcome = (States<Current>, States<Goal>);
+    type Outcome = (States<ItemIdT, Current>, States<ItemIdT, Goal>);
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
@@ -568,8 +568,8 @@ where
 
     fn outcome_type_names(&self) -> Vec<String> {
         vec![
-            tynm::type_name::<StatesCurrent>(),
-            tynm::type_name::<StatesGoal>(),
+            tynm::type_name::<StatesCurrent<ItemIdT>>(),
+            tynm::type_name::<StatesGoal<ItemIdT>>(),
         ]
     }
 
@@ -654,8 +654,8 @@ where
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
-            States<Current>,
-            States<Goal>,
+            States<ItemIdT, Current>,
+            States<ItemIdT, Goal>,
             IndexMap<ItemIdT, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,

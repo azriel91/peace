@@ -32,7 +32,7 @@ use crate::ctx::CmdCtxTypes;
 /// |   |- 🌊 deploy                # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored`
+/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored<ItemIdT>`
 /// |   |
 /// |   |- 🌊 ..                       # ❌ cannot read or write other `Flow` information
 /// |
@@ -124,7 +124,7 @@ where
         FlowParams<<<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key>,
     >,
     /// Stored current states for each profile for the selected flow.
-    profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
+    profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored<ItemIdT>>>,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -200,7 +200,8 @@ where
         FlowParams<<<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key>,
     >,
     /// Stored current states for each profile for the selected flow.
-    pub profile_to_states_current_stored: &'view BTreeMap<Profile, Option<StatesCurrentStored>>,
+    pub profile_to_states_current_stored:
+        &'view BTreeMap<Profile, Option<StatesCurrentStored<ItemIdT>>>,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -253,7 +254,7 @@ where
                 <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
             >,
         >,
-        profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
+        profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored<ItemIdT>>>,
         params_specs_type_reg: ParamsSpecsTypeReg,
         profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
         states_type_reg: StatesTypeReg,
@@ -413,7 +414,7 @@ where
     /// flow.
     pub fn profile_to_states_current_stored(
         &self,
-    ) -> &BTreeMap<Profile, Option<StatesCurrentStored>> {
+    ) -> &BTreeMap<Profile, Option<StatesCurrentStored<ItemIdT>>> {
         &self.profile_to_states_current_stored
     }
 

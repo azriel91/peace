@@ -26,9 +26,14 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
 #[derive(Debug, Serialize)]
-pub struct StatesMut<TS>(TypeMap<ItemIdT, BoxDtDisplay>, PhantomData<TS>);
+pub struct StatesMut<ItemIdT, TS>(TypeMap<ItemIdT, BoxDtDisplay>, PhantomData<TS>)
+where
+    ItemIdT: ItemId;
 
-impl<TS> StatesMut<TS> {
+impl<ItemIdT, TS> StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     /// Returns a new `StatesMut` map.
     pub fn new() -> Self {
         Self::default()
@@ -48,13 +53,19 @@ impl<TS> StatesMut<TS> {
     }
 }
 
-impl<TS> Default for StatesMut<TS> {
+impl<ItemIdT, TS> Default for StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     fn default() -> Self {
         Self(TypeMap::default(), PhantomData)
     }
 }
 
-impl<TS> Deref for StatesMut<TS> {
+impl<ItemIdT, TS> Deref for StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     type Target = TypeMap<ItemIdT, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
@@ -62,19 +73,28 @@ impl<TS> Deref for StatesMut<TS> {
     }
 }
 
-impl<TS> DerefMut for StatesMut<TS> {
+impl<ItemIdT, TS> DerefMut for StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for StatesMut<TS> {
+impl<ItemIdT, TS> From<TypeMap<ItemIdT, BoxDtDisplay>> for StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     fn from(type_map: TypeMap<ItemIdT, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
 
-impl<TS> Extend<(ItemIdT, BoxDtDisplay)> for StatesMut<TS> {
+impl<ItemIdT, TS> Extend<(ItemIdT, BoxDtDisplay)> for StatesMut<ItemIdT, TS>
+where
+    ItemIdT: ItemId,
+{
     fn extend<T: IntoIterator<Item = (ItemIdT, BoxDtDisplay)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(item_id, state)| {
             self.insert_raw(item_id, state);

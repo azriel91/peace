@@ -41,7 +41,7 @@ fn debug() {
     let state_diffs = test_state_diffs();
 
     assert_eq!(
-        r#"StateDiffs({ItemId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StateDiffs<ItemIdT>({ItemId("key"): TypedValue { type: "i32", value: 123 }})"#,
         format!("{state_diffs:?}")
     );
 }

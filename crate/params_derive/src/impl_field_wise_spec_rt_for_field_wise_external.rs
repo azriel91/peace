@@ -23,8 +23,8 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
             fn resolve(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 if let Some(params) = self.0.as_ref() {
                     Ok(params.clone())
                 } else {
@@ -32,13 +32,13 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         Ok(t) => Ok((&*t).clone()),
                         Err(borrow_fail) => match borrow_fail {
                             #peace_resources_path::BorrowFail::ValueNotFound => {
-                                Err(#peace_params_path::ParamsResolveError::InMemory {
+                                Err(#peace_params_path::ParamsResolveError::<ItemIdT>::InMemory {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
                             #peace_resources_path::BorrowFail::BorrowConflictImm |
                             #peace_resources_path::BorrowFail::BorrowConflictMut => {
-                                Err(#peace_params_path::ParamsResolveError::InMemoryBorrowConflict {
+                                Err(#peace_params_path::ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
@@ -50,8 +50,8 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
             fn resolve_partial(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
-                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx<ItemIdT>,
+            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError<ItemIdT>> {
                 if let Some(params) = self.0.as_ref() {
                     Ok(params.clone().into())
                 } else {
@@ -59,13 +59,13 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         Ok(t) => Ok((&*t).clone().into()),
                         Err(borrow_fail) => match borrow_fail {
                             #peace_resources_path::BorrowFail::ValueNotFound => {
-                                Err(#peace_params_path::ParamsResolveError::InMemory {
+                                Err(#peace_params_path::ParamsResolveError::<ItemIdT>::InMemory {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
                             #peace_resources_path::BorrowFail::BorrowConflictImm |
                             #peace_resources_path::BorrowFail::BorrowConflictMut => {
-                                Err(#peace_params_path::ParamsResolveError::InMemoryBorrowConflict {
+                                Err(#peace_params_path::ParamsResolveError::<ItemIdT>::InMemoryBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }

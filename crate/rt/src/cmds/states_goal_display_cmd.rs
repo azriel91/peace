@@ -28,7 +28,7 @@ where
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
-        CmdOutcome<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        CmdOutcome<StatesGoalStored<ItemIdT>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     >
     where

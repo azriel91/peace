@@ -1,22 +1,19 @@
 use tokio::sync::mpsc::Sender;
 
-use crate::{
-    progress::{
-        CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId,
-    },
-    ItemIdT,
+use crate::progress::{
+    CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId,
 };
 
 /// Submits progress for an item's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
-pub struct ProgressSender<'exec> {
+pub struct ProgressSender<'exec, ItemIdT> {
     /// ID of the item this belongs to.
     item_id: &'exec ItemIdT,
     /// Channel sender to send progress updates to.
     progress_tx: &'exec Sender<CmdProgressUpdate>,
 }
 
-impl<'exec> ProgressSender<'exec> {
+impl<'exec, ItemIdT> ProgressSender<'exec, ItemIdT> {
     /// Returns a new `ProgressSender`.
     pub fn new(item_id: &'exec ItemIdT, progress_tx: &'exec Sender<CmdProgressUpdate>) -> Self {
         Self {

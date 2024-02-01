@@ -69,9 +69,9 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
         })) => {
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
-            assert_eq!("States<Current>", input_name_short);
+            assert_eq!("States<ItemIdT, Current>", input_name_short);
             assert_eq!(
-                "peace_resources::states::States<peace_resources::states::ts::Current>",
+                "peace_resources::states::States<ItemIdT, peace_resources::states::ts::Current>",
                 input_name_full
             );
             #[cfg(feature = "error_reporting")]
@@ -82,17 +82,17 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
 CmdBlocks:
   - StatesDiscoverCmdBlock:
     Input: ()
-    Outcome: States<Goal>
+    Outcome: States<ItemIdT, Goal>
   - DiffCmdBlock:
-    Input: (States<Current>, States<Goal>)
-    Outcome: (StateDiffs, States<Current>, States<Goal>)
+    Input: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
+    Outcome: (StateDiffs, States<ItemIdT, Current>, States<ItemIdT, Goal>)
 "#,
                     cmd_execution_src
                 );
                 match input_span {
                     Some(input_span) => {
                         assert_eq!(154, input_span.offset());
-                        assert_eq!("States<Current>".len(), input_span.len());
+                        assert_eq!("States<ItemIdT, Current>".len(), input_span.len());
                     }
                     None => panic!(
                         "Expected `input_span` to be `Some(SourceSpan::from((154, 15)))`, but was `None`."
@@ -158,9 +158,9 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
         })) => {
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
-            assert_eq!("States<Goal>", input_name_short);
+            assert_eq!("States<ItemIdT, Goal>", input_name_short);
             assert_eq!(
-                "peace_resources::states::States<peace_resources::states::ts::Goal>",
+                "peace_resources::states::States<ItemIdT, peace_resources::states::ts::Goal>",
                 input_name_full
             );
             #[cfg(feature = "error_reporting")]
@@ -171,17 +171,17 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
 CmdBlocks:
   - StatesDiscoverCmdBlock:
     Input: ()
-    Outcome: States<Current>
+    Outcome: States<ItemIdT, Current>
   - DiffCmdBlock:
-    Input: (States<Current>, States<Goal>)
-    Outcome: (StateDiffs, States<Current>, States<Goal>)
+    Input: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
+    Outcome: (StateDiffs, States<ItemIdT, Current>, States<ItemIdT, Goal>)
 "#,
                     cmd_execution_src
                 );
                 match input_span {
                     Some(input_span) => {
                         assert_eq!(174, input_span.offset());
-                        assert_eq!("States<Goal>".len(), input_span.len());
+                        assert_eq!("States<ItemIdT, Goal>".len(), input_span.len());
                     }
                     None => panic!(
                         "Expected `input_span` to be `Some(SourceSpan::from((174, 12)))`, but was `None`."

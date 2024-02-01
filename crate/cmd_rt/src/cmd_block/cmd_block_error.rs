@@ -19,10 +19,10 @@ where
 {
     /// Error fetching `CmdBlock::InputT` from `resources`.
     ///
-    /// If `CmdBlock::InputT` is a tuple, such as `(StatesCurrent, StatesGoal)`,
-    /// and `states_current` and `states_goal` are inserted individually in
-    /// `Resources`, then `CmdBlock::input_fetch` should be implemented to call
-    /// `Resources::remove` for each of them.
+    /// If `CmdBlock::InputT` is a tuple, such as `(StatesCurrent<ItemIdT>,
+    /// StatesGoal<ItemIdT>)`, and `states_current` and `states_goal` are
+    /// inserted individually in `Resources`, then `CmdBlock::input_fetch`
+    /// should be implemented to call `Resources::remove` for each of them.
     #[error(
         "Failed to fetch `{input_name_short}` from `resource`s.",
         input_name_short = _0.resource_name_short

@@ -350,8 +350,10 @@ where
         resources.insert(self.mock_fns.clone());
 
         let mock_dest = {
-            let states_current_stored =
-                <RMaybe<'_, StatesCurrentStored> as Data>::borrow(Self::ID_DEFAULT, resources);
+            let states_current_stored = <RMaybe<'_, StatesCurrentStored<ItemIdT>> as Data>::borrow(
+                Self::ID_DEFAULT,
+                resources,
+            );
             let mock_state_current_stored: Option<&'_ MockState> = states_current_stored
                 .as_ref()
                 .and_then(|states_current_stored| states_current_stored.get(self.id()));

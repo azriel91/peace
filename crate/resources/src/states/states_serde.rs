@@ -28,12 +28,16 @@ use type_reg::{
 /// [`FromIterator::<(ItemIdT, Option<BoxDtDisplay>)>::from_iter`]: std::iter::FromIterator
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct StatesSerde<ValueT>(TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>)
+pub struct StatesSerde<ItemIdT, ValueT>(
+    TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>,
+)
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq;
 
-impl<ValueT> StatesSerde<ValueT>
+impl<ItemIdT, ValueT> StatesSerde<ItemIdT, ValueT>
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq,
 {
     /// Creates an empty `StatesSerde` map with the specified capacity.
@@ -50,8 +54,9 @@ where
     }
 }
 
-impl<ValueT> Clone for StatesSerde<ValueT>
+impl<ItemIdT, ValueT> Clone for StatesSerde<ItemIdT, ValueT>
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq,
 {
     fn clone(&self) -> Self {
@@ -66,8 +71,9 @@ where
     }
 }
 
-impl<ValueT> Deref for StatesSerde<ValueT>
+impl<ItemIdT, ValueT> Deref for StatesSerde<ItemIdT, ValueT>
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq,
 {
     type Target = TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>;
@@ -77,8 +83,9 @@ where
     }
 }
 
-impl<ValueT> FromIterator<(ItemIdT, Option<BoxDtDisplay>)> for StatesSerde<ValueT>
+impl<ItemIdT, ValueT> FromIterator<(ItemIdT, Option<BoxDtDisplay>)> for StatesSerde<ItemIdT, ValueT>
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq,
 {
     fn from_iter<T: IntoIterator<Item = (ItemIdT, Option<BoxDtDisplay>)>>(iter: T) -> Self {
@@ -92,9 +99,10 @@ where
     }
 }
 
-impl<ValueT> From<TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>>
-    for StatesSerde<ValueT>
+impl<ItemIdT, ValueT> From<TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>>
+    for StatesSerde<ItemIdT, ValueT>
 where
+    ItemIdT: ItemId,
     ValueT: Clone + Debug + PartialEq + Eq,
 {
     fn from(type_map_opt: TypeMapOpt<ItemIdT, BoxDtDisplay, UnknownEntriesSome<ValueT>>) -> Self {

@@ -31,7 +31,10 @@ fn outcome_type_names_includes_states_compared() {
         };
     }
 
-    assert_outcome_type_names!(current, &["States<Current>"]);
-    assert_outcome_type_names!(goal, &["States<Goal>"]);
-    assert_outcome_type_names!(current_and_goal, &["States<Current>", "States<Goal>"]);
+    assert_outcome_type_names!(current, &["States<ItemIdT, Current>"]);
+    assert_outcome_type_names!(goal, &["States<ItemIdT, Goal>"]);
+    assert_outcome_type_names!(
+        current_and_goal,
+        &["States<ItemIdT, Current>", "States<ItemIdT, Goal>"]
+    );
 }

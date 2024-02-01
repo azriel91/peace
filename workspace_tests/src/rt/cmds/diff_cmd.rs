@@ -140,7 +140,7 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
     let resources = &cmd_ctx.view().resources;
-    let states_current = resources.borrow::<StatesCurrent>();
+    let states_current = resources.borrow::<StatesCurrent<ItemIdT>>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -215,7 +215,7 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
     let resources = &cmd_ctx.view().resources;
-    let states_goal = resources.borrow::<StatesGoal>();
+    let states_goal = resources.borrow::<StatesGoal<ItemIdT>>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
@@ -284,8 +284,8 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
     // Note: discovered `StatesCurrent` and `StatesGoal` are not automatically
     // serialized to storage.
     let resources = &cmd_ctx.view().resources;
-    let states_current = resources.borrow::<StatesCurrent>();
-    let states_goal = resources.borrow::<StatesGoal>();
+    let states_current = resources.borrow::<StatesCurrent<ItemIdT>>();
+    let states_goal = resources.borrow::<StatesGoal<ItemIdT>>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);

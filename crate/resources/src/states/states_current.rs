@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use peace_core::ItemId;
+
 use crate::states::{
     ts::{Current, CurrentStored},
     States,
@@ -9,8 +11,8 @@ use crate::states::{
 ///
 /// This is strictly only present when the [`States`] are discovered in the
 /// current execution. `States` read from the [`StatesCurrentFile`] are
-/// inserted into [`Resources`] as [`StatesCurrentStored`], as those discovered
-/// states may be out of date with the actual.
+/// inserted into [`Resources`] as [`StatesCurrentStored<ItemIdT>`], as those
+/// discovered states may be out of date with the actual.
 ///
 /// # Implementors
 ///
@@ -47,11 +49,14 @@ use crate::states::{
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrentFile`] crate::paths::StatesCurrentFile
-/// [`StatesCurrentStored`]: crate::states::StatesCurrentStored
-pub type StatesCurrent = States<Current>;
+/// [`StatesCurrentStored<ItemIdT>`]: crate::states::StatesCurrentStored<ItemIdT>
+pub type StatesCurrent<ItemIdT> = States<ItemIdT, Current>;
 
-impl From<States<CurrentStored>> for States<Current> {
-    fn from(states_current_stored: States<CurrentStored>) -> Self {
+impl<ItemIdT> From<States<ItemIdT, CurrentStored>> for States<ItemIdT, Current>
+where
+    ItemIdT: ItemId,
+{
+    fn from(states_current_stored: States<ItemIdT, CurrentStored>) -> Self {
         let States(type_map, PhantomData) = states_current_stored;
 
         Self(type_map, PhantomData)

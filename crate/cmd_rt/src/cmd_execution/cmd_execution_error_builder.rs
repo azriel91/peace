@@ -28,23 +28,23 @@ impl CmdExecutionErrorBuilder {
     ///
     /// ```yaml
     /// CmdExecution:
-    ///   ExecutionOutcome: (States<Previous>, States<Ensured>, States<Goal>)
+    ///   ExecutionOutcome: (States<ItemIdT, Previous>, States<ItemIdT, Ensured>, States<ItemIdT, Goal>)
     /// CmdBlocks:
     ///   - StatesCurrentReadCmdBlock:
-    ///       Input: States<Current>
-    ///       Outcome: States<Goal>
+    ///       Input: States<ItemIdT, Current>
+    ///       Outcome: States<ItemIdT, Goal>
     ///   - StatesGoalReadCmdBlock:
-    ///       Input: States<Current>
-    ///       Outcome: States<Goal>
+    ///       Input: States<ItemIdT, Current>
+    ///       Outcome: States<ItemIdT, Goal>
     ///   - StatesDiscoverCmdBlock:
     ///       Input: ()
-    ///       Outcome: (States<Current>, States<Goal>)
+    ///       Outcome: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
     ///   - ApplyStateSyncCheckCmdBlock:
-    ///       Input: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
-    ///       Outcome: (States<CurrentStored>, States<Current>, States<GoalStored>, States<Goal>)
+    ///       Input: (States<ItemIdT, CurrentStored>, States<ItemIdT, Current>, States<ItemIdT, GoalStored>, States<ItemIdT, Goal>)
+    ///       Outcome: (States<ItemIdT, CurrentStored>, States<ItemIdT, Current>, States<ItemIdT, GoalStored>, States<ItemIdT, Goal>)
     ///   - ApplyExecCmdBlock:
-    ///       Input: (States<Current>, States<Goal>)
-    ///       Outcome: (States<Previous>, States<Ensured>, States<Goal>)
+    ///       Input: (States<ItemIdT, Current>, States<ItemIdT, Goal>)
+    ///       Outcome: (States<ItemIdT, Previous>, States<ItemIdT, Ensured>, States<ItemIdT, Goal>)
     /// ```
     pub fn build<'types: 'f, 'f, ExecutionOutcome, CmdCtxTypesT, CmdBlockIterator>(
         cmd_blocks: CmdBlockIterator,

@@ -660,7 +660,7 @@ async fn resources_set_up(
 
 async fn resources_set_up_with_pre_stored_state(
     item_wrapper: &VecCopyItemWrapper,
-) -> Result<(ParamsSpecs, Resources<SetUp>, StatesCurrent), VecCopyError> {
+) -> Result<(ParamsSpecs, Resources<SetUp>, StatesCurrent<ItemIdT>), VecCopyError> {
     let (params_specs, mut resources) = resources_set_up(item_wrapper).await?;
     let stored_state = vec![0, 1, 2, 3, 4, 5, 6, 7];
     resources.insert(VecB(stored_state.clone()));
@@ -683,8 +683,8 @@ async fn resources_and_states_current_stored_and_goal(
     (
         ParamsSpecs,
         Resources<SetUp>,
-        StatesCurrentStored,
-        StatesGoal,
+        StatesCurrentStored<ItemIdT>,
+        StatesGoal<ItemIdT>,
     ),
     VecCopyError,
 > {
@@ -717,7 +717,7 @@ async fn resources_and_states_current_stored_and_goal(
             states_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state);
         }
 
-        Into::<StatesCurrentStored>::into(StatesCurrent::from(states_mut))
+        Into::<StatesCurrentStored<ItemIdT>>::into(StatesCurrent::from(states_mut))
     };
     let states_goal = {
         let mut states_goal_mut = StatesMut::<states::ts::Goal>::new();
