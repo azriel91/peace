@@ -32,6 +32,21 @@ pub enum IamPolicyState {
     },
 }
 
+impl IamPolicyState {
+    /// Returns the `policy_id_arn_version` if it exists.
+    pub fn policy_id_arn_version(&self) -> Option<String> {
+        if let IamPolicyState::Some {
+            policy_id_arn_version: Generated::Value(policy_id_arn_version),
+            ..
+        } = self
+        {
+            Some(policy_id_arn_version.arn().to_string())
+        } else {
+            None
+        }
+    }
+}
+
 fn path_default() -> String {
     String::from("/")
 }

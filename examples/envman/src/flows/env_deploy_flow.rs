@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{app_name, flow_id, item_id, state::Generated, Profile},
+    cfg::{app_name, flow_id, item_id, Profile},
     params::{Params, ParamsSpec},
     rt_model::{Flow, ItemGraphBuilder},
 };
@@ -134,17 +134,7 @@ impl EnvDeployFlow {
         let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
             .with_name(iam_role_name)
             .with_path(path.clone())
-            .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
-                if let IamPolicyState::Some {
-                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                    ..
-                } = iam_policy_state
-                {
-                    Some(policy_id_arn_version.arn().to_string())
-                } else {
-                    None
-                }
-            })
+            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
             .build();
         let instance_profile_params_spec = InstanceProfileParams::<WebApp>::field_wise_spec()
             .with_name(instance_profile_name)
