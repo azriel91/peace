@@ -54,13 +54,7 @@ impl AppUploadCmd {
         let profile_key = WorkspaceParamsKey::Profile;
 
         let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
-            .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
-                S3BucketState::None => None,
-                S3BucketState::Some {
-                    name,
-                    creation_date: _,
-                } => Some(name.clone()),
-            })
+            .with_bucket_name_from_map(S3BucketState::bucket_name)
             .build();
 
         let mut cmd_ctx = {

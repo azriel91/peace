@@ -17,7 +17,7 @@ use crate::{
         peace_aws_iam_policy::{IamPolicyItem, IamPolicyParams, IamPolicyState},
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItem, InstanceProfileParams},
-        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams},
+        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams, S3BucketState},
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
     model::{EnvManError, RepoSlug, WebApp},
@@ -161,7 +161,7 @@ impl EnvDeployFlow {
             .build();
         let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_file_path(web_app_path_local)
-            .with_bucket_name(bucket_name)
+            .with_bucket_name_from_map(S3BucketState::bucket_name)
             .with_object_key(object_key)
             .build();
 
