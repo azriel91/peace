@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.13 (2024-02-03)
 
 * Provide more accurate feedback about interruption on CLI. ([#172], [#173])
 * Remove requirement to import `peace::cfg::AppName` when using `app_name!("..")` macro. ([#157], [#176])

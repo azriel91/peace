@@ -13,12 +13,12 @@ impl<E> ParamsSpecsSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
+    /// Serializes the [`ParamsSpecs`] of all [`Item`]s to disk.
     ///
     /// # Parameters:
     ///
-    /// * `storage`: `Storage` to read from.
-    /// * `params_specs`: ParamsSpecs to serialize.
+    /// * `storage`: `Storage` to write to.
+    /// * `params_specs`: `ParamsSpecs` to serialize.
     /// * `params_specs_file`: Path to save the serialized params_specs to.
     ///
     /// [`Item`]: peace_cfg::Item
