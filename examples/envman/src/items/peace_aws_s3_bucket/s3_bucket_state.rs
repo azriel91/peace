@@ -22,6 +22,19 @@ pub enum S3BucketState {
     },
 }
 
+impl S3BucketState {
+    /// Returns the bucket name if the bucket exists.
+    pub fn bucket_name(&self) -> Option<String> {
+        match self {
+            S3BucketState::None => None,
+            S3BucketState::Some {
+                name,
+                creation_date: _,
+            } => Some(name.clone()),
+        }
+    }
+}
+
 impl fmt::Display for S3BucketState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

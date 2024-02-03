@@ -1,6 +1,6 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::{app_name, item_id, state::Generated, Profile},
+    cfg::{app_name, item_id, Profile},
     cmd::{
         ctx::CmdCtx,
         scopes::{
@@ -57,16 +57,7 @@ impl EnvCmd {
         let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
             .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
             .with_path(iam_role_path)
-            .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
-                let IamPolicyState::Some {
-                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                    ..
-                } = iam_policy_state
-                else {
-                    return None;
-                };
-                Some(policy_id_arn_version.arn().to_string())
-            })
+            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
             .build();
 
         let CmdOpts { profile_print } = cmd_opts;

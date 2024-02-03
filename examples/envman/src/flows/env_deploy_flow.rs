@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{app_name, flow_id, item_id, state::Generated, Profile},
+    cfg::{app_name, flow_id, item_id, Profile},
     params::{Params, ParamsSpec},
     rt_model::{Flow, ItemGraphBuilder},
 };
@@ -17,7 +17,7 @@ use crate::{
         peace_aws_iam_policy::{IamPolicyItem, IamPolicyParams, IamPolicyState},
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItem, InstanceProfileParams},
-        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams},
+        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams, S3BucketState},
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
     model::{EnvManError, RepoSlug, WebApp},
@@ -134,17 +134,7 @@ impl EnvDeployFlow {
         let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
             .with_name(iam_role_name)
             .with_path(path.clone())
-            .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
-                if let IamPolicyState::Some {
-                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                    ..
-                } = iam_policy_state
-                {
-                    Some(policy_id_arn_version.arn().to_string())
-                } else {
-                    None
-                }
-            })
+            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
             .build();
         let instance_profile_params_spec = InstanceProfileParams::<WebApp>::field_wise_spec()
             .with_name(instance_profile_name)
@@ -161,7 +151,7 @@ impl EnvDeployFlow {
             .build();
         let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_file_path(web_app_path_local)
-            .with_bucket_name(bucket_name)
+            .with_bucket_name_from_map(S3BucketState::bucket_name)
             .with_object_key(object_key)
             .build();
 
