@@ -1,4 +1,4 @@
-# Params Definition
+# Params Specification
 
 For an item to work with different values, the values must be passed in.
 
@@ -217,3 +217,21 @@ See:
 * [`optfield`](https://github.com/roignpar/optfield)
 * [`partial_derive`](https://github.com/rise0chen/partial_derive)
 * [`optional-field`](https://github.com/cvpartner/optional-field)
+
+## Implementation
+
+See the `params_derive` crate for code gen.
+
+The following command helps to see what's been generated.
+
+```bash
+cargo expand --package peace_item_blank blank_params \
+  | sd -f cm '^    #\[doc\(hidden\)\][\n](^[ ]{4}[a-z# ].+[\n])+^[ ]{4}\};\n' '' \
+  | sd -f cm '^    #\[automatically_derived\][\n](^[ ]{4}[# a-z{].*[\n])+^[ ]{4}\{?\}\n' '' \
+  | sd -f cm '^    #\[allow\(unused_qualifications\)\][\n](^[ ]{4}[# a-z{].*[\n])+^[ ]{4}\}\n' '' \
+  | sd -f cm '^    #\[serde\(bound = ""\)\]' '    #[derive(Serialize, Deserialize)]\n    #[serde(bound = "")]' \
+  | sd -f cm '^    extern crate test;[\n](^[ ]{4}.*[\n])+^\}' '}' \
+  | sd -f cm '^(    pub struct [A-Za-z0-9_]+Partial)' '    #[derive(PartialEq, Eq)]\n$1' \
+  | sd -f cm '^(    #\[derivative\()' '    #[derive(derivative::Derivative)]\n$1' \
+  | xclip -se c
+```
