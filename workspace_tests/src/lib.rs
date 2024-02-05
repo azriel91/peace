@@ -28,6 +28,8 @@ mod params;
 mod resources;
 mod rt;
 mod rt_model;
+#[cfg(feature = "webi")]
+mod webi;
 
 // `peace_items` test modules
 #[cfg(feature = "items")]

@@ -32,12 +32,16 @@ peace_params = { workspace = true }
 peace_resources = { workspace = true }
 peace_rt = { workspace = true }
 peace_rt_model = { workspace = true }
+peace_webi = { workspace = true, optional = true }
 
 [features]
 default = []
 cli = [
     "dep:peace_cli",
     "dep:peace_cli_model",
+]
+webi = [
+    "dep:peace_webi",
 ]
 error_reporting = [
     "dep:miette",
@@ -103,6 +107,7 @@ peace_rt_model_native = { path = "crate/rt_model_native", version = "0.0.13" }
 peace_rt_model_web = { path = "crate/rt_model_web", version = "0.0.13" }
 peace_static_check_macros = { path = "crate/static_check_macros", version = "0.0.13" }
 peace_value_traits = { path = "crate/value_traits", version = "0.0.13" }
+peace_webi = { path = "crate/webi", version = "0.0.13" }
 
 # Item crates
 peace_items = { path = "items", version = "0.0.13" }
@@ -117,6 +122,7 @@ peace_item_tar_x = { path = "items/tar_x", version = "0.0.13" }
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.
 async-trait = "0.1.77"
+axum = "0.7.4"
 base64 = "0.21.7"
 bytes = "1.5.0"
 cfg-if = "1.0.0"
@@ -134,6 +140,10 @@ heck = "0.4.1"
 indexmap = "2.1.0"
 indicatif = "0.17.7"
 interruptible = "0.2.1"
+leptos = { version = "0.6" }
+leptos_axum = "0.6"
+leptos_meta = { version = "0.6" }
+leptos_router = { version = "0.6" }
 libc = "0.2.152"
 miette = "5.10.0"
 pretty_assertions = "1.4.0"
@@ -152,6 +162,7 @@ tempfile = "3.9.0"
 thiserror = "1.0.56"
 tokio = "1.35.1"
 tokio-util = "0.7.10"
+tower-http = "0.5.1"
 tynm = "0.1.9"
 type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.0"

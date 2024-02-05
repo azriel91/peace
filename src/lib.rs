@@ -19,6 +19,8 @@ pub use peace_params as params;
 pub use peace_resources as resources;
 pub use peace_rt as rt;
 pub use peace_rt_model as rt_model;
+#[cfg(feature = "webi")]
+pub use peace_webi as webi;
 
 // We still can't build with `--all-features`, even with `indicatif 0.17.4`.
 //

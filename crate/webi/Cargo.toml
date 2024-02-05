@@ -1,0 +1,31 @@
+[package]
+name = "peace_webi"
+description = "Web interface for the peace automation framework."
+documentation = "https://docs.rs/peace_webi/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
+cfg-if = { workspace = true }
+peace_fmt = { workspace = true }
+peace_core = { workspace = true, optional = true }
+peace_rt_model_core = { workspace = true }
+
+[features]
+default = []
+output_progress = [
+    "dep:peace_core",
+    "peace_core/output_progress",
+    "peace_rt_model_core/output_progress",
+]
