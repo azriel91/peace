@@ -1,5 +1,14 @@
 # Changelog
 
+## unreleased
+
+* Move `Cli*` types to `peace_cli` crate under `cli::output` module. ([#182])
+* Move `OutputFormat` and `OutputFormatParseError` to `peace_cli_model` crate. ([#182])
+
+
+[#182]: https://github.com/azriel91/peace/issues/182
+
+
 ## 0.0.13 (2024-02-03)
 
 * Provide more accurate feedback about interruption on CLI. ([#172], [#173])

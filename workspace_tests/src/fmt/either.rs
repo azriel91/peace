@@ -1,9 +1,9 @@
 use peace::{
+    cli::output::{CliColorizeOpt, CliMdPresenter},
     fmt::{
         presentable::{Bold, CodeInline},
         Either, Presentable, PresentableExt,
     },
-    rt_model::output::{CliColorizeOpt, CliMdPresenter},
 };
 
 use crate::fmt::cli_output;

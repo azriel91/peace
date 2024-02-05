@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use peace::rt_model::output::{CliProgressFormatOpt, CliProgressFormatOptParseError};
+use peace::cli::output::{CliProgressFormatOpt, CliProgressFormatOptParseError};
 
 #[test]
 fn from_str_returns_ok_for_auto() {

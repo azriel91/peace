@@ -1,13 +1,14 @@
 use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
+    cli::output::{CliMdPresenter, CliOutput, CliOutputBuilder},
+    cli_model::OutputFormat,
     fmt::{
         presentable::{Bold, CodeInline, HeadingLevel},
         Presenter,
     },
-    rt_model::output::{CliMdPresenter, CliOutput, CliOutputBuilder, OutputFormat},
 };
 
-use peace::rt_model::output::CliColorizeOpt;
+use peace::cli::output::CliColorizeOpt;
 
 #[tokio::test]
 async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std::error::Error>> {

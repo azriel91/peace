@@ -1,4 +1,4 @@
-use peace::rt_model::output::CliColorizeOptParseError;
+use peace::cli::output::CliColorizeOptParseError;
 
 #[test]
 fn display_includes_auto_always_never() {

@@ -1,5 +1,6 @@
-use peace_rt_model_core::output::OutputFormat;
 use std::io::IsTerminal;
+
+use peace_cli_model::OutputFormat;
 use tokio::io::{AsyncWrite, Stdout};
 
 use crate::output::{CliColorize, CliColorizeOpt, CliOutput};

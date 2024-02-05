@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::output::OutputFormatParseError;
+use crate::OutputFormatParseError;
 
 /// How to format command output -- human readable or machine parsable.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

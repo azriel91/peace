@@ -1,12 +1,12 @@
 [package]
-name = "peace_rt_model_native"
-description = "Runtime data types for the peace automation framework."
-documentation = "https://docs.rs/peace_rt_model_native/"
-authors.workspace = true
+name = "peace_cli"
+description = "Command line interface for the peace automation framework."
+documentation = "https://docs.rs/peace_cli/"
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
-repository.workspace = true
 homepage.workspace = true
+repository.workspace = true
 readme.workspace = true
 categories.workspace = true
 keywords.workspace = true
@@ -17,18 +17,24 @@ doctest = true
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
+console = { workspace = true }
 futures = { workspace = true }
+peace_cli_model = { workspace = true }
 peace_core = { workspace = true }
-peace_resources = { workspace = true }
+peace_fmt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-std"] }
-tokio-util = { workspace = true, features = ["io", "io-util"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+raw_tty = { workspace = true }
 
 [features]
 default = []
-error_reporting = ["peace_rt_model_core/error_reporting"]
 output_in_memory = ["peace_rt_model_core/output_in_memory"]
 output_progress = [
     "peace_core/output_progress",

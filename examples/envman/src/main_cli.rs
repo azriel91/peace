@@ -11,7 +11,7 @@ use envman::{
         EnvDiffSelection, EnvManError, ProfileSwitch,
     },
 };
-use peace::rt_model::output::CliOutput;
+use peace::cli::output::CliOutput;
 use tokio::io::Stdout;
 
 #[cfg(feature = "web_server")]

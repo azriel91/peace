@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use peace::rt_model::output::{CliColorizeOpt, CliColorizeOptParseError};
+use peace::cli::output::{CliColorizeOpt, CliColorizeOptParseError};
 
 #[test]
 fn from_str_returns_ok_for_auto() {

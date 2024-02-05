@@ -18,7 +18,4 @@ test = false
 
 [dependencies]
 async-trait = { workspace = true }
-serde = { workspace = true }
-
-[dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

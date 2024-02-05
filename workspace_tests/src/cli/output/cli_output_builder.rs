@@ -1,7 +1,10 @@
-use peace::rt_model::output::{CliColorize, CliColorizeOpt, CliOutputBuilder, OutputFormat};
+use peace::{
+    cli::output::{CliColorize, CliColorizeOpt, CliOutputBuilder},
+    cli_model::OutputFormat,
+};
 
 #[cfg(feature = "output_progress")]
-use peace::rt_model::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
+use peace::cli::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
 
 #[tokio::test]
 async fn new_uses_sensible_defaults() -> Result<(), Box<dyn std::error::Error>> {

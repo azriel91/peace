@@ -13,7 +13,6 @@ pub use crate::{
     workspace_initializer::WorkspaceInitializer, workspace_spec::WorkspaceSpec,
 };
 
-pub mod output;
 pub mod workspace;
 
 mod storage;

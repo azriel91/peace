@@ -1,4 +1,4 @@
-use peace::rt_model::output::CliOutputTarget;
+use peace::cli::output::CliOutputTarget;
 
 #[test]
 fn clone() {

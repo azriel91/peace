@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueHint};
-use peace::rt_model::output::OutputFormat;
+use peace::cli_model::OutputFormat;
 use url::Url;
 
 #[derive(Parser)]

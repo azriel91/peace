@@ -1,4 +1,4 @@
-use peace::rt_model::output::CliProgressFormatOptParseError;
+use peace::cli::output::CliProgressFormatOptParseError;
 
 #[test]
 fn display_includes_auto_output_pb_progress_bar() {

@@ -7,13 +7,6 @@
 pub use peace_data::fn_graph::{self, FnRef};
 pub use peace_rt_model_core::*;
 
-pub mod output {
-    pub use peace_rt_model_core::output::*;
-
-    #[cfg(not(target_arch = "wasm32"))]
-    pub use peace_rt_model_native::output::*;
-}
-
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::*;
 

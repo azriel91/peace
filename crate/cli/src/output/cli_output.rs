@@ -1,11 +1,8 @@
 use std::fmt::{self, Debug};
 
+use peace_cli_model::OutputFormat;
 use peace_fmt::Presentable;
-use peace_rt_model_core::{
-    async_trait,
-    output::{OutputFormat, OutputWrite},
-    Error, NativeError,
-};
+use peace_rt_model_core::{async_trait, output::OutputWrite, Error, NativeError};
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 

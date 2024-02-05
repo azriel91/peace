@@ -1,10 +1,10 @@
 use futures::{stream, StreamExt, TryStreamExt};
 use peace::{
+    cli::output::{CliColorizeOpt, CliMdPresenter},
     fmt::{
         presentable::{CodeInline, Heading, HeadingLevel},
         Presentable,
     },
-    rt_model::output::{CliColorizeOpt, CliMdPresenter},
 };
 
 use crate::fmt::cli_output;

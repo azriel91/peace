@@ -1,10 +1,12 @@
 use peace::{
     cfg::{item_id, State},
+    cli::output::{CliColorizeOpt, CliOutput, CliOutputBuilder},
+    cli_model::OutputFormat,
     resources::{
         internal::{StateDiffsMut, StatesMut},
         states::{StateDiffs, StatesCurrentStored},
     },
-    rt_model::output::{CliColorizeOpt, CliOutput, CliOutputBuilder, OutputFormat, OutputWrite},
+    rt_model::output::OutputWrite,
 };
 
 cfg_if::cfg_if! {
@@ -20,9 +22,9 @@ cfg_if::cfg_if! {
                 ProgressUpdate,
                 ProgressUpdateAndId,
             },
+            cli::output::{CliOutputTarget, CliProgressFormatOpt},
             rt_model::{
                 indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget},
-                output::{CliOutputTarget, CliProgressFormatOpt},
                 CmdProgressTracker,
                 IndexMap,
             },
