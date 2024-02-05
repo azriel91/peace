@@ -495,9 +495,8 @@ impl Default for CliOutput<Stdout> {
     }
 }
 
-/// Simple serialization implementations for now.
-///
-/// See <https://github.com/azriel91/peace/issues/28> for further improvements.
+/// Outputs progress and `Presentable`s in either serialized or presentable
+/// form.
 #[async_trait(?Send)]
 impl<E, W> OutputWrite<E> for CliOutput<W>
 where
