@@ -6,20 +6,19 @@ use leptos_axum::LeptosRoutes;
 use peace_fmt::Presentable;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
 use peace_value_traits::AppError;
+use peace_webi_components::Home;
 use peace_webi_model::WebiError;
 use tokio::io::AsyncWriteExt;
 use tower_http::services::ServeDir;
 
-use crate::components::Home;
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_core::progress::{
-            ProgressComplete,
-            ProgressLimit,
-            ProgressStatus,
+            // ProgressComplete,
+            // ProgressLimit,
+            // ProgressStatus,
             ProgressTracker,
-            ProgressUpdate,
+            // ProgressUpdate,
             ProgressUpdateAndId,
         };
         use peace_rt_model_core::CmdProgressTracker;
@@ -31,6 +30,12 @@ cfg_if::cfg_if! {
 pub struct WebiOutput {
     /// IP address and port to listen on.
     socket_addr: Option<SocketAddr>,
+}
+
+impl WebiOutput {
+    pub fn new(socket_addr: Option<SocketAddr>) -> Self {
+        Self { socket_addr }
+    }
 }
 
 impl WebiOutput {
@@ -83,18 +88,18 @@ where
     AppErrorT: AppError,
 {
     #[cfg(feature = "output_progress")]
-    async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {}
+    async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     #[cfg(feature = "output_progress")]
     async fn progress_update(
         &mut self,
-        progress_tracker: &ProgressTracker,
-        progress_update_and_id: &ProgressUpdateAndId,
+        _progress_tracker: &ProgressTracker,
+        _progress_update_and_id: &ProgressUpdateAndId,
     ) {
     }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {}
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     async fn present<P>(&mut self, _presentable: P) -> Result<(), AppErrorT>
     where

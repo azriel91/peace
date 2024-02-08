@@ -17,24 +17,17 @@ doctest = true
 test = false
 
 [dependencies]
-axum = { workspace = true }
-cfg-if = { workspace = true }
-leptos = { workspace = true }
-leptos_axum = { workspace = true }
-leptos_meta = { workspace = true }
-leptos_router = { workspace = true }
-peace_core = { workspace = true, optional = true }
-peace_fmt = { workspace = true }
-peace_rt_model_core = { workspace = true }
-peace_value_traits = { workspace = true }
+peace_webi_components = { workspace = true }
 peace_webi_model = { workspace = true }
-tokio = { workspace = true, features = ["net"] }
-tower-http = { workspace = true, features = ["fs"] }
+peace_webi_output = { workspace = true, optional = true }
 
 [features]
 default = []
 output_progress = [
-    "dep:peace_core",
-    "peace_core/output_progress",
-    "peace_rt_model_core/output_progress",
+    "peace_webi_output?/output_progress",
+]
+ssr = [
+    "dep:peace_webi_output",
+    "peace_webi_output/ssr",
+    "peace_webi_components/ssr",
 ]

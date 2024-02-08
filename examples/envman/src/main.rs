@@ -33,10 +33,8 @@ cfg_if::cfg_if! {
         }
     } else if #[cfg(feature = "ssr")] {
         // web server
-        use envman::{
-            model::EnvManError,
-            web::WebServer,
-        };
+        use envman::model::EnvManError;
+        use peace::webi::output::WebiOutput;
 
         #[cfg(not(feature = "error_reporting"))]
         pub fn main() -> Result<(), EnvManError> {
@@ -48,7 +46,11 @@ cfg_if::cfg_if! {
                 .build()
                 .map_err(EnvManError::TokioRuntimeInit)?;
 
-            runtime.block_on(WebServer::start(None))
+            let webi_output = WebiOutput::new(None);
+
+            runtime.block_on(async move {
+                webi_output.start().await.map_err(EnvManError::from)
+            })
         }
 
         #[cfg(feature = "error_reporting")]
@@ -73,8 +75,12 @@ cfg_if::cfg_if! {
                 .build()
                 .map_err(EnvManError::TokioRuntimeInit)?;
 
+            let webi_output = WebiOutput::new(None);
+
             runtime
-                .block_on(WebServer::start(None))
+                .block_on(async move {
+                    webi_output.start().await.map_err(EnvManError::from)
+                })
                 .map_err(peace::miette::Report::from)
         }
     } else if #[cfg(feature = "csr")] {

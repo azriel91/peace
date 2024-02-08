@@ -156,6 +156,18 @@ pub enum EnvManError {
     TokioRuntimeInit(#[source] std::io::Error),
 
     // === Web Server errors === //
+    /// Web interface server produced an error.
+    #[cfg(feature = "ssr")]
+    #[error("Web interface server produced an error.")]
+    #[cfg_attr(feature = "error_reporting", diagnostic(code(envman::webi)))]
+    Webi {
+        /// Underlying error.
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[from]
+        #[source]
+        error: peace::webi_model::WebiError,
+    },
+
     /// Web server ended due to an error.
     #[cfg(feature = "ssr")]
     #[error("Web server ended due to an error.")]

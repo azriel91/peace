@@ -28,7 +28,7 @@ chrono = { version = "0.4.33", default-features = false, features = ["clock", "s
 derivative = { version = "2.2.0", optional = true }
 futures = { version = "0.3.30", optional = true }
 md5-rs = { version = "0.1.5", optional = true }  # WASM compatible, and reads bytes as stream
-peace = { path = "../..", default-features = false, features = ["cli"] }
+peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download", "tar_x"] }
 semver = { version = "1.0.21", optional = true }
 serde = { version = "1.0.196", features = ["derive"] }
@@ -71,9 +71,10 @@ default = []
 cli = [
     "error_reporting",
     "output_progress",
-
     "flow_logic",
     "web_server",
+
+    "peace/cli",
 ]
 # The `"ssr"` feature is used for two purposes:
 #
@@ -99,8 +100,13 @@ ssr = [
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
+    "peace/webi",
+    "peace/ssr",
 ]
-csr = ["web_components"]
+csr = [
+    "web_components",
+    "peace/webi",
+]
 
 # === peace passthrough features === #
 error_reporting = [
@@ -145,6 +151,7 @@ hydrate = [
     "leptos/hydrate",
     "leptos_meta/hydrate",
     "leptos_router/hydrate",
+    "peace/webi",
 ]
 
 [package.metadata.cargo-all-features]

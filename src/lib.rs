@@ -22,6 +22,8 @@ pub use peace_rt_model as rt_model;
 #[cfg(feature = "webi")]
 pub use peace_webi as webi;
 #[cfg(feature = "webi")]
+pub use peace_webi_components as webi_components;
+#[cfg(feature = "webi")]
 pub use peace_webi_model as webi_model;
 
 // We still can't build with `--all-features`, even with `indicatif 0.17.4`.

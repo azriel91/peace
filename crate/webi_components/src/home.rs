@@ -2,7 +2,7 @@ use leptos::{component, view, IntoView};
 use leptos_meta::{provide_meta_context, Link, Stylesheet};
 use leptos_router::{Route, Router, Routes};
 
-use crate::components::FlowGraph;
+use crate::FlowGraph;
 
 #[component]
 pub fn Home() -> impl IntoView {

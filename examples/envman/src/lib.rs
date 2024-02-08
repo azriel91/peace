@@ -69,7 +69,7 @@ cfg_if::cfg_if! {
         use wasm_bindgen::prelude::wasm_bindgen;
         use leptos::*;
 
-        use crate::web::components::Home;
+        use peace::webi_components::Home;
 
         #[wasm_bindgen]
         pub async fn hydrate() {

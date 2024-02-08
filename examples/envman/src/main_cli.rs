@@ -14,9 +14,6 @@ use envman::{
 use peace::cli::output::CliOutput;
 use tokio::io::Stdout;
 
-#[cfg(feature = "web_server")]
-use envman::web::WebServer;
-
 pub fn run() -> Result<(), EnvManError> {
     let CliArgs {
         command,
@@ -131,7 +128,12 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
-            WebServer::start(Some(SocketAddr::from((address, port)))).await?
+            use peace::webi::output::WebiOutput;
+
+            let webi_output = WebiOutput::new(Some(SocketAddr::from((address, port))));
+            webi_output.start().await?;
+
+            // WebServer::start(Some(SocketAddr::from((address, port)))).await?
         }
     }
 
