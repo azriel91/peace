@@ -19,6 +19,7 @@ test = false
 [dependencies]
 axum = { workspace = true }
 cfg-if = { workspace = true }
+futures = { workspace = true }
 leptos = { workspace = true }
 leptos_axum = { workspace = true }
 leptos_meta = { workspace = true }

@@ -2,4 +2,6 @@
 
 pub use crate::webi_output::WebiOutput;
 
+pub mod assets;
+
 mod webi_output;

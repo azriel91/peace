@@ -1,6 +1,7 @@
-use std::{fmt::Debug, net::SocketAddr, path::PathBuf};
+use std::{fmt::Debug, net::SocketAddr, path::Path};
 
 use axum::Router;
+use futures::stream::{self, StreamExt, TryStreamExt};
 use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_fmt::Presentable;
@@ -48,12 +49,38 @@ impl WebiOutput {
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
         let routes = leptos_axum::generate_route_list(|| view! {  <Home /> });
 
+        stream::iter(crate::assets::ASSETS.into_iter())
+            .map(Result::<_, WebiError>::Ok)
+            .try_for_each(|(path_str, contents)| async move {
+                let asset_path = Path::new(path_str);
+                if let Some(parent_dir) = asset_path.parent() {
+                    tokio::fs::create_dir_all(parent_dir)
+                        .await
+                        .map_err(|error| WebiError::AssetDirCreate {
+                            asset_dir: parent_dir.to_path_buf(),
+                            error,
+                        })?;
+                }
+
+                tokio::fs::write(asset_path, contents)
+                    .await
+                    .map_err(|error| WebiError::AssetWrite {
+                        asset_path: asset_path.to_path_buf(),
+                        error,
+                    })?;
+
+                Ok(())
+            })
+            .await?;
+
         let router = Router::new()
             // serve the pkg directory
             .nest_service(
                 "/pkg",
-                ServeDir::new(PathBuf::from(leptos_options.site_pkg_dir.as_str())),
+                ServeDir::new(Path::new(leptos_options.site_pkg_dir.as_str())),
             )
+            // serve the `webi` directory
+            .nest_service("/webi", ServeDir::new(Path::new("webi")))
             // serve the SSR rendered homepage
             .leptos_routes(&leptos_options, routes, move || view! {  <Home /> })
             .with_state(leptos_options);
