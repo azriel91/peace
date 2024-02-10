@@ -15,7 +15,7 @@ test = false
 [lib]
 doctest = false
 test = false
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 aws-config = { version = "1.1.4", optional = true }

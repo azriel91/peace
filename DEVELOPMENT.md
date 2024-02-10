@@ -135,8 +135,14 @@ These instructions are for Linux. They may work on OS X, but for Windows, please
 Build and serve the `envman` example:
 
 ```bash
-cargo leptos serve --project "envman" -v
+cargo leptos watch --project "envman" -v
 ```
+
+You can also use `trunk` to build the client side `csr` app.
+
+```bash
+(cd examples/envman && trunk build -d ../../dist)
+````
 
 ### Uninstallation
 
