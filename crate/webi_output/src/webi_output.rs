@@ -52,10 +52,7 @@ impl WebiOutput {
             // serve the pkg directory
             .nest_service(
                 "/pkg",
-                ServeDir::new(PathBuf::from_iter([
-                    leptos_options.site_root.as_str(),
-                    leptos_options.site_pkg_dir.as_str(),
-                ])),
+                ServeDir::new(PathBuf::from(leptos_options.site_pkg_dir.as_str())),
             )
             // serve the SSR rendered homepage
             .leptos_routes(&leptos_options, routes, move || view! {  <Home /> })
