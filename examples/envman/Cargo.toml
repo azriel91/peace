@@ -90,7 +90,6 @@ cli = [
 #   enabled when we use `"web_server"` as the web server feature without enabling `"ssr"` as well.
 ssr = [
     "flow_logic",
-    "web_components",
     "dep:axum",
     "dep:hyper",
     "dep:leptos_axum",
@@ -104,7 +103,6 @@ ssr = [
     "peace/ssr",
 ]
 csr = [
-    "web_components",
     "peace/webi",
 ]
 
@@ -138,16 +136,13 @@ flow_logic = [
 ]
 
 # web related
-web_components = [
-    "dep:tracing",
-]
 web_server = [
     "ssr", # leptos generates functions that depend on this feature in the application crate.
 ]
 
 # leptos csr
 hydrate = [
-    "web_components",
+    "dep:tracing",
     "leptos/hydrate",
     "leptos_meta/hydrate",
     "leptos_router/hydrate",
@@ -173,8 +168,8 @@ site-pkg-dir = "pkg"
 #
 # Optional. Env: LEPTOS_STYLE_FILE.
 # style-file = "../../target/web/envman/public/css/tailwind.css"
-tailwind-input-file = "src/web/tailwind.css"
-tailwind-config-file = "src/web/tailwind.config.js"
+# tailwind-input-file = "src/web/tailwind.css"
+# tailwind-config-file = "src/web/tailwind.config.js"
 
 # Assets source dir. All files found here will be copied and synchronized to site-root.
 # The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir.

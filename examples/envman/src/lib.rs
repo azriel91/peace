@@ -59,13 +59,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "web_components")] {
-        pub mod web;
-    }
-}
-
-cfg_if::cfg_if! {
-    if #[cfg(all(feature = "web_components", feature = "hydrate"))] {
+    if #[cfg(feature = "hydrate")] {
         use wasm_bindgen::prelude::wasm_bindgen;
         use leptos::*;
 
