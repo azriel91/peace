@@ -1,0 +1,19 @@
+[package]
+name = "peace_flow_model"
+description = "Flow data model for the peace automation framework."
+documentation = "https://docs.rs/peace_flow_model/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[dependencies]
+fn_graph = { workspace = true, features = ["graph_info"] }
+peace_core = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tynm = { workspace = true, features = ["info", "serde"] }
