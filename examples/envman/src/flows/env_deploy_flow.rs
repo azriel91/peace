@@ -52,15 +52,15 @@ impl EnvDeployFlow {
                     S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
                 ]);
 
-                graph_builder.add_edges([
+                graph_builder.add_logic_edges([
                     (app_download_id, app_extract_id),
                     (iam_policy_item_id, iam_role_item_id),
                     (iam_role_item_id, instance_profile_item_id),
                     // Download the file before uploading it.
                     (app_download_id, s3_object_id),
-                    // Create the bucket before uploading to it.
-                    (s3_bucket_id, s3_object_id),
                 ])?;
+                // Create the bucket before uploading to it.
+                graph_builder.add_contains_edge(s3_bucket_id, s3_object_id)?;
                 graph_builder.build()
             };
 

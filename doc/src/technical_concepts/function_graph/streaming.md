@@ -265,7 +265,7 @@ This can be seen by timing the executions:
 #
 #         // Define dependencies to control ordering.
 #         fn_graph_builder
-#             .add_edges([
+#             .add_logic_edges([
 #                 (fn_id1, fn_id2),
 #                 (fn_id1, fn_id3),
 #                 (fn_id2, fn_id4),

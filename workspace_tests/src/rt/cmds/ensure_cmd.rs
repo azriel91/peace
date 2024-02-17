@@ -1520,7 +1520,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
                 })
                 .into(),
         );
-        graph_builder.add_edge(vec_copy_fn_id, mock_fn_id)?;
+        graph_builder.add_logic_edge(vec_copy_fn_id, mock_fn_id)?;
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -1704,7 +1704,7 @@ async fn states_current_is_serialized_on_apply_exec_cmd_block_interrupt()
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         let vec_copy_id = graph_builder.add_fn(VecCopyItem::default().into());
         let mock_id = graph_builder.add_fn(MockItem::<()>::default().into());
-        graph_builder.add_edge(vec_copy_id, mock_id)?;
+        graph_builder.add_logic_edge(vec_copy_id, mock_id)?;
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);

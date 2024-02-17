@@ -34,7 +34,8 @@ impl AppUploadFlow {
                     S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
                 ]);
 
-                graph_builder.add_edges([(a, c), (b, c)])?;
+                graph_builder.add_logic_edge(a, c)?;
+                graph_builder.add_contains_edge(b, c)?;
                 graph_builder.build()
             };
 
