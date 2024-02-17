@@ -119,9 +119,7 @@ fn outcome_node_hierarchy(
             if let Some(child_node_hierarchy) =
                 outcome_node_hierarchy(graph_info, visited, child_node_index)
             {
-                let item_spec_info = graph_info.node_weight(node_index).unwrap_or_else(|| {
-                    panic!("`node_index`: `{node_index:?}` is invalid when accessing `flow_item_spec.graph_info`")
-                });
+                let item_spec_info = &graph_info[child_node_index];
                 hierarchy.insert(
                     item_spec_info_to_node_id(item_spec_info),
                     child_node_hierarchy,
