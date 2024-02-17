@@ -25,6 +25,7 @@ leptos_axum = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
 peace_core = { workspace = true, optional = true }
+peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_value_traits = { workspace = true }

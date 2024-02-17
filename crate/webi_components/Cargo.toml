@@ -17,13 +17,16 @@ doctest = true
 test = false
 
 [dependencies]
+dot_ix = { workspace = true }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
+peace_flow_model = { workspace = true }
 
 [features]
 default = []
 ssr = [
+    "dot_ix/ssr",
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",

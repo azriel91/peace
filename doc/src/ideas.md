@@ -261,6 +261,60 @@ Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized o
 </div>
 </details>
 
+<details>
+<summary>16. Combine <code>data</code> and <code>params{,_partial}</code> into <code>FnCtx</code></summary>
+<div>
+
+`Item` functions take in `FnCtx`, `data`, and item `params` as separate arguments.
+
+This was done to:
+
+* Reduce the additional layer to get `Item::Params`, or `Item::ParamsPartial`.
+* Avoid progress sender from being passed in to function that didn't need it.
+
+However, functions don't necessarily need runtime `fn_ctx` or `data`, making it noise in the signature.
+
+Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized over `Params` and `ParamsPartial`.
+
+</div>
+</details>
+
+<details>
+<summary>17. Style edges / items red when an error occurs.</summary>
+<div>
+
+When we hit an error, can we go through parameters / states to determine whether the error is to do with an item itself, or a link between the item and its predecessor?
+
+Then style that link red.
+
+</div>
+</details>
+
+<details>
+<summary>18. Markdown text instead of <code>Presentable</code>.</summary>
+<div>
+
+Instead of requiring developers to `impl Presentable for` all the different types that use, and use different `Presentable` methods, we could require them to implement `Display`, using a markdown string.
+
+Then, for different `OutputWrite` implementations, we would do something like this:
+
+* `CliOutput`: `syntect` highlight things.
+* `WebiOutput`: Use commonmark to generate HTML elements, and with 19, use that as part of each item node's content.
+
+</div>
+</details>
+
+<details>
+<summary>19. HTML with SVG arrows and flexbox instead of <code>dot</code>.</summary>
+<div>
+
+Instead of using `dot`, we just use flexbox and generate arrows between HTML `div`s.
+
+This trades 
+
+</div>
+</details>
+
 
 ## Notes
 

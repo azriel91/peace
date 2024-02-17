@@ -4,6 +4,7 @@ use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
 use leptos::view;
 use leptos_axum::LeptosRoutes;
+use peace_flow_model::FlowSpecInfo;
 use peace_fmt::Presentable;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
 use peace_value_traits::AppError;
@@ -31,23 +32,31 @@ cfg_if::cfg_if! {
 pub struct WebiOutput {
     /// IP address and port to listen on.
     socket_addr: Option<SocketAddr>,
+    /// Flow to display to the user.
+    flow_spec_info: FlowSpecInfo,
 }
 
 impl WebiOutput {
-    pub fn new(socket_addr: Option<SocketAddr>) -> Self {
-        Self { socket_addr }
+    pub fn new(socket_addr: Option<SocketAddr>, flow_spec_info: FlowSpecInfo) -> Self {
+        Self {
+            socket_addr,
+            flow_spec_info,
+        }
     }
 }
 
 impl WebiOutput {
     pub async fn start(&self) -> Result<(), WebiError> {
-        let Self { socket_addr } = self;
+        let Self {
+            socket_addr,
+            flow_spec_info,
+        } = self;
 
         // Setting this to None means we'll be using cargo-leptos and its env vars
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(|| view! {  <Home /> });
+        let routes = leptos_axum::generate_route_list(move || view! {  <Home /> });
 
         stream::iter(crate::assets::ASSETS.into_iter())
             .map(Result::<_, WebiError>::Ok)
@@ -73,6 +82,7 @@ impl WebiOutput {
             })
             .await?;
 
+        let flow_spec_info = flow_spec_info.clone();
         let router = Router::new()
             // serve the pkg directory
             .nest_service(
@@ -82,7 +92,12 @@ impl WebiOutput {
             // serve the `webi` directory
             .nest_service("/webi", ServeDir::new(Path::new("webi")))
             // serve the SSR rendered homepage
-            .leptos_routes(&leptos_options, routes, move || view! {  <Home /> })
+            .leptos_routes_with_context(
+                &leptos_options,
+                routes,
+                move || leptos::provide_context(flow_spec_info.clone()),
+                move || view! {  <Home /> },
+            )
             .with_state(leptos_options);
 
         let listener = tokio::net::TcpListener::bind(socket_addr)

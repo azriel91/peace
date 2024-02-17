@@ -34,10 +34,12 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "ssr")] {
         // web server
         use envman::model::EnvManError;
-        use peace::webi::output::WebiOutput;
 
         #[cfg(not(feature = "error_reporting"))]
         pub fn main() -> Result<(), EnvManError> {
+            use envman::flows::EnvDeployFlow;
+            use peace::webi::output::WebiOutput;
+
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .thread_name("main")
                 .thread_stack_size(3 * 1024 * 1024)
@@ -46,9 +48,12 @@ cfg_if::cfg_if! {
                 .build()
                 .map_err(EnvManError::TokioRuntimeInit)?;
 
-            let webi_output = WebiOutput::new(None);
-
             runtime.block_on(async move {
+                let flow = EnvDeployFlow::flow().await?;
+                let flow_spec_info = flow.flow_spec_info();
+
+                let webi_output = WebiOutput::new(None, flow_spec_info);
+
                 webi_output.start().await.map_err(EnvManError::from)
             })
         }

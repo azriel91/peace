@@ -1,4 +1,6 @@
 use peace_cfg::FlowId;
+use peace_data::fn_graph::GraphInfo;
+use peace_flow_model::{FlowSpecInfo, ItemSpecInfo};
 
 use crate::ItemGraph;
 
@@ -57,5 +59,22 @@ impl<E> Flow<E> {
     /// Returns a mutable reference to the item graph.
     pub fn graph_mut(&self) -> &ItemGraph<E> {
         &self.graph
+    }
+
+    /// Generates a `FlowSpecInfo` from this `Flow`'s information.
+    pub fn flow_spec_info(&self) -> FlowSpecInfo
+    where
+        E: 'static,
+    {
+        let flow_id = self.flow_id.clone();
+        let graph_info = GraphInfo::from_graph(&self.graph, |item_boxed| {
+            let item_id = item_boxed.id().clone();
+            ItemSpecInfo { item_id }
+        });
+
+        FlowSpecInfo {
+            flow_id,
+            graph_info,
+        }
     }
 }

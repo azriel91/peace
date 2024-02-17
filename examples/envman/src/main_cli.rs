@@ -128,9 +128,13 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
+            use envman::flows::EnvDeployFlow;
             use peace::webi::output::WebiOutput;
 
-            let webi_output = WebiOutput::new(Some(SocketAddr::from((address, port))));
+            let flow = EnvDeployFlow::flow().await?;
+            let flow_spec_info = flow.flow_spec_info();
+            let webi_output =
+                WebiOutput::new(Some(SocketAddr::from((address, port))), flow_spec_info);
             webi_output.start().await?;
 
             // WebServer::start(Some(SocketAddr::from((address, port)))).await?
