@@ -43,7 +43,10 @@ pub fn FlowGraph() -> impl IntoView {
 
 #[leptos::server(endpoint = "/flow_graph")]
 pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCustomError>> {
-    use dot_ix::{model::common::GraphvizDotTheme, rt::IntoGraphvizDotSrc};
+    use dot_ix::{
+        model::common::{graphviz_dot_theme::GraphStyle, GraphvizDotTheme},
+        rt::IntoGraphvizDotSrc,
+    };
     use peace_flow_model::FlowSpecInfo;
 
     let flow_spec_info = leptos::use_context::<FlowSpecInfo>().ok_or_else(|| {
@@ -53,6 +56,6 @@ pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCus
     let progress_info_graph = flow_spec_info.into_progress_info_graph();
     Ok(IntoGraphvizDotSrc::into(
         &progress_info_graph,
-        &GraphvizDotTheme::default(),
+        &GraphvizDotTheme::default().with_graph_style(GraphStyle::Circle),
     ))
 }
