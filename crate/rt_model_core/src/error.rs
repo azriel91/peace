@@ -226,7 +226,7 @@ pub enum Error {
         /// Source text to be deserialized.
         #[cfg(feature = "error_reporting")]
         #[source_code]
-        states_file_source: miette::NamedSource,
+        states_file_source: miette::NamedSource<String>,
         /// Offset within the source text that the error occurred.
         #[cfg(feature = "error_reporting")]
         #[label("{}", error_message)]
@@ -273,7 +273,7 @@ pub enum Error {
         /// Source text to be deserialized.
         #[cfg(feature = "error_reporting")]
         #[source_code]
-        params_specs_file_source: miette::NamedSource,
+        params_specs_file_source: miette::NamedSource<String>,
         /// Offset within the source text that the error occurred.
         #[cfg(feature = "error_reporting")]
         #[label("{}", error_message)]
