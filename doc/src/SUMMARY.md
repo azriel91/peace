@@ -36,6 +36,8 @@
     - [Diagrams](technical_concepts/diagrams.md)
         - [Progress](technical_concepts/diagrams/progress.md)
         - [Outcome](technical_concepts/diagrams/outcome.md)
+            - [Render Technology](technical_concepts/diagrams/outcome/render_technology.md)
+            - [HTML + Flexbox](technical_concepts/diagrams/outcome/html_flexbox.md)
     - [Workspace](technical_concepts/workspace.md)
     - [Commands](technical_concepts/commands.md)
         - [Scopes](technical_concepts/commands/scopes.md)
