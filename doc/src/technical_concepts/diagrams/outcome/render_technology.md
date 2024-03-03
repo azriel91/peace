@@ -80,3 +80,11 @@ then styling it.
 For recovery hints, we need to make it clear where the error shown on the the outcome diagram is related to input parameters, whether it is a file, or a value produced by a host.
 
 If we are using `dot`-like or a CSS-enabled technology, then we can style the relevant edge / node with Tailwind CSS styles.
+
+
+## Tailwind CSS generation
+
+[`encre-css`] is likely what we will use, as it is TailwindCSS compatible.
+
+
+[`encre-css`]: https://crates.io/crates/encre-css

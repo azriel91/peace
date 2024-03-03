@@ -38,6 +38,7 @@
         - [Outcome](technical_concepts/diagrams/outcome.md)
             - [Render Technology](technical_concepts/diagrams/outcome/render_technology.md)
             - [HTML + Flexbox](technical_concepts/diagrams/outcome/html_flexbox.md)
+            - [Div Diag](technical_concepts/diagrams/outcome/div_diag.md)
     - [Workspace](technical_concepts/workspace.md)
     - [Commands](technical_concepts/commands.md)
         - [Scopes](technical_concepts/commands/scopes.md)
