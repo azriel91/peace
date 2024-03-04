@@ -150,7 +150,7 @@ dot_ix = "0.2.0"
 dyn-clone = "1.0.16"
 enser = "0.1.4"
 erased-serde = "0.4.3"
-fn_graph = { version = "0.12.0", features = ["async", "interruptible", "resman"] }
+fn_graph = { version = "0.13.0", features = ["async", "graph_info", "interruptible", "resman"] }
 futures = "0.3.30"
 heck = "0.4.1"
 indexmap = "2.2.3"
@@ -184,6 +184,3 @@ type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.0"
 wasm-bindgen = "0.2.91"
 web-sys = "0.3.68"
-
-[patch.crates-io]
-fn_graph = { path = "/mnt/data/work/github/azriel91/fn_graph" }
