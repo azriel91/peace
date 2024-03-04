@@ -1,6 +1,6 @@
 //! Resources that track current and goal states, and state diffs.
 
-use std::{fmt::Debug, iter::FromIterator, ops::Deref};
+use std::{fmt::Debug, ops::Deref};
 
 use peace_core::ItemId;
 use serde::Serialize;
