@@ -136,8 +136,6 @@ async fn run_command(
             let webi_output =
                 WebiOutput::new(Some(SocketAddr::from((address, port))), flow_spec_info);
             webi_output.start().await?;
-
-            // WebServer::start(Some(SocketAddr::from((address, port)))).await?
         }
     }
 
