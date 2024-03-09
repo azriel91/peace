@@ -129,6 +129,9 @@ jobs:
       - uses: taiki-e/install-action@cargo-llvm-cov
       - uses: taiki-e/install-action@nextest
 
+      - name: 'Configure build to remove debuginfo'
+        run: echo $'\n[profile.dev]\ndebug = false' >> Cargo.toml
+
       - name: 'Collect coverage'
         run: ./coverage.sh
 
