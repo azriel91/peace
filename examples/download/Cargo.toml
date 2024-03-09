@@ -18,16 +18,17 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-peace = { path = "../..", default-features = false, features = ["cli"] }
 peace_items = { path = "../../items", features = ["file_download"] }
 thiserror = "1.0.57"
 url = { version = "2.5.0", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+peace = { workspace = true, default-features = false, features = ["cli"] }
 clap = { version = "4.5.1", features = ["derive"] }
 tokio = { version = "1.36.0", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+peace = { workspace = true, default-features = false }
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.6.4"
 tokio = "1.36.0"
