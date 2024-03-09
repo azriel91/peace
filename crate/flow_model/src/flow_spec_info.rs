@@ -100,7 +100,7 @@ fn outcome_node_hierarchy(
     let mut hierarchy = NodeHierarchy::new();
     let children = graph_info.children(node_index);
     children
-        .iter(&*graph_info)
+        .iter(graph_info)
         .filter_map(|(edge_index, child_node_index)| {
             // For outcome graphs, child nodes that:
             //
@@ -138,7 +138,7 @@ fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, 
             //
             let children = graph_info.children(node_index);
             children
-                .iter(&*graph_info)
+                .iter(graph_info)
                 .filter_map(|(edge_index, child_node_index)| {
                     // For outcome graphs, child nodes that:
                     //
@@ -182,7 +182,7 @@ fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId,
             //
             let children = graph_info.children(node_index);
             children
-                .iter(&*graph_info)
+                .iter(graph_info)
                 .filter_map(|(edge_index, child_node_index)| {
                     //
                     // * are contained by parents nodes are represented as a nested node.
