@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::DateTime;
 use peace::{
     cfg::{state::Timestamped, FnCtx},
     params::Params,
@@ -128,14 +128,10 @@ where
         if let Some(creation_date) = creation_date {
             let state_current = S3BucketState::Some {
                 name: name.to_string(),
-                creation_date: Timestamped::Value(DateTime::from_naive_utc_and_offset(
-                    NaiveDateTime::from_timestamp_opt(
-                        creation_date.secs(),
-                        creation_date.subsec_nanos(),
-                    )
-                    .unwrap(),
-                    Utc,
-                )),
+                creation_date: Timestamped::Value(
+                    DateTime::from_timestamp(creation_date.secs(), creation_date.subsec_nanos())
+                        .unwrap(),
+                ),
             };
 
             Ok(state_current)
