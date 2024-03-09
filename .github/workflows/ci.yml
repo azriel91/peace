@@ -210,7 +210,7 @@ jobs:
         run: cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
 
       - name: 'Example: envman (leptos)'
-        run: cargo leptos build --project "envman" -v
+        run: cargo leptos build --project "envman" --bin-features "cli" -v
 
       # When updating this, also update book.yml
       - name: 'Example: download (WASM)'
