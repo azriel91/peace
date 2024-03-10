@@ -72,9 +72,6 @@ impl<E> Flow<E> {
             ItemSpecInfo { item_id }
         });
 
-        FlowSpecInfo {
-            flow_id,
-            graph_info,
-        }
+        FlowSpecInfo::new(flow_id, graph_info)
     }
 }

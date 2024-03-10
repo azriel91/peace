@@ -9,3 +9,10 @@ pub struct ItemSpecInfo {
     /// ID of the `Item`.
     pub item_id: ItemId,
 }
+
+impl ItemSpecInfo {
+    /// Returns a new `ItemSpecInfo`.
+    pub fn new(item_id: ItemId) -> Self {
+        Self { item_id }
+    }
+}

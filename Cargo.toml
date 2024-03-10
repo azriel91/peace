@@ -155,7 +155,7 @@ dot_ix = "0.2.0"
 dyn-clone = "1.0.17"
 enser = "0.1.4"
 erased-serde = "0.4.3"
-fn_graph = { version = "0.13.0", features = ["async", "graph_info", "interruptible", "resman"] }
+fn_graph = { version = "0.13.2", features = ["async", "graph_info", "interruptible", "resman"] }
 futures = "0.3.30"
 heck = "0.4.1"
 indexmap = "2.2.5"

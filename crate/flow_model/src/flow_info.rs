@@ -17,3 +17,13 @@ pub struct FlowInfo {
     /// Serialized representation of the flow graph.
     pub graph_info: GraphInfo<ItemInfo>,
 }
+
+impl FlowInfo {
+    /// Returns a new `FlowInfo`.
+    pub fn new(flow_id: FlowId, graph_info: GraphInfo<ItemInfo>) -> Self {
+        Self {
+            flow_id,
+            graph_info,
+        }
+    }
+}

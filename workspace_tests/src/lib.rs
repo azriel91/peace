@@ -23,6 +23,7 @@ mod cmd_model;
 mod cmd_rt;
 mod data;
 mod diff;
+mod flow_model;
 mod fmt;
 mod params;
 mod resources;

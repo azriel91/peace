@@ -23,6 +23,14 @@ pub struct FlowSpecInfo {
 }
 
 impl FlowSpecInfo {
+    /// Returns a new `FlowSpecInfo`.
+    pub fn new(flow_id: FlowId, graph_info: GraphInfo<ItemSpecInfo>) -> Self {
+        Self {
+            flow_id,
+            graph_info,
+        }
+    }
+
     /// Returns an [`InfoGraph`] that represents the progress of the flow's
     /// execution.
     pub fn into_progress_info_graph(&self) -> InfoGraph {
