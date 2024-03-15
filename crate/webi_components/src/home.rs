@@ -4,6 +4,7 @@ use leptos_router::{Route, Router, Routes};
 
 use crate::FlowGraph;
 
+/// Top level component of the `WebiOutput`.
 #[component]
 pub fn Home() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
