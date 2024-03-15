@@ -17,7 +17,7 @@ use crate::{
         peace_aws_iam_policy::{IamPolicyItem, IamPolicyParams, IamPolicyState},
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItem, InstanceProfileParams},
-        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams, S3BucketState},
+        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams},
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
     model::{EnvManError, RepoSlug, WebApp},
@@ -52,15 +52,15 @@ impl EnvDeployFlow {
                     S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
                 ]);
 
-                graph_builder.add_edges([
+                graph_builder.add_logic_edges([
                     (app_download_id, app_extract_id),
                     (iam_policy_item_id, iam_role_item_id),
                     (iam_role_item_id, instance_profile_item_id),
                     // Download the file before uploading it.
                     (app_download_id, s3_object_id),
-                    // Create the bucket before uploading to it.
-                    (s3_bucket_id, s3_object_id),
                 ])?;
+                // Create the bucket before uploading to it.
+                graph_builder.add_contains_edge(s3_bucket_id, s3_object_id)?;
                 graph_builder.build()
             };
 
@@ -151,7 +151,7 @@ impl EnvDeployFlow {
             .build();
         let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_file_path(web_app_path_local)
-            .with_bucket_name_from_map(S3BucketState::bucket_name)
+            .with_bucket_name(bucket_name)
             .with_object_key(object_key)
             .build();
 

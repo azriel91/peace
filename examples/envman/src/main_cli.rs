@@ -11,11 +11,8 @@ use envman::{
         EnvDiffSelection, EnvManError, ProfileSwitch,
     },
 };
-use peace::rt_model::output::CliOutput;
+use peace::cli::output::CliOutput;
 use tokio::io::Stdout;
-
-#[cfg(feature = "web_server")]
-use envman::web::WebServer;
 
 pub fn run() -> Result<(), EnvManError> {
     let CliArgs {
@@ -131,7 +128,14 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
-            WebServer::start(Some(SocketAddr::from((address, port)))).await?
+            use envman::flows::EnvDeployFlow;
+            use peace::webi::output::WebiOutput;
+
+            let flow = EnvDeployFlow::flow().await?;
+            let flow_spec_info = flow.flow_spec_info();
+            let webi_output =
+                WebiOutput::new(Some(SocketAddr::from((address, port))), flow_spec_info);
+            webi_output.start().await?;
         }
     }
 

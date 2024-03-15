@@ -1,0 +1,19 @@
+[package]
+name = "peace_cli_model"
+description = "Command line interface data types for the peace automation framework."
+documentation = "https://docs.rs/peace_cli/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]

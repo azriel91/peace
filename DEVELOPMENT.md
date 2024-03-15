@@ -132,11 +132,27 @@ These instructions are for Linux. They may work on OS X, but for Windows, please
 
 > ℹ️ These commands assume you are running them from the repository root directory.
 
-Build and serve the `envman` example:
+Build and serve the `envman` example. Either:
 
 ```bash
-cargo leptos serve --project "envman" -v
+# Watch, build, and `envman` purely as a web server.
+cargo leptos watch --project "envman" -v
 ```
+
+Or:
+
+```bash
+# Build `envman` as a cli tool.
+cargo +stable leptos build --project envman --bin-features "cli" \
+  && test -d /tmp/demo \
+  || mkdir /tmp/demo \
+  && cp -R target/{debug/envman,web/envman/pkg} /tmp/demo
+
+# In a separate terminal
+cd /tmp/demo
+./envman web
+```
+
 
 ### Uninstallation
 

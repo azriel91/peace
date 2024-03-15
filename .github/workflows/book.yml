@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
 
       - name: 'Install `wasm-pack`'
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
 
-      - run: cargo install mdbook-graphviz
+      - run: cargo install mdbook-graphviz --git https://github.com/azriel91/mdbook-graphviz.git --branch maintenance/update-dependencies
         if: steps.mdbook_graphviz_cache.outputs.cache-hit != 'true'
 
       # When updating this, also update ci.yml

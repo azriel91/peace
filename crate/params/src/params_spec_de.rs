@@ -8,6 +8,7 @@ type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
 /// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Deserialize)]
+#[serde(bound = "T: Params")]
 pub enum ParamsSpecDe<T>
 where
     T: Params,
@@ -53,7 +54,7 @@ where
 
 impl<T> Debug for ParamsSpecDe<T>
 where
-    T: Params + Debug,
+    T: Params,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -72,7 +73,7 @@ where
 
 impl<T> From<ParamsSpecDe<T>> for ParamsSpec<T>
 where
-    T: Params + Clone + Debug + Send + Sync + 'static,
+    T: Params,
 {
     fn from(value_spec_de: ParamsSpecDe<T>) -> Self {
         match value_spec_de {

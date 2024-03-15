@@ -28,10 +28,10 @@ use crate::{
 /// 4. These `AnySpecRtBoxed`s are downcasted back to `ValueSpec<T>` when
 ///    resolving values for item params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ParamsSpecDe<T>")]
+#[serde(from = "crate::ParamsSpecDe<T>", bound = "T: Params")]
 pub enum ParamsSpec<T>
 where
-    T: Params + Clone + Debug + Send + Sync + 'static,
+    T: Params,
 {
     /// Loads a stored value spec.
     ///
@@ -95,7 +95,7 @@ where
 
 impl<T> ParamsSpec<T>
 where
-    T: Params + Clone + Debug + Send + Sync + 'static,
+    T: Params,
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
@@ -108,7 +108,7 @@ where
 
 impl<T> Debug for ParamsSpec<T>
 where
-    T: Params + Clone + Debug + Send + Sync + 'static,
+    T: Params,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -125,7 +125,7 @@ where
 
 impl<T> From<T> for ParamsSpec<T>
 where
-    T: Params + Clone + Debug + Send + Sync + 'static,
+    T: Params,
 {
     fn from(value: T) -> Self {
         Self::Value { value }

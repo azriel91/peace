@@ -5,16 +5,27 @@
 pub use miette;
 
 pub use peace_cfg as cfg;
+#[cfg(feature = "cli")]
+pub use peace_cli as cli;
+#[cfg(feature = "cli")]
+pub use peace_cli_model as cli_model;
 pub use peace_cmd as cmd;
 pub use peace_cmd_model as cmd_model;
 pub use peace_cmd_rt as cmd_rt;
 pub use peace_data as data;
 pub use peace_diff as diff;
+pub use peace_flow_model as flow_model;
 pub use peace_fmt as fmt;
 pub use peace_params as params;
 pub use peace_resources as resources;
 pub use peace_rt as rt;
 pub use peace_rt_model as rt_model;
+#[cfg(feature = "webi")]
+pub use peace_webi as webi;
+#[cfg(feature = "webi")]
+pub use peace_webi_components as webi_components;
+#[cfg(feature = "webi")]
+pub use peace_webi_model as webi_model;
 
 // We still can't build with `--all-features`, even with `indicatif 0.17.4`.
 //

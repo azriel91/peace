@@ -1,4 +1,7 @@
-use peace::rt_model::output::{CliColorizeOpt, CliOutput, CliOutputBuilder, OutputFormat};
+use peace::{
+    cli::output::{CliColorizeOpt, CliOutput, CliOutputBuilder},
+    cli_model::OutputFormat,
+};
 
 mod either;
 mod presentable;

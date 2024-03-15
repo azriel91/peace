@@ -23,7 +23,7 @@ console = { workspace = true }
 diff-struct = { workspace = true }
 derivative = { workspace = true }
 futures = { workspace = true }
-peace = { workspace = true, default-features = false }
+peace = { workspace = true, default-features = false, features = ["cli"] }
 # `ItemWrapper` always needs the `blank` item spec to be present.
 peace_items = { workspace = true, features = ["blank"] }
 pretty_assertions = { workspace = true }
@@ -37,12 +37,13 @@ tokio = { workspace = true, features = ["rt", "macros"] }
 tynm = { workspace = true }
 
 [features]
-default = ["items", "output_in_memory"]
+default = ["items", "output_in_memory", "webi"]
 
 # `peace` features
 error_reporting = ["peace/error_reporting"]
 output_in_memory = ["peace/output_in_memory"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]
+webi = ["peace/webi"]
 
 # `peace_items` features
 items = [

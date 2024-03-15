@@ -161,11 +161,7 @@ where
                     dest_offset_col + 1,
                 );
                 // Add one to length because we are 1-based, not 0-based?
-                let length = SourceOffset::from_location(
-                    &init_command_approx,
-                    loc_line,
-                    init_command_approx.len() - dest_offset_col + 1,
-                );
+                let length = init_command_approx.len() - dest_offset_col + 1;
                 SourceSpan::new(start, length)
             };
             Err(FileDownloadError::DestFileCreate {

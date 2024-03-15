@@ -11,7 +11,7 @@ use url::Url;
 
 use crate::{
     items::{
-        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams, S3BucketState},
+        peace_aws_s3_bucket::{S3BucketItem, S3BucketParams},
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
     model::{EnvManError, RepoSlug, WebApp},
@@ -34,7 +34,8 @@ impl AppUploadFlow {
                     S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
                 ]);
 
-                graph_builder.add_edges([(a, c), (b, c)])?;
+                graph_builder.add_logic_edge(a, c)?;
+                graph_builder.add_contains_edge(b, c)?;
                 graph_builder.build()
             };
 
@@ -93,12 +94,12 @@ impl AppUploadFlow {
             .to_string_lossy()
             .to_string();
         let s3_bucket_params_spec = S3BucketParams::<WebApp>::field_wise_spec()
-            .with_name(bucket_name)
+            .with_name(bucket_name.clone())
             .build();
         let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_file_path(web_app_path_local)
             .with_object_key(object_key)
-            .with_bucket_name_from_map(S3BucketState::bucket_name)
+            .with_bucket_name(bucket_name)
             .build();
 
         Ok(AppUploadFlowParamsSpecs {

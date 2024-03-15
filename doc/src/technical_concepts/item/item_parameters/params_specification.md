@@ -99,7 +99,7 @@ The following snippets are here to show the changes that include the above conce
 ```rust ,ignore
 // Traits in Peace Framework
 trait Item {
-    type Params: Params + Serialize + Deserialize;
+    type Params: Params;
 
     fn setup(&self, resources);
     fn try_state_current(fn_ctx, params_partial, data);

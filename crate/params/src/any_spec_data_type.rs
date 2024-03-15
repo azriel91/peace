@@ -1,3 +1,5 @@
+#![allow(clippy::multiple_bound_locations)] // https://github.com/marcianx/downcast-rs/issues/19
+
 use std::{any::Any, fmt};
 
 use dyn_clone::DynClone;

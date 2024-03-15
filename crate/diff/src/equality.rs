@@ -1,7 +1,4 @@
-use std::{
-    cmp::{Ordering, PartialOrd},
-    fmt,
-};
+use std::{cmp::Ordering, fmt};
 
 /// Represents whether a value is equal to another.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

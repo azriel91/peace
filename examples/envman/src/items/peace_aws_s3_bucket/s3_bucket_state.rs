@@ -17,7 +17,7 @@ pub enum S3BucketState {
         ///
         /// TODO: newtype + proc macro.
         name: String,
-        ///
+        /// Timestamp that the S3Bucket was created.
         creation_date: Timestamped<DateTime<Utc>>,
     },
 }

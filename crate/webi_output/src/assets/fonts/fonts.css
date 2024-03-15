@@ -1,0 +1,33 @@
+/*
+ * Hand written, based on CSS from <https://www.fontsquirrel.com/fonts/liberation-mono>
+ *
+ * Paths are relative to this file.
+ */
+
+@font-face {
+    font-family: 'liberationmono';
+    src: url('liberationmono/LiberationMono-Regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'liberationmono-bold';
+    src: url('liberationmono/LiberationMono-Bold-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'liberationmono-italic';
+    src: url('liberationmono/LiberationMono-Italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'liberationmono-bold-italic';
+    src: url('liberationmono/LiberationMono-BoldItalic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}

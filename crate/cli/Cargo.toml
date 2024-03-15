@@ -1,0 +1,42 @@
+[package]
+name = "peace_cli"
+description = "Command line interface for the peace automation framework."
+documentation = "https://docs.rs/peace_cli/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
+cfg-if = { workspace = true }
+console = { workspace = true }
+futures = { workspace = true }
+peace_cli_model = { workspace = true }
+peace_core = { workspace = true }
+peace_fmt = { workspace = true }
+peace_rt_model_core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-std"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+raw_tty = { workspace = true }
+
+[features]
+default = []
+output_in_memory = ["peace_rt_model_core/output_in_memory"]
+output_progress = [
+    "peace_core/output_progress",
+    "peace_rt_model_core/output_progress",
+]

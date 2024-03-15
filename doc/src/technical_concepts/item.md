@@ -4,9 +4,9 @@
 
 An **item** is something that can be created, inspected, and cleaned up by automation.
 
-An itemification defines data types and logic to manage that item.
+"Itemification" is to define data types and logic to manage that item.
 
-The [`Item`][`Item`] and associated types are how consumers integrate with the Peace framework. Consumers provide a unique ID, data types, and functions, which will be selectively executed by the framework to provide lean, robust automation, and a good user experience.
+The [`Item`][`Item`] trait and associated types are how consumers integrate with the Peace framework. Consumers provide a unique ID, data types, and functions, which will be selectively executed by the framework to provide lean, robust automation, and a good user experience.
 
 This logical breakdown guides automation developers to structure logic to handle cases that are not normally considered of when writing automation. Combined with trait requirements on data types, the framework is able to provide commands, workflow optimizations, and understandable output to ensure a pleasant automation experience.
 

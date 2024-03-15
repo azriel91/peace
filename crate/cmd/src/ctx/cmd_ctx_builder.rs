@@ -300,8 +300,8 @@ where
             // Removing the entry from stored params specs is deliberate, so filtering for
             // stored params specs that no longer have a corresponding item are
             // detected.
-            let params_spec_provided = params_specs_provided.remove_entry(item_id);
-            let params_spec_stored = params_specs_stored.remove_entry(item_id);
+            let params_spec_provided = params_specs_provided.shift_remove_entry(item_id);
+            let params_spec_stored = params_specs_stored.shift_remove_entry(item_id);
 
             // Deep merge params specs.
             let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
@@ -344,7 +344,8 @@ where
         item_graph.iter_insertion().for_each(|item_rt| {
             let item_id = item_rt.id();
 
-            if let Some((item_id, params_spec_boxed)) = params_specs_provided.remove_entry(item_id)
+            if let Some((item_id, params_spec_boxed)) =
+                params_specs_provided.shift_remove_entry(item_id)
             {
                 params_specs.insert_raw(item_id, params_spec_boxed);
             } else {

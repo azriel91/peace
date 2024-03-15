@@ -60,7 +60,7 @@ let graph = {
         Item3::new().into(),
         Item4::new().into(),
     ]);
-    graph_builder.add_edges([
+    graph_builder.add_logic_edges([
         (id_1, id_3),
         (id_2, id_3),
         (id_2, id_4),

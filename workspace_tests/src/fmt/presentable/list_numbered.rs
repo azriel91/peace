@@ -1,6 +1,6 @@
 use peace::{
+    cli::output::{CliColorizeOpt, CliMdPresenter},
     fmt::{presentable::ListNumbered, Presentable},
-    rt_model::output::{CliColorizeOpt, CliMdPresenter},
 };
 
 use crate::fmt::cli_output;

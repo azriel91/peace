@@ -17,16 +17,20 @@ pub(crate) mod mock_item;
 
 // `peace` test modules
 mod cfg;
+mod cli;
 mod cmd;
 mod cmd_model;
 mod cmd_rt;
 mod data;
 mod diff;
+mod flow_model;
 mod fmt;
 mod params;
 mod resources;
 mod rt;
 mod rt_model;
+#[cfg(feature = "webi")]
+mod webi;
 
 // `peace_items` test modules
 #[cfg(feature = "items")]

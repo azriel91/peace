@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-/// Unique identifier for an `ItemId`, `Cow<'static, str>` newtype.
+/// Unique identifier for an [`Item`], `Cow<'static, str>` newtype.
 ///
 /// Must begin with a letter or underscore, and contain only letters, numbers,
 /// and underscores.
@@ -30,6 +30,8 @@ use serde::{Deserialize, Serialize};
 /// * Read state using the old ID.
 /// * Either clean up that state, or migrate that state into an Item with the
 ///   new ID.
+///
+/// [`Item`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Item.html
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ItemId(Cow<'static, str>);
 

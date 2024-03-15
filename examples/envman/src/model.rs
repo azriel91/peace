@@ -14,7 +14,7 @@ pub use self::{
     repo_slug_error::RepoSlugError,
 };
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "cli")]
 pub mod cli_args;
 
 mod env_diff_selection;
