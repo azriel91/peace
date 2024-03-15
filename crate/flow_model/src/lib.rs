@@ -4,6 +4,7 @@
 //! `Flow` contains logic, it currently resides in `peace_rt_model`.
 
 // Re-exports;
+pub use dot_ix;
 pub use fn_graph::GraphInfo;
 
 pub use crate::{

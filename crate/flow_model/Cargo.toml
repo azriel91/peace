@@ -13,7 +13,7 @@ keywords.workspace = true
 license.workspace = true
 
 [dependencies]
-dot_ix = { workspace = true }
+dot_ix = { workspace = true, default-features = false }
 fn_graph = { workspace = true, features = ["graph_info"] }
 peace_core = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

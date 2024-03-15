@@ -151,7 +151,7 @@ console = "0.15.8"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
 downcast-rs = "1.2.0"
-dot_ix = "0.2.0"
+dot_ix = { version = "0.4.1", default-features = false }
 dyn-clone = "1.0.17"
 enser = "0.1.4"
 erased-serde = "0.4.3"

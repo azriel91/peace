@@ -33,7 +33,7 @@ impl FlowSpecInfo {
 
     /// Returns an [`InfoGraph`] that represents the progress of the flow's
     /// execution.
-    pub fn into_progress_info_graph(&self) -> InfoGraph {
+    pub fn to_progress_info_graph(&self) -> InfoGraph {
         let graph_info = &self.graph_info;
         let item_count = graph_info.node_count();
 
@@ -60,7 +60,7 @@ impl FlowSpecInfo {
 
     /// Returns an [`InfoGraph`] that represents the outcome of the flow's
     /// execution.
-    pub fn into_outcome_info_graph(&self) -> InfoGraph {
+    pub fn to_outcome_info_graph(&self) -> InfoGraph {
         let graph_info = &self.graph_info;
         let item_count = graph_info.node_count();
 
@@ -165,7 +165,7 @@ fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, 
                     let item_id = item_spec_info_to_node_id(item_spec_info);
                     let child_item_id = item_spec_info_to_node_id(&graph_info[child_node_index]);
                     edges.insert(
-                        EdgeId::try_from(format!("{child_item_id}__{item_id}")).expect(
+                        EdgeId::try_from(format!("{item_id}__{child_item_id}")).expect(
                             "Expected `peace` `ItemId`s concatenated \
                             to be valid `dot_ix` `EdgeId`s.",
                         ),
@@ -208,7 +208,7 @@ fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId,
                     let item_id = item_spec_info_to_node_id(item_spec_info);
                     let child_item_id = item_spec_info_to_node_id(&graph_info[child_node_index]);
                     edges.insert(
-                        EdgeId::try_from(format!("{child_item_id}__{item_id}")).expect(
+                        EdgeId::try_from(format!("{item_id}__{child_item_id}")).expect(
                             "Expected `peace` `ItemId`s concatenated \
                             to be valid `dot_ix` `EdgeId`s.",
                         ),

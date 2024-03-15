@@ -1,12 +1,113 @@
 use peace::{
     cfg::{flow_id, item_id},
     data::fn_graph::{Edge, WouldCycle},
-    flow_model::FlowSpecInfo,
+    flow_model::{
+        dot_ix::{
+            self,
+            model::{
+                common::{EdgeId, NodeHierarchy, NodeId},
+                edge_id,
+                info_graph::{GraphDir, InfoGraph, NodeInfo},
+                node_id, IndexMap,
+            },
+        },
+        FlowSpecInfo,
+    },
     rt_model::{Flow, ItemGraph, ItemGraphBuilder},
 };
 use peace_items::blank::BlankItem;
 
 use crate::PeaceTestError;
+
+#[test]
+fn to_progress_info_graph() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_spec_info = flow_spec_info()?;
+
+    let info_graph = flow_spec_info.to_progress_info_graph();
+
+    let info_graph_expected = {
+        let mut node_hierarchy = NodeHierarchy::new();
+        node_hierarchy.insert(node_id!("a"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("b"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("c"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("d"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("e"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("f"), NodeHierarchy::new());
+
+        let mut edges = IndexMap::<EdgeId, [NodeId; 2]>::new();
+        edges.insert(edge_id!("a__b"), [node_id!("a"), node_id!("b")]);
+        edges.insert(edge_id!("a__c"), [node_id!("a"), node_id!("c")]);
+        edges.insert(edge_id!("b__e"), [node_id!("b"), node_id!("e")]);
+        edges.insert(edge_id!("c__d"), [node_id!("c"), node_id!("d")]);
+        edges.insert(edge_id!("d__e"), [node_id!("d"), node_id!("e")]);
+        edges.insert(edge_id!("f__e"), [node_id!("f"), node_id!("e")]);
+
+        let mut node_infos = IndexMap::<NodeId, NodeInfo>::new();
+        node_infos.insert(node_id!("a"), NodeInfo::new(String::from("a")));
+        node_infos.insert(node_id!("b"), NodeInfo::new(String::from("b")));
+        node_infos.insert(node_id!("c"), NodeInfo::new(String::from("c")));
+        node_infos.insert(node_id!("d"), NodeInfo::new(String::from("d")));
+        node_infos.insert(node_id!("e"), NodeInfo::new(String::from("e")));
+        node_infos.insert(node_id!("f"), NodeInfo::new(String::from("f")));
+
+        InfoGraph::builder()
+            .with_direction(GraphDir::Vertical)
+            .with_hierarchy(node_hierarchy)
+            .with_node_infos(node_infos)
+            .with_edges(edges)
+            .build()
+    };
+
+    assert_eq!(info_graph_expected, info_graph);
+    Ok(())
+}
+
+#[test]
+fn to_outcome_info_graph() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_spec_info = flow_spec_info()?;
+
+    let info_graph = flow_spec_info.to_outcome_info_graph();
+
+    let info_graph_expected = {
+        let mut node_hierarchy = NodeHierarchy::new();
+        node_hierarchy.insert(node_id!("a"), {
+            let mut node_hierarchy_a = NodeHierarchy::new();
+            node_hierarchy_a.insert(node_id!("b"), NodeHierarchy::new());
+            node_hierarchy_a
+        });
+        node_hierarchy.insert(node_id!("c"), {
+            let mut node_hierarchy_c = NodeHierarchy::new();
+            node_hierarchy_c.insert(node_id!("d"), NodeHierarchy::new());
+            node_hierarchy_c
+        });
+        node_hierarchy.insert(node_id!("e"), NodeHierarchy::new());
+        node_hierarchy.insert(node_id!("f"), NodeHierarchy::new());
+
+        let mut edges = IndexMap::<EdgeId, [NodeId; 2]>::new();
+        edges.insert(edge_id!("a__c"), [node_id!("a"), node_id!("c")]);
+        edges.insert(edge_id!("b__e"), [node_id!("b"), node_id!("e")]);
+        edges.insert(edge_id!("d__e"), [node_id!("d"), node_id!("e")]);
+        edges.insert(edge_id!("f__e"), [node_id!("f"), node_id!("e")]);
+
+        let mut node_infos = IndexMap::<NodeId, NodeInfo>::new();
+        node_infos.insert(node_id!("a"), NodeInfo::new(String::from("a")));
+        node_infos.insert(node_id!("b"), NodeInfo::new(String::from("b")));
+        node_infos.insert(node_id!("c"), NodeInfo::new(String::from("c")));
+        node_infos.insert(node_id!("d"), NodeInfo::new(String::from("d")));
+        node_infos.insert(node_id!("e"), NodeInfo::new(String::from("e")));
+        node_infos.insert(node_id!("f"), NodeInfo::new(String::from("f")));
+
+        InfoGraph::builder()
+            .with_direction(GraphDir::Vertical)
+            .with_hierarchy(node_hierarchy)
+            .with_node_infos(node_infos)
+            .with_edges(edges)
+            .build()
+    };
+
+    assert_eq!(info_graph_expected, info_graph);
+    Ok(())
+}
 
 #[test]
 fn clone() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,7 +125,7 @@ fn debug() -> Result<(), Box<dyn std::error::Error>> {
         "FlowSpecInfo { \
             flow_id: FlowId(\"flow_id\"), \
             graph_info: GraphInfo { \
-                graph: Dag { graph: Graph { Ty: \"Directed\", node_count: 6, edge_count: 9, edges: (0, 1), (0, 2), (1, 4), (2, 3), (3, 4), (5, 4), (1, 2), (5, 1), (0, 5), node weights: {0: ItemSpecInfo { item_id: ItemId(\"a\") }, 1: ItemSpecInfo { item_id: ItemId(\"b\") }, 2: ItemSpecInfo { item_id: ItemId(\"c\") }, 3: ItemSpecInfo { item_id: ItemId(\"d\") }, 4: ItemSpecInfo { item_id: ItemId(\"e\") }, 5: ItemSpecInfo { item_id: ItemId(\"f\") }}, edge weights: {0: Logic, 1: Logic, 2: Logic, 3: Logic, 4: Logic, 5: Logic, 6: Data, 7: Data, 8: Data} }, cycle_state: DfsSpace { dfs: Dfs { stack: [], discovered: FixedBitSet { data: [], length: 0 } } } } \
+                graph: Dag { graph: Graph { Ty: \"Directed\", node_count: 6, edge_count: 9, edges: (0, 1), (0, 2), (1, 4), (2, 3), (3, 4), (5, 4), (1, 2), (5, 1), (0, 5), node weights: {0: ItemSpecInfo { item_id: ItemId(\"a\") }, 1: ItemSpecInfo { item_id: ItemId(\"b\") }, 2: ItemSpecInfo { item_id: ItemId(\"c\") }, 3: ItemSpecInfo { item_id: ItemId(\"d\") }, 4: ItemSpecInfo { item_id: ItemId(\"e\") }, 5: ItemSpecInfo { item_id: ItemId(\"f\") }}, edge weights: {0: Contains, 1: Logic, 2: Logic, 3: Contains, 4: Logic, 5: Logic, 6: Data, 7: Data, 8: Data} }, cycle_state: DfsSpace { dfs: Dfs { stack: [], discovered: FixedBitSet { data: [], length: 0 } } } } \
             } \
         }",
         format!("{flow_spec_info:?}")
@@ -52,7 +153,7 @@ graph_info:
     edges:
     - - 0
       - 1
-      - Logic
+      - Contains
     - - 0
       - 2
       - Logic
@@ -61,7 +162,7 @@ graph_info:
       - Logic
     - - 2
       - 3
-      - Logic
+      - Contains
     - - 3
       - 4
       - Logic
@@ -103,10 +204,10 @@ graph_info:
     node_holes: []
     edge_property: directed
     edges:
-    - [0, 1, Logic]
+    - [0, 1, Contains]
     - [0, 2, Logic]
     - [1, 4, Logic]
-    - [2, 3, Logic]
+    - [2, 3, Contains]
     - [3, 4, Logic]
     - [5, 4, Logic]
     - [1, 2, Data]
@@ -127,11 +228,27 @@ fn flow_spec_info() -> Result<FlowSpecInfo, WouldCycle<Edge>> {
 }
 
 fn complex_graph() -> Result<ItemGraph<PeaceTestError>, WouldCycle<Edge>> {
+    // Progress:
+    //
+    // ```text
     // a - b --------- e
     //   \          / /
     //    '-- c - d  /
     //              /
     //   f --------'
+    // ```
+    //
+    // Outcome:
+    //
+    // ```text
+    // .-a---.     .-e-.
+    // |.-b-.|     '---'
+    // |'---'| .-c---.
+    // '-----' |.-d-.|
+    //         |'---'|
+    // .-f-.   '-----'
+    // '---'
+    // ```
     let mut item_graph_builder = ItemGraphBuilder::new();
     let [fn_id_a, fn_id_b, fn_id_c, fn_id_d, fn_id_e, fn_id_f] = item_graph_builder.add_fns([
         BlankItem::<()>::new(item_id!("a")).into(),
@@ -141,14 +258,13 @@ fn complex_graph() -> Result<ItemGraph<PeaceTestError>, WouldCycle<Edge>> {
         BlankItem::<()>::new(item_id!("e")).into(),
         BlankItem::<()>::new(item_id!("f")).into(),
     ]);
-    item_graph_builder.add_logic_edges([
-        (fn_id_a, fn_id_b),
-        (fn_id_a, fn_id_c),
-        (fn_id_b, fn_id_e),
-        (fn_id_c, fn_id_d),
-        (fn_id_d, fn_id_e),
-        (fn_id_f, fn_id_e),
-    ])?;
+    item_graph_builder.add_contains_edge(fn_id_a, fn_id_b)?;
+    item_graph_builder.add_logic_edge(fn_id_a, fn_id_c)?;
+    item_graph_builder.add_logic_edge(fn_id_b, fn_id_e)?;
+    item_graph_builder.add_contains_edge(fn_id_c, fn_id_d)?;
+    item_graph_builder.add_logic_edge(fn_id_d, fn_id_e)?;
+    item_graph_builder.add_logic_edge(fn_id_f, fn_id_e)?;
+
     let item_graph = item_graph_builder.build();
     Ok(item_graph)
 }

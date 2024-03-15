@@ -54,7 +54,7 @@ pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCus
         ServerFnError::<NoCustomError>::ServerError("`FlowSpecInfo` was not set.".to_string())
     })?;
 
-    let progress_info_graph = flow_spec_info.into_progress_info_graph();
+    let progress_info_graph = flow_spec_info.to_progress_info_graph();
     Ok(IntoGraphvizDotSrc::into(
         &progress_info_graph,
         &GraphvizDotTheme::default().with_graph_style(GraphStyle::Circle),
@@ -74,7 +74,7 @@ pub async fn outcome_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCust
         ServerFnError::<NoCustomError>::ServerError("`FlowSpecInfo` was not set.".to_string())
     })?;
 
-    let outcome_info_graph = flow_spec_info.into_outcome_info_graph();
+    let outcome_info_graph = flow_spec_info.to_outcome_info_graph();
     Ok(IntoGraphvizDotSrc::into(
         &outcome_info_graph,
         &GraphvizDotTheme::default().with_graph_style(GraphStyle::Boxes),
