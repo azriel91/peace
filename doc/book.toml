@@ -27,3 +27,6 @@ site-url = "/book/" # to work with `peace_website`
 [output.html.fold]
 enable = true
 level = 1
+
+[output.html.code]
+hidelines = { bash = "~", cs = "~", java = "#" }
