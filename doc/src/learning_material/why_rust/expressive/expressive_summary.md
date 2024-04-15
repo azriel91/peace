@@ -4,7 +4,7 @@
 
 1. How easy is it to:
     - Take a design and implement the code?
-    - Read code, and understand the intent?
+    - Read code, and understand what it is doing?
 2. Rust allows you to write concise code that retains clarity.
 
 </div>

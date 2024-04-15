@@ -91,15 +91,16 @@
             - [Co/Co Mapping](learning_material/why_rust/expressive/coco_mapping.md)
             - [Traits](learning_material/why_rust/expressive/traits.md)
                 <!-- - [Traits 2](learning_material/why_rust/expressive/traits_2.md) -->
+                <!-- - [Multiple Values - Java](learning_material/why_rust/expressive/multiple_values_java.md) -->
             - [Multiple Values - Rust](learning_material/why_rust/expressive/multiple_values_rust.md)
             - [Control Flow](learning_material/why_rust/expressive/control_flow.md)
             - [Control Flow - Java](learning_material/why_rust/expressive/control_flow_java.md)
-            - [Control Flow - Rust](learning_material/why_rust/expressive/control_flow_rust.md)
                 <!-- - [Control Flow - Rust 1](learning_material/why_rust/expressive/control_flow_rust_1a.md) -->
                 <!-- - [Control Flow - Rust 1](learning_material/why_rust/expressive/control_flow_rust_1b.md) -->
-                <!-- - [Multiple Values - Java](learning_material/why_rust/expressive/multiple_values_java.md) -->
+            - [Control Flow - Rust](learning_material/why_rust/expressive/control_flow_rust.md)
             - [Expressive Summary](learning_material/why_rust/expressive/expressive_summary.md)
         - [👻 No Surprises](learning_material/why_rust/no_surprises.md)
+            - [Equality](learning_material/why_rust/no_surprises/equality.md)
             - [Equality - Java](learning_material/why_rust/no_surprises/equality_java.md)
             - [Equality - Rust 1](learning_material/why_rust/no_surprises/equality_rust_1.md)
             - [Equality - Rust 2](learning_material/why_rust/no_surprises/equality_rust_2.md)
