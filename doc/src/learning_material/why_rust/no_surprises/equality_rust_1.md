@@ -1,6 +1,7 @@
 # Equality - Rust
 
 ```rust
+
 struct Data(u32);
 
 # fn main() {

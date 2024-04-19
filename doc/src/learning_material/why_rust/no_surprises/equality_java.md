@@ -5,11 +5,11 @@
 ```java
 # class Data {
 #     public int value;
-#     public Data(int value) { this.value = value; }
+#     public Data(int value) {
+#         this.value = value;
+#     }
 # }
-#
-String ab = "ab";
-String c = "c";
+String ab = "ab", c = "c";
 # boolean[] equality = new boolean[] {
 
 // Which of the following are true / false?

@@ -2,7 +2,7 @@
 
 <div style="font-size: 1.5em;">
 
-Many third party built tools:
+Many tools by the community:
 
 * **🛡️ audit** <!-- Ensures your dependencies have no vulnerabilities.-->
 * **🙅 deny** <!-- Ensures all dependencies are published with specific licenses.-->

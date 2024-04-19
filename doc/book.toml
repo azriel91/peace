@@ -29,4 +29,4 @@ enable = true
 level = 1
 
 [output.html.code]
-hidelines = { bash = "~", cs = "~", java = "#" }
+hidelines = { bash = "~", cs = "~", java = "#", patch = "#" }

@@ -18,6 +18,7 @@ name = "scratch"
 version = "0.1.0"
 
 [dependencies]
+# yes we have comments!
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 ```
