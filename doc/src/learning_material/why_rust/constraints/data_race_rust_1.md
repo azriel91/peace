@@ -1,4 +1,4 @@
-# Example: Data Race - Rust 1
+# Data Race - Rust 1
 
 ```rust
 # use std::thread;
@@ -31,8 +31,8 @@ println!("value: {}", data.value);
 ~ (
 ~   mkdir -p /tmp/target/rust
 ~   rustc \
-~     doc/src/learning_material/why_rust/constraints/example_data_race_1.rs \
-~     -o /tmp/target/rust/example_data_race_1
-~   /tmp/target/rust/example_data_race_1
+~     doc/src/learning_material/why_rust/constraints/data_race_1.rs \
+~     -o /tmp/target/rust/data_race_1
+~   /tmp/target/rust/data_race_1
 ~ )
 ```

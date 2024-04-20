@@ -1,4 +1,4 @@
-# Example: Data Race - Rust 2
+# Data Race - Rust 2
 
 ```rust
 # use std::{
@@ -51,8 +51,8 @@ if let Ok(Ok(data)) = Arc::try_unwrap(arc_mutex).map(Mutex::into_inner) {
 ~ (
 ~   mkdir -p /tmp/target/rust
 ~   rustc \
-~     doc/src/learning_material/why_rust/constraints/example_data_race_2.rs \
-~     -o /tmp/target/rust/example_data_race_2
-~   /tmp/target/rust/example_data_race_2
+~     doc/src/learning_material/why_rust/constraints/data_race_2.rs \
+~     -o /tmp/target/rust/data_race_2
+~   /tmp/target/rust/data_race_2
 ~ )
 ```

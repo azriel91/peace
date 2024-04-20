@@ -1,38 +1,56 @@
 # Multiple Values - Java
 
+<div style="display: flex; justify-content: center; gap: 20px;">
+<div style="flex-basis: 50%; flex: 1 0;">
+
 ```java
-public static String fetchName() {
+public static String fetch() {
     return "name";
 }
 
-public static void main(String[] args) {
-    String name = fetchName();
+public static void main(
+    String[] args
+) {
+    String name = fetch();
+
+
 
     System.out.println(name);
 }
 ```
 
+</div>
+<div style="flex-basis: 50%; flex: 1 0;">
 
 ```java
-public static NameAndCached fetchName() {
-    return new NameAndCached("name", false);
+public static NameAndVal fetch() {
+    return new NameAndVal("name", 123);
 }
 
-public static void main(String[] args) {
-    NameAndCached nameAndIsCached = fetchName();
-    String name = nameAndIsCached.name;
-    boolean cached = nameAndIsCached.cached;
+public static void main(
+    String[] args
+) {
+    var nameAndVal = fetch();
+    var name = nameAndVal.name;
+    var val = nameAndVal.val;
 
-    System.out.println(String.format("%s %b", name, cached));
+    System.out.println(String.format(
+        "%s %b", name, val
+    ));
 }
 
-static class NameAndCached {
+static class NameAndVal {
     final String name;
-    final boolean cached;
+    final boolean val;
 
-    public NameAndCached(final String name, final boolean cached) {
+    public NameAndVal(
+            final String name,
+            final boolean val) {
         this.name = name;
-        this.cached = cached;
+        this.val = val;
     }
 }
 ```
+
+</div>
+</div>

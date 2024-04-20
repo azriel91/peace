@@ -3,8 +3,12 @@
 <div style="font-size: 1.5em;">
 
 1. Constraints mark programs as invalid.
+
 2. Well designed constraints mark incorrect programs as invalid.
-3. Rust implements strict constraints.
+
+3. Rust has strict constraints, so more incorrect programs are marked invalid.
+
+---
 
 Switch from:
 

@@ -1,58 +1,53 @@
-# Example: Non-nullability - Rust
+# Nullability - Rust
 
-```rust
-fn do_something(s: String) {
-    // s can *never!* be `null`
+```rust ,ignore
+fn print(s: String) {
     println!("{s}");
     println!("{}", s.len());
 }
 ```
 
 ```rust
-# fn do_something(s: String) {
+# fn print(s: String) {
 #     println!("{s}");
 #     println!("{}", s.len());
 # }
-#
-#
-#
 # fn main() {
-do_something("hello".into());
+print();
 # }
 ```
 
 ```rust
-# fn do_something(s: String) {
+# fn print(s: String) {
 #     println!("{s}");
 #     println!("{}", s.len());
 # }
 #
-#
-#
 # fn main() {
-do_something(None);
+print(None);
 # }
 ```
 
 ```rust
-# fn do_something(s: String) {
+# fn print(s: String) {
 #     println!("{s}");
 #     println!("{}", s.len());
 # }
 #
 #
-#
 # fn main() {
-do_something();
+print("hello".into());
 # }
 ```
+
+
 
 ## Accepting "nothing"
 
 ```rust
-fn do_something(s_opt: Option<String>) {
+fn print(s_opt: Option<String>) {
     match s_opt {
-        None => println!("it's nothing!"),
+        None => println!("nothing!"),
         Some(s) => {
             println!("{s}");
             println!("{}", s.len());
@@ -61,7 +56,7 @@ fn do_something(s_opt: Option<String>) {
 }
 
 fn main() {
-    do_something(Some("hello".into()));
-    do_something(None);
+    print(None);
+    print(Some("hello".into()));
 }
 ```

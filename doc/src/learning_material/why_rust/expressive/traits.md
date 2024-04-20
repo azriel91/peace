@@ -1,5 +1,8 @@
 # Traits
 
+<div style="display: flex; justify-content: center; gap: 20px;">
+<div style="flex-basis: 50%; flex: 1 0;">
+
 ```rust
 # use std::time::Duration;
 # fn main() {
@@ -8,17 +11,27 @@ let duration =
     + Duration::from_secs(15)
     + Duration::from_secs(47);
 
-println!("{} seconds", duration.as_secs());
+println!(
+    "{} seconds",
+    duration.as_secs()
+);
 # }
 ```
 
----
+</div>
+<div style="flex-basis: 50%; flex: 1 0;">
 
 ```rust
 # fn main() {
-let duration = 3.minutes() + 15.seconds() + 47.seconds();
+let duration =
+    3.minutes()
+    + 15.seconds()
+    + 47.seconds();
 
-println!("{}", duration.for_humans());
+println!(
+    "{}",
+    duration.for_humans()
+);
 # }
 #
 # trait IntoDuration {
@@ -58,6 +71,9 @@ println!("{}", duration.for_humans());
 #     }
 # }
 ```
+
+</div>
+</div>
 
 <!--
 * In Rust, we can write code, that is very readable, *and* still retain strong type checking.

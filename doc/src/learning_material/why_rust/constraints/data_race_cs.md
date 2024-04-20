@@ -1,4 +1,4 @@
-# Example: Data Race - C#
+# Data Race - C#
 
 ```cs
 ~ using System;
@@ -34,9 +34,9 @@ Console.WriteLine($"value: {data.Value}");
 ~ (
 ~   mkdir -p /tmp/target/cs
 ~   mono-csc \
-~     doc/src/learning_material/why_rust/constraints/example_data_race.cs \
-~     -out:/tmp/target/cs/example_data_race.exe
-~   /tmp/target/cs/example_data_race.exe
+~     doc/src/learning_material/why_rust/constraints/data_race.cs \
+~     -out:/tmp/target/cs/data_race.exe
+~   /tmp/target/cs/data_race.exe
 ~ )
 ```
 

@@ -7,6 +7,6 @@
     font-size: 2.0em;
 ">
 
-# 👻 No Surprises
+# 😵‍💫 Umambiguous
 
 </div>
