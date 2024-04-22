@@ -112,7 +112,7 @@ catch (ConnectionLostException e) {}
 
 </div>
 
-### Cleaner
+### Unambiguous
 
 <div style="display: flex; justify-content: center; gap: 20px;">
 <div style="flex-basis: 50%;">
