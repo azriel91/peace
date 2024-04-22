@@ -1,5 +1,13 @@
 # Cloning - Rust
 
+```rust
+#[derive(Clone, Copy)] // <-- just add this "procedural macro"
+pub struct Data {
+    value: u32,
+}
+```
+
+
 ### Copy
 
 <div style="display: flex; justify-content: center; gap: 20px;">

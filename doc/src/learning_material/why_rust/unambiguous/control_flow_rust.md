@@ -116,6 +116,7 @@ pub enum Fail {
 ### Usage
 
 ```rust
+# #![deny(unused_must_use)]
 # fn main() {
 // Use `download()`
 let result = download("/tmp/a_file.txt");
@@ -168,25 +169,6 @@ upload("/tmp/a_file.txt");
 #     ConnectionLost(std::io::Error),
 # }
 ```
-
-<details><summary>compile warning</summary>
-
-```rust ,ignore
-warning: unused `Result` that must be used
-  --> src/main.rs:19:1
-   |
-19 | upload("/tmp/a_file.txt");
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-   = note: this `Result` may be an `Err` variant, which should be handled
-   = note: `#[warn(unused_must_use)]` on by default
-help: use `let _ = ...` to ignore the resulting value
-   |
-19 | let _ = upload("/tmp/a_file.txt");
-   | +++++++
-```
-
-</details>
 
 <!--
 
