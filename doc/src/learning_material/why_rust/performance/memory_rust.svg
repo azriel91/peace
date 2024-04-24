@@ -54,7 +54,7 @@
 <g tabindex="0" id="node3" class="node [&amp;>path]:focus:outline-blue-500 [&amp;>path]:focus:outline-2 [&amp;>path]:focus:outline-dashed [&amp;>path]:stroke-sky-600 [&amp;>path]:stroke-1 [&amp;>path]:focus:stroke-sky-500 [&amp;>path]:focus:stroke-1 [&amp;>path]:focus:hover:stroke-sky-400 [&amp;>path]:focus:hover:stroke-1 [&amp;>path]:hover:stroke-sky-400 [&amp;>path]:hover:stroke-1 [&amp;>path]:focus:active:stroke-sky-500 [&amp;>path]:focus:active:stroke-1 [&amp;>path]:fill-sky-300 [&amp;>path]:focus:fill-sky-200 [&amp;>path]:focus:hover:fill-sky-100 [&amp;>path]:hover:fill-sky-100 [&amp;>path]:focus:active:fill-sky-200 px-1.5 py-1.5 cursor-pointer rounded-lg ">
 <title>stack_var_1</title>
 <path fill="lightgrey" d="M49.81,-65.88C49.81,-65.88 19.89,-65.88 19.89,-65.88 16.93,-65.88 13.97,-62.92 13.97,-59.96 13.97,-59.96 13.97,-54.04 13.97,-54.04 13.97,-51.08 16.93,-48.12 19.89,-48.12 19.89,-48.12 49.81,-48.12 49.81,-48.12 52.77,-48.12 55.73,-51.08 55.73,-54.04 55.73,-54.04 55.73,-59.96 55.73,-59.96 55.73,-62.92 52.77,-65.88 49.81,-65.88"></path>
-<text text-anchor="start" x="16.85" y="-54" font-family="liberationmono" font-size="10.00" fill="#111111">123</text>
+<text text-anchor="start" x="16.85" y="-54" font-family="liberationmono" font-size="10.00" fill="#111111">&#160;&#160;&#160;123</text>
 </g>
 </g>
 </svg>

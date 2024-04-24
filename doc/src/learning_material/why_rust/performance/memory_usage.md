@@ -15,6 +15,7 @@ class Outer { Inner inner; }
 
 public static void main(String[] ag) {
     var s = "hello";
+
     var outer = new Outer();
     outer.inner = new Inner();
     inner.value = 123;
