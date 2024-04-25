@@ -1,8 +1,12 @@
 # Benchmarks
 
+<div style="font-size: 1.5em;">
+
 > Rust is blazingly fast ...
 >
 > -- <https://www.rust-lang.org/>
+
+</div>
 
 
 ## Charts
