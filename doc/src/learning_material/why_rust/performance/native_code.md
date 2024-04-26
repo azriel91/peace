@@ -14,9 +14,12 @@ Rust is compiled to target CPU code via LLVM. So you get similar speeds to C/C++
 
 <div class="hidden">
 
-1. C, C++, and Rust compile to something called LLVM IR -- which is short for low level virtual machine, intermediate representation.
-2. This is further compiled to the binary instruction for each CPU.
-3. whether it is Intel, ARM -- which is what Macs use,
-
+1. In more detail, Rust has good CPU performance because of how it is compiled.
+1. C, C++, Rust, Swift, and Julia, compile to something called LLVM IR -- which is short for low level virtual machine, intermediate representation.
+2. This is further compiled into CPU specific instructions,
+3. meaning it runs very fast, on those CPUs,
+4. whether it is Intel, ARM -- which is what Macs use, or something else.
+5. This means you cannot take an executable compiled for Intel, and run it on an ARM CPU.
+6. LLVM IR can also be compiled to Web assembly, which runs in the browser.
 
 </div>
