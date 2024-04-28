@@ -1,0 +1,25 @@
+# Native Code
+
+Rust is compiled to target CPU code via LLVM. So you get similar speeds to C/C++.
+
+<div style="display: flex; justify-content: center;">
+
+<object
+    type="image/svg+xml"
+    data="llvm.svg"
+    width="600"></object>
+<small>[](https://azriel.im/dot_ix/?src=BYSwpgTghhDGwE8BcAoABGgznVGPdgH0B7AF2EkyTQG8BfdPAwzAdxADNTr7H85CEAK6ZutBniwDYABxk8JaADZKAbgFtCICAsYAjKLADWYAHYATXHgPGz5kuUq7JNkxcKsomdc%2BuG39jA%2B4nxornaEAB4AHABsuiimxOZghKZQ6mBUjATUAEQAPHoAfADKxEJwYGiwyWAFAPQleTnSctR4eQDCDV0A1H15aADEaHnqUCCmAHSyMi38RMKiHWMASiKkYyNjE1PTEJgLUkRsnGJjpexcQ6PjkzNnN61EZBSH%2BWjT0xjHKhpaHRjAAywIAagBZNAACgAkmsAJTHcIWfJFYpdAAKAFU0FNRMJYKQQMRTJhGs19P4IjF4pI8rSYbDTKQwEoEWMqbZ3EFVmMAIJrKGSelcgIeLzBX4AdTAejQ-MwmDA6j0SgQyOp7jeTm2km%2BIpaiTqhBSmFg2Qwo1yY2OzDm%2BVuaAA5KJLEhakItgAyJSkADcvoDYwoKmIeX9zpegk2jp2zpkECmpCUpgAhNC8qGlOGEVHFixrmI8k6E0mWZns7n8ycHO8qLbGKNgKRSDIqA0Gv91NNiBAAOYNczEC0NYFQUz9tZgDjTFvqJTDdTJIRKMAAWgJQiJlTAjG7gLjo1gUBUeIAzAAmNAAARkXsw0JkpAgt%2BmBIRTbCWssjataBbNsOwafsQHIIQ9FmYh1CHDg2SUEBMC7NR1HXKt11YPslHMJocz0BoJlESAGiraUsPMd8xRpOIjzQAAfddQlGZdVAARzQABSQ4QAAGk4uBIiYmpTyUViAEh71ITAv0A9skE7YgZDMTAKiqKCYJgYlYDXBpLwARgac8SPg4gMPIjC5S8ZVVXVKieQgYISx2AB%2BZy7PsTxvFo6EOCEUxYC%2BaZPwwFF7B1D5bR2PJviNJIUkIFViAAK0QqwbUAXg3AEWd6MHTQdLAA2d6NljEQA%2BDcAAN3oyeMR0sAMh3o3Cht0sALZ39xQw88sAJd3AHg-9zqHSwBS3Z6kKfyiGi8sAbp33MIXk8sGqbPOCQAeDcABH2poavrAC%2BdlAUDAcx%2ByyNKBEIA9tGoABtAg%2BJOiAAF1WoBbRCEIULzuuvjQrulBHEyKxMgHVJ2HIZ6vDAagXyEPd8FIBA10tPA4tSFIOCgVcpKsSQCWIEwPBAcxyGoZ09JrSQwEiF8oAJ2BKhUiB1xkYhk0gNAIAqCxdvXJR%2B2JtBdv200ZxRv04ZJsnoGoKnDj7OmGZZSBQmYY62tO0J8GAKAlMIWocyBNUIZVrAXyx1JRBh0G0HMLwKHMf9MGAPtyAna2OD7NAzu9YoZCgcgbqQC7DZMdcLdtmBoGQc87pFA2Wex9g8eAAmzr0mRIhu7moej421fipIHNPAnYgABgLtO0A4EAVBYLPUhziYlAJgBWIuS9J8nqGKRjI4wN2Pa94AfYnEAJlZdc-YzwPLeIDgOGVUh1xY1IABZMGOqYwBgLRTDL0wwLACPO4lmnpcZiBQmup6Xv14ONa1vtqF1yGRUx7GTbXagg6tm27YgB2LFLl3u89t7X2T8NzvxDlAMOe8Mb%2BwBrjfGLpE7J1TpfGBlcoDZz7LXfOTd9ZlwrsHDBuc64ukbsXfWLcxZoHbvrLu7tAF9yQAPIeG5R5G3HrbSe08wCz3noQJeK9TBrwgBvLeO8oEigPlLemx9T4gH7C2agvo5EtlweXJQaDCFYJdHpHBkc8HqIIakO2qhIANzIXotRGjUjOypg2QmuiRT6KsdNIkIATEEx0eYx%2BqDDFpEwXnF0C8HHQIzs44xpiXTnmCUwHxVcXHEncSQ6J6cjYsGhq-c2ZBWTmH1p7cw5gpj9gJuebmuR9YFAKNQAAVAheRpBL5q2vsQbW1B%2Byh31hUFMq9NbNNvmgBAJlWChAvpHCp1TakqMjlfVIN8dZKD1igC0DZqEYBvCYBAHBoCZEwFHNh79OEzznsQExtBQgFw4ngGguyA77KnjPagC9oj%2BjQIoDAniLlXJAewu2dzuHUALs8xQDAgA)</small>
+
+</div>
+
+<div class="hidden">
+
+1. In more detail, Rust has good CPU performance because of how it is compiled.
+1. C, C++, Rust, Swift, and Julia, compile to something called LLVM IR -- which is short for low level virtual machine, intermediate representation.
+2. This is further compiled into CPU specific instructions,
+3. meaning it runs very fast, on those CPUs,
+4. whether it is Intel, ARM -- which is what Macs use, or something else.
+5. This means you cannot take an executable compiled for Intel, and run it on an ARM CPU.
+6. LLVM IR can also be compiled to Web assembly, which runs in the browser.
+
+</div>

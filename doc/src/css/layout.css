@@ -39,3 +39,11 @@ hr {
     border: none;
     padding: 0.1em 0.5em;
 }
+
+ol ol {
+    list-style: lower-alpha;
+}
+
+ol ol ol {
+    list-style: lower-roman;
+}
