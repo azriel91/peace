@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use dot_ix::model::{
-    common::{EdgeId, NodeHierarchy, NodeId},
-    info_graph::{GraphDir, IndexMap, InfoGraph, NodeInfo},
+    common::{EdgeId, Edges, NodeHierarchy, NodeId, NodeNames},
+    info_graph::{GraphDir, InfoGraph},
 };
 use fn_graph::{daggy::Walker, Edge, FnId, GraphInfo};
 use peace_core::FlowId;
@@ -48,13 +48,13 @@ impl FlowSpecInfo {
         );
 
         let edges = progress_node_edges(graph_info);
-        let node_infos = node_infos(graph_info);
+        let node_names = node_names(graph_info);
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .build()
     }
 
@@ -82,13 +82,13 @@ impl FlowSpecInfo {
             );
 
         let edges = outcome_node_edges(graph_info);
-        let node_infos = node_infos(graph_info);
+        let node_names = node_names(graph_info);
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .build()
     }
 }
@@ -139,9 +139,9 @@ fn outcome_node_hierarchy(
 }
 
 /// Returns the list of edges between items in the graph.
-fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, [NodeId; 2]> {
+fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> Edges {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
+        Edges::with_capacity(graph_info.node_count()),
         |mut edges, (node_index, item_spec_info)| {
             //
             let children = graph_info.children(node_index);
@@ -183,9 +183,9 @@ fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, 
 /// For progress graphs, an edge is rendered between pairs of predecessor and
 /// successor items, regardless of whether their dependency is `Edge::Logic`
 /// (adjacent) or `Edge::Contains` (nested).
-fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, [NodeId; 2]> {
+fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> Edges {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
+        Edges::with_capacity(graph_info.node_count()),
         |mut edges, (node_index, item_spec_info)| {
             //
             let children = graph_info.children(node_index);
@@ -222,18 +222,18 @@ fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId,
 }
 
 /// Returns the list of edges between items in the graph.
-fn node_infos(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<NodeId, NodeInfo> {
+fn node_names(graph_info: &GraphInfo<ItemSpecInfo>) -> NodeNames {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
-        |mut node_infos, (_node_index, item_spec_info)| {
+        NodeNames::with_capacity(graph_info.node_count()),
+        |mut node_names, (_node_index, item_spec_info)| {
             let item_id = item_spec_info_to_node_id(item_spec_info);
 
             // Note: This does not have to be the ID, it can be a human readable name.
-            let node_info = NodeInfo::new(item_id.to_string());
+            let node_name = item_id.to_string();
 
-            node_infos.insert(item_id, node_info);
+            node_names.insert(item_id, node_name);
 
-            node_infos
+            node_names
         },
     )
 }

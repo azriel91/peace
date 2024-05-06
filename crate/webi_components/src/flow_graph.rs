@@ -38,7 +38,9 @@ pub fn FlowGraph() -> impl IntoView {
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <div class="flex items-center justify-center">
-                <DotSvg dot_src_and_styles=progress_dot_graph />
+                <DotSvg
+                    dot_src_and_styles=progress_dot_graph.into()
+                />
                 {outcome_info_graph}
             </div>
         </Transition>
