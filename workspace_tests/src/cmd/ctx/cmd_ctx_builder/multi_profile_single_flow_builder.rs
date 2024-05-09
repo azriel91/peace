@@ -24,8 +24,8 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_flow(&flow)
         .build()
         .await?;
@@ -82,8 +82,8 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_flow(&flow)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
@@ -151,8 +151,8 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_profile_param::<u64>(String::from("profile_param_1"))
@@ -212,8 +212,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_flow(&flow)
         .with_flow_params_k::<String>()
         .with_flow_param::<bool>(String::from("flow_param_0"))
@@ -280,8 +280,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_flow(&flow)
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
@@ -344,8 +344,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_flow_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_flow_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
@@ -359,8 +359,8 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_flow(&flow)
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
@@ -447,8 +447,8 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -496,8 +496,8 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_profile_filter()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_profile_filter(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
@@ -511,8 +511,8 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -592,12 +592,14 @@ async fn getters() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_flow(&flow)
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_flow(&flow)
+    .build()
+    .await?;
 
     assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
     assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
@@ -633,12 +635,14 @@ async fn debug() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_flow(&flow)
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_flow(&flow)
+    .build()
+    .await?;
 
     let multi_profile_single_flow = cmd_ctx.scope();
     assert!(format!("{multi_profile_single_flow:?}").contains("MultiProfileSingleFlow {"));

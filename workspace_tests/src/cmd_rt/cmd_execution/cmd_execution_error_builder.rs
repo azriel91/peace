@@ -41,8 +41,8 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
         flow,
     } = test_ctx_init().await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -130,8 +130,8 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
         flow,
     } = test_ctx_init().await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(

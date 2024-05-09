@@ -14,8 +14,8 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemGraphBuilder::new().build());
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(output.into(), (&workspace).into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .build()

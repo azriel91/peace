@@ -21,8 +21,8 @@ use crate::{
 };
 
 #[tokio::test]
-async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -35,18 +35,21 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     let CmdOutcome::Complete {
         value: states_current,
         cmd_blocks_processed: _,
@@ -85,8 +88,8 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
 }
 
 #[tokio::test]
-async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -99,18 +102,21 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
@@ -185,8 +191,8 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 }
 
 #[tokio::test]
-async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -199,18 +205,21 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Clean states.
@@ -244,8 +253,8 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
 }
 
 #[tokio::test]
-async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -258,18 +267,21 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
@@ -316,8 +328,8 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
 }
 
 #[tokio::test]
-async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -330,18 +342,21 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
@@ -353,16 +368,19 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
     };
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     // Overwrite states current.
     cmd_ctx
         .resources_mut()
@@ -423,8 +441,8 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 /// This should not return an error, because the target state for cleaning is
 /// not `state_goal`, but `state_clean`.
 #[tokio::test]
-async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -437,18 +455,21 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
@@ -460,16 +481,19 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
     };
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
 
     // Dry-clean states.
     let CmdOutcome::Complete {
@@ -532,8 +556,8 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -546,18 +570,21 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
@@ -569,16 +596,19 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
     };
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
     // Overwrite states current.
     cmd_ctx
         .resources_mut()
@@ -638,8 +668,8 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
 /// This should not return an error, because the target state for cleaning is
 /// not `state_goal`, but `state_clean`.
 #[tokio::test]
-async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -652,18 +682,21 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current and goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(0).into())
+    .await?;
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Alter states.
@@ -675,16 +708,19 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         panic!("Expected `EnsureCmd::exec` to complete successfully.");
     };
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
 
     // Clean states.
     let CmdOutcome::Complete {
@@ -747,8 +783,8 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -767,17 +803,20 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
 
     // Write current and goal states to disk.
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
@@ -855,8 +894,8 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -869,17 +908,20 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
 
     // Write current and goal states to disk.
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
@@ -916,10 +958,13 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,

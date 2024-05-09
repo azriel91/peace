@@ -12,12 +12,14 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_profile(profile.clone())
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile.clone())
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
@@ -38,17 +40,19 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_profile(profile.clone())
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile.clone())
+    .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+    .with_workspace_param_value(
+        String::from("ws_param_1"),
+        Some("ws_param_1_value".to_string()),
+    )
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
@@ -75,14 +79,16 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
-            .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
-            .with_profile(profile.clone())
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
+    .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
+    .with_profile(profile.clone())
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
@@ -107,19 +113,21 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_profile(profile.clone())
-            .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile.clone())
+    .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
+    .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+    .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
+    .with_workspace_param_value(
+        String::from("ws_param_1"),
+        Some("ws_param_1_value".to_string()),
+    )
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
@@ -144,23 +152,25 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_from_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_from_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .with_profile_from_workspace_param(&String::from("profile"))
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+    .with_workspace_param_value(
+        String::from("ws_param_1"),
+        Some("ws_param_1_value".to_string()),
+    )
+    .with_profile_from_workspace_param(&String::from("profile"))
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
@@ -182,25 +192,27 @@ async fn build_with_workspace_params_with_profile_from_params()
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_profile_from_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-            .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .with_profile_from_workspace_param(&String::from("profile"))
-            .build()
-            .await?;
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError, _>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
+    .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+    .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
+    .with_workspace_param_value(
+        String::from("ws_param_1"),
+        Some("ws_param_1_value".to_string()),
+    )
+    .with_profile_from_workspace_param(&String::from("profile"))
+    .build()
+    .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let profile_dir = ProfileDir::from((peace_app_dir, &profile));
