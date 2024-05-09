@@ -4,6 +4,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use futures::stream::{StreamExt, TryStreamExt};
 use interruptible::Interruptibility;
+use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_cfg::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -48,11 +49,11 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut CmdCtxBuilderTypesT::Output,
+    output: OwnedOrMutRef<'ctx, CmdCtxBuilderTypesT::Output>,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
-    workspace: &'ctx Workspace,
+    workspace: OwnedOrRef<'ctx, Workspace>,
     /// Data held while building `CmdCtx`.
     scope_builder: ScopeBuilder,
 }

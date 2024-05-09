@@ -150,10 +150,6 @@ fn impl_build_for(
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
 
-    let workspace_dirs_and_storage_borrow = quote! {
-        let workspace_dirs = self.workspace.dirs();
-        let storage = self.workspace.storage();
-    };
     let (workspace_params_deserialize, workspace_params_serialize, workspace_params_insert) =
         workspace_params_load_save(workspace_params_selection);
 
@@ -308,13 +304,20 @@ fn impl_build_for(
             {
                 use futures::stream::TryStreamExt;
 
-                // Values shared by subsequent function calls.
-                // let workspace_dirs = self.workspace.dirs();
-                // let storage = self.workspace.storage();
-                #workspace_dirs_and_storage_borrow
-
+                // let workspace = &self.workspace;
+                // let workspace_dirs = workspace.dirs();
+                // let storage = workspace.storage();
+                // let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                // let workspace_params = &mut self.scope_builder.workspace_params_selection.0;
+                //
                 // let workspace_params_file = WorkspaceParamsFile::from(workspace_dirs.peace_app_dir());
-                // self.workspace_params_merge(&workspace_params_file).await?;
+                // self.workspace_params_merge(
+                //     storage,
+                //     params_type_regs_builder,
+                //     workspace_params,
+                //     &workspace_params_file,
+                // )
+                //.await?;
                 #workspace_params_deserialize
 
                 // let profile = self
@@ -340,6 +343,7 @@ fn impl_build_for(
                 #profile_s_ref
 
                 // === Cmd dirs === //
+                // let workspace_dirs = self.workspace.dirs();
                 // --- Single Profile --- //
                 // let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile_s_ref));
                 // let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
@@ -407,6 +411,12 @@ fn impl_build_for(
 
                 // === Profile Params === //
                 // --- Single --- //
+                // let workspace = &self.workspace;
+                // let workspace_dirs = workspace.dirs();
+                // let storage = workspace.storage();
+                // let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                // let profile_params = &mut self.scope_builder.profile_params_selection.0;
+                //
                 // let profile_params_file = ProfileParamsFile::from(&profile_dir);
                 // self.profile_params_merge(&profile_params_file).await?;
                 // --- Multi --- //
@@ -436,6 +446,12 @@ fn impl_build_for(
 
                 // === Flow Params === //
                 // --- Single --- //
+                // let workspace = &self.workspace;
+                // let workspace_dirs = workspace.dirs();
+                // let storage = workspace.storage();
+                // let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                // let flow_params = &mut self.scope_builder.flow_params_selection.0;
+                //
                 // let flow_params_file = ProfileParamsFile::from(&flow_dir);
                 // self.flow_params_merge(&flow_params_file).await?;
                 // --- Multi --- //
@@ -503,6 +519,8 @@ fn impl_build_for(
                 let interruptibility_state = interruptibility.into();
 
                 // Serialize params to `PeaceAppDir`.
+
+                let storage = workspace.storage();
 
                 // crate::ctx::cmd_ctx_builder::workspace_params_serialize(
                 //     &workspace_params,
@@ -950,11 +968,23 @@ fn workspace_params_load_save(
         }
         WorkspaceParamsSelection::Some => {
             let workspace_params_deserialize = quote! {
+                let workspace = &self.workspace;
+                let workspace_dirs = workspace.dirs();
+                let storage = workspace.storage();
+                let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                let workspace_params = &mut self.scope_builder.workspace_params_selection.0;
+
                 let workspace_params_file = peace_resources::internal::WorkspaceParamsFile::from(
                     workspace_dirs.peace_app_dir()
                 );
 
-                self.workspace_params_merge(&workspace_params_file).await?;
+                Self::workspace_params_merge(
+                    storage,
+                    params_type_regs_builder,
+                    workspace_params,
+                    &workspace_params_file,
+                )
+                .await?;
             };
             let workspace_params_serialize = quote! {
                 crate::ctx::cmd_ctx_builder::workspace_params_serialize(
@@ -1014,11 +1044,22 @@ fn profile_params_load_save(
             }
             ProfileParamsSelection::Some => {
                 let profile_params_deserialize = quote! {
+                    let workspace = &self.workspace;
+                    let workspace_dirs = workspace.dirs();
+                    let storage = workspace.storage();
+                    let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                    let profile_params = &mut self.scope_builder.profile_params_selection.0;
+
                     let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
                         &profile_dir
                     );
 
-                    self.profile_params_merge(&profile_params_file).await?;
+                    Self::profile_params_merge(
+                        storage,
+                        params_type_regs_builder,
+                        profile_params,
+                        &profile_params_file,
+                    ).await?;
                 };
                 let profile_params_serialize = quote! {
                     crate::ctx::cmd_ctx_builder::profile_params_serialize(
@@ -1147,11 +1188,22 @@ fn flow_params_load_save(
             }
             FlowParamsSelection::Some => {
                 let flow_params_deserialize = quote! {
+                    let workspace = &self.workspace;
+                    let workspace_dirs = workspace.dirs();
+                    let storage = workspace.storage();
+                    let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
+                    let flow_params = &mut self.scope_builder.flow_params_selection.0;
+
                     let flow_params_file = peace_resources::internal::FlowParamsFile::from(
                         &flow_dir
                     );
 
-                    self.flow_params_merge(&flow_params_file).await?;
+                    Self::flow_params_merge(
+                        storage,
+                        params_type_regs_builder,
+                        flow_params,
+                        &flow_params_file,
+                    ).await?;
                 };
                 let flow_params_serialize = quote! {
                     crate::ctx::cmd_ctx_builder::flow_params_serialize(
@@ -1267,6 +1319,7 @@ fn profiles_from_peace_app_dir(
         ProfileCount::None | ProfileCount::One => proc_macro2::TokenStream::new(),
         ProfileCount::Multiple => match profile_selection {
             ProfileSelection::NotSelected => quote! {
+                let workspace_dirs = self.workspace.dirs();
                 let profiles = crate::ctx::cmd_ctx_builder::profiles_from_peace_app_dir(
                     workspace_dirs.peace_app_dir(),
                     None,
@@ -1277,6 +1330,7 @@ fn profiles_from_peace_app_dir(
                 `ProfileSelection::FromWorkspaceParam`."
             ),
             ProfileSelection::FilterFunction => quote! {
+                let workspace_dirs = self.workspace.dirs();
                 let profiles_filter_fn = self.scope_builder.profile_selection.0.as_ref();
                 let profiles = crate::ctx::cmd_ctx_builder::profiles_from_peace_app_dir(
                     workspace_dirs.peace_app_dir(),
@@ -1326,6 +1380,9 @@ fn profile_s_ref(scope: Scope, profile_selection: ProfileSelection) -> proc_macr
 ///     ```
 fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
     let mut dirs_tokens = proc_macro2::TokenStream::new();
+    dirs_tokens.extend(quote! {
+        let workspace_dirs = self.workspace.dirs();
+    });
 
     match scope.profile_count() {
         ProfileCount::None => {}

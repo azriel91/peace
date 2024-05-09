@@ -44,7 +44,8 @@ fn impl_params_merge_for(
     let params_type_reg_method_name = params_scope.params_type_reg_method_name();
     let params_file_name = params_scope.params_file_name();
     let params_file_type = params_scope.params_file_type();
-    let params_selection_name = params_scope.params_selection_name();
+    let params_map_type = params_scope.params_map_type();
+    let params_k_type_param = params_scope.params_k_type_param();
 
     let doc_summary = {
         let params_scope_str = params_scope.to_str();
@@ -74,24 +75,59 @@ fn impl_params_merge_for(
         .build()
     };
 
+    let params_keys_type = match params_scope {
+        ParamsScope::Workspace => quote! {
+            peace_rt_model::params::ParamsKeysImpl<
+                peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
+                ProfileParamsKMaybe,
+                FlowParamsKMaybe,
+            >,
+        },
+        ParamsScope::Profile => quote! {
+            peace_rt_model::params::ParamsKeysImpl<
+                WorkspaceParamsKMaybe,
+                peace_rt_model::params::KeyKnown<ProfileParamsK>,
+                FlowParamsKMaybe,
+            >,
+        },
+        ParamsScope::Flow => quote! {
+            peace_rt_model::params::ParamsKeysImpl<
+                WorkspaceParamsKMaybe,
+                ProfileParamsKMaybe,
+                peace_rt_model::params::KeyKnown<FlowParamsK>,
+            >,
+        },
+    };
+
     quote! {
         #impl_header
         {
             #[doc = #doc_summary]
             // async fn workspace_params_merge
             async fn #params_merge_method_name(
-                &mut self,
+                storage: &peace_rt_model::Storage,
+                // params_type_regs_builder:
+                //     &peace_rt_model::params::ParamsTypeRegsBuilder<
+                //         peace_rt_model::params::ParamsKeysImpl<
+                //             peace_rt_model::params::KeyKnown<WorkspaceParamsK>,
+                //             ProfileParamsKMaybe,
+                //             FlowParamsKMaybe,
+                //         >,
+                //     >,
+                params_type_regs_builder:
+                    &peace_rt_model::params::ParamsTypeRegsBuilder<#params_keys_type>,
+                // params: &mut peace_rt_model::params::WorkspaceParams<WorkspaceParamsK>,
+                params: &mut peace_rt_model::params::#params_map_type<#params_k_type_param>,
                 // workspace_params_file: &peace_resources::internal::WorkspaceParamsFile,
                 #params_file_name: &peace_resources::internal::#params_file_type,
             ) -> Result<(), peace_rt_model::Error> {
-                let storage = self.workspace.storage();
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
                     // WorkspaceParamsK,
                     #p_keys_key_maybe_key
                 >(
                     storage,
-                    // self.scope_builder.params_type_regs_builder.workspace_params_type_reg(),
-                    self.scope_builder.params_type_regs_builder.#params_type_reg_method_name(),
+                    // params_type_regs_builder.workspace_params_type_reg(),
+                    params_type_regs_builder.#params_type_reg_method_name(),
                     #params_file_name,
                 )
                 .await?;
@@ -101,7 +137,6 @@ fn impl_params_merge_for(
                         // or, copy `params_deserialized` to `params` where
                         // there isn't a value.
 
-                        let params = &mut self.scope_builder.#params_selection_name.0;
                         if params.is_empty() {
                             *params = params_deserialized;
                         } else {

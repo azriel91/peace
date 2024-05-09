@@ -73,8 +73,8 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
             pub fn #constructor_method_name(
-                output: &'ctx mut Output,
-                workspace: &'ctx peace_rt_model::Workspace,
+                output: own::OwnedOrMutRef<'ctx, Output>,
+                workspace: own::OwnedOrRef<'ctx, peace_rt_model::Workspace>,
             ) -> Self
             {
                 let scope_builder = #scope_builder_name {

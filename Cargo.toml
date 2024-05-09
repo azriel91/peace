@@ -160,13 +160,14 @@ futures = "0.3.30"
 heck = "0.4.1"
 indexmap = "2.2.5"
 indicatif = "0.17.8"
-interruptible = "0.2.1"
+interruptible = "0.2.2"
 leptos = { version = "0.6" }
 leptos_axum = "0.6"
 leptos_meta = { version = "0.6" }
 leptos_router = { version = "0.6" }
 libc = "0.2.153"
 miette = "7.2.0"
+own = "0.1.0"
 pretty_assertions = "1.4.0"
 proc-macro2 = "1.0.78"
 quote = "1.0.35"
