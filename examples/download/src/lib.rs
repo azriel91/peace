@@ -83,9 +83,10 @@ where
     O: OutputWrite<DownloadError>,
 {
     let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
-    let mut cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, workspace)
-        .with_profile(profile)
-        .with_flow(flow);
+    let mut cmd_ctx_builder =
+        CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
+            .with_profile(profile)
+            .with_flow(flow);
 
     if let Some(file_download_params) = file_download_params {
         cmd_ctx_builder = cmd_ctx_builder.with_item_params::<FileDownloadItem<FileId>>(

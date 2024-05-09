@@ -29,8 +29,10 @@ impl ProfileListCmd {
             WorkspaceSpec::SessionStorage,
         )?;
 
-        let cmd_ctx_builder =
-            CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
+        let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<EnvManError, O>(
+            output.into(),
+            (&workspace).into(),
+        );
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let mut cmd_ctx = cmd_ctx_builder.await?;

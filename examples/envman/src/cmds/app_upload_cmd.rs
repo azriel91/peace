@@ -58,8 +58,10 @@ impl AppUploadCmd {
             .build();
 
         let mut cmd_ctx = {
-            let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+            let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
+                output.into(),
+                (&workspace).into(),
+            );
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
@@ -116,8 +118,10 @@ impl AppUploadCmd {
             .build();
 
         let mut cmd_ctx = {
-            let cmd_ctx_builder =
-                CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
+            let cmd_ctx_builder = CmdCtx::builder_multi_profile_single_flow::<EnvManError, O>(
+                output.into(),
+                (&workspace).into(),
+            );
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder

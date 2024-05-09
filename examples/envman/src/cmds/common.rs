@@ -25,7 +25,8 @@ pub async fn env_man_flow<O>(
 where
     O: OutputWrite<EnvManError>,
 {
-    let cmd_ctx_builder = CmdCtx::builder_no_profile_no_flow::<EnvManError, _>(output, workspace);
+    let cmd_ctx_builder =
+        CmdCtx::builder_no_profile_no_flow::<EnvManError, O>(output.into(), workspace.into());
     crate::cmds::ws_params_augment!(cmd_ctx_builder);
     let cmd_ctx = cmd_ctx_builder.await?;
     Ok(cmd_ctx
