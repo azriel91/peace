@@ -481,7 +481,10 @@ fn impl_build_for(
 
                 // Create directories and write init parameters to storage.
                 #[cfg(target_arch = "wasm32")]
-                peace_rt_model::WorkspaceInitializer::dirs_create(storage, dirs_to_create).await?;
+                {
+                    let storage = self.workspace.storage();
+                    peace_rt_model::WorkspaceInitializer::dirs_create(storage, dirs_to_create).await?;
+                }
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     peace_rt_model::WorkspaceInitializer::dirs_create(dirs_to_create).await?;
