@@ -84,14 +84,6 @@ pub enum EnvManError {
         #[from]
         peace_items::file_download::FileDownloadError,
     ),
-    /// A `TarX` item error occurred.
-    #[error("A `TarX` item error occurred.")]
-    PeaceItemTarX(
-        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
-        #[source]
-        #[from]
-        peace_items::tar_x::TarXError,
-    ),
     /// An `InstanceProfile` item error occurred.
     #[error("An `InstanceProfile` item error occurred.")]
     InstanceProfileItem(

@@ -11,7 +11,7 @@ use peace::{
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Flow, Workspace, WorkspaceSpec},
 };
-use peace_items::{file_download::FileDownloadItem, tar_x::TarXItem};
+use peace_items::file_download::FileDownloadItem;
 use semver::Version;
 use url::Url;
 
@@ -248,7 +248,6 @@ where
 {
     let EnvDeployFlowParamsSpecs {
         app_download_params_spec,
-        app_extract_params_spec,
         iam_policy_params_spec,
         iam_role_params_spec,
         instance_profile_params_spec,
@@ -269,7 +268,6 @@ where
                 item_id!("app_download"),
                 app_download_params_spec,
             )
-            .with_item_params::<TarXItem<WebApp>>(item_id!("app_extract"), app_extract_params_spec)
             .with_item_params::<IamPolicyItem<WebApp>>(
                 item_id!("iam_policy"),
                 iam_policy_params_spec,
