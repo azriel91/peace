@@ -113,7 +113,26 @@ fn outcome_node_hierarchy(
             // For outcome graphs, child nodes that:
             //
             // * are contained by parents nodes are represented as a nested node.
-            // * reference data from parent nodes are represented by forward edges
+            // * reference data from parent nodes are represented by forward edges.
+            //
+            // We actually want to determine nesting from the following information:
+            //
+            // * Host machines:
+            //
+            //     A file transfer would have a source host, source path, dest host, dest
+            //     path, and these exist in the same Item's parameters.
+            //
+            // * Physical nesting:
+            //
+            //     - Configuration that lives inside a server.
+            //     - Cloud resource that lives inside a subnet.
+            //
+            //     Should this be provided by the item or tool developer?
+            //
+            //     Probably the item. The item knows its parameters (which may be mapped
+            //     from other items' state), so the containment is returned based on the
+            //     item knowing its parent container is from a source / destination
+            //     parameter.
             if matches!(
                 graph_info.edge_weight(edge_index).copied(),
                 Some(Edge::Contains)
@@ -192,9 +211,13 @@ fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> Edges {
             children
                 .iter(graph_info)
                 .filter_map(|(edge_index, child_node_index)| {
+                    // For progress graphs, child nodes that:
                     //
-                    // * are contained by parents nodes are represented as a nested node.
-                    // * reference data from parent nodes are represented by forward edges
+                    // * are contained by parents nodes
+                    // * reference data from parent nodes
+                    //
+                    // are both represented by forward edges, since this is their sequential
+                    // ordering.
                     if matches!(
                         graph_info.edge_weight(edge_index).copied(),
                         Some(Edge::Logic | Edge::Contains)
