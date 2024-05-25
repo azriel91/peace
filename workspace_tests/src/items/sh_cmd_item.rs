@@ -173,8 +173,8 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
 }
 
 #[tokio::test]
-async fn state_current_returns_shell_command_current_state(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn state_current_returns_shell_command_current_state()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -318,8 +318,8 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
 }
 
 #[tokio::test]
-async fn ensure_when_creation_required_executes_apply_exec_shell_command(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_when_creation_required_executes_apply_exec_shell_command()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -372,8 +372,8 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command(
 }
 
 #[tokio::test]
-async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),

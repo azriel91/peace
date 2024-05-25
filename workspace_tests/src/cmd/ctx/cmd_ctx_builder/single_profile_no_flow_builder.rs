@@ -152,8 +152,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_from_params(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_from_params()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
@@ -192,8 +192,8 @@ async fn build_with_workspace_params_with_profile_from_params(
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_profile_from_params()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");

@@ -31,15 +31,21 @@ impl EnvDeployFlow {
             let graph = {
                 let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
-                let [app_download_id, iam_policy_item_id, iam_role_item_id, instance_profile_item_id, s3_bucket_id, s3_object_id] =
-                    graph_builder.add_fns([
-                        FileDownloadItem::<WebApp>::new(item_id!("app_download")).into(),
-                        IamPolicyItem::<WebApp>::new(item_id!("iam_policy")).into(),
-                        IamRoleItem::<WebApp>::new(item_id!("iam_role")).into(),
-                        InstanceProfileItem::<WebApp>::new(item_id!("instance_profile")).into(),
-                        S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into(),
-                        S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
-                    ]);
+                let [
+                    app_download_id,
+                    iam_policy_item_id,
+                    iam_role_item_id,
+                    instance_profile_item_id,
+                    s3_bucket_id,
+                    s3_object_id,
+                ] = graph_builder.add_fns([
+                    FileDownloadItem::<WebApp>::new(item_id!("app_download")).into(),
+                    IamPolicyItem::<WebApp>::new(item_id!("iam_policy")).into(),
+                    IamRoleItem::<WebApp>::new(item_id!("iam_role")).into(),
+                    InstanceProfileItem::<WebApp>::new(item_id!("instance_profile")).into(),
+                    S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into(),
+                    S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
+                ]);
 
                 graph_builder.add_logic_edges([
                     (iam_policy_item_id, iam_role_item_id),

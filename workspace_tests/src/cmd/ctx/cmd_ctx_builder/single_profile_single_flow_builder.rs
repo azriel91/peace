@@ -239,8 +239,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_flow_params(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_flow_params()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -302,8 +302,8 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_from_params(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_from_params()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -353,8 +353,8 @@ async fn build_with_workspace_params_with_profile_from_params(
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_profile_from_params()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -416,8 +416,8 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_params_provided(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_params_provided()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -465,8 +465,8 @@ async fn build_with_item_params_returns_ok_when_params_provided(
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -516,8 +516,8 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -574,8 +574,8 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -633,8 +633,8 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_provided_mismatch(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_provided_mismatch()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -703,8 +703,8 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_stored_mismatch(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_stored_mismatch()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -783,8 +783,8 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -869,8 +869,8 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -946,8 +946,8 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -1027,8 +1027,8 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -1107,8 +1107,8 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");

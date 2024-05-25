@@ -559,8 +559,8 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
 }
 
 #[tokio::test]
-async fn diff_stored_with_profile_0_missing_states_current(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn diff_stored_with_profile_0_missing_states_current()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -628,8 +628,8 @@ async fn diff_stored_with_profile_0_missing_states_current(
 }
 
 #[tokio::test]
-async fn diff_stored_with_profile_1_missing_states_current(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn diff_stored_with_profile_1_missing_states_current()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
