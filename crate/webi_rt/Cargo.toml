@@ -12,4 +12,7 @@ categories.workspace = true
 keywords.workspace = true
 license.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]

@@ -12,6 +12,9 @@ categories.workspace = true
 keywords.workspace = true
 license.workspace = true
 
+[lints]
+workspace = true
+
 [lib]
 doctest = true
 test = false
@@ -190,3 +193,6 @@ type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.0"
 wasm-bindgen = "0.2.92"
 web-sys = "0.3.69"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
