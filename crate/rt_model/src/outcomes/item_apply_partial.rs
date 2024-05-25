@@ -21,7 +21,7 @@ use crate::outcomes::ItemApplyPartialRt;
 ///
 /// 2. Each function call *may* fail.
 /// 3. If we have an enum representing the state after each function call, we
-/// have to duplicate the earlier fields per variant.
+///    have to duplicate the earlier fields per variant.
 ///
 /// It is not likely to be error prone or too unergonomic to store each field as
 /// optional.

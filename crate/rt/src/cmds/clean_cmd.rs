@@ -39,8 +39,8 @@ where
     /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the
-    ///   *forward* direction.
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the *forward*
+    ///    direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
     ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
@@ -116,8 +116,8 @@ where
     /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the
-    ///   *forward* direction.
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the *forward*
+    ///    direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
     ///     `Item::try_state_current` during `ItemRt::clean_prepare`.

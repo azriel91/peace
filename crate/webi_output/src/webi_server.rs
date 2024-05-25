@@ -41,7 +41,7 @@ impl WebiServer {
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
         let routes = leptos_axum::generate_route_list(move || view! {  <Home /> });
 
-        stream::iter(crate::assets::ASSETS.into_iter())
+        stream::iter(crate::assets::ASSETS.iter())
             .map(Result::<_, WebiError>::Ok)
             .try_for_each(|(path_str, contents)| async move {
                 let asset_path = Path::new(path_str);
