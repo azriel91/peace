@@ -5,10 +5,7 @@ use peace::{
     params::{Params, ParamsSpec},
     rt_model::{Flow, ItemGraphBuilder},
 };
-use peace_items::{
-    file_download::{FileDownloadItem, FileDownloadParams},
-    tar_x::{TarXItem, TarXParams},
-};
+use peace_items::file_download::{FileDownloadItem, FileDownloadParams};
 use semver::Version;
 use url::Url;
 
@@ -36,7 +33,6 @@ impl EnvDeployFlow {
 
                 let [
                     app_download_id,
-                    app_extract_id,
                     iam_policy_item_id,
                     iam_role_item_id,
                     instance_profile_item_id,
@@ -44,7 +40,6 @@ impl EnvDeployFlow {
                     s3_object_id,
                 ] = graph_builder.add_fns([
                     FileDownloadItem::<WebApp>::new(item_id!("app_download")).into(),
-                    TarXItem::<WebApp>::new(item_id!("app_extract")).into(),
                     IamPolicyItem::<WebApp>::new(item_id!("iam_policy")).into(),
                     IamRoleItem::<WebApp>::new(item_id!("iam_role")).into(),
                     InstanceProfileItem::<WebApp>::new(item_id!("instance_profile")).into(),
@@ -53,7 +48,6 @@ impl EnvDeployFlow {
                 ]);
 
                 graph_builder.add_logic_edges([
-                    (app_download_id, app_extract_id),
                     (iam_policy_item_id, iam_role_item_id),
                     (iam_role_item_id, instance_profile_item_id),
                     // Download the file before uploading it.
@@ -81,15 +75,8 @@ impl EnvDeployFlow {
         let repo_name = slug.repo_name();
         let app_download_dir = PathBuf::from_iter([account, repo_name, &format!("{version}")]);
 
-        #[cfg(target_family = "windows")]
-        let file_ext = "zip";
-        #[cfg(any(target_family = "unix", target_family = "wasm"))]
-        let file_ext = "tar";
-        // windows:
-        // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.zip
-        //
-        // linux:
         // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
+        let file_ext = "tar";
         let web_app_file_url = url.map(Result::Ok).unwrap_or_else(|| {
             let url_candidate = format!(
                 "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
@@ -107,10 +94,6 @@ impl EnvDeployFlow {
             peace_items::file_download::StorageForm::Base64,
         )
         .into();
-        let app_extract_params_spec = TarXParams::<WebApp>::field_wise_spec()
-            .with_tar_path(web_app_path_local.clone())
-            .with_dest(app_download_dir.join("extracted"))
-            .build();
 
         let iam_policy_name = profile.to_string();
         let iam_role_name = profile.to_string();
@@ -157,7 +140,6 @@ impl EnvDeployFlow {
 
         Ok(EnvDeployFlowParamsSpecs {
             app_download_params_spec,
-            app_extract_params_spec,
             iam_policy_params_spec,
             iam_role_params_spec,
             instance_profile_params_spec,
@@ -170,7 +152,6 @@ impl EnvDeployFlow {
 #[derive(Debug)]
 pub struct EnvDeployFlowParamsSpecs {
     pub app_download_params_spec: ParamsSpec<FileDownloadParams<WebApp>>,
-    pub app_extract_params_spec: ParamsSpec<TarXParams<WebApp>>,
     pub iam_policy_params_spec: ParamsSpec<IamPolicyParams<WebApp>>,
     pub iam_role_params_spec: ParamsSpec<IamRoleParams<WebApp>>,
     pub instance_profile_params_spec: ParamsSpec<InstanceProfileParams<WebApp>>,

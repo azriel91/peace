@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use dot_ix::model::{
-    common::{EdgeId, NodeHierarchy, NodeId},
-    info_graph::{GraphDir, IndexMap, InfoGraph, NodeInfo},
+    common::{EdgeId, Edges, NodeHierarchy, NodeId, NodeNames},
+    info_graph::{GraphDir, InfoGraph},
 };
 use fn_graph::{daggy::Walker, Edge, FnId, GraphInfo};
 use peace_core::FlowId;
@@ -48,13 +48,13 @@ impl FlowSpecInfo {
         );
 
         let edges = progress_node_edges(graph_info);
-        let node_infos = node_infos(graph_info);
+        let node_names = node_names(graph_info);
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .build()
     }
 
@@ -82,13 +82,13 @@ impl FlowSpecInfo {
             );
 
         let edges = outcome_node_edges(graph_info);
-        let node_infos = node_infos(graph_info);
+        let node_names = node_names(graph_info);
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .build()
     }
 }
@@ -113,7 +113,26 @@ fn outcome_node_hierarchy(
             // For outcome graphs, child nodes that:
             //
             // * are contained by parents nodes are represented as a nested node.
-            // * reference data from parent nodes are represented by forward edges
+            // * reference data from parent nodes are represented by forward edges.
+            //
+            // We actually want to determine nesting from the following information:
+            //
+            // * Host machines:
+            //
+            //     A file transfer would have a source host, source path, dest host, dest
+            //     path, and these exist in the same Item's parameters.
+            //
+            // * Physical nesting:
+            //
+            //     - Configuration that lives inside a server.
+            //     - Cloud resource that lives inside a subnet.
+            //
+            //     Should this be provided by the item or tool developer?
+            //
+            //     Probably the item. The item knows its parameters (which may be mapped
+            //     from other items' state), so the containment is returned based on the
+            //     item knowing its parent container is from a source / destination
+            //     parameter.
             if matches!(
                 graph_info.edge_weight(edge_index).copied(),
                 Some(Edge::Contains)
@@ -139,9 +158,9 @@ fn outcome_node_hierarchy(
 }
 
 /// Returns the list of edges between items in the graph.
-fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, [NodeId; 2]> {
+fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> Edges {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
+        Edges::with_capacity(graph_info.node_count()),
         |mut edges, (node_index, item_spec_info)| {
             //
             let children = graph_info.children(node_index);
@@ -183,18 +202,22 @@ fn outcome_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, 
 /// For progress graphs, an edge is rendered between pairs of predecessor and
 /// successor items, regardless of whether their dependency is `Edge::Logic`
 /// (adjacent) or `Edge::Contains` (nested).
-fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId, [NodeId; 2]> {
+fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> Edges {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
+        Edges::with_capacity(graph_info.node_count()),
         |mut edges, (node_index, item_spec_info)| {
             //
             let children = graph_info.children(node_index);
             children
                 .iter(graph_info)
                 .filter_map(|(edge_index, child_node_index)| {
+                    // For progress graphs, child nodes that:
                     //
-                    // * are contained by parents nodes are represented as a nested node.
-                    // * reference data from parent nodes are represented by forward edges
+                    // * are contained by parents nodes
+                    // * reference data from parent nodes
+                    //
+                    // are both represented by forward edges, since this is their sequential
+                    // ordering.
                     if matches!(
                         graph_info.edge_weight(edge_index).copied(),
                         Some(Edge::Logic | Edge::Contains)
@@ -222,18 +245,18 @@ fn progress_node_edges(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<EdgeId,
 }
 
 /// Returns the list of edges between items in the graph.
-fn node_infos(graph_info: &GraphInfo<ItemSpecInfo>) -> IndexMap<NodeId, NodeInfo> {
+fn node_names(graph_info: &GraphInfo<ItemSpecInfo>) -> NodeNames {
     graph_info.iter_insertion_with_indices().fold(
-        IndexMap::with_capacity(graph_info.node_count()),
-        |mut node_infos, (_node_index, item_spec_info)| {
+        NodeNames::with_capacity(graph_info.node_count()),
+        |mut node_names, (_node_index, item_spec_info)| {
             let item_id = item_spec_info_to_node_id(item_spec_info);
 
             // Note: This does not have to be the ID, it can be a human readable name.
-            let node_info = NodeInfo::new(item_id.to_string());
+            let node_name = item_id.to_string();
 
-            node_infos.insert(item_id, node_info);
+            node_names.insert(item_id, node_name);
 
-            node_infos
+            node_names
         },
     )
 }

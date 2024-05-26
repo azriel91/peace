@@ -1,4 +1,6 @@
-use std::fmt::{self, Debug};
+#[cfg(unix)]
+use std::fmt;
+use std::fmt::Debug;
 
 use peace_cli_model::OutputFormat;
 use peace_fmt::Presentable;

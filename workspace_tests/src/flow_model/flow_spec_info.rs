@@ -5,10 +5,10 @@ use peace::{
         dot_ix::{
             self,
             model::{
-                common::{EdgeId, NodeHierarchy, NodeId},
+                common::{Edges, NodeHierarchy, NodeNames},
                 edge_id,
-                info_graph::{GraphDir, InfoGraph, NodeInfo},
-                node_id, IndexMap,
+                info_graph::{GraphDir, InfoGraph},
+                node_id,
             },
         },
         FlowSpecInfo,
@@ -34,7 +34,7 @@ fn to_progress_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         node_hierarchy.insert(node_id!("e"), NodeHierarchy::new());
         node_hierarchy.insert(node_id!("f"), NodeHierarchy::new());
 
-        let mut edges = IndexMap::<EdgeId, [NodeId; 2]>::new();
+        let mut edges = Edges::new();
         edges.insert(edge_id!("a__b"), [node_id!("a"), node_id!("b")]);
         edges.insert(edge_id!("a__c"), [node_id!("a"), node_id!("c")]);
         edges.insert(edge_id!("b__e"), [node_id!("b"), node_id!("e")]);
@@ -42,18 +42,18 @@ fn to_progress_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         edges.insert(edge_id!("d__e"), [node_id!("d"), node_id!("e")]);
         edges.insert(edge_id!("f__e"), [node_id!("f"), node_id!("e")]);
 
-        let mut node_infos = IndexMap::<NodeId, NodeInfo>::new();
-        node_infos.insert(node_id!("a"), NodeInfo::new(String::from("a")));
-        node_infos.insert(node_id!("b"), NodeInfo::new(String::from("b")));
-        node_infos.insert(node_id!("c"), NodeInfo::new(String::from("c")));
-        node_infos.insert(node_id!("d"), NodeInfo::new(String::from("d")));
-        node_infos.insert(node_id!("e"), NodeInfo::new(String::from("e")));
-        node_infos.insert(node_id!("f"), NodeInfo::new(String::from("f")));
+        let mut node_names = NodeNames::new();
+        node_names.insert(node_id!("a"), String::from("a"));
+        node_names.insert(node_id!("b"), String::from("b"));
+        node_names.insert(node_id!("c"), String::from("c"));
+        node_names.insert(node_id!("d"), String::from("d"));
+        node_names.insert(node_id!("e"), String::from("e"));
+        node_names.insert(node_id!("f"), String::from("f"));
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(node_hierarchy)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .with_edges(edges)
             .build()
     };
@@ -83,24 +83,24 @@ fn to_outcome_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         node_hierarchy.insert(node_id!("e"), NodeHierarchy::new());
         node_hierarchy.insert(node_id!("f"), NodeHierarchy::new());
 
-        let mut edges = IndexMap::<EdgeId, [NodeId; 2]>::new();
+        let mut edges = Edges::new();
         edges.insert(edge_id!("a__c"), [node_id!("a"), node_id!("c")]);
         edges.insert(edge_id!("b__e"), [node_id!("b"), node_id!("e")]);
         edges.insert(edge_id!("d__e"), [node_id!("d"), node_id!("e")]);
         edges.insert(edge_id!("f__e"), [node_id!("f"), node_id!("e")]);
 
-        let mut node_infos = IndexMap::<NodeId, NodeInfo>::new();
-        node_infos.insert(node_id!("a"), NodeInfo::new(String::from("a")));
-        node_infos.insert(node_id!("b"), NodeInfo::new(String::from("b")));
-        node_infos.insert(node_id!("c"), NodeInfo::new(String::from("c")));
-        node_infos.insert(node_id!("d"), NodeInfo::new(String::from("d")));
-        node_infos.insert(node_id!("e"), NodeInfo::new(String::from("e")));
-        node_infos.insert(node_id!("f"), NodeInfo::new(String::from("f")));
+        let mut node_names = NodeNames::new();
+        node_names.insert(node_id!("a"), String::from("a"));
+        node_names.insert(node_id!("b"), String::from("b"));
+        node_names.insert(node_id!("c"), String::from("c"));
+        node_names.insert(node_id!("d"), String::from("d"));
+        node_names.insert(node_id!("e"), String::from("e"));
+        node_names.insert(node_id!("f"), String::from("f"));
 
         InfoGraph::builder()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(node_hierarchy)
-            .with_node_infos(node_infos)
+            .with_node_names(node_names)
             .with_edges(edges)
             .build()
     };

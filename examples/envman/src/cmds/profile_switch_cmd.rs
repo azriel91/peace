@@ -31,8 +31,10 @@ impl ProfileSwitchCmd {
 
         let env_man_flow = env_man_flow(output, &workspace).await?;
 
-        let cmd_ctx_builder =
-            CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
+        let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<EnvManError, O>(
+            output.into(),
+            (&workspace).into(),
+        );
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let mut cmd_ctx = cmd_ctx_builder.await?;
@@ -53,8 +55,10 @@ impl ProfileSwitchCmd {
                         app_name,
                     });
                 } else {
-                    let cmd_ctx_builder =
-                        CmdCtx::builder_no_profile_no_flow::<EnvManError, _>(output, workspace);
+                    let cmd_ctx_builder = CmdCtx::builder_no_profile_no_flow::<EnvManError, O>(
+                        output.into(),
+                        workspace.into(),
+                    );
                     crate::cmds::ws_params_augment!(cmd_ctx_builder);
                     cmd_ctx_builder
                         .with_workspace_param_value(

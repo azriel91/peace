@@ -12,12 +12,15 @@ categories.workspace = true
 keywords.workspace = true
 license.workspace = true
 
+[lints]
+workspace = true
+
 [lib]
 doctest = true
 test = false
 
 [dependencies]
-dot_ix = { workspace = true, features = ["rt", "web_components"] }
+dot_ix = { workspace = true, features = ["rt", "web_components", "flex_diag"] }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }

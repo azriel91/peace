@@ -1,6 +1,9 @@
-use dot_ix::{model::common::DotSrcAndStyles, web_components::DotSvg};
+use dot_ix::{
+    model::{common::DotSrcAndStyles, info_graph::InfoGraph},
+    web_components::{DotSvg, FlexDiag},
+};
 use leptos::{
-    component, server_fn::error::NoCustomError, view, IntoView, ServerFnError, SignalGet,
+    component, server_fn::error::NoCustomError, view, IntoView, ServerFnError, Signal, SignalGet,
     Transition,
 };
 
@@ -19,23 +22,26 @@ pub fn FlowGraph() -> impl IntoView {
         Some(progress_dot_graph)
     };
 
-    let outcome_dot_resource = leptos::create_resource(
+    let outcome_info_graph_resource = leptos::create_resource(
         || (),
-        move |()| async move { outcome_dot_graph().await.unwrap() },
+        move |()| async move { outcome_info_graph().await.unwrap() },
     );
-    let outcome_dot_graph = move || {
-        let outcome_dot_graph = outcome_dot_resource
-            .get()
-            .expect("Expected `outcome_dot_graph` to always be generated successfully.");
+    let outcome_info_graph = move || {
+        let outcome_info_graph =
+            Signal::from(move || outcome_info_graph_resource.get().unwrap_or_default());
 
-        Some(outcome_dot_graph)
+        view! {
+            <FlexDiag info_graph=outcome_info_graph />
+        }
     };
 
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <div class="flex items-center justify-center">
-                <DotSvg dot_src_and_styles=progress_dot_graph />
-                <DotSvg dot_src_and_styles=outcome_dot_graph />
+                <DotSvg
+                    dot_src_and_styles=progress_dot_graph.into()
+                />
+                {outcome_info_graph}
             </div>
         </Transition>
     }
@@ -63,11 +69,7 @@ pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCus
 
 /// Returns the graph representing item outcomes.
 #[leptos::server(endpoint = "/flow_graph")]
-pub async fn outcome_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCustomError>> {
-    use dot_ix::{
-        model::common::{graphviz_dot_theme::GraphStyle, GraphvizDotTheme},
-        rt::IntoGraphvizDotSrc,
-    };
+pub async fn outcome_info_graph() -> Result<InfoGraph, ServerFnError<NoCustomError>> {
     use peace_flow_model::FlowSpecInfo;
 
     let flow_spec_info = leptos::use_context::<FlowSpecInfo>().ok_or_else(|| {
@@ -75,8 +77,5 @@ pub async fn outcome_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCust
     })?;
 
     let outcome_info_graph = flow_spec_info.to_outcome_info_graph();
-    Ok(IntoGraphvizDotSrc::into(
-        &outcome_info_graph,
-        &GraphvizDotTheme::default().with_graph_style(GraphStyle::Boxes),
-    ))
+    Ok(outcome_info_graph)
 }

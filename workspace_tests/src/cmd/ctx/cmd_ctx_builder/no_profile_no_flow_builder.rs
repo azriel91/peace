@@ -10,10 +10,11 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-        .build()
-        .await?;
+    let output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(output.into(), (&workspace).into())
+            .build()
+            .await?;
 
     assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
     Ok(())
@@ -25,15 +26,16 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_workspace_param_value(
-            String::from("ws_param_1"),
-            Some("ws_param_1_value".to_string()),
-        )
-        .build()
-        .await?;
+    let output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(output.into(), (&workspace).into())
+            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+            .with_workspace_param_value(
+                String::from("ws_param_1"),
+                Some("ws_param_1_value".to_string()),
+            )
+            .build()
+            .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
 

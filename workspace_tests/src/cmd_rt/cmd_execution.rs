@@ -37,8 +37,8 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
         flow,
     } = test_ctx_init().await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(
@@ -94,8 +94,8 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
         flow,
     } = test_ctx_init().await?;
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_params::<VecCopyItem>(

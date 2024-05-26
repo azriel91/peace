@@ -2,6 +2,7 @@
 
 use std::ops::{Deref, DerefMut};
 
+use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_rt_model::Workspace;
 
 use crate::ctx::{
@@ -38,8 +39,8 @@ impl<Scope> CmdCtx<Scope> {
 impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
     pub fn builder_no_profile_no_flow<'ctx, AppError, Output>(
-        output: &'ctx mut Output,
-        workspace: &'ctx Workspace,
+        output: OwnedOrMutRef<'ctx, Output>,
+        workspace: OwnedOrRef<'ctx, Workspace>,
     ) -> CmdCtxBuilder<
         'ctx,
         CmdCtxTypesCollectorEmpty<AppError, Output>,
@@ -50,8 +51,8 @@ impl CmdCtx<()> {
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
     pub fn builder_multi_profile_no_flow<'ctx, AppError, Output>(
-        output: &'ctx mut Output,
-        workspace: &'ctx Workspace,
+        output: OwnedOrMutRef<'ctx, Output>,
+        workspace: OwnedOrRef<'ctx, Workspace>,
     ) -> CmdCtxBuilder<
         'ctx,
         CmdCtxTypesCollectorEmpty<AppError, Output>,
@@ -62,8 +63,8 @@ impl CmdCtx<()> {
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
     pub fn builder_multi_profile_single_flow<'ctx, AppError, Output>(
-        output: &'ctx mut Output,
-        workspace: &'ctx Workspace,
+        output: OwnedOrMutRef<'ctx, Output>,
+        workspace: OwnedOrRef<'ctx, Workspace>,
     ) -> CmdCtxBuilder<
         'ctx,
         CmdCtxTypesCollectorEmpty<AppError, Output>,
@@ -74,8 +75,8 @@ impl CmdCtx<()> {
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_single_profile_no_flow<'ctx, AppError, Output>(
-        output: &'ctx mut Output,
-        workspace: &'ctx Workspace,
+        output: OwnedOrMutRef<'ctx, Output>,
+        workspace: OwnedOrRef<'ctx, Workspace>,
     ) -> CmdCtxBuilder<
         'ctx,
         CmdCtxTypesCollectorEmpty<AppError, Output>,
@@ -86,8 +87,8 @@ impl CmdCtx<()> {
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_single_profile_single_flow<'ctx, AppError, Output>(
-        output: &'ctx mut Output,
-        workspace: &'ctx Workspace,
+        output: OwnedOrMutRef<'ctx, Output>,
+        workspace: OwnedOrRef<'ctx, Workspace>,
     ) -> CmdCtxBuilder<
         'ctx,
         CmdCtxTypesCollectorEmpty<AppError, Output>,

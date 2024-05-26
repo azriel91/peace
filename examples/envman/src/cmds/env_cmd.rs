@@ -63,8 +63,10 @@ impl EnvCmd {
         let CmdOpts { profile_print } = cmd_opts;
 
         let mut cmd_ctx = {
-            let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+            let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
+                output.into(),
+                (&workspace).into(),
+            );
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
@@ -107,8 +109,10 @@ impl EnvCmd {
         let flow = EnvDeployFlow::flow().await?;
 
         let mut cmd_ctx = {
-            let cmd_ctx_builder =
-                CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
+            let cmd_ctx_builder = CmdCtx::builder_multi_profile_single_flow::<EnvManError, O>(
+                output.into(),
+                (&workspace).into(),
+            );
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 

@@ -11,7 +11,7 @@ use peace::{
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Flow, Workspace, WorkspaceSpec},
 };
-use peace_items::{file_download::FileDownloadItem, tar_x::TarXItem};
+use peace_items::file_download::FileDownloadItem;
 use semver::Version;
 use url::Url;
 
@@ -64,8 +64,10 @@ impl ProfileInitCmd {
         )?;
 
         if !profile_reinit_allowed {
-            let cmd_ctx_builder =
-                CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
+            let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<EnvManError, O>(
+                output.into(),
+                (&workspace).into(),
+            );
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             let cmd_ctx_result = cmd_ctx_builder.await;
@@ -88,8 +90,10 @@ impl ProfileInitCmd {
             }
         }
 
-        let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_no_flow::<EnvManError, _>(output, &workspace);
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow::<EnvManError, O>(
+            output.into(),
+            (&workspace).into(),
+        );
         crate::cmds::interruptibility_augment!(cmd_ctx_builder);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
@@ -208,8 +212,10 @@ where
         s3_object_params_spec,
     } = AppUploadFlow::params(profile_to_create, slug, version, url)?;
     let cmd_ctx = {
-        let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, workspace);
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
+            output.into(),
+            workspace.into(),
+        );
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         cmd_ctx_builder
@@ -242,7 +248,6 @@ where
 {
     let EnvDeployFlowParamsSpecs {
         app_download_params_spec,
-        app_extract_params_spec,
         iam_policy_params_spec,
         iam_role_params_spec,
         instance_profile_params_spec,
@@ -250,8 +255,10 @@ where
         s3_object_params_spec,
     } = EnvDeployFlow::params(profile_to_create, slug, version, url)?;
     let cmd_ctx = {
-        let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, workspace);
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
+            output.into(),
+            workspace.into(),
+        );
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         cmd_ctx_builder
@@ -261,7 +268,6 @@ where
                 item_id!("app_download"),
                 app_download_params_spec,
             )
-            .with_item_params::<TarXItem<WebApp>>(item_id!("app_extract"), app_extract_params_spec)
             .with_item_params::<IamPolicyItem<WebApp>>(
                 item_id!("iam_policy"),
                 iam_policy_params_spec,

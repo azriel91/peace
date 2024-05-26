@@ -25,17 +25,20 @@ async fn reads_states_current_stored_from_disk_when_present()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let output = &mut NoOpOutput;
 
     // Write current states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     let CmdOutcome::Complete {
         value: states_current_from_discover,
         cmd_blocks_processed: _,
@@ -45,15 +48,18 @@ async fn reads_states_current_stored_from_disk_when_present()
     };
 
     // Re-read states from disk.
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     let CmdOutcome::Complete {
         value: states_current_stored_from_read,
         cmd_blocks_processed: _,
@@ -85,15 +91,18 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
 
     // Try and read states from disk.
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     let exec_result = StatesCurrentReadCmd::exec(&mut cmd_ctx).await;
 
     assert!(matches!(

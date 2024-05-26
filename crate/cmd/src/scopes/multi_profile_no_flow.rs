@@ -1,6 +1,7 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
+use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_core::Profile;
 use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 use peace_rt_model::{
@@ -60,13 +61,13 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    output: &'ctx mut CmdCtxTypesT::Output,
+    output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
     interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
-    workspace: &'ctx Workspace,
+    workspace: OwnedOrRef<'ctx, Workspace>,
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
@@ -179,9 +180,9 @@ where
     /// Returns a new `MultiProfileNoFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
-        output: &'ctx mut CmdCtxTypesT::Output,
+        output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
         interruptibility_state: InterruptibilityState<'static, 'static>,
-        workspace: &'ctx Workspace,
+        workspace: OwnedOrRef<'ctx, Workspace>,
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
@@ -240,12 +241,12 @@ where
 
     /// Returns a reference to the output.
     pub fn output(&self) -> &CmdCtxTypesT::Output {
-        self.output
+        &self.output
     }
 
     /// Returns a mutable reference to the output.
     pub fn output_mut(&mut self) -> &mut CmdCtxTypesT::Output {
-        self.output
+        &mut self.output
     }
 
     /// Returns the interruptibility capability.
@@ -255,7 +256,7 @@ where
 
     /// Returns the workspace that the `peace` tool runs in.
     pub fn workspace(&self) -> &Workspace {
-        self.workspace
+        &self.workspace
     }
 
     /// Returns a reference to the workspace directory.

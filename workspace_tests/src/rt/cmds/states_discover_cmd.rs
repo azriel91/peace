@@ -36,16 +36,19 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+    .await?;
 
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
@@ -132,15 +135,18 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let CmdOutcome::Complete {
         value: states_current,
@@ -181,15 +187,18 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     // Writes to states_current_file.yaml
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -198,27 +207,33 @@ async fn current_inserts_states_current_stored_from_states_current_file()
     //
     // Note: The actual logic is part of `CmdCtxBuilder::build`, implemented by
     // `impl_build.rs`.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current_stored_from_cmd_ctx = resources.borrow::<StatesCurrentStored>();
 
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     let CmdOutcome::Complete {
         value: states_current_stored,
         cmd_blocks_processed: _,
@@ -259,16 +274,19 @@ async fn current_returns_error_when_try_state_current_returns_error()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,
@@ -335,16 +353,19 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,
@@ -414,16 +435,19 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,
@@ -518,16 +542,19 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,
@@ -624,16 +651,19 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+    .await?;
 
     let CmdOutcome::ItemError {
         item_stream_outcome,
@@ -712,15 +742,18 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let CmdOutcome::Complete {
         value: states_goal,
@@ -768,15 +801,18 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .await?;
 
     // Write to disk first.
     assert!(matches!(
@@ -789,10 +825,13 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
     ));
 
     // Discover without serializing to storage.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .await?;
     // Overwrite states current.
     cmd_ctx
         .resources_mut()
@@ -844,15 +883,18 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3]).into(),
+    )
+    .await?;
 
     // Write to disk first.
     assert!(matches!(
@@ -861,14 +903,17 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
     ));
 
     // Discover without serializing to storage.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let CmdOutcome::Complete {
         value: states_goal,
@@ -917,15 +962,18 @@ async fn current_with_sets_progress_complete_for_successful_items()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let _cmd_outcome = StatesDiscoverCmd::<_>::current_with(&mut cmd_ctx, false).await;
 
@@ -974,15 +1022,18 @@ async fn goal_with_sets_progress_complete_for_successful_items()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let _cmd_outcome = StatesDiscoverCmd::<_>::goal_with(&mut cmd_ctx, false).await?;
 
@@ -1031,15 +1082,18 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
 
     let _cmd_outcome = StatesDiscoverCmd::<_>::current_and_goal_with(&mut cmd_ctx, false).await?;
 

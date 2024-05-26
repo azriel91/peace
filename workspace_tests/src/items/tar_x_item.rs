@@ -47,13 +47,13 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
     let flow = Flow::new(flow_id, graph);
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -87,7 +87,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -99,7 +99,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -138,7 +138,7 @@ async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std:
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -146,7 +146,7 @@ async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std:
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -184,7 +184,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -192,7 +192,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -236,7 +236,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -250,7 +250,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -297,7 +297,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -310,7 +310,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -355,7 +355,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X1_TAR).await?;
@@ -368,7 +368,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -414,7 +414,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -432,7 +432,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -480,7 +480,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -490,7 +490,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -525,7 +525,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -535,7 +535,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -603,13 +603,13 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
     let flow = Flow::new(flow_id, graph);
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -652,7 +652,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
@@ -668,7 +668,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(
@@ -731,13 +731,13 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         workspace,
         profile,
         graph,
-        mut output,
+        output,
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
     let flow = Flow::new(flow_id, graph);
 
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
         .with_flow(&flow)
         .with_item_params::<TarXItem<TarXTest>>(

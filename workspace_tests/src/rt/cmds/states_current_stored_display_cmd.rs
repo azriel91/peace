@@ -28,15 +28,18 @@ async fn reads_states_current_stored_from_disk_when_present()
     let mut fn_tracker_output = FnTrackerOutput::new();
 
     // Write current states to disk.
-    let mut output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .with_item_params::<VecCopyItem>(
-            VecCopyItem::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-        )
-        .await?;
+    let output = &mut NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
+        output.into(),
+        (&workspace).into(),
+    )
+    .with_profile(profile!("test_profile"))
+    .with_flow(&flow)
+    .with_item_params::<VecCopyItem>(
+        VecCopyItem::ID_DEFAULT.clone(),
+        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+    )
+    .await?;
     let CmdOutcome::Complete {
         value: states_current_stored_from_discover,
         cmd_blocks_processed: _,
@@ -47,14 +50,17 @@ async fn reads_states_current_stored_from_disk_when_present()
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(&flow)
-            .with_item_params::<VecCopyItem>(
-                VecCopyItem::ID_DEFAULT.clone(),
-                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-            )
-            .await?;
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError, FnTrackerOutput>(
+            (&mut fn_tracker_output).into(),
+            (&workspace).into(),
+        )
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     let CmdOutcome::Complete {
         value: states_current_stored_from_read,
         cmd_blocks_processed: _,
@@ -99,14 +105,17 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and display states from disk.
     let mut cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(&flow)
-            .with_item_params::<VecCopyItem>(
-                VecCopyItem::ID_DEFAULT.clone(),
-                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-            )
-            .await?;
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError, FnTrackerOutput>(
+            (&mut fn_tracker_output).into(),
+            (&workspace).into(),
+        )
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     let exec_result = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await;
 
     assert!(matches!(

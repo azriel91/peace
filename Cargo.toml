@@ -12,6 +12,9 @@ categories.workspace = true
 keywords.workspace = true
 license.workspace = true
 
+[lints]
+workspace = true
+
 [lib]
 doctest = true
 test = false
@@ -151,7 +154,7 @@ console = "0.15.8"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
 downcast-rs = "1.2.0"
-dot_ix = { version = "0.4.1", default-features = false }
+dot_ix = { version = "0.5.0", default-features = false }
 dyn-clone = "1.0.17"
 enser = "0.1.4"
 erased-serde = "0.4.3"
@@ -160,13 +163,14 @@ futures = "0.3.30"
 heck = "0.4.1"
 indexmap = "2.2.5"
 indicatif = "0.17.8"
-interruptible = "0.2.1"
+interruptible = "0.2.2"
 leptos = { version = "0.6" }
 leptos_axum = "0.6"
 leptos_meta = { version = "0.6" }
 leptos_router = { version = "0.6" }
 libc = "0.2.153"
 miette = "7.2.0"
+own = "0.1.0"
 pretty_assertions = "1.4.0"
 proc-macro2 = "1.0.78"
 quote = "1.0.35"
@@ -189,3 +193,6 @@ type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.0"
 wasm-bindgen = "0.2.92"
 web-sys = "0.3.69"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }

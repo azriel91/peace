@@ -17,7 +17,7 @@ where
     O: OutputWrite<EnvManError>,
 {
     output
-        .present(&Heading::new(HeadingLevel::Level1, "Errors"))
+        .present(Heading::new(HeadingLevel::Level1, "Errors"))
         .await?;
 
     #[cfg(feature = "error_reporting")]
@@ -73,7 +73,7 @@ where
     O: OutputWrite<EnvManError>,
 {
     output
-        .present(&Heading::new(HeadingLevel::Level1, "Errors"))
+        .present(Heading::new(HeadingLevel::Level1, "Errors"))
         .await?;
 
     #[cfg(feature = "error_reporting")]
