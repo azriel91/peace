@@ -12,7 +12,7 @@ use crate::states::{
 ///
 /// # Implementors
 ///
-/// If an `Item`'s goal state discovery depends on the goal `State` of
+/// If a `Step`'s goal state discovery depends on the goal `State` of
 /// a previous `Item`, then you should insert the predecessor's goal
 /// state into [`Resources`], and reference that in the subsequent
 /// `TryFnSpec`'s [`Data`]:

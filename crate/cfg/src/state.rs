@@ -18,11 +18,11 @@ use serde::{Deserialize, Serialize};
 /// states. Otherwise, a type that represents the fully logical / fully physical
 /// state is sufficient.
 ///
-/// In `peace`, [`State`] represents the values of an item, and has the
+/// In `peace`, [`State`] represents the values of a step, and has the
 /// following usages:
 ///
-/// * Showing users the state of an item.
-/// * Allowing users to describe the state that an item should be.
+/// * Showing users the state of a step.
+/// * Allowing users to describe the state that a step should be.
 /// * Determining what needs to change between the current state and the goal
 ///   state.
 ///
@@ -64,7 +64,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Fully Logical
 ///
-/// If an item's state can be fully described before the item exists, and can be
+/// If a step's state can be fully described before the item exists, and can be
 /// made to happen without interacting with an external service, then the state
 /// is fully logical.
 ///
@@ -76,7 +76,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Logical and Physical
 ///
-/// If an item's goal state can be described before the item exists, but
+/// If a step's goal state can be described before the item exists, but
 /// interacts with an external service which produces additional information to
 /// bring that goal state into existence, then the state has both logical and
 /// physical parts.
@@ -89,7 +89,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Fully Physical
 ///
-/// If an item's goal state is simply, "automation has been executed after these
+/// If a step's goal state is simply, "automation has been executed after these
 /// files have been modified", then the state has no logical component.
 ///
 /// For example, running a compilation command only if the compilation artifact

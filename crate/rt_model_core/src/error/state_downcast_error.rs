@@ -1,6 +1,6 @@
 use type_reg::untagged::{BoxDtDisplay, DataType};
 
-/// Error downcasting a `BoxDtDisplay` into an item's concrete state type.
+/// Error downcasting a `BoxDtDisplay` into a step's concrete state type.
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum StateDowncastError {

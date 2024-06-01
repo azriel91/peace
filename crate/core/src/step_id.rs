@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-/// Unique identifier for an [`Item`], `Cow<'static, str>` newtype.
+/// Unique identifier for a [`Step`], `Cow<'static, str>` newtype.
 ///
 /// Must begin with a letter or underscore, and contain only letters, numbers,
 /// and underscores.
@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 /// there needs to be a way to:
 ///
 /// * Read state using the old ID.
-/// * Either clean up that state, or migrate that state into an Item with the
+/// * Either clean up that state, or migrate that state into a Step with the
 ///   new ID.
 ///
 /// [`Item`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Item.html

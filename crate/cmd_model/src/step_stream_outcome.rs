@@ -17,7 +17,7 @@ pub struct ItemStreamOutcome<T> {
 }
 
 impl<T> ItemStreamOutcome<T> {
-    /// Returns an `ItemStreamOutcome` that is `Finished<T>`.
+    /// Returns a `StepStreamOutcome` that is `Finished<T>`.
     pub fn finished_with(value: T, item_ids_processed: Vec<ItemId>) -> Self {
         Self {
             value,

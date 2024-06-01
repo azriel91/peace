@@ -6,7 +6,7 @@ use crate::ItemGraph;
 
 /// A flow to manage items.
 ///
-/// A Flow ID is strictly associated with an [`ItemGraph`], as the graph
+/// A Flow ID is strictly associated with a [`StepGraph`], as the graph
 /// contains the definitions to read and write the items' [`State`]s.
 ///
 /// [`State`]: peace_cfg::Item::State

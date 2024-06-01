@@ -1,6 +1,6 @@
 use type_reg::untagged::BoxDtDisplay;
 
-/// Stored and/or discovered state for an item.
+/// Stored and/or discovered state for a step.
 #[derive(Clone, Debug)]
 pub enum StateStoredAndDiscovered {
     /// Stored state exists, but the actual item state cannot be discovered.

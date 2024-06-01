@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 
 /// Marker for apply-dry state.
 ///
-/// This is used for referential param values, where an item param value is
+/// This is used for referential param values, where a step param value is
 /// dependent on the state of a predecessor's state.
 ///
-/// An `ApplyDry<Item::State>` is set to `Some` whenever an item is dry applied,
+/// An `ApplyDry<Item::State>` is set to `Some` whenever a step is dry applied,
 /// enabling a subsequent successor's params to access that value when the
 /// successor's `apply_dry` function is run.
 ///

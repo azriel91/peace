@@ -34,7 +34,7 @@ pub struct CmdBlockWrapper<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, Inp
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
-    /// Function to run if interruption or an item failure happens while
+    /// Function to run if interruption or a step failure happens while
     /// executing this `CmdBlock`.
     fn_partial_exec_handler: fn(BlockOutcome) -> ExecutionOutcome,
     /// Marker.
@@ -54,7 +54,7 @@ where
     /// * `fn_partial_exec_handler`: How the `CmdExecution` should end, if
     ///   execution ends with this `CmdBlock`.
     ///
-    ///     This could be due to interruption, or a `CmdOutcome` with an item
+    ///     This could be due to interruption, or a `CmdOutcome` with a step
     ///     failure.
     pub fn new(
         cmd_block: CB,
@@ -146,7 +146,7 @@ where
                     // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
                     // items fail to be ensured.
                     //
-                    // Note, when discovering current and goal states for diffing, and an item
+                    // Note, when discovering current and goal states for diffing, and a step
                     // error occurs, mapping the partially accumulated `(StatesCurrentMut,
                     // StatesGoalMut)` into `StateDiffs` may or may not be semantically
                     // meaningful.

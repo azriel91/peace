@@ -70,7 +70,7 @@ pub trait ItemRt<E>:
     ///     whether we should use a string newtype for `ItemId`s, or redesign
     ///     how `Item`s or related types are keyed.
     ///
-    /// Note: it is impossible to call this method if an `Item`'s state type has
+    /// Note: it is impossible to call this method if a `Step`'s state type has
     /// changed -- it would have failed on deserialization.
     fn state_eq(&self, state_a: &BoxDtDisplay, state_b: &BoxDtDisplay) -> Result<bool, E>
     where

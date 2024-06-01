@@ -7,7 +7,7 @@ use crate::{
     ItemId,
 };
 
-/// Submits progress for an item's `ApplyFns::exec` method.
+/// Submits progress for a step's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'exec> {
     /// ID of the item this belongs to.

@@ -15,7 +15,7 @@ pub enum TarXError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_item_tar_x::tar_file_not_exists)),
-        help("Make sure there is an item that downloads the tar file.")
+        help("Make sure there is a step that downloads the tar file.")
     )]
     TarFileNotExists {
         /// Path to the tar file to extract.

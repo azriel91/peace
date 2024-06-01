@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace_data::fn_graph::FnId;
 
-/// Runtime identifier for an [`Item`]. [`FnId`] newtype.
+/// Runtime identifier for a [`Step`]. [`FnId`] newtype.
 ///
 /// This is a cheap identifier to copy around, instead of cloning
 /// [`ItemId`].

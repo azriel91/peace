@@ -81,7 +81,7 @@ This may be dependent on profile params &ndash; sort env based on env type, last
 <summary>7. Cancel-safe state storage</summary>
 <div>
 
-When an item ensure does multiple writes, there is a possibility of not all of those writes occur during execution:
+When a step ensure does multiple writes, there is a possibility of not all of those writes occur during execution:
 
 * user interrupts the execution.
 * internet connection drops.
@@ -104,9 +104,9 @@ Implementors may add/remove/modify items in flows.
 
 Peace needs to be designed such that these changes do not cause already-existent flows to not be loadable, i.e. when:
 
-* `states_*.yaml` contains state for which an item no longer exists in the flow.
-* `states_*.yaml` does not contain state for an item that is newly added to the flow.
-* `states_*.yaml` contains state whose fields are different to a new version of an item.
+* `states_*.yaml` contains state for which a step no longer exists in the flow.
+* `states_*.yaml` does not contain state for a step that is newly added to the flow.
+* `states_*.yaml` contains state whose fields are different to a new version of a step.
 
     This one can be addressed by having `State` be an enum, with versioned variants.
 
@@ -283,7 +283,7 @@ Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized o
 <summary>17. Style edges / items red when an error occurs.</summary>
 <div>
 
-When we hit an error, can we go through parameters / states to determine whether the error is to do with an item itself, or a link between the item and its predecessor?
+When we hit an error, can we go through parameters / states to determine whether the error is to do with a step itself, or a link between the item and its predecessor?
 
 Then style that link red.
 
@@ -337,7 +337,7 @@ This trades
 3. AWS SDK does not always include error detail -- S3 `head_object`. ([aws-sdk-rust#227])
 4. Progress output should enable-able for state current / goal discover / clean functions.
 5. Flow params are annoying to register every time we add another item. Maybe split end user provided params from item params.
-6. Blank item needs a lot of rework to be easier to implement an item. ([67], [#96])
+6. Blank item needs a lot of rework to be easier to implement a step. ([67], [#96])
 7. For `ApplyCmd`, collect `StateCurrent`, `StateGoal`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
 9. Progress limit should not be returned in `ApplyFns::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/goal discovery to set the limits easily.

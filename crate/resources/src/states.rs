@@ -57,7 +57,7 @@ mod states_serde;
 ///    outer layer for whether the item had an entry, and the inner layer for
 ///    whether there was any `State` recorded.
 ///
-/// 4. If we can guarantee the item ID is valid -- an ID of an item in the flow
+/// 4. If we can guarantee the item ID is valid -- an ID of a step in the flow
 ///    -- we could remove that outer `Option` layer. Currently we cannot make
 ///    this guarantee, as:
 ///

@@ -5,7 +5,7 @@ use indicatif::ProgressBar;
 
 use crate::progress::{ProgressLimit, ProgressStatus};
 
-/// Tracks progress for an item's `ApplyFns::exec` method.
+/// Tracks progress for a step's `ApplyFns::exec` method.
 #[derive(Debug)]
 pub struct ProgressTracker {
     /// Status of the item's execution progress.

@@ -1,6 +1,6 @@
 # Item Parameters
 
-For an item to work with different values, the values must be passed in. These values are called item parameters.
+For a step to work with different values, the values must be passed in. These values are called item parameters.
 
 ```dot process
 digraph {

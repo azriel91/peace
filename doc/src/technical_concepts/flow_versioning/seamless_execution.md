@@ -90,14 +90,14 @@ An item upgrade may be one of:
 
 Notes:
 
-* It may not be possible to migrate an item to a newer version without cleaning up its successors.
+* It may not be possible to migrate a step to a newer version without cleaning up its successors.
 * It is possible if successors don't "live inside" the item, but only need their parameters changed.
 * it is not possible if successors live inside the item, and need to be deleted in order to modify the item.
 
-Whether or not a successor needs to be cleaned up likely should be encoded into the `Edge` type, not part of the item upgrade parameters -- an item is unable to know if its successors live inside it or point to it.
+Whether or not a successor needs to be cleaned up likely should be encoded into the `Edge` type, not part of the item upgrade parameters -- a step is unable to know if its successors live inside it or point to it.
 
 ```rust ,ignore
-/// Indicates what is needed for an instance of an item to be upgraded.
+/// Indicates what is needed for an instance of a step to be upgraded.
 enum ItemUpgradeReq {
     /// Item instance does not need to be upgraded, i.e. only state data type is changed.
     None,

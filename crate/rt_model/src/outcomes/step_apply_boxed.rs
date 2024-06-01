@@ -8,7 +8,7 @@ impl<State, StateDiff> From<ItemApply<State, StateDiff>> for ItemApplyBoxed
 where
     ItemApply<State, StateDiff>: ItemApplyRt,
 {
-    /// Returns an `ItemApplyBoxed` which erases an `ItemApply`'s type
+    /// Returns a `StepApplyBoxed` which erases a `StepApply`'s type
     /// parameters.
     fn from(item_apply: ItemApply<State, StateDiff>) -> Self {
         Self(Box::new(item_apply))

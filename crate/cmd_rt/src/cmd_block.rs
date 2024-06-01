@@ -163,7 +163,7 @@ pub trait CmdBlock: Debug {
     /// Producer function to process all items.
     ///
     /// This is infallible because errors are expected to be returned associated
-    /// with an item. This may change if there are errors that are related to
+    /// with a step. This may change if there are errors that are related to
     /// the block that are not associated with a specific item.
     ///
     /// # Implementors

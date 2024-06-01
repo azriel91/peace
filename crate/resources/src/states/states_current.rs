@@ -14,7 +14,7 @@ use crate::states::{
 ///
 /// # Implementors
 ///
-/// If an `Item`'s state discovery depends on the `State` of a previous
+/// If a `Step`'s state discovery depends on the `State` of a previous
 /// `Item`, then you should insert the predecessor's state into
 /// [`Resources`], and reference that in the subsequent `TryFnSpec`'s [`Data`]:
 ///

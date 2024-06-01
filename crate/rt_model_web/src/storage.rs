@@ -74,18 +74,18 @@ impl Storage {
         Ok(storage)
     }
 
-    /// Returns whether an item exists in the web storage.
+    /// Returns whether a step exists in the web storage.
     pub fn contains_item(&self, path: &Path) -> Result<bool, Error> {
         self.get_item_opt(path).map(|item| item.is_some())
     }
 
     /// Gets an optional item in the web storage.
     ///
-    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
+    /// * Use [`get_item_opt`] if you would like to fetch a step that may not
     ///   exist.
     /// * Use [`get_items_opt`] if you would like to fetch multiple optional
     ///   items.
-    /// * Use [`get_item`] if you would like to fetch an item that must exist.
+    /// * Use [`get_item`] if you would like to fetch a step that must exist.
     /// * Use [`get_items`] if you would like to fetch multiple items that must
     ///   exist.
     ///
@@ -103,11 +103,11 @@ impl Storage {
 
     /// Gets multiple items in the web storage.
     ///
-    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
+    /// * Use [`get_item_opt`] if you would like to fetch a step that may not
     ///   exist.
     /// * Use [`get_items_opt`] if you would like to fetch multiple optional
     ///   items.
-    /// * Use [`get_item`] if you would like to fetch an item that must exist.
+    /// * Use [`get_item`] if you would like to fetch a step that must exist.
     /// * Use [`get_items`] if you would like to fetch multiple items that must
     ///   exist.
     ///
@@ -137,13 +137,13 @@ impl Storage {
         Ok(iter)
     }
 
-    /// Gets an item in the web storage.
+    /// Gets a step in the web storage.
     ///
-    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
+    /// * Use [`get_item_opt`] if you would like to fetch a step that may not
     ///   exist.
     /// * Use [`get_items_opt`] if you would like to fetch multiple optional
     ///   items.
-    /// * Use [`get_item`] if you would like to fetch an item that must exist.
+    /// * Use [`get_item`] if you would like to fetch a step that must exist.
     /// * Use [`get_items`] if you would like to fetch multiple items that must
     ///   exist.
     ///
@@ -168,7 +168,7 @@ impl Storage {
 
     /// Gets a base64 encoded item in the web storage.
     ///
-    /// * Use [`get_item_b64_opt`] if you would like to fetch an item that may
+    /// * Use [`get_item_b64_opt`] if you would like to fetch a step that may
     ///   not exist.
     ///
     /// [`get_items`]: Self::get_items
@@ -192,7 +192,7 @@ impl Storage {
 
     /// Gets a base64 encoded item in the web storage.
     ///
-    /// * Use [`get_item_b64_opt`] if you would like to fetch an item that may
+    /// * Use [`get_item_b64_opt`] if you would like to fetch a step that may
     ///   not exist.
     ///
     /// [`get_items`]: Self::get_items
@@ -212,11 +212,11 @@ impl Storage {
 
     /// Gets multiple items in the web storage.
     ///
-    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
+    /// * Use [`get_item_opt`] if you would like to fetch a step that may not
     ///   exist.
     /// * Use [`get_items_opt`] if you would like to fetch multiple optional
     ///   items.
-    /// * Use [`get_item`] if you would like to fetch an item that must exist.
+    /// * Use [`get_item`] if you would like to fetch a step that must exist.
     /// * Use [`get_items`] if you would like to fetch multiple items that must
     ///   exist.
     ///
@@ -251,7 +251,7 @@ impl Storage {
         Ok(iter)
     }
 
-    /// Sets an item in the web storage.
+    /// Sets a step in the web storage.
     ///
     /// See [`set_items`] if you would like to set multiple items.
     ///
@@ -417,7 +417,7 @@ impl Storage {
         Ok(())
     }
 
-    /// Deletes an item from the web storage.
+    /// Deletes a step from the web storage.
     pub fn remove_item(&self, path: &Path) -> Result<(), Error> {
         let storage = self.get()?;
         let key = path.to_string_lossy();
