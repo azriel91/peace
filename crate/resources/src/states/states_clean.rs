@@ -1,8 +1,8 @@
 use crate::states::{ts::Clean, States};
 
-/// Clean `State`s for all `Item`s.
+/// Clean `State`s for all `Step`s.
 ///
-/// These are the states that each item would be in, if `Item::apply` were to be
+/// These are the states that each step would be in, if `Step::apply` were to be
 /// run with `state_clean` as the target state.
 ///
 /// **Note:** Not to be confused with [`StatesCleaned`].

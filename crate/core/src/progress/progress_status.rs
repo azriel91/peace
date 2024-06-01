@@ -27,11 +27,11 @@ use crate::progress::ProgressComplete;
 /// be `Copy` -- not sure yet.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressStatus {
-    /// This item is registered for execution.
+    /// This step is registered for execution.
     ///
     /// This status is used when we don't know the progress limit.
     Initialized,
-    /// The item was waiting for execution, when the command was interrupted.
+    /// The step was waiting for execution, when the command was interrupted.
     Interrupted,
     /// Execution has not yet begun.
     ///
@@ -40,8 +40,8 @@ pub enum ProgressStatus {
     /// * The framework to begin executing the logic.
     /// * A predecessor's execution completion.
     ExecPending,
-    /// Execution has started for this item, but we haven't received
-    /// `ProgressDelta` update from the item exec logic.
+    /// Execution has started for this step, but we haven't received
+    /// `ProgressDelta` update from the step exec logic.
     Queued,
     /// Execution is in progress.
     ///
@@ -49,7 +49,7 @@ pub enum ProgressStatus {
     ///
     /// * **Units total:** Unknown (spinner) / known (progress bar).
     /// * **Units current**
-    /// * **Function:** `Item::{state_current, state_goal, apply}`.
+    /// * **Function:** `Step::{state_current, state_goal, apply}`.
     ///
     ///     Certain functions will not be applicable, e.g. when `StateCurrent`
     ///     is feature gated, then the function won't be available when the
@@ -57,7 +57,7 @@ pub enum ProgressStatus {
     Running,
     /// Progress updates have not been received for a given period.
     ///
-    /// Item implementations are responsible for sending progress updates,
+    /// Step implementations are responsible for sending progress updates,
     /// but if there are no progress updates, or an identical "it's running"
     /// progress update is continuously received, then Peace may determine that
     /// the task may have stalled, and user attention is required.
@@ -72,6 +72,6 @@ pub enum ProgressStatus {
     /// This status is best conveyed alongside additional information:
     ///
     /// * **Completion Status**: Success, Failed.
-    /// * **Function:** `Item::{state_current, state_goal, apply}`.
+    /// * **Function:** `Step::{state_current, state_goal, apply}`.
     Complete(ProgressComplete),
 }

@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::join;
-use peace_cfg::{ApplyCheck, FnCtx, ItemId};
+use peace_cfg::{ApplyCheck, FnCtx, StepId};
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
@@ -17,8 +17,8 @@ use peace_resources::{
     ResourceFetchError, Resources,
 };
 use peace_rt_model::{
-    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    ItemBoxed, ItemRt,
+    outcomes::{StepApplyBoxed, StepApplyPartialBoxed},
+    StepBoxed, StepRt,
 };
 use tokio::sync::mpsc::{self, Receiver};
 
@@ -123,40 +123,40 @@ where
     /// up:
     ///
     /// ```rust,ignore
-    /// async fn item_apply_exec<F, Fut>(
+    /// async fn step_apply_exec<F, Fut>(
     ///     resources: &Resources<SetUp>,
-    ///     outcomes_tx: &Sender<ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
-    ///     item: FnRef<'_, ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
+    ///     outcomes_tx: &Sender<StepApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
+    ///     step: FnRef<'_, StepBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemRt<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn StepRt<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut StepApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>>,
     /// ```
-    async fn item_apply_exec(
-        item_apply_exec_ctx: ItemApplyExecCtx<
+    async fn step_apply_exec(
+        step_apply_exec_ctx: StepApplyExecCtx<
             '_,
             <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
         >,
-        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        step: &StepBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), ()> {
-        let ItemApplyExecCtx {
+        let StepApplyExecCtx {
             params_specs,
             resources,
             apply_for_internal,
             #[cfg(feature = "output_progress")]
             progress_tx,
             outcomes_tx,
-        } = item_apply_exec_ctx;
+        } = step_apply_exec_ctx;
 
-        let item_id = item.id();
+        let step_id = step.id();
 
-        // Indicate this item is running, so that an `Interrupt` message from
+        // Indicate this step is running, so that an `Interrupt` message from
         // `CmdExecution` does not cause it to be rendered as `Interrupted`.
         #[cfg(feature = "output_progress")]
         let _progress_send_unused = progress_tx.try_send(
             ProgressUpdateAndId {
-                item_id: item_id.clone(),
+                step_id: step_id.clone(),
                 progress_update: ProgressUpdate::Queued,
                 msg_update: ProgressMsgUpdate::NoChange,
             }
@@ -164,28 +164,28 @@ where
         );
 
         let apply_fn = if StatesTs::dry_run() {
-            ItemRt::apply_exec_dry
+            StepRt::apply_exec_dry
         } else {
-            ItemRt::apply_exec
+            StepRt::apply_exec
         };
 
         let fn_ctx = FnCtx::new(
-            item_id,
+            step_id,
             #[cfg(feature = "output_progress")]
-            ProgressSender::new(item_id, progress_tx),
+            ProgressSender::new(step_id, progress_tx),
         );
-        let item_apply = match apply_for_internal {
+        let step_apply = match apply_for_internal {
             ApplyForInternal::Ensure => {
-                ItemRt::ensure_prepare(&**item, params_specs, resources, fn_ctx).await
+                StepRt::ensure_prepare(&**step, params_specs, resources, fn_ctx).await
             }
             ApplyForInternal::Clean { states_current } => {
-                ItemRt::clean_prepare(&**item, states_current, params_specs, resources).await
+                StepRt::clean_prepare(&**step, states_current, params_specs, resources).await
             }
         };
 
-        match item_apply {
-            Ok(mut item_apply) => {
-                match item_apply.apply_check() {
+        match step_apply {
+            Ok(mut step_apply) => {
+                match step_apply.apply_check() {
                     #[cfg(not(feature = "output_progress"))]
                     ApplyCheck::ExecRequired => {}
                     #[cfg(feature = "output_progress")]
@@ -193,7 +193,7 @@ where
                         // Update `OutputWrite`s with progress limit.
                         let _progress_send_unused = progress_tx.try_send(
                             ProgressUpdateAndId {
-                                item_id: item_id.clone(),
+                                step_id: step_id.clone(),
                                 progress_update: ProgressUpdate::Limit(progress_limit),
                                 msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
                             }
@@ -204,7 +204,7 @@ where
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(
                             ProgressUpdateAndId {
-                                item_id: item_id.clone(),
+                                step_id: step_id.clone(),
                                 progress_update: ProgressUpdate::Complete(
                                     ProgressComplete::Success,
                                 ),
@@ -217,9 +217,9 @@ where
                         // In case of an interrupt or power failure, we may not have written states
                         // to disk.
                         outcomes_tx
-                            .send(ItemApplyOutcome::Success {
-                                item_id: item.id().clone(),
-                                item_apply,
+                            .send(StepApplyOutcome::Success {
+                                step_id: step.id().clone(),
+                                step_apply,
                             })
                             .await
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -228,14 +228,14 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(&**item, params_specs, resources, fn_ctx, &mut item_apply).await {
+                match apply_fn(&**step, params_specs, resources, fn_ctx, &mut step_apply).await {
                     Ok(()) => {
                         // apply succeeded
 
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(
                             ProgressUpdateAndId {
-                                item_id: item_id.clone(),
+                                step_id: step_id.clone(),
                                 progress_update: ProgressUpdate::Complete(
                                     ProgressComplete::Success,
                                 ),
@@ -245,9 +245,9 @@ where
                         );
 
                         outcomes_tx
-                            .send(ItemApplyOutcome::Success {
-                                item_id: item.id().clone(),
-                                item_apply,
+                            .send(StepApplyOutcome::Success {
+                                step_id: step.id().clone(),
+                                step_apply,
                             })
                             .await
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -260,7 +260,7 @@ where
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(
                             ProgressUpdateAndId {
-                                item_id: item_id.clone(),
+                                step_id: step_id.clone(),
                                 progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
                                 msg_update: ProgressMsgUpdate::Set(
                                     error
@@ -273,9 +273,9 @@ where
                         );
 
                         outcomes_tx
-                            .send(ItemApplyOutcome::Fail {
-                                item_id: item.id().clone(),
-                                item_apply,
+                            .send(StepApplyOutcome::Fail {
+                                step_id: step.id().clone(),
+                                step_apply,
                                 error,
                             })
                             .await
@@ -286,11 +286,11 @@ where
                     }
                 }
             }
-            Err((error, item_apply_partial)) => {
+            Err((error, step_apply_partial)) => {
                 #[cfg(feature = "output_progress")]
                 let _progress_send_unused = progress_tx.try_send(
                     ProgressUpdateAndId {
-                        item_id: item.id().clone(),
+                        step_id: step.id().clone(),
                         progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
                         msg_update: ProgressMsgUpdate::Set(
                             error
@@ -303,9 +303,9 @@ where
                 );
 
                 outcomes_tx
-                    .send(ItemApplyOutcome::PrepareFail {
-                        item_id: item.id().clone(),
-                        item_apply_partial,
+                    .send(StepApplyOutcome::PrepareFail {
+                        step_id: step.id().clone(),
+                        step_apply_partial,
                         error,
                     })
                     .await
@@ -318,7 +318,7 @@ where
 
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            StepApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_applied_mut: StatesMut<StatesTs>,
         mut states_target_mut: StatesMut<StatesTs::TsTarget>,
@@ -326,17 +326,17 @@ where
         (
             States<StatesTs>,
             States<StatesTs::TsTarget>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
-        while let Some(item_outcome) = outcomes_rx.recv().await {
+        while let Some(step_outcome) = outcomes_rx.recv().await {
             Self::outcome_collate(
                 &mut states_applied_mut,
                 &mut states_target_mut,
                 &mut errors,
-                item_outcome,
+                step_outcome,
             )?;
         }
 
@@ -349,38 +349,38 @@ where
     fn outcome_collate(
         states_applied_mut: &mut StatesMut<StatesTs>,
         states_target_mut: &mut StatesMut<StatesTs::TsTarget>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: StepApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let apply_for = StatesTs::apply_for();
 
         match outcome_partial {
-            ItemApplyOutcome::PrepareFail {
-                item_id,
-                item_apply_partial,
+            StepApplyOutcome::PrepareFail {
+                step_id,
+                step_apply_partial,
                 error,
             } => {
-                errors.insert(item_id.clone(), error);
+                errors.insert(step_id.clone(), error);
 
                 // Save `state_target` (which is `state_goal`) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        if let Some(state_target) = item_apply_partial.state_target() {
-                            states_target_mut.insert_raw(item_id, state_target);
+                        if let Some(state_target) = step_apply_partial.state_target() {
+                            states_target_mut.insert_raw(step_id, state_target);
                         }
                     }
                     ApplyFor::Clean => {}
                 }
             }
-            ItemApplyOutcome::Success {
-                item_id,
-                item_apply,
+            StepApplyOutcome::Success {
+                step_id,
+                step_apply,
             } => {
-                if let Some(state_applied) = item_apply.state_applied() {
-                    states_applied_mut.insert_raw(item_id.clone(), state_applied);
+                if let Some(state_applied) = step_apply.state_applied() {
+                    states_applied_mut.insert_raw(step_id.clone(), state_applied);
                 } else {
-                    // Item was already in the goal state.
+                    // Step was already in the goal state.
                     // No change to current state.
                 }
 
@@ -388,28 +388,28 @@ where
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        let state_target = item_apply.state_target();
-                        states_target_mut.insert_raw(item_id, state_target);
+                        let state_target = step_apply.state_target();
+                        states_target_mut.insert_raw(step_id, state_target);
                     }
                     ApplyFor::Clean => {}
                 }
             }
-            ItemApplyOutcome::Fail {
-                item_id,
-                item_apply,
+            StepApplyOutcome::Fail {
+                step_id,
+                step_apply,
                 error,
             } => {
-                errors.insert(item_id.clone(), error);
-                if let Some(state_applied) = item_apply.state_applied() {
-                    states_applied_mut.insert_raw(item_id.clone(), state_applied);
+                errors.insert(step_id.clone(), error);
+                if let Some(state_applied) = step_apply.state_applied() {
+                    states_applied_mut.insert_raw(step_id.clone(), state_applied);
                 }
 
                 // Save `state_target` (which is state_target) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        let state_target = item_apply.state_target();
-                        states_target_mut.insert_raw(item_id, state_target);
+                        let state_target = step_apply.state_target();
+                        states_target_mut.insert_raw(step_id, state_target);
                     }
                     ApplyFor::Clean => {}
                 }
@@ -493,7 +493,7 @@ where
             ..
         } = cmd_view;
 
-        let item_graph = flow.graph();
+        let step_graph = flow.graph();
         let resources_ref = &*resources;
         let apply_for = StatesTs::apply_for();
         let apply_for_internal = match apply_for {
@@ -502,8 +502,8 @@ where
         };
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        >(item_graph.node_count());
+            StepApplyOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        >(step_graph.node_count());
 
         let stream_opts = {
             let stream_opts = StreamOpts::new()
@@ -516,10 +516,10 @@ where
         };
 
         let (stream_outcome_result, outcome_collate) = {
-            let item_apply_exec_task = async move {
-                let stream_outcome = item_graph
-                    .try_for_each_concurrent_with(BUFFERED_FUTURES_MAX, stream_opts, |item| {
-                        let item_apply_exec_ctx = ItemApplyExecCtx {
+            let step_apply_exec_task = async move {
+                let stream_outcome = step_graph
+                    .try_for_each_concurrent_with(BUFFERED_FUTURES_MAX, stream_opts, |step| {
+                        let step_apply_exec_ctx = StepApplyExecCtx {
                             params_specs,
                             resources: resources_ref,
                             apply_for_internal: &apply_for_internal,
@@ -527,7 +527,7 @@ where
                             progress_tx,
                             outcomes_tx: &outcomes_tx,
                         };
-                        Self::item_apply_exec(item_apply_exec_ctx, item)
+                        Self::step_apply_exec(step_apply_exec_ctx, step)
                     })
                     .await;
 
@@ -538,7 +538,7 @@ where
             let outcome_collate_task =
                 Self::outcome_collate_task(outcomes_rx, states_applied_mut, states_target_mut);
 
-            join!(item_apply_exec_task, outcome_collate_task)
+            join!(step_apply_exec_task, outcome_collate_task)
         };
         let (states_applied, states_target, errors) = outcome_collate?;
 
@@ -550,7 +550,7 @@ where
             stream_outcome.map(|()| (states_previous, states_applied, states_target))
         };
 
-        Ok(CmdBlockOutcome::ItemWise {
+        Ok(CmdBlockOutcome::StepWise {
             stream_outcome,
             errors,
         })
@@ -573,37 +573,37 @@ enum ApplyForInternal {
     Clean { states_current: StatesCurrent },
 }
 
-struct ItemApplyExecCtx<'f, E> {
-    /// Map of item ID to its params' specs.
+struct StepApplyExecCtx<'f, E> {
+    /// Map of step ID to its params' specs.
     params_specs: &'f ParamsSpecs,
     /// Map of all types at runtime.
     resources: &'f Resources<SetUp>,
     /// Whether the `ApplyCmd` is for `Ensure` or `Clean`.
     apply_for_internal: &'f ApplyForInternal,
-    /// Channel sender for `CmdBlock` item outcomes.
+    /// Channel sender for `CmdBlock` step outcomes.
     #[cfg(feature = "output_progress")]
     progress_tx: &'f Sender<CmdProgressUpdate>,
-    outcomes_tx: &'f Sender<ItemApplyOutcome<E>>,
+    outcomes_tx: &'f Sender<StepApplyOutcome<E>>,
 }
 
 #[derive(Debug)]
-pub enum ItemApplyOutcome<E> {
+pub enum StepApplyOutcome<E> {
     /// Error occurred when discovering current state, goal states, state
     /// diff, or `ApplyCheck`.
     PrepareFail {
-        item_id: ItemId,
-        item_apply_partial: ItemApplyPartialBoxed,
+        step_id: StepId,
+        step_apply_partial: StepApplyPartialBoxed,
         error: E,
     },
     /// Ensure execution succeeded.
     Success {
-        item_id: ItemId,
-        item_apply: ItemApplyBoxed,
+        step_id: StepId,
+        step_apply: StepApplyBoxed,
     },
     /// Ensure execution failed.
     Fail {
-        item_id: ItemId,
-        item_apply: ItemApplyBoxed,
+        step_id: StepId,
+        step_apply: StepApplyBoxed,
         error: E,
     },
 }

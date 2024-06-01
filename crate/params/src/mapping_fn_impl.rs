@@ -315,7 +315,7 @@ macro_rules! arg_resolve {
                 // Either:
                 //
                 // * `A0` in the function is incorrect, so `Current<A0>` is not registered by any
-                //   item, or
+                //   step, or
                 // * There is a bug in Peace.
                 BorrowFail::ValueNotFound => match borrow_direct {
                     Ok(arg) => BorrowedData::Direct(arg),
@@ -323,7 +323,7 @@ macro_rules! arg_resolve {
                         // Either:
                         //
                         // * `A0` in the function is incorrect, so `Current<A0>` is not registered
-                        //   by any item, or
+                        //   by any step, or
                         // * There is a bug in Peace.
                         BorrowFail::ValueNotFound => {
                             return Err(ParamsResolveError::FromMap {
@@ -380,7 +380,7 @@ macro_rules! try_arg_resolve {
                 // Either:
                 //
                 // * `A0` in the function is incorrect, so `Current<A0>` is not registered by any
-                //   item, or
+                //   step, or
                 // * There is a bug in Peace.
                 BorrowFail::ValueNotFound => match borrow_direct {
                     Ok(arg) => BorrowedData::Direct(arg),
@@ -388,7 +388,7 @@ macro_rules! try_arg_resolve {
                         // Either:
                         //
                         // * `A0` in the function is incorrect, so `Current<A0>` is not registered
-                        //   by any item, or
+                        //   by any step, or
                         // * There is a bug in Peace.
                         BorrowFail::ValueNotFound => return Ok(None),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {

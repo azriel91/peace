@@ -8,7 +8,7 @@ use crate::{AnySpecRt, ParamsResolveError, ValueResolutionCtx};
 /// Runtime logic of how to look up values for each field in this struct.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]` on an
-/// `Item::Params`, as well as manual implementations for standard library
+/// `Step::Params`, as well as manual implementations for standard library
 /// types.
 pub trait FieldWiseSpecRt: AnySpecRt {
     /// The original value type. `MyParamsFieldWiseSpec::ValueType` is
@@ -17,7 +17,7 @@ pub trait FieldWiseSpecRt: AnySpecRt {
     /// The `Params` type, but with each of its fields wrapped in `Option`.
     type Partial: Clone + Debug + Default + Serialize + DeserializeOwned + Send + Sync + 'static;
 
-    /// Resolves the values to construct the item `Params`.
+    /// Resolves the values to construct the step `Params`.
     ///
     /// This function returns an error if any value is not present in
     /// [`Resources`]. For cases where missing values are not an error, see
@@ -29,7 +29,7 @@ pub trait FieldWiseSpecRt: AnySpecRt {
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::ValueType, ParamsResolveError>;
-    /// Resolves the values to construct the item `Params`.
+    /// Resolves the values to construct the step `Params`.
     ///
     /// Values that are not present in `Resources` will be `None`.
     fn resolve_partial(

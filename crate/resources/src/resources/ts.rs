@@ -12,6 +12,6 @@
 #[derive(Debug)]
 pub struct Empty;
 
-/// `Item::setup` has been run over [`Resources`].
+/// `Step::setup` has been run over [`Resources`].
 #[derive(Debug)]
 pub struct SetUp;

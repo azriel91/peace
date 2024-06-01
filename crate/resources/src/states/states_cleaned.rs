@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::states::{ts::Cleaned, States, StatesCurrent};
 
-/// Cleaned `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
+/// Cleaned `State`s for all `Step`s. `TypeMap<StepId>` newtype.
 ///
 /// These are the `State`s collected after `CleanOpSpec::exec` has been run.
 ///

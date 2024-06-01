@@ -289,7 +289,7 @@ where
             #[cfg(feature = "output_progress")]
             progress_format,
             #[cfg(feature = "output_progress")]
-            pb_item_id_width: None,
+            pb_step_id_width: None,
             #[cfg(unix)]
             stdin_tty_with_guard,
         }

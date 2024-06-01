@@ -404,7 +404,7 @@ fn builder_field_methods(
             //     .build();
             //
             // let mut cmd_ctx = // ..
-            //     .with_item_params::<_>(item_id, params_spec)
+            //     .with_step_params::<_>(step_id, params_spec)
             //     .await?;
             // ```
             quote! {

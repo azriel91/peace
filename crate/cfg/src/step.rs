@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
-use peace_core::{ApplyCheck, ItemId};
+use peace_core::{ApplyCheck, StepId};
 use peace_data::Data;
 use peace_params::{Params, ParamsSpec};
 use peace_resources::{resources::ts::Empty, Resources};
@@ -12,7 +12,7 @@ use crate::FnCtx;
 
 /// Defines all of the data and logic to manage a step.
 ///
-/// The item may be simple or complex, ranging from:
+/// The step may be simple or complex, ranging from:
 ///
 /// * File download.
 /// * Application installation.
@@ -55,17 +55,17 @@ use crate::FnCtx;
 ///
 /// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait(?Send)]
-pub trait Item: DynClone {
+pub trait Step: DynClone {
     /// Consumer provided error type.
     type Error: std::error::Error + Send + Sync;
 
-    /// Summary of the managed item's state.
+    /// Summary of the managed resource's state.
     ///
     /// **For an extensive explanation of state, and how to define it, please
     /// see the [state concept] as well as the [`State`] type.**
     ///
-    /// This type is used to represent the current state of the item (if it
-    /// exists), the goal state of the item (what is intended to exist), and
+    /// This type is used to represent the current state of the step (if it
+    /// exists), the goal state of the step (what is intended to exist), and
     /// is used in the *diff* calculation -- what is the difference between the
     /// current and goal states.
     ///
@@ -102,18 +102,18 @@ pub trait Item: DynClone {
     /// [`State`]: Self::State
     type StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
-    /// Parameters to use this item.
+    /// Parameters to use this step.
     ///
-    /// Item consumers must provide for this item to work.
+    /// Step consumers must provide for this step to work.
     ///
     /// # Examples
     ///
-    /// * For a file download item:
+    /// * For a file download step:
     ///
     ///     - URL of the file.
     ///     - Credentials.
     ///
-    /// * For a server launch item:
+    /// * For a server launch step:
     ///
     ///     - Image ID.
     ///     - Server size.
@@ -131,10 +131,10 @@ pub trait Item: DynClone {
         + Sync
         + 'static;
 
-    /// Data that the item accesses at runtime.
+    /// Data that the step accesses at runtime.
     ///
     /// These may be objects instantiated in `setup` for use during execution,
-    /// or information calculated from previous items.
+    /// or information calculated from previous steps.
     type Data<'exec>: Data<'exec>;
 
     /// Returns the ID of this full spec.
@@ -142,16 +142,16 @@ pub trait Item: DynClone {
     /// # Implementors
     ///
     /// The ID should be a unique value that does not change over the lifetime
-    /// of the managed item.
+    /// of the managed resource.
     ///
-    /// [`ItemId`]s must begin with a letter or underscore, and contain only
-    /// letters, numbers, and underscores.  The [`item_id!`] macro provides
+    /// [`StepId`]s must begin with a letter or underscore, and contain only
+    /// letters, numbers, and underscores.  The [`step_id!`] macro provides
     /// a compile time check to ensure that these conditions are upheld.
     ///
     /// ```rust
-    /// # use peace_cfg::{item_id, ItemId};
-    /// const fn id() -> ItemId {
-    ///     item_id!("my_item")
+    /// # use peace_cfg::{step_id, StepId};
+    /// const fn id() -> StepId {
+    ///     step_id!("my_step")
     /// }
     /// # fn main() { let _id = id(); }
     /// ```
@@ -161,24 +161,24 @@ pub trait Item: DynClone {
     /// This is an instance method as logic for a `Step` may be used for
     /// multiple tasks. For example, a `Step` implemented to download a
     /// file may be instantiated with different files to download, and each
-    /// instance of the `Item` should have its own ID.
+    /// instance of the `Step` should have its own ID.
     ///
-    /// [`item_id!`]: peace_static_check_macros::item_id
-    fn id(&self) -> &ItemId;
+    /// [`step_id!`]: peace_static_check_macros::step_id
+    fn id(&self) -> &StepId;
 
     /// Inserts an instance of each data type in [`Resources`].
     ///
     /// # Implementors
     ///
     /// [`Resources`] is the map of any type, and an instance of each data type
-    /// must be inserted into the map so that item functions can borrow the
+    /// must be inserted into the map so that [`Step`] functions can borrow the
     /// instance of that type.
     ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Self::Error>;
 
-    /// Returns the current state of the managed item, if possible.
+    /// Returns the current state of the managed resource, if possible.
     ///
     /// This should return `Ok(None)` if the state is not able to be queried,
     /// such as when failing to connect to a remote host, instead of returning
@@ -189,7 +189,7 @@ pub trait Item: DynClone {
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
-    /// Returns the current state of the managed item.
+    /// Returns the current state of the managed resource.
     ///
     /// This is *expected* to successfully discover the current state, so errors
     /// will be presented to the user.
@@ -199,7 +199,7 @@ pub trait Item: DynClone {
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
-    /// Returns the goal state of the managed item, if possible.
+    /// Returns the goal state of the managed resource, if possible.
     ///
     /// This should return `Ok(None)` if the state is not able to be queried,
     /// such as when failing to read a potentially non-existent file to
@@ -210,17 +210,17 @@ pub trait Item: DynClone {
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
-    /// Returns the goal state of the managed item.
+    /// Returns the goal state of the managed resource.
     ///
     /// This is *expected* to successfully discover the goal state, so errors
     /// will be presented to the user.
     ///
     /// # Examples
     ///
-    /// * For a file download item, the goal state could be the destination path
+    /// * For a file download step, the goal state could be the destination path
     ///   and a content hash.
     ///
-    /// * For a web application service item, the goal state could be the web
+    /// * For a web application service step, the goal state could be the web
     ///   service is running on the latest version.
     async fn state_goal(
         fn_ctx: FnCtx<'_>,
@@ -241,10 +241,10 @@ pub trait Item: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download item, the difference could be the content hash
+    /// * For a file download step, the difference could be the content hash
     ///   changes from `abcd` to `efgh`.
     ///
-    /// * For a web application service item, the goal state could be the
+    /// * For a web application service step, the goal state could be the
     ///   application version changing from 1 to 2.
     async fn state_diff(
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -257,10 +257,10 @@ pub trait Item: DynClone {
     ///
     /// # Implementors
     ///
-    /// This should return essentially the `None` concept of the item
-    /// state. The diff between this and the current state will be shown to the
-    /// user when they want to see what would be cleaned up by the clean
-    /// command.
+    /// This should return essentially the `None` / "work has not been done"
+    /// variant of the step state. The diff between this and the current
+    /// state will be shown to the user when they want to see what would be
+    /// cleaned up by the clean command.
     async fn state_clean(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
@@ -273,10 +273,10 @@ pub trait Item: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download item, if the destination file differs from the
+    /// * For a file download step, if the destination file differs from the
     ///   file on the server, then the file needs to be downloaded.
     ///
-    /// * For a web application service item, if the web service is running, but
+    /// * For a web application service step, if the web service is running, but
     ///   reports a previous version, then the service may need to be restarted.
     ///
     /// # Implementors
@@ -286,20 +286,20 @@ pub trait Item: DynClone {
     /// # Parameters
     ///
     /// * `fn_ctx`: Context to send progress updates.
-    /// * `params`: Parameters to the item.
+    /// * `params`: Parameters to the step.
     /// * `data`: Runtime data that the function reads from or writes to.
-    /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`state_current`].
-    /// * `state_target`: Target [`State`] of the managed item, either
+    /// * `state_current`: Current [`State`] of the managed resource, returned
+    ///   from [`state_current`].
+    /// * `state_target`: Target [`State`] of the managed resource, either
     ///   [`state_clean`] or [`state_goal`].
-    /// * `state_diff`: Goal [`State`] of the managed item, returned from
+    /// * `state_diff`: Goal [`State`] of the managed resource, returned from
     ///   [`state_diff`].
     ///
-    /// [`state_clean`]: crate::Item::state_clean
-    /// [`state_current`]: crate::Item::state_current
-    /// [`state_goal`]: crate::Item::state_goal
+    /// [`state_clean`]: crate::Step::state_clean
+    /// [`state_current`]: crate::Step::state_current
+    /// [`state_goal`]: crate::Step::state_goal
     /// [`State`]: Self::State
-    /// [`state_diff`]: crate::Item::state_diff
+    /// [`state_diff`]: crate::Step::state_diff
     async fn apply_check(
         params: &Self::Params<'_>,
         data: Self::Data<'_>,
@@ -319,7 +319,7 @@ pub trait Item: DynClone {
     ///
     /// * Where there would be IDs received from an external system, a
     ///   placeholder ID should still be inserted into the runtime data. This
-    ///   should allow subsequent `Item`s that rely on this one to use those
+    ///   should allow subsequent `Step`s that rely on this one to use those
     ///   placeholders in their logic.
     ///
     /// # Implementors
@@ -329,22 +329,22 @@ pub trait Item: DynClone {
     /// # Parameters
     ///
     /// * `fn_ctx`: Context to send progress updates.
-    /// * `params`: Parameters to the item.
+    /// * `params`: Parameters to the step.
     /// * `data`: Runtime data that the function reads from or writes to.
-    /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`state_current`].
-    /// * `state_target`: Target [`State`] of the managed item, either
+    /// * `state_current`: Current [`State`] of the managed resource, returned
+    ///   from [`state_current`].
+    /// * `state_target`: Target [`State`] of the managed resource, either
     ///   [`state_clean`] or [`state_goal`].
-    /// * `state_diff`: Goal [`State`] of the managed item, returned from
+    /// * `state_diff`: Goal [`State`] of the managed resource, returned from
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
-    /// [`state_clean`]: crate::Item::state_clean
-    /// [`state_current`]: crate::Item::state_current
-    /// [`state_goal`]: crate::Item::state_goal
+    /// [`state_clean`]: crate::Step::state_clean
+    /// [`state_current`]: crate::Step::state_current
+    /// [`state_goal`]: crate::Step::state_goal
     /// [`State`]: Self::State
-    /// [`state_diff`]: crate::Item::state_diff
+    /// [`state_diff`]: crate::Step::state_diff
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
@@ -361,22 +361,22 @@ pub trait Item: DynClone {
     /// # Parameters
     ///
     /// * `fn_ctx`: Context to send progress updates.
-    /// * `params`: Parameters to the item.
+    /// * `params`: Parameters to the step.
     /// * `data`: Runtime data that the function reads from or writes to.
-    /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`state_current`].
-    /// * `state_target`: Target [`State`] of the managed item, either
+    /// * `state_current`: Current [`State`] of the managed resource, returned
+    ///   from [`state_current`].
+    /// * `state_target`: Target [`State`] of the managed resource, either
     ///   [`state_clean`] or [`state_goal`].
-    /// * `state_diff`: Goal [`State`] of the managed item, returned from
+    /// * `state_diff`: Goal [`State`] of the managed resource, returned from
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
-    /// [`state_clean`]: crate::Item::state_clean
-    /// [`state_current`]: crate::Item::state_current
-    /// [`state_goal`]: crate::Item::state_goal
+    /// [`state_clean`]: crate::Step::state_clean
+    /// [`state_current`]: crate::Step::state_current
+    /// [`state_goal`]: crate::Step::state_goal
     /// [`State`]: Self::State
-    /// [`state_diff`]: crate::Item::state_diff
+    /// [`state_diff`]: crate::Step::state_diff
     async fn apply(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,

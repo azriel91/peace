@@ -13,7 +13,7 @@ impl<E> ParamsSpecsSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Serializes the [`ParamsSpecs`] of all [`Item`]s to disk.
+    /// Serializes the [`ParamsSpecs`] of all [`Step`]s to disk.
     ///
     /// # Parameters:
     ///
@@ -21,7 +21,7 @@ where
     /// * `params_specs`: `ParamsSpecs` to serialize.
     /// * `params_specs_file`: Path to save the serialized params_specs to.
     ///
-    /// [`Item`]: peace_cfg::Item
+    /// [`Step`]: peace_cfg::Step
     pub async fn serialize(
         storage: &Storage,
         params_specs: &ParamsSpecs,
@@ -40,7 +40,7 @@ where
         Ok(())
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`ParamsSpecs`] of all [`Step`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -49,7 +49,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`Item`]: peace_cfg::Item
+    /// [`Step`]: peace_cfg::Step
     pub async fn deserialize_opt(
         profile: &Profile,
         flow_id: &FlowId,
@@ -69,7 +69,7 @@ where
         .await
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`ParamsSpecs`] of all [`Step`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -78,7 +78,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`Item`]: peace_cfg::Item
+    /// [`Step`]: peace_cfg::Step
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal(
         thread_name: String,
@@ -138,7 +138,7 @@ where
         Ok(params_specs_opt)
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`ParamsSpecs`] of all [`Step`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -147,7 +147,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`Item`]: peace_cfg::Item
+    /// [`Step`]: peace_cfg::Step
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal(
         profile: &Profile,

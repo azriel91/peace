@@ -549,7 +549,7 @@ fn impl_build_for(
                 // .await?;
                 #flow_params_serialize
 
-                // Track items in memory.
+                // Track steps in memory.
                 let mut resources = peace_resources::Resources::new();
                 // === WorkspaceParamsSelected === //
                 // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
@@ -600,10 +600,10 @@ fn impl_build_for(
 
                 // === MultiProfileSingleFlow === //
                 // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let step_graph = flow.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
-                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(step_graph);
                 //
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
                 // let profile_to_params_specs = futures::stream::iter(
@@ -682,20 +682,20 @@ fn impl_build_for(
                 //     >()
                 //     .await?;
                 //
-                // // Call each `Item`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
-                //     item_graph,
+                // // Call each `Step`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::step_graph_setup(
+                //     step_graph,
                 //     resources
                 // )
                 // .await?;
                 //
                 // === SingleProfileSingleFlow === //
-                // // Set up resources for the flow's item graph
+                // // Set up resources for the flow's step graph
                 // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let step_graph = flow.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
-                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(step_graph);
                 //
                 // // Params specs loading and storage.
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -741,9 +741,9 @@ fn impl_build_for(
                 //     resources.insert(states_current_stored);
                 // }
                 //
-                // // Call each `Item`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
-                //     item_graph,
+                // // Call each `Step`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::step_graph_setup(
+                //     step_graph,
                 //     resources
                 // )
                 // .await?;
@@ -754,12 +754,12 @@ fn impl_build_for(
                 //     let multi_progress = indicatif::MultiProgress::with_draw_target(
                 //         indicatif::ProgressDrawTarget::hidden()
                 //     );
-                //     let progress_trackers = item_graph.iter_insertion().fold(
-                //         peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
-                //         |mut progress_trackers, item| {
+                //     let progress_trackers = step_graph.iter_insertion().fold(
+                //         peace_rt_model::IndexMap::with_capacity(step_graph.node_count()),
+                //         |mut progress_trackers, step| {
                 //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                 //             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
-                //             progress_trackers.insert(item.id().clone(), progress_tracker);
+                //             progress_trackers.insert(step.id().clone(), progress_tracker);
                 //             progress_trackers
                 //         },
                 //     );
@@ -1600,17 +1600,17 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             proc_macro2::TokenStream::new()
         }
         Scope::MultiProfileSingleFlow => {
-            // * Reads previous item params and stores them in a `Map<Profile, ItemParams>`.
+            // * Reads previous step params and stores them in a `Map<Profile, StepParams>`.
             // * Reads previously stored current states and stores them in a `Map<Profile,
             //   StatesCurrentStored>`.
             //
             // These are then held in the scope for easy access for consumers.
             quote! {
                 let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let step_graph = flow.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
-                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(step_graph);
 
                 let params_specs_type_reg_ref = &params_specs_type_reg;
                 let profile_to_params_specs = futures::stream::iter(
@@ -1689,9 +1689,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     >()
                     .await?;
 
-                // Call each `Item`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
-                    item_graph,
+                // Call each `Step`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::step_graph_setup(
+                    step_graph,
                     resources
                 )
                 .await?;
@@ -1703,24 +1703,24 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             //
             // It is not possible to insert stored current states into resources when
             // running a command with multiple flows, as the flows will have
-            // different items and their state (type)s will be different.
+            // different steps and their state (type)s will be different.
             //
             // An example is workspace initialization, where the stored current states per
-            // item for workspace initialization are likely different to application
+            // step for workspace initialization are likely different to application
             // specific flows.
             //
             // We currently don't support inserting resources for `MultiProfileSingleFlow`
             // commands. That would require either multiple `Resources` maps, or a
             // `Resources` map that contains `Map<Profile, _>`.
             //
-            // It also requires multiple item graph setups to work without conflicting
+            // It also requires multiple step graph setups to work without conflicting
             // with each other.
             quote! {
                 let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let step_graph = flow.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
-                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(step_graph);
 
                 // Params specs loading and storage.
                 let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -1766,9 +1766,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     resources.insert(states_current_stored);
                 }
 
-                // Call each `Item`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
-                    item_graph,
+                // Call each `Step`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::step_graph_setup(
+                    step_graph,
                     resources
                 )
                 .await?;
@@ -1779,12 +1779,12 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     let multi_progress = indicatif::MultiProgress::with_draw_target(
                         indicatif::ProgressDrawTarget::hidden()
                     );
-                    let progress_trackers = item_graph.iter_insertion().fold(
-                        peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
-                        |mut progress_trackers, item| {
+                    let progress_trackers = step_graph.iter_insertion().fold(
+                        peace_rt_model::IndexMap::with_capacity(step_graph.node_count()),
+                        |mut progress_trackers, step| {
                             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
-                            progress_trackers.insert(item.id().clone(), progress_tracker);
+                            progress_trackers.insert(step.id().clone(), progress_tracker);
                             progress_trackers
                         },
                     );

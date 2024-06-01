@@ -8,11 +8,11 @@ pub use dot_ix;
 pub use fn_graph::GraphInfo;
 
 pub use crate::{
-    flow_info::FlowInfo, flow_spec_info::FlowSpecInfo, item_info::ItemInfo,
-    item_spec_info::ItemSpecInfo,
+    flow_info::FlowInfo, flow_spec_info::FlowSpecInfo, step_info::StepInfo,
+    step_spec_info::StepSpecInfo,
 };
 
 mod flow_info;
 mod flow_spec_info;
-mod item_info;
-mod item_spec_info;
+mod step_info;
+mod step_spec_info;

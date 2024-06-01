@@ -12,7 +12,7 @@ use peace_resources::{
     states::{States, StatesCleaned, StatesCleanedDry, StatesPrevious},
     Resources,
 };
-use peace_rt_model::{ItemGraph, Storage};
+use peace_rt_model::{StepGraph, Storage};
 
 use crate::{
     cmd_blocks::{
@@ -29,37 +29,37 @@ impl<CmdCtxTypesT> CleanCmd<CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec_dry`] for each [`Step`].
     ///
-    /// In practice this runs [`Item::apply_check`], and only runs
+    /// In practice this runs [`Step::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item functions run for a `Clean` execution to work
+    /// The grouping of step functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the *forward*
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Step`s in the *forward*
     ///    direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
+    ///     `Step::try_state_current` during `StepRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `Item` run
-    ///    `ItemRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Step` run
+    ///    `StepRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///     1. `Step::try_state_current`, which resolves parameters from the
     ///        *current* state.
-    ///     2. `Item::state_goal`
-    ///     3. `Item::apply_check`
+    ///     2. `Step::state_goal`
+    ///     3. `Step::apply_check`
     ///
-    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
-    ///    `Item::apply_exec_dry`.
+    /// 3. For `Step`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Step::apply_exec_dry`.
     ///
-    /// [`apply_exec_dry`]: peace_cfg::Item::apply_exec_dry
-    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
-    /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
-    /// [`Item`]: peace_cfg::Item
+    /// [`apply_exec_dry`]: peace_cfg::Step::apply_exec_dry
+    /// [`Step::apply_check`]: peace_cfg::Step::apply_check
+    /// [`Step::apply_exec_dry`]: peace_cfg::StepRt::apply_exec_dry
+    /// [`Step`]: peace_cfg::Step
     pub async fn exec_dry<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -72,7 +72,7 @@ where
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
-    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec_dry`] for each [`Step`].
     ///
     /// See [`Self::exec_dry`] for full documentation.
     ///
@@ -106,37 +106,37 @@ where
         Ok(cmd_outcome)
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec`] for each [`Step`].
     ///
-    /// In practice this runs [`Item::apply_check`], and only runs
+    /// In practice this runs [`Step::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item functions run for a `Clean` execution to work
+    /// The grouping of step functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the *forward*
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Step`s in the *forward*
     ///    direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
+    ///     `Step::try_state_current` during `StepRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `Item` run
-    ///    `ItemRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Step` run
+    ///    `StepRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///     1. `Step::try_state_current`, which resolves parameters from the
     ///        *current* state.
-    ///     2. `Item::state_goal`
-    ///     3. `Item::apply_check`
+    ///     2. `Step::state_goal`
+    ///     3. `Step::apply_check`
     ///
-    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
-    ///    `Item::apply_exec`.
+    /// 3. For `Step`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Step::apply_exec`.
     ///
-    /// [`apply_exec`]: peace_cfg::Item::apply_exec
-    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
-    /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
-    /// [`Item`]: peace_cfg::Item
+    /// [`apply_exec`]: peace_cfg::Step::apply_exec
+    /// [`Step::apply_check`]: peace_cfg::Step::apply_check
+    /// [`Step::apply_exec`]: peace_cfg::StepRt::apply_exec
+    /// [`Step`]: peace_cfg::Step
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -149,7 +149,7 @@ where
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec`] for each [`Step`].
     ///
     /// See [`Self::exec`] for full documentation.
     ///
@@ -170,7 +170,7 @@ where
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
+        let (step_graph, resources) = (flow.graph(), resources);
 
         // We shouldn't serialize current if we returned from an interruption / error
         // handler.
@@ -180,7 +180,7 @@ where
                     CleanExecChange::None => Ok(Default::default()),
                     CleanExecChange::Some(states_previous_and_cleaned) => {
                         let (states_previous, states_cleaned) = *states_previous_and_cleaned;
-                        Self::serialize_current(item_graph, resources, &states_cleaned).await?;
+                        Self::serialize_current(step_graph, resources, &states_cleaned).await?;
 
                         resources.insert::<StatesPrevious>(states_previous);
 
@@ -193,14 +193,14 @@ where
         cmd_outcome.transpose()
     }
 
-    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
+    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Step`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCleaned`].
     ///
     /// [`exec`]: peace_cfg::ApplyFns::exec
-    /// [`Item`]: peace_cfg::Item
-    /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
+    /// [`Step`]: peace_cfg::Step
+    /// [`ApplyFns`]: peace_cfg::Step::ApplyFns
     async fn exec_internal<'ctx, 'ctx_ref, StatesTs>(
         cmd_ctx: &'ctx_ref mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         apply_stored_state_sync: ApplyStoredStateSync,
@@ -269,10 +269,10 @@ where
         // i.e. is it part of `ApplyFns::exec`'s contract to return the state.
         //
         // * It may be duplication of code.
-        // * `FileDownloadItem` needs to know the ETag from the last request, which:
+        // * `FileDownloadStep` needs to know the ETag from the last request, which:
         //     - in `StatesCurrentFn` comes from `StatesCurrent`
         //     - in `CleanCmd` comes from `Cleaned`
-        // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
+        // * `ShCmdStep` doesn't return the state in the apply script, so in the step we
         //   run the state current script after the apply exec script.
 
         Ok(cmd_outcome)
@@ -280,7 +280,7 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        step_graph: &StepGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
         states_cleaned: &StatesCleaned,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
@@ -290,7 +290,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, item_graph, states_cleaned, &states_current_file)
+        StatesSerializer::serialize(&storage, step_graph, states_cleaned, &states_current_file)
             .await?;
 
         drop(flow_dir);

@@ -24,7 +24,7 @@ mod presenter;
 /// ```rust,ignore
 /// use peace_fmt::{present, Presentable};
 ///
-/// present!(output, "a str", item, "\n");
+/// present!(output, "a str", step, "\n");
 /// ```
 #[macro_export]
 macro_rules! present {
@@ -40,7 +40,7 @@ macro_rules! present {
 /// ```rust,ignore
 /// use peace_fmt::{present, Presentable};
 ///
-/// presentln!(output, "a str", item, "\n");
+/// presentln!(output, "a str", step, "\n");
 /// ```
 #[macro_export]
 macro_rules! presentln {

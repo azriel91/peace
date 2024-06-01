@@ -1,18 +1,18 @@
-use crate::outcomes::{ItemApply, ItemApplyRt};
+use crate::outcomes::{StepApply, StepApplyRt};
 
-/// A boxed `ItemApply`.
+/// A boxed `StepApply`.
 #[derive(Clone, serde::Serialize)]
-pub struct ItemApplyBoxed(pub(crate) Box<dyn ItemApplyRt>);
+pub struct StepApplyBoxed(pub(crate) Box<dyn StepApplyRt>);
 
-impl<State, StateDiff> From<ItemApply<State, StateDiff>> for ItemApplyBoxed
+impl<State, StateDiff> From<StepApply<State, StateDiff>> for StepApplyBoxed
 where
-    ItemApply<State, StateDiff>: ItemApplyRt,
+    StepApply<State, StateDiff>: StepApplyRt,
 {
     /// Returns a `StepApplyBoxed` which erases a `StepApply`'s type
     /// parameters.
-    fn from(item_apply: ItemApply<State, StateDiff>) -> Self {
-        Self(Box::new(item_apply))
+    fn from(step_apply: StepApply<State, StateDiff>) -> Self {
+        Self(Box::new(step_apply))
     }
 }
 
-crate::outcomes::box_data_type_newtype!(ItemApplyBoxed, ItemApplyRt);
+crate::outcomes::box_data_type_newtype!(StepApplyBoxed, StepApplyRt);

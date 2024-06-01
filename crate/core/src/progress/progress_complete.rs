@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// * The end user is using invalid values (need for education).
 /// * The environment is flakey (need for stabilization).
 ///
-/// Ideally [rust#84277] is implemented so `Item` implementations can use
+/// Ideally [rust#84277] is implemented so `Step` implementations can use
 /// `?` when returning each variant.
 ///
 /// [rust#84277]: https://github.com/rust-lang/rust/issues/84277

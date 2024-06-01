@@ -37,7 +37,7 @@ static STD_LIB_TYPES: &[&str] = &[
 /// This attribute must be:
 ///
 /// * attached to std library types defined outside the `peace_params` crate.
-/// * attached to each `Params`' field defined outside the item crate.
+/// * attached to each `Params`' field defined outside the step crate.
 pub fn is_fieldless_type(ast: &DeriveInput) -> bool {
     is_known_fieldless_std_lib_spec(&ast.ident) || is_tagged_fieldless(&ast.attrs)
 }
@@ -57,7 +57,7 @@ fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
 ///
 /// * attached to std library types defined outside the `peace_params` crate, if
 ///   it isn't already covered by `STD_LIB_TYPES`.
-/// * attached to each field in `Params` that is defined outside the item crate.
+/// * attached to each field in `Params` that is defined outside the step crate.
 pub fn is_tagged_fieldless(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
         if attr.path().is_ident("value_spec") {

@@ -9,7 +9,7 @@
 //! * `ROpt<'_, T>`: Immutable access to an `Option<T>` resource.
 //! * `WOpt<'_, T>`: Mutable access to an `Option<T>` resource.
 //!
-//! Notably if you want to insert a resource during item execution, you
+//! Notably if you want to insert a resource during step execution, you
 //! should use `WOpt` instead of `WMaybe`, and correspondingly read it using
 //! `ROpt`.
 pub use self::{r_maybe::RMaybe, r_opt::ROpt, w_maybe::WMaybe, w_opt::WOpt};

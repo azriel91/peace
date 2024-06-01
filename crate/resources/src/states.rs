@@ -13,7 +13,7 @@ pub mod ts;
 
 use std::{marker::PhantomData, ops::Deref};
 
-use peace_core::ItemId;
+use peace_core::StepId;
 use peace_fmt::{Presentable, Presenter};
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
@@ -33,7 +33,7 @@ mod states_goal_stored;
 mod states_previous;
 mod states_serde;
 
-/// Map of `State`s for all `Item`s. `TypeMap<ItemId, Item::State>` newtype.
+/// Map of `State`s for all `Step`s. `TypeMap<StepId, Step::State>` newtype.
 ///
 /// # Type Parameters
 ///
@@ -45,41 +45,41 @@ mod states_serde;
 ///
 /// # Design
 ///
-/// When states are serialized, we want there to be an entry for each item.
+/// When states are serialized, we want there to be an entry for each step.
 ///
-/// 1. This means the `States` map should contain an entry for each item,
-///    regardless of whether a `State` is recorded for that item.
+/// 1. This means the `States` map should contain an entry for each step,
+///    regardless of whether a `State` is recorded for that step.
 ///
-/// 2. Inserting an `Option<_>` layer around the `Item::State` turns the map
-///    into a `Map<ItemId, Option<Item::State>>`.
+/// 2. Inserting an `Option<_>` layer around the `Step::State` turns the map
+///    into a `Map<StepId, Option<Step::State>>`.
 ///
-/// 3. Calling `states.get(item_id)` returns `Option<Option<Item::State>>`, the
-///    outer layer for whether the item had an entry, and the inner layer for
+/// 3. Calling `states.get(step_id)` returns `Option<Option<Step::State>>`, the
+///    outer layer for whether the step had an entry, and the inner layer for
 ///    whether there was any `State` recorded.
 ///
-/// 4. If we can guarantee the item ID is valid -- an ID of a step in the flow
+/// 4. If we can guarantee the step ID is valid -- an ID of a step in the flow
 ///    -- we could remove that outer `Option` layer. Currently we cannot make
 ///    this guarantee, as:
 ///
-///     - item IDs are constructed by developer code, without any constraints
-///       for which items are inserted into the Flow, and which are inserted
+///     - step IDs are constructed by developer code, without any constraints
+///       for which steps are inserted into the Flow, and which are inserted
 ///       into `States` -- although insertion into `States` is largely managed
 ///       by `peace`.
 ///
-///     - `States` may contain different items across different versions of an
+///     - `States` may contain different steps across different versions of an
 ///       automation tool, so it is possible (and valid) to:
 ///
-///         + Deserialize `States` that contain states for `Item`s that are no
+///         + Deserialize `States` that contain states for `Step`s that are no
 ///           longer in the flow.
-///         + Deserialize `States` that do not contain states for `Item`s that
+///         + Deserialize `States` that do not contain states for `Step`s that
 ///           are newly added to the flow.
-///         + Have a combination of the above for renamed items.
+///         + Have a combination of the above for renamed steps.
 ///
 /// 5. For clarity of each of these `Option` layers, we can wrap them in a
 ///    newtype.
 ///
 /// 6. For code cleanliness, this additional layer requires calling
-///    [`flatten()`] on `states.get(item_id)`.
+///    [`flatten()`] on `states.get(step_id)`.
 ///
 /// 7. We *could* introduce a different type during serialization that handles
 ///    this additional layer, to remove the additional `flatten()`. How do we
@@ -92,31 +92,31 @@ mod states_serde;
 ///
 /// ## `StatesSerde` Separate Type
 ///
-/// Newtype for `Map<ItemId, Option<Item::State>>`.
+/// Newtype for `Map<StepId, Option<Step::State>>`.
 ///
-/// ### Item Additions
+/// ### Step Additions
 ///
-/// * Flow contains the `Item`.
-/// * Stored state doesn't contain an entry for the item.
-/// * Deserialized `StatesSerde` should contain `(item_id!("new"), None)` -- may
+/// * Flow contains the `Step`.
+/// * Stored state doesn't contain an entry for the step.
+/// * Deserialized `StatesSerde` should contain `(step_id!("new"), None)` -- may
 ///   need custom deserialization code.
 ///
-/// ### Item Removals
+/// ### Step Removals
 ///
-/// * Flow does not contain the `Item`.
-/// * Stored state contains an entry for the item, but cannot be deserialized.
+/// * Flow does not contain the `Step`.
+/// * Stored state contains an entry for the step, but cannot be deserialized.
 /// * Deserialized `StatesSerde` would not contain any entry.
-/// * Deserialization will return the unable to be deserialized item state in
+/// * Deserialization will return the unable to be deserialized step state in
 ///   the return value. Meaning, `StatesSerde` will contain it in a separate
 ///   "removed" field.
 ///
 /// After deserialization, `StatesSerde` is explicitly mapped into `States`, and
-/// we can inform the developer and/or user of the removed items if it is
+/// we can inform the developer and/or user of the removed steps if it is
 /// useful.
 ///
-/// ## `States` With Optional Item State
+/// ## `States` With Optional Step State
 ///
-/// Developers will frequently use `states.get(item_id).flatten()` to access
+/// Developers will frequently use `states.get(step_id).flatten()` to access
 /// state.
 ///
 /// Deserialization has all the same properties as the `StatesSerde` separate
@@ -128,16 +128,16 @@ mod states_serde;
 /// encountered? If so, then:
 ///
 /// * `peace` should store the version of the flow in the stored states files
-/// * items that have ever been used in flows must be shipped in the automation
+/// * steps that have ever been used in flows must be shipped in the automation
 ///   software, in order to support safe upgrades.
 ///
 /// How would this work?
 ///
-/// * Newly added items just work.
-/// * Removed items need to be removed:
+/// * Newly added steps just work.
+/// * Removed steps need to be removed:
 ///     - Successors may need their parameters specified from new predecessors.
-///     - If removing multiple items, we need to clean them in reverse.
-/// * Renamed items may need to be re-applied, or potentially cleaned and
+///     - If removing multiple steps, we need to clean them in reverse.
+/// * Renamed steps may need to be re-applied, or potentially cleaned and
 ///   re-ensured. This doesn't support data retention if a predecessor needs to
 ///   be cleaned, forcing successors to be cleaned, and reensured after. Unless,
 ///   `peace` supports backup and restore.
@@ -146,7 +146,7 @@ mod states_serde;
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct States<TS>(
-    pub(crate) TypeMap<ItemId, BoxDtDisplay>,
+    pub(crate) TypeMap<StepId, BoxDtDisplay>,
     pub(crate) PhantomData<TS>,
 );
 
@@ -165,7 +165,7 @@ impl<TS> States<TS> {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<StepId, BoxDtDisplay> {
         self.0
     }
 }
@@ -176,7 +176,7 @@ impl<TS> Clone for States<TS> {
         clone.0.extend(
             self.0
                 .iter()
-                .map(|(item_id, state)| (item_id.clone(), state.clone())),
+                .map(|(step_id, state)| (step_id.clone(), state.clone())),
         );
 
         clone
@@ -190,15 +190,15 @@ impl<TS> Default for States<TS> {
 }
 
 impl<TS> Deref for States<TS> {
-    type Target = TypeMap<ItemId, BoxDtDisplay>;
+    type Target = TypeMap<StepId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<TS> From<TypeMap<ItemId, BoxDtDisplay>> for States<TS> {
-    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
+impl<TS> From<TypeMap<StepId, BoxDtDisplay>> for States<TS> {
+    fn from(type_map: TypeMap<StepId, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
@@ -216,8 +216,8 @@ impl<TS> Presentable for States<TS> {
         PR: Presenter<'output>,
     {
         presenter
-            .list_numbered_with(self.iter(), |(item_id, state)| {
-                (item_id, format!(": {state}"))
+            .list_numbered_with(self.iter(), |(step_id, state)| {
+                (step_id, format!(": {state}"))
             })
             .await
     }

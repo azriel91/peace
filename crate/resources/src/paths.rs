@@ -38,7 +38,7 @@
 //!     |   |   |- 00000007_2022-08-23T13_07_31_artifact_publish.yaml
 //!     |   |
 //!     |   |- .meta.yaml  # Store the last discovered time so we can inform the user.
-//!     |   |              # Should time be stored per item, or per invocation?
+//!     |   |              # Should time be stored per step, or per invocation?
 //!     |   |
 //!     |   |- dev_env  # flow name
 //!     |   |   |- states_goal.yaml

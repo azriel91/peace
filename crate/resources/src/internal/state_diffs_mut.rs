@@ -1,10 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_core::ItemId;
+use peace_core::StepId;
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// Diffs of `State`s for each `Item`s. `TypeMap<ItemId, BoxDtDisplay>`
+/// Diffs of `State`s for each `Step`s. `TypeMap<StepId, BoxDtDisplay>`
 /// newtype.
 ///
 /// # Implementors
@@ -15,7 +15,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// [`StateDiffs`]: crate::StateDiffs
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StateDiffsMut(TypeMap<ItemId, BoxDtDisplay>);
+pub struct StateDiffsMut(TypeMap<StepId, BoxDtDisplay>);
 
 impl StateDiffsMut {
     /// Returns a new `StateDiffsMut` map.
@@ -32,13 +32,13 @@ impl StateDiffsMut {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<StepId, BoxDtDisplay> {
         self.0
     }
 }
 
 impl Deref for StateDiffsMut {
-    type Target = TypeMap<ItemId, BoxDtDisplay>;
+    type Target = TypeMap<StepId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -51,16 +51,16 @@ impl DerefMut for StateDiffsMut {
     }
 }
 
-impl From<TypeMap<ItemId, BoxDtDisplay>> for StateDiffsMut {
-    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
+impl From<TypeMap<StepId, BoxDtDisplay>> for StateDiffsMut {
+    fn from(type_map: TypeMap<StepId, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }
 
-impl Extend<(ItemId, BoxDtDisplay)> for StateDiffsMut {
-    fn extend<T: IntoIterator<Item = (ItemId, BoxDtDisplay)>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|(item_id, state_diff)| {
-            self.insert_raw(item_id, state_diff);
+impl Extend<(StepId, BoxDtDisplay)> for StateDiffsMut {
+    fn extend<T: IntoIterator<Item = (StepId, BoxDtDisplay)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(step_id, state_diff)| {
+            self.insert_raw(step_id, state_diff);
         });
     }
 }

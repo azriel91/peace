@@ -5,7 +5,7 @@ use std::{fmt::Debug, hash::Hash};
 use futures::stream::{StreamExt, TryStreamExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
-use peace_cfg::ItemId;
+use peace_cfg::StepId;
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
@@ -16,7 +16,7 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Flow, ItemGraph, ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage, Workspace,
+    Flow, StepGraph, ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage, Workspace,
     WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -140,7 +140,7 @@ where
     Ok(())
 }
 
-/// Serializes item params to storage.
+/// Serializes step params to storage.
 async fn params_specs_serialize(
     params_specs: &ParamsSpecs,
     storage: &Storage,
@@ -248,23 +248,23 @@ pub(crate) async fn profiles_from_peace_app_dir(
     Ok(profiles)
 }
 
-/// Registers each item's `Params` and `State` for stateful
+/// Registers each step's `Params` and `State` for stateful
 /// deserialization.
-fn params_and_states_type_reg<E>(item_graph: &ItemGraph<E>) -> (ParamsSpecsTypeReg, StatesTypeReg)
+fn params_and_states_type_reg<E>(step_graph: &StepGraph<E>) -> (ParamsSpecsTypeReg, StatesTypeReg)
 where
     E: 'static,
 {
-    item_graph.iter().fold(
+    step_graph.iter().fold(
         (ParamsSpecsTypeReg::new(), StatesTypeReg::new()),
-        |(mut params_specs_type_reg, mut states_type_reg), item| {
-            item.params_and_state_register(&mut params_specs_type_reg, &mut states_type_reg);
+        |(mut params_specs_type_reg, mut states_type_reg), step| {
+            step.params_and_state_register(&mut params_specs_type_reg, &mut states_type_reg);
 
             (params_specs_type_reg, states_type_reg)
         },
     )
 }
 
-/// Merges provided item parameters with previously stored item
+/// Merges provided step parameters with previously stored step
 /// parameters.
 ///
 /// If a step's parameters are not provided, and nothing was previously
@@ -281,86 +281,86 @@ where
     // precedence.
     //
     // We construct a new TypeMap because we want to make sure params specs are
-    // serialized in order of the items in the graph.
-    let item_graph = flow.graph();
-    let mut params_specs = ParamsSpecs::with_capacity(item_graph.node_count());
+    // serialized in order of the steps in the graph.
+    let step_graph = flow.graph();
+    let mut params_specs = ParamsSpecs::with_capacity(step_graph.node_count());
 
     // Collected erroneous data -- parameters may have been valid in the past, but:
     //
-    // * item IDs may have changed.
-    // * items may have been removed, but params specs remain.
-    // * items may have been added, but params specs forgotten to be added.
-    let mut item_ids_with_no_params_specs = Vec::<ItemId>::new();
+    // * step IDs may have changed.
+    // * steps may have been removed, but params specs remain.
+    // * steps may have been added, but params specs forgotten to be added.
+    let mut step_ids_with_no_params_specs = Vec::<StepId>::new();
     let mut params_specs_stored_mismatches = None;
-    let mut params_specs_not_usable = Vec::<ItemId>::new();
+    let mut params_specs_not_usable = Vec::<StepId>::new();
 
     if let Some(mut params_specs_stored) = params_specs_stored {
-        item_graph.iter_insertion().for_each(|item_rt| {
-            let item_id = item_rt.id();
+        step_graph.iter_insertion().for_each(|step_rt| {
+            let step_id = step_rt.id();
 
             // Removing the entry from stored params specs is deliberate, so filtering for
-            // stored params specs that no longer have a corresponding item are
+            // stored params specs that no longer have a corresponding step are
             // detected.
-            let params_spec_provided = params_specs_provided.shift_remove_entry(item_id);
-            let params_spec_stored = params_specs_stored.shift_remove_entry(item_id);
+            let params_spec_provided = params_specs_provided.shift_remove_entry(step_id);
+            let params_spec_stored = params_specs_stored.shift_remove_entry(step_id);
 
             // Deep merge params specs.
             let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
                 (None, None) => None,
                 (None, Some(params_spec_stored)) => Some(params_spec_stored),
 
-                // Newly added item, or potentially renamed.
+                // Newly added step, or potentially renamed.
                 (Some(params_spec_provided), None) => Some(params_spec_provided),
 
                 (
-                    Some((item_id, mut params_spec_provided)),
-                    Some((_item_id, params_spec_stored)),
+                    Some((step_id, mut params_spec_provided)),
+                    Some((_step_id, params_spec_stored)),
                 ) => {
                     params_spec_provided.merge(&*params_spec_stored);
-                    Some((item_id, params_spec_provided))
+                    Some((step_id, params_spec_provided))
                 }
             };
 
-            if let Some((item_id, params_spec_boxed)) = params_spec_to_use {
+            if let Some((step_id, params_spec_boxed)) = params_spec_to_use {
                 // `*Spec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
                 //
                 // Also, field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
                 // which never had specifications, which are also unusable.
                 if params_spec_boxed.is_usable() {
-                    params_specs.insert_raw(item_id, params_spec_boxed);
+                    params_specs.insert_raw(step_id, params_spec_boxed);
                 } else {
-                    params_specs_not_usable.push(item_id);
+                    params_specs_not_usable.push(step_id);
                 }
             } else {
-                // Collect items that do not have parameters.
-                item_ids_with_no_params_specs.push(item_id.clone());
+                // Collect steps that do not have parameters.
+                step_ids_with_no_params_specs.push(step_id.clone());
             }
         });
 
-        // Stored parameters whose IDs do not correspond to any item IDs in the
+        // Stored parameters whose IDs do not correspond to any step IDs in the
         // graph. May be empty.
         params_specs_stored_mismatches = Some(params_specs_stored);
     } else {
-        item_graph.iter_insertion().for_each(|item_rt| {
-            let item_id = item_rt.id();
+        step_graph.iter_insertion().for_each(|step_rt| {
+            let step_id = step_rt.id();
 
-            if let Some((item_id, params_spec_boxed)) =
-                params_specs_provided.shift_remove_entry(item_id)
+            if let Some((step_id, params_spec_boxed)) =
+                params_specs_provided.shift_remove_entry(step_id)
             {
-                params_specs.insert_raw(item_id, params_spec_boxed);
+                params_specs.insert_raw(step_id, params_spec_boxed);
             } else {
-                // Collect items that do not have parameters.
-                item_ids_with_no_params_specs.push(item_id.clone());
+                // Collect steps that do not have parameters.
+                step_ids_with_no_params_specs.push(step_id.clone());
             }
         });
     }
 
-    // Provided parameters whose IDs do not correspond to any item IDs in the
+    // Provided parameters whose IDs do not correspond to any step IDs in the
     // graph.
     let params_specs_provided_mismatches = params_specs_provided;
 
-    let params_no_issues = item_ids_with_no_params_specs.is_empty()
+    let params_no_issues = step_ids_with_no_params_specs.is_empty()
         && params_specs_provided_mismatches.is_empty()
         && params_specs_stored_mismatches
             .as_ref()
@@ -372,7 +372,7 @@ where
         Ok(params_specs)
     } else {
         Err(peace_rt_model::Error::ParamsSpecsMismatch {
-            item_ids_with_no_params_specs,
+            step_ids_with_no_params_specs,
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,
             params_specs_not_usable,
@@ -380,18 +380,18 @@ where
     }
 }
 
-async fn item_graph_setup<E>(
-    item_graph: &ItemGraph<E>,
+async fn step_graph_setup<E>(
+    step_graph: &StepGraph<E>,
     resources: Resources<Empty>,
 ) -> Result<Resources<SetUp>, E>
 where
     E: std::error::Error + 'static,
 {
-    let resources = item_graph
+    let resources = step_graph
         .stream()
         .map(Ok::<_, E>)
-        .try_fold(resources, |mut resources, item| async move {
-            item.setup(&mut resources).await?;
+        .try_fold(resources, |mut resources, step| async move {
+            step.setup(&mut resources).await?;
             Ok(resources)
         })
         .await?;

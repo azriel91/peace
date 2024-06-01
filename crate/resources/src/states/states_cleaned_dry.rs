@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::states::{ts::CleanedDry, States, StatesCurrent};
 
-/// Dry-run ensured `State`s for all `Item`s.
+/// Dry-run ensured `State`s for all `Step`s.
 ///
 /// These are the `State`s collected after `CleanOpSpec::exec_dry` has been
 /// run.

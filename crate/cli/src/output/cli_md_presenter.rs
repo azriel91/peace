@@ -122,7 +122,7 @@ where
         let mut cli_output_in_memory = CliOutput::new_with_writer(&mut buffer);
         let mut width_buffer_presenter = CliMdPresenter::new(&mut cli_output_in_memory);
 
-        // Render the first presentable of all items, so we can determine the maximum
+        // Render the first presentable of all steps, so we can determine the maximum
         // width.
         let (entries, max_width, _width_buffer_presenter, _f) =
             stream::iter(iterator.map(Result::<_, std::io::Error>::Ok))

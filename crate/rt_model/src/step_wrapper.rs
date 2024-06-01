@@ -5,7 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId};
+use peace_cfg::{async_trait, ApplyCheck, FnCtx, Step, StepId};
 use peace_data::{
     fn_graph::{DataAccess, DataAccessDyn, TypeIds},
     marker::{ApplyDry, Clean, Current, Goal},
@@ -21,24 +21,24 @@ use peace_resources::{
 use type_reg::untagged::BoxDataTypeDowncast;
 
 use crate::{
-    outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
+    outcomes::{StepApply, StepApplyBoxed, StepApplyPartial, StepApplyPartialBoxed},
+    StepRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
 };
 
-/// Wraps a type implementing [`Item`].
+/// Wraps a type implementing [`Step`].
 ///
 /// # Type Parameters
 ///
-/// * `I`: Item type to wrap.
+/// * `I`: Step type to wrap.
 /// * `E`: Application specific error type.
 ///
 ///     Notably, `E` here should be the application's error type, which is not
-///     necessarily the item's error type (unless you have only one item
+///     necessarily the step's error type (unless you have only one step
 ///     spec in the application).
 #[allow(clippy::type_complexity)]
-pub struct ItemWrapper<I, E>(I, PhantomData<E>);
+pub struct StepWrapper<I, E>(I, PhantomData<E>);
 
-impl<I, E> Clone for ItemWrapper<I, E>
+impl<I, E> Clone for StepWrapper<I, E>
 where
     I: Clone,
 {
@@ -47,26 +47,26 @@ where
     }
 }
 
-impl<I, E> PartialEq for ItemWrapper<I, E> {
+impl<I, E> PartialEq for StepWrapper<I, E> {
     fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
 
-impl<I, E> Eq for ItemWrapper<I, E> {}
+impl<I, E> Eq for StepWrapper<I, E> {}
 
-impl<I, E> ItemWrapper<I, E>
+impl<I, E> StepWrapper<I, E>
 where
-    I: Debug + Item + Send + Sync,
+    I: Debug + Step + Send + Sync,
     E: Debug
         + Send
         + Sync
         + std::error::Error
-        + From<<I as Item>::Error>
+        + From<<I as Step>::Error>
         + From<crate::Error>
         + 'static,
-    for<'params> <I as Item>::Params<'params>:
-        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+    for<'params> <I as Step>::Params<'params>:
+        TryFrom<<<I as Step>::Params<'params> as Params>::Partial>,
     for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
 {
     async fn state_clean(
@@ -76,15 +76,15 @@ where
     ) -> Result<I::State, E> {
         let state_clean = {
             let params_partial = {
-                let item_id = self.id();
+                let step_id = self.id();
                 let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
+                        step_id: step_id.clone(),
                     })?;
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Clean,
-                    item_id.clone(),
+                    step_id.clone(),
                     tynm::type_name::<I::Params<'_>>(),
                 );
                 params_spec
@@ -107,15 +107,15 @@ where
     ) -> Result<Option<I::State>, E> {
         let state_current = {
             let params_partial = {
-                let item_id = self.id();
+                let step_id = self.id();
                 let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
+                        step_id: step_id.clone(),
                     })?;
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Current,
-                    item_id.clone(),
+                    step_id.clone(),
                     tynm::type_name::<I::Params<'_>>(),
                 );
                 params_spec
@@ -140,15 +140,15 @@ where
     ) -> Result<I::State, E> {
         let state_current = {
             let params = {
-                let item_id = self.id();
+                let step_id = self.id();
                 let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
+                        step_id: step_id.clone(),
                     })?;
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Current,
-                    item_id.clone(),
+                    step_id.clone(),
                     tynm::type_name::<I::Params<'_>>(),
                 );
                 params_spec
@@ -170,15 +170,15 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<I::State>, E> {
         let params_partial = {
-            let item_id = self.id();
+            let step_id = self.id();
             let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
+                    step_id: step_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Goal,
-                item_id.clone(),
+                step_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
             params_spec
@@ -194,12 +194,12 @@ where
         Ok(state_goal)
     }
 
-    /// Returns the goal state for this item.
+    /// Returns the goal state for this step.
     ///
     /// `value_resolution_ctx` is passed in because:
     ///
     /// * When discovering the goal state for a flow, without altering any
-    ///   items, the goal state of a successor is dependent on the goal state of
+    ///   steps, the goal state of a successor is dependent on the goal state of
     ///   a predecessor.
     /// * When discovering the goal state of a successor, after a predecessor
     ///   has had state applied, the predecessor's goal state does not
@@ -217,15 +217,15 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<I::State, E> {
         let params = {
-            let item_id = self.id();
+            let step_id = self.id();
             let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
+                    step_id: step_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 value_resolution_mode,
-                item_id.clone(),
+                step_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
             params_spec
@@ -243,12 +243,12 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemId, BoxDtDisplay>,
-        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+        states_a: &TypeMap<StepId, BoxDtDisplay>,
+        states_b: &TypeMap<StepId, BoxDtDisplay>,
     ) -> Result<Option<I::StateDiff>, E> {
-        let item_id = <I as Item>::id(self);
-        let state_base = states_a.get::<I::State, _>(item_id);
-        let state_goal = states_b.get::<I::State, _>(item_id);
+        let step_id = <I as Step>::id(self);
+        let state_base = states_a.get::<I::State, _>(step_id);
+        let state_goal = states_b.get::<I::State, _>(step_id);
 
         if let Some((state_base, state_goal)) = state_base.zip(state_goal) {
             let state_diff: I::StateDiff = self
@@ -277,29 +277,29 @@ where
     ) -> Result<I::StateDiff, E> {
         let state_diff: I::StateDiff = {
             let params_partial = {
-                let item_id = self.id();
+                let step_id = self.id();
                 let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
+                        step_id: step_id.clone(),
                     })?;
 
                 // Running `diff` for a single profile will be between the current and goal
                 // states, and parameters are not really intended to be used for diffing.
                 //
-                // However for `ShCmdItem`, the shell script for diffing's path is in
+                // However for `ShCmdStep`, the shell script for diffing's path is in
                 // params, which *likely* would be provided as direct `Value`s instead of
                 // mapped from predecessors' state(s). Iff the values are mapped from a
                 // predecessor's state, then we would want it to be the goal state, as that
                 // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
-                // `Item::apply_dry`, and `ValueResolutionMode::Apply` is used in
-                // `Item::apply`.
+                // `Step::apply_dry`, and `ValueResolutionMode::Apply` is used in
+                // `Step::apply`.
                 //
                 // Running `diff` for multiple profiles will likely be between two profiles'
                 // current states.
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Goal,
-                    item_id.clone(),
+                    step_id.clone(),
                     tynm::type_name::<I::Params<'_>>(),
                 );
                 params_spec
@@ -325,11 +325,11 @@ where
         value_resolution_mode: ValueResolutionMode,
     ) -> Result<ApplyCheck, E> {
         let params_partial = {
-            let item_id = self.id();
+            let step_id = self.id();
             let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
+                    step_id: step_id.clone(),
                 })?;
 
             // Normally an `apply_check` only compares the states / state diff.
@@ -341,7 +341,7 @@ where
             // state will be fed into successors' goal state.
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 value_resolution_mode,
-                item_id.clone(),
+                step_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
             params_spec
@@ -354,7 +354,7 @@ where
                 .await
                 .map_err(Into::<E>::into)
         } else {
-            // > If we cannot resolve parameters, then this item, and its predecessor are
+            // > If we cannot resolve parameters, then this step, and its predecessor are
             // > cleaned up.
             //
             // The above is not necessarily true -- the user may have provided an incorrect
@@ -373,15 +373,15 @@ where
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
         let params = {
-            let item_id = self.id();
+            let step_id = self.id();
             let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
+                    step_id: step_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::ApplyDry,
-                item_id.clone(),
+                step_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
             params_spec
@@ -409,15 +409,15 @@ where
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
         let params = {
-            let item_id = self.id();
+            let step_id = self.id();
             let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .get::<ParamsSpec<I::Params<'_>>, _>(step_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
+                    step_id: step_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Current,
-                item_id.clone(),
+                step_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
             params_spec
@@ -435,7 +435,7 @@ where
     }
 }
 
-impl<I, E> Debug for ItemWrapper<I, E>
+impl<I, E> Debug for StepWrapper<I, E>
 where
     I: Debug,
 {
@@ -444,7 +444,7 @@ where
     }
 }
 
-impl<I, E> Deref for ItemWrapper<I, E> {
+impl<I, E> Deref for StepWrapper<I, E> {
     type Target = I;
 
     fn deref(&self) -> &Self::Target {
@@ -452,26 +452,26 @@ impl<I, E> Deref for ItemWrapper<I, E> {
     }
 }
 
-impl<I, E> DerefMut for ItemWrapper<I, E> {
+impl<I, E> DerefMut for StepWrapper<I, E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<I, E> From<I> for ItemWrapper<I, E>
+impl<I, E> From<I> for StepWrapper<I, E>
 where
-    I: Debug + Item + Send + Sync,
-    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+    I: Debug + Step + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Step>::Error> + 'static,
 {
-    fn from(item: I) -> Self {
-        Self(item, PhantomData)
+    fn from(step: I) -> Self {
+        Self(step, PhantomData)
     }
 }
 
-impl<I, E> DataAccess for ItemWrapper<I, E>
+impl<I, E> DataAccess for StepWrapper<I, E>
 where
-    I: Debug + Item + Send + Sync,
-    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+    I: Debug + Step + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Step>::Error> + 'static,
 {
     fn borrows() -> TypeIds {
         let mut type_ids = <I::Data<'_> as DataAccess>::borrows();
@@ -485,10 +485,10 @@ where
     }
 }
 
-impl<I, E> DataAccessDyn for ItemWrapper<I, E>
+impl<I, E> DataAccessDyn for StepWrapper<I, E>
 where
-    I: Debug + Item + Send + Sync,
-    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+    I: Debug + Step + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Step>::Error> + 'static,
 {
     fn borrows(&self) -> TypeIds {
         let mut type_ids = <I::Data<'_> as DataAccess>::borrows();
@@ -503,29 +503,29 @@ where
 }
 
 #[async_trait(?Send)]
-impl<I, E> ItemRt<E> for ItemWrapper<I, E>
+impl<I, E> StepRt<E> for StepWrapper<I, E>
 where
-    I: Clone + Debug + Item + Send + Sync + 'static,
+    I: Clone + Debug + Step + Send + Sync + 'static,
     E: Debug
         + Send
         + Sync
         + std::error::Error
-        + From<<I as Item>::Error>
+        + From<<I as Step>::Error>
         + From<crate::Error>
         + 'static,
-    for<'params> <I as Item>::Params<'params>:
-        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+    for<'params> <I as Step>::Params<'params>:
+        TryFrom<<<I as Step>::Params<'params> as Params>::Partial>,
     for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
 {
-    fn id(&self) -> &ItemId {
-        <I as Item>::id(self)
+    fn id(&self) -> &StepId {
+        <I as Step>::id(self)
     }
 
-    fn eq(&self, other: &dyn ItemRt<E>) -> bool {
+    fn eq(&self, other: &dyn StepRt<E>) -> bool {
         if self.id() == other.id() {
             let other = other.as_any();
-            if let Some(item_wrapper) = other.downcast_ref::<Self>() {
-                self == item_wrapper
+            if let Some(step_wrapper) = other.downcast_ref::<Self>() {
+                self == step_wrapper
             } else {
                 false
             }
@@ -550,7 +550,7 @@ where
         resources.insert(ApplyDry::<I::State>(None));
 
         // Run user defined setup.
-        <I as Item>::setup(self, resources)
+        <I as Step>::setup(self, resources)
             .await
             .map_err(Into::<E>::into)
     }
@@ -645,7 +645,7 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
         self.state_goal_exec(
-            // Use the would-be state of predecessor to discover goal state of this item.
+            // Use the would-be state of predecessor to discover goal state of this step.
             //
             // TODO: this means we may need to overlay the goal state with the predecessor's
             // current state.
@@ -666,8 +666,8 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemId, BoxDtDisplay>,
-        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+        states_a: &TypeMap<StepId, BoxDtDisplay>,
+        states_b: &TypeMap<StepId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
         self.state_diff_exec(params_specs, resources, states_a, states_b)
             .await
@@ -680,15 +680,15 @@ where
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
-        let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
+    ) -> Result<StepApplyBoxed, (E, StepApplyPartialBoxed)> {
+        let mut step_apply_partial = StepApplyPartial::<I::State, I::StateDiff>::new();
 
         match self
             .state_current_exec(params_specs, resources, fn_ctx)
             .await
         {
-            Ok(state_current) => item_apply_partial.state_current = Some(state_current),
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Ok(state_current) => step_apply_partial.state_current = Some(state_current),
+            Err(error) => return Err((error, step_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
         fn_ctx.progress_sender().reset_to_pending();
@@ -702,8 +702,8 @@ where
             )
             .await
         {
-            Ok(state_goal) => item_apply_partial.state_target = Some(state_goal),
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Ok(state_goal) => step_apply_partial.state_target = Some(state_goal),
+            Err(error) => return Err((error, step_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
         fn_ctx.progress_sender().reset_to_pending();
@@ -711,25 +711,25 @@ where
             .state_diff_exec_with(
                 params_specs,
                 resources,
-                item_apply_partial
+                step_apply_partial
                     .state_current
                     .as_ref()
                     .expect("unreachable: This is set just above."),
-                item_apply_partial
+                step_apply_partial
                     .state_target
                     .as_ref()
                     .expect("unreachable: This is set just above."),
             )
             .await
         {
-            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Ok(state_diff) => step_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, step_apply_partial.into())),
         }
 
         let (Some(state_current), Some(state_goal), Some(state_diff)) = (
-            item_apply_partial.state_current.as_ref(),
-            item_apply_partial.state_target.as_ref(),
-            item_apply_partial.state_diff.as_ref(),
+            step_apply_partial.state_current.as_ref(),
+            step_apply_partial.state_target.as_ref(),
+            step_apply_partial.state_diff.as_ref(),
         ) else {
             unreachable!("These are set just above.");
         };
@@ -747,7 +747,7 @@ where
             .await;
         let state_applied = match apply_check {
             Ok(apply_check) => {
-                item_apply_partial.apply_check = Some(apply_check);
+                step_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
                 match apply_check {
@@ -755,13 +755,13 @@ where
                     ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
                     ApplyCheck::ExecRequired { .. } => None,
-                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecNotRequired => step_apply_partial.state_current.clone(),
                 }
             }
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Err(error) => return Err((error, step_apply_partial.into())),
         };
 
-        Ok(ItemApply::try_from((item_apply_partial, state_applied))
+        Ok(StepApply::try_from((step_apply_partial, state_applied))
             .expect("unreachable: All the fields are set above.")
             .into())
     }
@@ -771,27 +771,27 @@ where
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-        item_apply_boxed: &mut ItemApplyBoxed,
+        step_apply_boxed: &mut StepApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_apply) = item_apply_boxed
+        let Some(step_apply) = step_apply_boxed
             .as_data_type_mut()
-            .downcast_mut::<ItemApply<I::State, I::StateDiff>>()
+            .downcast_mut::<StepApply<I::State, I::StateDiff>>()
         else {
             panic!(
-                "Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+                "Failed to downcast `StepApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>()
+                concrete_type = std::any::type_name::<StepApply<I::State, I::StateDiff>>()
             )
         };
 
-        let ItemApply {
+        let StepApply {
             state_current_stored: _,
             state_current,
             state_target,
             state_diff,
             apply_check,
             state_applied,
-        } = item_apply;
+        } = step_apply;
 
         match apply_check {
             #[cfg(not(feature = "output_progress"))]
@@ -835,50 +835,50 @@ where
         states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
-        let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
+    ) -> Result<StepApplyBoxed, (E, StepApplyPartialBoxed)> {
+        let mut step_apply_partial = StepApplyPartial::<I::State, I::StateDiff>::new();
 
         if let Some(state_current) = states_current.get::<I::State, _>(self.id()) {
-            item_apply_partial.state_current = Some(state_current.clone());
+            step_apply_partial.state_current = Some(state_current.clone());
         } else {
-            // Hack: Setting ItemApplyPartial state_current to state_clean is a hack,
-            // which allows successor items to read the state of a predecessor, when
+            // Hack: Setting StepApplyPartial state_current to state_clean is a hack,
+            // which allows successor steps to read the state of a predecessor, when
             // none can be discovered.
             //
             // This may not necessarily be a hack.
             match self.state_clean(params_specs, resources).await {
-                Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
-                Err(error) => return Err((error, item_apply_partial.into())),
+                Ok(state_clean) => step_apply_partial.state_current = Some(state_clean),
+                Err(error) => return Err((error, step_apply_partial.into())),
             }
         }
         match self.state_clean(params_specs, resources).await {
-            Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Ok(state_clean) => step_apply_partial.state_target = Some(state_clean),
+            Err(error) => return Err((error, step_apply_partial.into())),
         }
 
         match self
             .state_diff_exec_with(
                 params_specs,
                 resources,
-                item_apply_partial
+                step_apply_partial
                     .state_current
                     .as_ref()
                     .expect("unreachable: This is confirmed just above."),
-                item_apply_partial
+                step_apply_partial
                     .state_target
                     .as_ref()
                     .expect("unreachable: This is set just above."),
             )
             .await
         {
-            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Ok(state_diff) => step_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, step_apply_partial.into())),
         }
 
         let (Some(state_current), Some(state_clean), Some(state_diff)) = (
-            item_apply_partial.state_current.as_ref(),
-            item_apply_partial.state_target.as_ref(),
-            item_apply_partial.state_diff.as_ref(),
+            step_apply_partial.state_current.as_ref(),
+            step_apply_partial.state_target.as_ref(),
+            step_apply_partial.state_diff.as_ref(),
         ) else {
             unreachable!("These are set just above.");
         };
@@ -897,7 +897,7 @@ where
 
         let state_applied = match apply_check {
             Ok(apply_check) => {
-                item_apply_partial.apply_check = Some(apply_check);
+                step_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
                 match apply_check {
@@ -905,13 +905,13 @@ where
                     ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
                     ApplyCheck::ExecRequired { .. } => None,
-                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecNotRequired => step_apply_partial.state_current.clone(),
                 }
             }
-            Err(error) => return Err((error, item_apply_partial.into())),
+            Err(error) => return Err((error, step_apply_partial.into())),
         };
 
-        Ok(ItemApply::try_from((item_apply_partial, state_applied))
+        Ok(StepApply::try_from((step_apply_partial, state_applied))
             .expect("unreachable: All the fields are set above.")
             .into())
     }
@@ -921,27 +921,27 @@ where
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-        item_apply_boxed: &mut ItemApplyBoxed,
+        step_apply_boxed: &mut StepApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_apply) = item_apply_boxed
+        let Some(step_apply) = step_apply_boxed
             .as_data_type_mut()
-            .downcast_mut::<ItemApply<I::State, I::StateDiff>>()
+            .downcast_mut::<StepApply<I::State, I::StateDiff>>()
         else {
             panic!(
-                "Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+                "Failed to downcast `StepApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>()
+                concrete_type = std::any::type_name::<StepApply<I::State, I::StateDiff>>()
             )
         };
 
-        let ItemApply {
+        let StepApply {
             state_current_stored: _,
             state_current,
             state_target,
             state_diff,
             apply_check,
             state_applied,
-        } = item_apply;
+        } = step_apply;
 
         match apply_check {
             #[cfg(not(feature = "output_progress"))]

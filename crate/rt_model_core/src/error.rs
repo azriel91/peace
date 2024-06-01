@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace_cmd_model::CmdExecutionError;
-use peace_core::{FlowId, ItemId, Profile};
+use peace_core::{FlowId, StepId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::ParamsSpecsFile;
 
@@ -82,10 +82,10 @@ pub enum Error {
         ParamsResolveError,
     ),
 
-    /// A `Params::Spec` was not present for a given item ID.
+    /// A `Params::Spec` was not present for a given step ID.
     ///
     /// If this happens, this is a bug in the Peace framework.
-    #[error("A `Params::Spec` was not present for item: {item_id}")]
+    #[error("A `Params::Spec` was not present for step: {step_id}")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
@@ -101,17 +101,17 @@ pub enum Error {
         )
     )]
     ParamsSpecNotFound {
-        /// Item ID for which the params spec was not found.
-        item_id: ItemId,
+        /// Step ID for which the params spec was not found.
+        step_id: StepId,
     },
 
-    /// Item params specs do not match with the items in the flow.
+    /// Step params specs do not match with the steps in the flow.
     ///
     /// # Symptoms
     ///
-    /// * Provided params specs for a step ID has no corresponding item ID in
+    /// * Provided params specs for a step ID has no corresponding step ID in
     ///   the flow.
-    /// * Stored params specs for a step ID has no corresponding item ID in the
+    /// * Stored params specs for a step ID has no corresponding step ID in the
     ///   flow.
     /// * ID of a step in the flow does not have a corresponding provided
     ///   params spec.
@@ -122,28 +122,28 @@ pub enum Error {
     ///
     /// These can happen when:
     ///
-    /// * An item is added.
+    /// * An step is added.
     ///
     ///    - No corresponding provided params spec.
     ///    - No corresponding stored params spec.
     ///
-    /// * An item ID is renamed.
+    /// * An step ID is renamed.
     ///
     ///    - Provided params spec ID mismatch.
     ///    - Stored params spec ID mismatch.
     ///    - No corresponding provided params spec.
     ///
-    /// * An item is removed.
+    /// * An step is removed.
     ///
     ///    - Provided params spec ID mismatch.
     ///    - Stored params spec ID mismatch.
-    #[error("Item params specs do not match with the items in the flow.")]
+    #[error("Step params specs do not match with the steps in the flow.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::params_specs_mismatch),
             help("{}", params_specs_mismatch_display(
-                item_ids_with_no_params_specs,
+                step_ids_with_no_params_specs,
                 params_specs_provided_mismatches,
                 params_specs_stored_mismatches.as_ref(),
                 params_specs_not_usable,
@@ -151,16 +151,16 @@ pub enum Error {
         )
     )]
     ParamsSpecsMismatch {
-        /// Item IDs for which there are no provided or stored params spec.
-        item_ids_with_no_params_specs: Vec<ItemId>,
-        /// Provided params specs with no matching item ID in the flow.
+        /// Step IDs for which there are no provided or stored params spec.
+        step_ids_with_no_params_specs: Vec<StepId>,
+        /// Provided params specs with no matching step ID in the flow.
         params_specs_provided_mismatches: ParamsSpecs,
-        /// Stored params specs with no matching item ID in the flow.
+        /// Stored params specs with no matching step ID in the flow.
         params_specs_stored_mismatches: Option<ParamsSpecs>,
-        /// Item IDs which had a mapping function previously provided in
+        /// Step IDs which had a mapping function previously provided in
         /// its params spec, but on a subsequent invocation nothing was
         /// provided.
-        params_specs_not_usable: Vec<ItemId>,
+        params_specs_not_usable: Vec<StepId>,
     },
 
     /// In a `MultiProfileSingleFlow` diff, neither profile had `Params::Specs`
@@ -171,8 +171,8 @@ pub enum Error {
         diagnostic(
             code(peace_rt_model::params_specs_not_defined_for_diff),
             help(
-                "Make sure at least one of the flows has `.with_items_params(..)`\n\
-                defined for every item in the flow."
+                "Make sure at least one of the flows has `.with_steps_params(..)`\n\
+                defined for every step in the flow."
             )
         )
     )]
@@ -213,10 +213,10 @@ pub enum Error {
         diagnostic(
             code(peace_rt_model::states_deserialize),
             help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
+                "Make sure that all commands using the `{flow_id}` flow, also use the same step graph.\n\
+                This is because all Steps are used to deserialize state.\n\
                 \n\
-                If the item graph is different, it may make sense to use a different flow ID."
+                If the step graph is different, it may make sense to use a different flow ID."
             )
         )
     )]
@@ -258,10 +258,10 @@ pub enum Error {
         diagnostic(
             code(peace_rt_model::params_specs_deserialize),
             help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
+                "Make sure that all commands using the `{flow_id}` flow, also use the same step graph.\n\
+                This is because all Steps are used to deserialize state.\n\
                 \n\
-                If the item graph is different, it may make sense to use a different flow ID."
+                If the step graph is different, it may make sense to use a different flow ID."
             )
         )
     )]
@@ -491,13 +491,13 @@ pub enum Error {
     )]
     FlowParamsDeserialize(#[source] serde_yaml::Error),
 
-    /// Item does not exist in storage.
-    #[error("Item does not exist in storage: `{}`.", path.display())]
+    /// Step does not exist in storage.
+    #[error("Step does not exist in storage: `{}`.", path.display())]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::item_not_exists))
+        diagnostic(code(peace_rt_model::step_not_exists))
     )]
-    ItemNotExists {
+    StepNotExists {
         /// Path to the file.
         path: PathBuf,
     },
@@ -534,21 +534,21 @@ pub enum Error {
 
 #[cfg(feature = "error_reporting")]
 fn params_specs_mismatch_display(
-    item_ids_with_no_params: &[ItemId],
+    step_ids_with_no_params: &[StepId],
     params_specs_provided_mismatches: &ParamsSpecs,
     params_specs_stored_mismatches: Option<&ParamsSpecs>,
-    params_specs_not_usable: &[ItemId],
+    params_specs_not_usable: &[StepId],
 ) -> String {
-    let mut items = Vec::<String>::new();
+    let mut steps = Vec::<String>::new();
 
-    if !item_ids_with_no_params.is_empty() {
-        items.push(format!(
-            "The following items do not have parameters provided:\n\
+    if !step_ids_with_no_params.is_empty() {
+        steps.push(format!(
+            "The following steps do not have parameters provided:\n\
             \n\
             {}\n",
-            item_ids_with_no_params
+            step_ids_with_no_params
                 .iter()
-                .map(|item_id| format!("* {item_id}"))
+                .map(|step_id| format!("* {step_id}"))
                 .collect::<Vec<String>>()
                 .join("\n")
         ));
@@ -557,11 +557,11 @@ fn params_specs_mismatch_display(
     if !params_specs_provided_mismatches.is_empty() {
         let params_specs_provided_mismatches_list = params_specs_provided_mismatches
             .keys()
-            .map(|item_id| format!("* {item_id}"))
+            .map(|step_id| format!("* {step_id}"))
             .collect::<Vec<String>>()
             .join("\n");
-        items.push(format!(
-            "The following provided params specs do not correspond to any items in the flow:\n\
+        steps.push(format!(
+            "The following provided params specs do not correspond to any steps in the flow:\n\
             \n\
             {params_specs_provided_mismatches_list}\n",
         ))
@@ -571,11 +571,11 @@ fn params_specs_mismatch_display(
         if !params_specs_stored_mismatches.is_empty() {
             let params_specs_stored_mismatches_list = params_specs_stored_mismatches
                 .keys()
-                .map(|item_id| format!("* {item_id}"))
+                .map(|step_id| format!("* {step_id}"))
                 .collect::<Vec<String>>()
                 .join("\n");
-            items.push(format!(
-                "The following stored params specs do not correspond to any items in the flow:\n\
+            steps.push(format!(
+                "The following stored params specs do not correspond to any steps in the flow:\n\
                 \n\
                 {params_specs_stored_mismatches_list}\n",
             ));
@@ -583,8 +583,8 @@ fn params_specs_mismatch_display(
     }
 
     if !params_specs_not_usable.is_empty() {
-        items.push(format!(
-            "The following items either have not had a params spec provided previously,\n\
+        steps.push(format!(
+            "The following steps either have not had a params spec provided previously,\n\
             or had contained a mapping function, which cannot be loaded from disk.\n\
             \n\
             So the params spec needs to be provided to the command context for:\n\
@@ -592,11 +592,11 @@ fn params_specs_mismatch_display(
             {}\n",
             params_specs_not_usable
                 .iter()
-                .map(|item_id| format!("* {item_id}"))
+                .map(|step_id| format!("* {step_id}"))
                 .collect::<Vec<String>>()
                 .join("\n")
         ));
     }
 
-    items.join("\n")
+    steps.join("\n")
 }

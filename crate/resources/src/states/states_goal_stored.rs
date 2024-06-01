@@ -5,9 +5,9 @@ use crate::states::{
     States,
 };
 
-/// Stored goal `State`s for all `Item`s.
+/// Stored goal `State`s for all `Step`s.
 ///
-/// These are the states that each item would be in, if `Item::apply` were to be
+/// These are the states that each step would be in, if `Step::apply` were to be
 /// run with `state_goal` as the target state.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,

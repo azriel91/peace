@@ -89,7 +89,7 @@ mod util;
 )]
 pub fn value_spec(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`Params` derive: Failed to parse input as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldwise);
 
@@ -123,7 +123,7 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
 )]
 pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ParamsFieldless` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`ParamsFieldless` derive: Failed to parse input as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
@@ -133,7 +133,7 @@ pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`peace_params::value_impl`: Failed to parse item as struct, enum, or union.");
+        .expect("`peace_params::value_impl`: Failed to parse input as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
@@ -362,7 +362,7 @@ fn t_partial(
         &[
             parse_quote! {
                 #[doc="\
-                    Item parameters that may not necessarily have values.\n\
+                    Step parameters that may not necessarily have values.\n\
                     \n\
                     This is used for `try_state_current` and `try_state_goal` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\
@@ -414,7 +414,7 @@ fn t_partial_external(
         &[
             parse_quote! {
                 #[doc="\
-                    Item parameters that may not necessarily have values.\n\
+                    Step parameters that may not necessarily have values.\n\
                     \n\
                     This is used for `try_state_current` and `try_state_goal` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::states::{ts::Ensured, States, StatesCurrent};
 
-/// Ensured `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
+/// Ensured `State`s for all `Step`s. `TypeMap<StepId>` newtype.
 ///
 /// These are the `State`s collected after `ApplyFns::exec` has been run.
 ///

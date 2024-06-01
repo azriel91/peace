@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This is used for referential param values, where a step param value is
 /// dependent on the state of a predecessor's state.
 ///
-/// An `ApplyDry<Item::State>` is set to `Some` whenever a step is dry applied,
+/// An `ApplyDry<Step::State>` is set to `Some` whenever a step is dry applied,
 /// enabling a subsequent successor's params to access that value when the
 /// successor's `apply_dry` function is run.
 ///

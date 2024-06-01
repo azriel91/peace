@@ -1,23 +1,23 @@
 use peace_cfg::FlowId;
 use peace_data::fn_graph::GraphInfo;
-use peace_flow_model::{FlowSpecInfo, ItemSpecInfo};
+use peace_flow_model::{FlowSpecInfo, StepSpecInfo};
 
-use crate::ItemGraph;
+use crate::StepGraph;
 
-/// A flow to manage items.
+/// A flow to manage steps.
 ///
 /// A Flow ID is strictly associated with a [`StepGraph`], as the graph
-/// contains the definitions to read and write the items' [`State`]s.
+/// contains the definitions to read and write the steps' [`State`]s.
 ///
-/// [`State`]: peace_cfg::Item::State
+/// [`State`]: peace_cfg::Step::State
 #[derive(Debug)]
 pub struct Flow<E> {
     /// ID of this flow.
     flow_id: FlowId,
-    /// Graph of [`Item`]s in this flow.
+    /// Graph of [`Step`]s in this flow.
     ///
-    /// [`Item`]: peace_cfg::Item
-    graph: ItemGraph<E>,
+    /// [`Step`]: peace_cfg::Step
+    graph: StepGraph<E>,
 }
 
 impl<E> PartialEq for Flow<E>
@@ -42,7 +42,7 @@ impl<E> Eq for Flow<E> where E: 'static {}
 
 impl<E> Flow<E> {
     /// Returns a new `Flow`.
-    pub fn new(flow_id: FlowId, graph: ItemGraph<E>) -> Self {
+    pub fn new(flow_id: FlowId, graph: StepGraph<E>) -> Self {
         Self { flow_id, graph }
     }
 
@@ -51,13 +51,13 @@ impl<E> Flow<E> {
         &self.flow_id
     }
 
-    /// Returns the item graph.
-    pub fn graph(&self) -> &ItemGraph<E> {
+    /// Returns the step graph.
+    pub fn graph(&self) -> &StepGraph<E> {
         &self.graph
     }
 
-    /// Returns a mutable reference to the item graph.
-    pub fn graph_mut(&self) -> &ItemGraph<E> {
+    /// Returns a mutable reference to the step graph.
+    pub fn graph_mut(&self) -> &StepGraph<E> {
         &self.graph
     }
 
@@ -67,9 +67,9 @@ impl<E> Flow<E> {
         E: 'static,
     {
         let flow_id = self.flow_id.clone();
-        let graph_info = GraphInfo::from_graph(&self.graph, |item_boxed| {
-            let item_id = item_boxed.id().clone();
-            ItemSpecInfo { item_id }
+        let graph_info = GraphInfo::from_graph(&self.graph, |step_boxed| {
+            let step_id = step_boxed.id().clone();
+            StepSpecInfo { step_id }
         });
 
         FlowSpecInfo::new(flow_id, graph_info)

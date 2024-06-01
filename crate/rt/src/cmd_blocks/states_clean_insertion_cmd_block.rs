@@ -20,9 +20,9 @@ cfg_if::cfg_if! {
     }
 }
 
-/// Inserts [`StatesClean`]s for each item.
+/// Inserts [`StatesClean`]s for each step.
 ///
-/// This calls [`Item::state_clean`] for each item, and groups them together
+/// This calls [`Step::state_clean`] for each step, and groups them together
 /// into `StatesClean`.
 #[derive(Debug)]
 pub struct StatesCleanInsertionCmdBlock<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
@@ -86,18 +86,18 @@ where
                 StreamOpts::new()
                     .interruptibility_state(interruptibility_state.reborrow())
                     .interrupted_next_item_include(false),
-                |(mut states_clean_mut, mut errors), item_rt| {
+                |(mut states_clean_mut, mut errors), step_rt| {
                     async move {
-                        let item_id = item_rt.id().clone();
+                        let step_id = step_rt.id().clone();
                         let state_clean_boxed_result =
-                            item_rt.state_clean(params_specs, resources).await;
+                            step_rt.state_clean(params_specs, resources).await;
 
                         match state_clean_boxed_result {
                             Ok(state_clean_boxed) => {
-                                states_clean_mut.insert_raw(item_id, state_clean_boxed);
+                                states_clean_mut.insert_raw(step_id, state_clean_boxed);
                             }
                             Err(error) => {
-                                errors.insert(item_id, error);
+                                errors.insert(step_id, error);
                             }
                         }
 
@@ -111,7 +111,7 @@ where
 
         let stream_outcome = stream_outcome.map(StatesClean::from);
 
-        Ok(CmdBlockOutcome::ItemWise {
+        Ok(CmdBlockOutcome::StepWise {
             stream_outcome,
             errors,
         })

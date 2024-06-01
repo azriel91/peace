@@ -101,16 +101,16 @@ where
     /// Flow params for the selected flow.
     flow_params:
         FlowParams<<<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key>,
-    /// Type registry for each item's [`Params`]`::Spec`.
+    /// Type registry for each step's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Item::Params
+    /// [`Params`]: peace_cfg::Step::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     params_specs_type_reg: ParamsSpecsTypeReg,
-    /// Item params specs for the selected flow.
+    /// Step params specs for the selected flow.
     params_specs: ParamsSpecs,
-    /// Type registry for each item's `State`.
+    /// Type registry for each step's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
@@ -194,16 +194,16 @@ where
     pub flow_params: &'view FlowParams<
         <<CmdCtxTypesT::ParamsKeys as ParamsKeys>::FlowParamsKMaybe as KeyMaybe>::Key,
     >,
-    /// Type registry for each item's [`Params`]`::Spec`.
+    /// Type registry for each step's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Item::Params
+    /// [`Params`]: peace_cfg::Step::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub params_specs_type_reg: &'view ParamsSpecsTypeReg,
-    /// Item params specs for the selected flow.
+    /// Step params specs for the selected flow.
     pub params_specs: &'view ParamsSpecs,
-    /// Type registry for each item's `State`.
+    /// Type registry for each step's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
@@ -473,29 +473,29 @@ where
     /// and [`FlowParams`] deserialization.
     ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    /// [`ItemParams`]: peace_rt_model::ItemParams
+    /// [`StepParams`]: peace_rt_model::StepParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypesT::ParamsKeys> {
         &self.params_type_regs
     }
 
-    /// Returns the type registry for each item's [`Params`]`::Spec`.
+    /// Returns the type registry for each step's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Item::Params
+    /// [`Params`]: peace_cfg::Step::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub fn params_specs_type_reg(&self) -> &ParamsSpecsTypeReg {
         &self.params_specs_type_reg
     }
 
-    /// Returns the item params specs for the selected flow.
+    /// Returns the step params specs for the selected flow.
     pub fn params_specs(&self) -> &ParamsSpecs {
         &self.params_specs
     }
 
-    /// Returns the type registry for each item's `State`.
+    /// Returns the type registry for each step's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].

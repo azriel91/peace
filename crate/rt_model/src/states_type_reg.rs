@@ -1,23 +1,23 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_cfg::ItemId;
+use peace_cfg::StepId;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 
-/// Type registry for each item's `State`.
+/// Type registry for each step's `State`.
 ///
 /// This is used to deserialize [`StatesCurrentFile`] and [`StatesGoalFile`].
 ///
-/// Note: [`ItemParamsTypeReg`] uses [`BoxDt`], whereas this uses
+/// Note: [`StepParamsTypeReg`] uses [`BoxDt`], whereas this uses
 /// [`BoxDtDisplay`].
 ///
 /// [`BoxDt`]: peace_resources::type_reg::untagged::BoxDt
 /// [`BoxDtDisplay`]: peace_resources::type_reg::untagged::BoxDtDisplay
-/// [`ItemParamsTypeReg`]: crate::ItemParamsTypeReg
-/// [`Params`]: peace_cfg::Item::Params
+/// [`StepParamsTypeReg`]: crate::StepParamsTypeReg
+/// [`Params`]: peace_cfg::Step::Params
 /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
 /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
 #[derive(Debug, Default)]
-pub struct StatesTypeReg(TypeReg<ItemId, BoxDtDisplay>);
+pub struct StatesTypeReg(TypeReg<StepId, BoxDtDisplay>);
 
 impl StatesTypeReg {
     /// Returns new `StatesTypeReg`.
@@ -27,7 +27,7 @@ impl StatesTypeReg {
 }
 
 impl Deref for StatesTypeReg {
-    type Target = TypeReg<ItemId, BoxDtDisplay>;
+    type Target = TypeReg<StepId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

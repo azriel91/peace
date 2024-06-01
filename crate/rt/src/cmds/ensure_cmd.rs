@@ -12,7 +12,7 @@ use peace_resources::{
     states::{States, StatesEnsured, StatesEnsuredDry, StatesGoal, StatesPrevious},
     Resources,
 };
-use peace_rt_model::{ItemGraph, Storage};
+use peace_rt_model::{StepGraph, Storage};
 
 use crate::{
     cmd_blocks::{
@@ -29,29 +29,29 @@ impl<CmdCtxTypesT> EnsureCmd<CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec_dry`] for each [`Step`].
     ///
-    /// In practice this runs [`Item::apply_check`], and only runs
+    /// In practice this runs [`Step::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item functions run for an `Ensure` execution to
+    /// The grouping of step functions run for an `Ensure` execution to
     /// work is as follows:
     ///
-    /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
+    /// 1. For each `Step` run `StepRt::ensure_prepare`, which runs:
     ///
-    ///     1. `Item::state_current`
-    ///     2. `Item::state_goal`
-    ///     3. `Item::apply_check`
+    ///     1. `Step::state_current`
+    ///     2. `Step::state_goal`
+    ///     3. `Step::apply_check`
     ///
-    /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
-    ///    `Item::apply_exec_dry`.
+    /// 2. For `Step`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Step::apply_exec_dry`.
     ///
-    /// [`apply_exec_dry`]: peace_cfg::Item::apply_exec_dry
-    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
-    /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
-    /// [`Item`]: peace_cfg::Item
+    /// [`apply_exec_dry`]: peace_cfg::Step::apply_exec_dry
+    /// [`Step::apply_check`]: peace_cfg::Step::apply_check
+    /// [`Step::apply_exec_dry`]: peace_cfg::StepRt::apply_exec_dry
+    /// [`Step`]: peace_cfg::Step
     pub async fn exec_dry<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -64,7 +64,7 @@ where
         Self::exec_dry_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
-    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec_dry`] for each [`Step`].
     ///
     /// See [`Self::exec_dry`] for full documentation.
     ///
@@ -98,29 +98,29 @@ where
         Ok(cmd_outcome)
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec`] for each [`Step`].
     ///
-    /// In practice this runs [`Item::apply_check`], and only runs
+    /// In practice this runs [`Step::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item functions run for an `Ensure` execution to
+    /// The grouping of step functions run for an `Ensure` execution to
     /// work is as follows:
     ///
-    /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
+    /// 1. For each `Step` run `StepRt::ensure_prepare`, which runs:
     ///
-    ///     1. `Item::state_current`
-    ///     2. `Item::state_goal`
-    ///     3. `Item::apply_check`
+    ///     1. `Step::state_current`
+    ///     2. `Step::state_goal`
+    ///     3. `Step::apply_check`
     ///
-    /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
-    ///    `Item::apply_exec`.
+    /// 2. For `Step`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Step::apply_exec`.
     ///
-    /// [`apply_exec`]: peace_cfg::Item::apply_exec
-    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
-    /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
-    /// [`Item`]: peace_cfg::Item
+    /// [`apply_exec`]: peace_cfg::Step::apply_exec
+    /// [`Step::apply_check`]: peace_cfg::Step::apply_check
+    /// [`Step::apply_exec`]: peace_cfg::StepRt::apply_exec
+    /// [`Step`]: peace_cfg::Step
     pub async fn exec<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -133,7 +133,7 @@ where
         Self::exec_with(cmd_ctx, ApplyStoredStateSync::Both).await
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
+    /// Conditionally runs [`Step::apply_exec`] for each [`Step`].
     ///
     /// See [`Self::exec`] for full documentation.
     ///
@@ -154,7 +154,7 @@ where
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
+        let (step_graph, resources) = (flow.graph(), resources);
 
         // We shouldn't serialize current or goal if we returned from an interruption /
         // error handler.
@@ -164,8 +164,8 @@ where
                     EnsureExecChange::None => Ok(Default::default()),
                     EnsureExecChange::Some(stateses_boxed) => {
                         let (states_previous, states_applied, states_goal) = *stateses_boxed;
-                        Self::serialize_current(item_graph, resources, &states_applied).await?;
-                        Self::serialize_goal(item_graph, resources, &states_goal).await?;
+                        Self::serialize_current(step_graph, resources, &states_applied).await?;
+                        Self::serialize_goal(step_graph, resources, &states_goal).await?;
 
                         resources.insert::<StatesPrevious>(states_previous);
 
@@ -178,14 +178,14 @@ where
         cmd_outcome.transpose()
     }
 
-    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
+    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Step`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesEnsured`].
     ///
     /// [`exec`]: peace_cfg::ApplyFns::exec
-    /// [`Item`]: peace_cfg::Item
-    /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
+    /// [`Step`]: peace_cfg::Step
+    /// [`ApplyFns`]: peace_cfg::Step::ApplyFns
     async fn exec_internal<'ctx, StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         apply_stored_state_sync: ApplyStoredStateSync,
@@ -281,10 +281,10 @@ where
         // i.e. is it part of `ApplyFns::exec`'s contract to return the state.
         //
         // * It may be duplication of code.
-        // * `FileDownloadItem` needs to know the ETag from the last request, which:
+        // * `FileDownloadStep` needs to know the ETag from the last request, which:
         //     - in `StatesCurrentFn` comes from `StatesCurrent`
         //     - in `EnsureCmd` comes from `Ensured`
-        // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
+        // * `ShCmdStep` doesn't return the state in the apply script, so in the step we
         //   run the state current script after the apply exec script.
 
         Ok(ensure_exec_change)
@@ -292,7 +292,7 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        step_graph: &StepGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
         states_applied: &StatesEnsured,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
@@ -302,7 +302,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, item_graph, states_applied, &states_current_file)
+        StatesSerializer::serialize(&storage, step_graph, states_applied, &states_current_file)
             .await?;
 
         drop(flow_dir);
@@ -312,7 +312,7 @@ where
     }
 
     async fn serialize_goal(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        step_graph: &StepGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &Resources<SetUp>,
         states_goal: &StatesGoal,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
@@ -322,7 +322,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, item_graph, states_goal, &states_goal_file).await?;
+        StatesSerializer::serialize(&storage, step_graph, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);

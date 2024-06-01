@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use fn_graph::StreamOutcome;
 use indexmap::IndexMap;
-use peace_cfg::ItemId;
+use peace_cfg::StepId;
 use peace_resources::ResourceFetchError;
 
 /// Error while executing a `CmdBlock`.
@@ -35,19 +35,19 @@ where
     /// Error originated from `CmdBlock` exec code.
     #[error("`CmdBlock` block execution or collation logic failed.")]
     Exec(E),
-    /// Error originated from at least one item.
+    /// Error originated from at least one step.
     ///
     /// The `CmdBlock::Outcome` is mapped to the `ExecutionOutcome` using
     /// `fn_partial_exec_handler`.
-    #[error("`CmdBlock` item logic failed.")]
-    ItemError {
+    #[error("`CmdBlock` step logic failed.")]
+    StepError {
         /// The outcome value.
         stream_outcome: StreamOutcome<T>,
-        /// Item error(s) from the last command block's execution.
-        errors: IndexMap<ItemId, E>,
+        /// Step error(s) from the last command block's execution.
+        errors: IndexMap<StepId, E>,
     },
     /// An interrupt signal was received while the `CmdBlock` was executing.
-    #[error("`CmdBlock` item logic failed.")]
+    #[error("`CmdBlock` step logic failed.")]
     Interrupt {
         /// The stream outcome of the interrupted command block.
         stream_outcome: StreamOutcome<T>,

@@ -1,5 +1,5 @@
 use fn_graph::StreamOutcome;
-use peace_cmd_model::ItemStreamOutcome;
+use peace_cmd_model::StepStreamOutcome;
 use peace_rt_model::Flow;
 
 /// Maps a `StreamOutcome<T>` to a `StepStreamOutcome<T>`.
@@ -16,11 +16,11 @@ use peace_rt_model::Flow;
 ///   /         v
 /// rt_model_core
 /// ```
-pub struct ItemStreamOutcomeMapper;
+pub struct StepStreamOutcomeMapper;
 
-impl ItemStreamOutcomeMapper {
-    /// Maps `FnId`s into `ItemId`s for a better information abstraction level.
-    pub fn map<T, E>(flow: &Flow<E>, stream_outcome: StreamOutcome<T>) -> ItemStreamOutcome<T>
+impl StepStreamOutcomeMapper {
+    /// Maps `FnId`s into `StepId`s for a better information abstraction level.
+    pub fn map<T, E>(flow: &Flow<E>, stream_outcome: StreamOutcome<T>) -> StepStreamOutcome<T>
     where
         E: 'static,
     {
@@ -31,30 +31,30 @@ impl ItemStreamOutcomeMapper {
             fn_ids_not_processed,
         } = stream_outcome;
 
-        let item_ids_processed = fn_ids_processed
+        let step_ids_processed = fn_ids_processed
             .into_iter()
             .filter_map(|fn_id| {
                 flow.graph()
                     .node_weight(fn_id)
-                    .map(|item| item.id())
+                    .map(|step| step.id())
                     .cloned()
             })
             .collect::<Vec<_>>();
-        let item_ids_not_processed = fn_ids_not_processed
+        let step_ids_not_processed = fn_ids_not_processed
             .into_iter()
             .filter_map(|fn_id| {
                 flow.graph()
                     .node_weight(fn_id)
-                    .map(|item| item.id())
+                    .map(|step| step.id())
                     .cloned()
             })
             .collect::<Vec<_>>();
 
-        ItemStreamOutcome {
+        StepStreamOutcome {
             value,
             state,
-            item_ids_processed,
-            item_ids_not_processed,
+            step_ids_processed,
+            step_ids_not_processed,
         }
     }
 }

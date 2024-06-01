@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
-use peace_cfg::{ItemId, Profile};
+use peace_cfg::{StepId, Profile};
 use peace_cmd::{
     ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
@@ -55,7 +55,7 @@ where
     /// DiffCmd::diff(cmd_ctx, DiffStateSpec::CurrentStored, DiffStateSpec::GoalStored).await?;
     /// ```
     ///
-    /// [`state_diff`]: peace_cfg::Item::state_diff
+    /// [`state_diff`]: peace_cfg::Step::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff_stored(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
@@ -74,7 +74,7 @@ where
     /// For `Current` and `Goal` states, though they are discovered during the
     /// `DiffCmd` execution, they are not serialized.
     ///
-    /// [`state_diff`]: peace_cfg::Item::state_diff
+    /// [`state_diff`]: peace_cfg::Step::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff<StatesTs0, StatesTs1>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
@@ -143,7 +143,7 @@ where
     /// Both profiles' current states must have been discovered prior to
     /// running this. See [`StatesDiscoverCmd::current`].
     ///
-    /// [`state_diff`]: peace_cfg::Item::state_diff
+    /// [`state_diff`]: peace_cfg::Step::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_current_stored(
         cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypesT>>,
@@ -209,32 +209,32 @@ impl<CmdCtxTypesT, Scope> DiffCmd<CmdCtxTypesT, Scope>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Returns the [`state_diff`]` for each [`Item`].
+    /// Returns the [`state_diff`]` for each [`Step`].
     ///
     /// This does not take in `CmdCtx` as it may be used by both
     /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
     /// commands.
     ///
-    /// [`Item`]: peace_cfg::Item
-    /// [`state_diff`]: peace_cfg::Item::state_diff
+    /// [`Step`]: peace_cfg::Step
+    /// [`state_diff`]: peace_cfg::Step::state_diff
     pub async fn diff_any(
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<ItemId, BoxDtDisplay>,
-        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+        states_a: &TypeMap<StepId, BoxDtDisplay>,
+        states_b: &TypeMap<StepId, BoxDtDisplay>,
     ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let state_diffs = {
             let state_diffs_mut = flow
                 .graph()
                 .stream()
                 .map(Result::<_, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>::Ok)
-                .try_filter_map(|item| async move {
-                    let state_diff_opt = item
+                .try_filter_map(|step| async move {
+                    let state_diff_opt = step
                         .state_diff_exec(params_specs, resources, states_a, states_b)
                         .await?;
 
-                    Ok(state_diff_opt.map(|state_diff| (item.id().clone(), state_diff)))
+                    Ok(state_diff_opt.map(|state_diff| (step.id().clone(), state_diff)))
                 })
                 .try_collect::<StateDiffsMut>()
                 .await?;

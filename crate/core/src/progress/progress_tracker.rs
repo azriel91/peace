@@ -8,7 +8,7 @@ use crate::progress::{ProgressLimit, ProgressStatus};
 /// Tracks progress for a step's `ApplyFns::exec` method.
 #[derive(Debug)]
 pub struct ProgressTracker {
-    /// Status of the item's execution progress.
+    /// Status of the step's execution progress.
     progress_status: ProgressStatus,
     /// Internal progress bar to update.
     progress_bar: ProgressBar,

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use peace_core::ItemId;
+use peace_core::StepId;
 
 use crate::{FieldNameAndType, ValueResolutionMode};
 
@@ -10,9 +10,9 @@ pub struct ValueResolutionCtx {
     /// When resolving `Value`s, whether to look up `Current<T>` or
     /// `Goal<T>`.
     value_resolution_mode: ValueResolutionMode,
-    /// ID of the item whose params are being resolved.
-    item_id: ItemId,
-    /// Name of the `Item::Params` type.
+    /// ID of the step whose params are being resolved.
+    step_id: StepId,
+    /// Name of the `Step::Params` type.
     params_type_name: String,
     /// Hierarchy of fields traversed to resolve this value.
     resolution_chain: Vec<FieldNameAndType>,
@@ -21,12 +21,12 @@ pub struct ValueResolutionCtx {
 impl ValueResolutionCtx {
     pub fn new(
         value_resolution_mode: ValueResolutionMode,
-        item_id: ItemId,
+        step_id: StepId,
         params_type_name: String,
     ) -> Self {
         Self {
             value_resolution_mode,
-            item_id,
+            step_id,
             params_type_name,
             resolution_chain: Vec::new(),
         }
@@ -36,8 +36,8 @@ impl ValueResolutionCtx {
         self.value_resolution_mode
     }
 
-    pub fn item_id(&self) -> &ItemId {
-        &self.item_id
+    pub fn step_id(&self) -> &StepId {
+        &self.step_id
     }
 
     pub fn params_type_name(&self) -> &str {

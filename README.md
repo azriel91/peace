@@ -32,7 +32,7 @@ See:
 |   🟣   | Works, "fun idea"    |
 
 * 🟢 **Idempotent:** Multiple invocations result in the goal outcome.
-* 🟢 **Clean:** Every item creation is paired with how it is cleaned up.
+* 🟢 **Clean:** Every step defines how to create a resource and how to clean it up.
 * 🟢 **Understandable:** Progress is shown at an understandable level of detail.
 * 🔵 **Understandable:** Error reporting is compatible with [`miette`].
 * 🟡 **Interruptible:** Execution can be interrupted.
@@ -40,7 +40,7 @@ See:
 * 🟢 **Diffable:** States and diffs are serialized as YAML.
 * 🟢 **Efficient:** Tasks are concurrently executed via [`fn_graph`].
 * 🟢 **Namespaced:** Profile directories isolate environments from each other.
-* 🟢 **Type Safe:** Items and parameters are defined in code, not configuration.
+* 🟢 **Type Safe:** Steps and parameters are defined in code, not configuration.
 
 [`fn_graph`]: https://github.com/azriel91/fn_graph
 [`miette`]: https://github.com/zkat/miette
@@ -48,17 +48,17 @@ See:
 
 ### Roadmap
 
-* 🟢 Define items to manage with automation.
-* 🟢 Define dependencies between items.
+* 🟢 Define steps to manage with automation.
+* 🟢 Define dependencies between steps.
 * 🟢 Define "apply" logic.
 * 🟢 Define "clean up" logic.
 * 🟢 Discover current and goal states.
 * 🟢 Define diff calculation between states.
 * 🟢 Store and recall parameters across commands.
 * 🟢 Diff states between multiple profiles.
-* 🟢 Type-safe referential parameters -- specify usage of values generated during automation as parameters to subsequent items.
+* 🟢 Type-safe referential parameters -- specify usage of values generated during automation as parameters to subsequent steps.
 * 🟡 Feature-gated incremental functionality.
-* 🟡 Off-the-shelf support for common items.
+* 🟡 Off-the-shelf support for common steps.
 * 🟡 Dry run.
 * 🟣 WASM support.
 * ⚫ Cancel-safe interruption via [`tokio-graceful-shutdown`].

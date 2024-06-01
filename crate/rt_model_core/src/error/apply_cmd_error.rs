@@ -1,15 +1,15 @@
 use std::{fmt, fmt::Write};
 
-use crate::{ItemsStateStoredStale, StateStoredAndDiscovered};
+use crate::{StepsStateStoredStale, StateStoredAndDiscovered};
 
-/// Error applying changes to items.
+/// Error applying changes to steps.
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum ApplyCmdError {
     /// Stored current states were not up to date with actual current states.
     #[error(
         "Stored current states were not up to date with actual current states.\n\n{stale_states}",
-        stale_states = stale_states_fmt(items_state_stored_stale)?,
+        stale_states = stale_states_fmt(steps_state_stored_stale)?,
     )]
     #[cfg_attr(
         feature = "error_reporting",
@@ -24,15 +24,15 @@ pub enum ApplyCmdError {
         )
     )]
     StatesCurrentOutOfSync {
-        /// Items whose stored current state is out of sync with the discovered
+        /// Steps whose stored current state is out of sync with the discovered
         /// state.
-        items_state_stored_stale: ItemsStateStoredStale,
+        steps_state_stored_stale: StepsStateStoredStale,
     },
 
     /// Stored goal states were not up to date with actual goal states.
     #[error(
         "Stored goal states were not up to date with actual goal states.\n\n{stale_states}",
-        stale_states = stale_states_fmt(items_state_stored_stale)?,
+        stale_states = stale_states_fmt(steps_state_stored_stale)?,
     )]
     #[cfg_attr(
         feature = "error_reporting",
@@ -47,20 +47,20 @@ pub enum ApplyCmdError {
         )
     )]
     StatesGoalOutOfSync {
-        /// Items whose stored goal state is out of sync with the discovered
+        /// Steps whose stored goal state is out of sync with the discovered
         /// state.
-        items_state_stored_stale: ItemsStateStoredStale,
+        steps_state_stored_stale: StepsStateStoredStale,
     },
 }
 
 fn stale_states_fmt(
-    items_state_stored_stale: &ItemsStateStoredStale,
+    steps_state_stored_stale: &StepsStateStoredStale,
 ) -> Result<String, fmt::Error> {
-    let mut buffer = String::with_capacity(items_state_stored_stale.len() * 256);
-    items_state_stored_stale
+    let mut buffer = String::with_capacity(steps_state_stored_stale.len() * 256);
+    steps_state_stored_stale
         .iter()
-        .try_for_each(|(item_id, state_stored_and_discovered)| {
-            writeln!(&mut buffer, "* {item_id}:\n")?;
+        .try_for_each(|(step_id, state_stored_and_discovered)| {
+            writeln!(&mut buffer, "* {step_id}:\n")?;
 
             match state_stored_and_discovered {
                 StateStoredAndDiscovered::OnlyStoredExists { state_stored } => {

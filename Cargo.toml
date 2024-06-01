@@ -83,7 +83,7 @@ ssr = [
 [workspace]
 members = [
     "crate/*",
-    "items",
+    "steps",
     "workspace_tests",
     "examples/*",
 ]
@@ -132,15 +132,15 @@ peace_webi_components = { path = "crate/webi_components", version = "0.0.13" }
 peace_webi_model = { path = "crate/webi_model", version = "0.0.13" }
 peace_webi_output = { path = "crate/webi_output", version = "0.0.13" }
 
-# Item crates
-peace_items = { path = "items", version = "0.0.13" }
+# Step crates
+peace_steps = { path = "steps", version = "0.0.13" }
 
-peace_item_blank = { path = "items/blank", version = "0.0.13" }
-peace_item_file_download = { path = "items/file_download", version = "0.0.13" }
-peace_item_sh_cmd = { path = "items/sh_cmd", version = "0.0.13" }
-peace_item_tar_x = { path = "items/tar_x", version = "0.0.13" }
+peace_step_blank = { path = "steps/blank", version = "0.0.13" }
+peace_step_file_download = { path = "steps/file_download", version = "0.0.13" }
+peace_step_sh_cmd = { path = "steps/sh_cmd", version = "0.0.13" }
+peace_step_tar_x = { path = "steps/tar_x", version = "0.0.13" }
 
-# Dependencies used by framework and item crates.
+# Dependencies used by framework and step crates.
 #
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.

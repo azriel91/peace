@@ -2,52 +2,52 @@ use std::ops::{Deref, DerefMut};
 
 use peace_data::fn_graph::FnGraphBuilder;
 
-use crate::{ItemBoxed, ItemGraph};
+use crate::{StepBoxed, StepGraph};
 
-/// Builder for a [`StepGraph`], `FnGraphBuilder<ItemBoxed<E>>`
+/// Builder for a [`StepGraph`], `FnGraphBuilder<StepBoxed<E>>`
 /// newtype.
 #[derive(Debug)]
-pub struct ItemGraphBuilder<E>(FnGraphBuilder<ItemBoxed<E>>);
+pub struct StepGraphBuilder<E>(FnGraphBuilder<StepBoxed<E>>);
 
-impl<E> ItemGraphBuilder<E> {
-    /// Returns a new `ItemGraphBuilder`.
+impl<E> StepGraphBuilder<E> {
+    /// Returns a new `StepGraphBuilder`.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Returns the inner [`FnGraphBuilder`].
-    pub fn into_inner(self) -> FnGraphBuilder<ItemBoxed<E>> {
+    pub fn into_inner(self) -> FnGraphBuilder<StepBoxed<E>> {
         self.0
     }
 
-    /// Builds and returns the [`ItemGraph`].
-    pub fn build(self) -> ItemGraph<E> {
-        ItemGraph::from(self.0.build())
+    /// Builds and returns the [`StepGraph`].
+    pub fn build(self) -> StepGraph<E> {
+        StepGraph::from(self.0.build())
     }
 }
 
-impl<E> Default for ItemGraphBuilder<E> {
+impl<E> Default for StepGraphBuilder<E> {
     fn default() -> Self {
         Self(FnGraphBuilder::default())
     }
 }
 
-impl<E> Deref for ItemGraphBuilder<E> {
-    type Target = FnGraphBuilder<ItemBoxed<E>>;
+impl<E> Deref for StepGraphBuilder<E> {
+    type Target = FnGraphBuilder<StepBoxed<E>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<E> DerefMut for ItemGraphBuilder<E> {
+impl<E> DerefMut for StepGraphBuilder<E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<E> From<FnGraphBuilder<ItemBoxed<E>>> for ItemGraphBuilder<E> {
-    fn from(graph: FnGraphBuilder<ItemBoxed<E>>) -> Self {
+impl<E> From<FnGraphBuilder<StepBoxed<E>>> for StepGraphBuilder<E> {
+    fn from(graph: FnGraphBuilder<StepBoxed<E>>) -> Self {
         Self(graph)
     }
 }

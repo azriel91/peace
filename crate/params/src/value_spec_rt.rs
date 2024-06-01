@@ -7,7 +7,7 @@ use crate::{AnySpecRt, ParamsResolveError, ValueResolutionCtx};
 /// Runtime logic of how to look up values for each field in this struct.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]` on an
-/// `Item::Params`, as well as in the `peace_params` crate for standard
+/// `Step::Params`, as well as in the `peace_params` crate for standard
 /// library types.
 pub trait ValueSpecRt: AnySpecRt {
     /// The original value type. `MyParamsValueSpec::ValueType` is `MyParams`.

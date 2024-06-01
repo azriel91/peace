@@ -4,20 +4,20 @@ use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::outcomes::ItemApplyPartialRt;
+use crate::outcomes::StepApplyPartialRt;
 
 /// Information about a step during an `ApplyCmd` execution.
 ///
 /// # Design Note
 ///
-/// 1. `ApplyCmd` calls the following function for each item.
+/// 1. `ApplyCmd` calls the following function for each step.
 ///
-///     - [`Item::state_current`]
-///     - [`Item::state_goal`] or [`Item::state_clean`]
-///     - [`Item::state_diff`]
+///     - [`Step::state_current`]
+///     - [`Step::state_goal`] or [`Step::state_clean`]
+///     - [`Step::state_diff`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
-///     - [`Item::state_current`]
+///     - [`Step::state_current`]
 ///
 /// 2. Each function call *may* fail.
 /// 3. If we have an enum representing the state after each function call, we
@@ -26,13 +26,13 @@ use crate::outcomes::ItemApplyPartialRt;
 /// It is not likely to be error prone or too unergonomic to store each field as
 /// optional.
 ///
-/// [`Item::state_current`]: peace_cfg::Item::state_current
-/// [`Item::state_goal`]: peace_cfg::Item::state_goal
-/// [`Item::state_diff`]: peace_cfg::Item::state_diff
-/// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
-/// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
+/// [`Step::state_current`]: peace_cfg::Step::state_current
+/// [`Step::state_goal`]: peace_cfg::Step::state_goal
+/// [`Step::state_diff`]: peace_cfg::Step::state_diff
+/// [`ApplyFns::check`]: peace_cfg::Step::ApplyFns
+/// [`ApplyFns::exec`]: peace_cfg::Step::ApplyFns
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct ItemApplyPartial<State, StateDiff> {
+pub struct StepApplyPartial<State, StateDiff> {
     /// Current state stored on disk before the execution.
     pub state_current_stored: Option<State>,
     /// Current state discovered during the execution.
@@ -41,18 +41,18 @@ pub struct ItemApplyPartial<State, StateDiff> {
     pub state_target: Option<State>,
     /// Diff between current and goal states.
     pub state_diff: Option<StateDiff>,
-    /// Whether item execution is required.
+    /// Whether step execution is required.
     pub apply_check: Option<ApplyCheck>,
 }
 
-impl<State, StateDiff> ItemApplyPartial<State, StateDiff> {
-    /// Returns a new `ItemApplyPartial` with all fields set to `None`.
+impl<State, StateDiff> StepApplyPartial<State, StateDiff> {
+    /// Returns a new `StepApplyPartial` with all fields set to `None`.
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
+impl<State, StateDiff> Default for StepApplyPartial<State, StateDiff> {
     fn default() -> Self {
         Self {
             state_current_stored: None,
@@ -64,7 +64,7 @@ impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
     }
 }
 
-impl<State, StateDiff> ItemApplyPartialRt for ItemApplyPartial<State, StateDiff>
+impl<State, StateDiff> StepApplyPartialRt for StepApplyPartial<State, StateDiff>
 where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
