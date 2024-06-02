@@ -123,7 +123,8 @@ pub enum WebError {
     },
     /// Failed to remove an item from browser storage.
     ///
-    /// This failure mode happens when the `get_item` call to the browser fails.
+    /// This failure mode happens when the `remove_item` call to the browser
+    /// fails.
     ///
     /// Note: The original `JsValue` error is converted to a `String` to allow
     /// this type to be `Send`.
