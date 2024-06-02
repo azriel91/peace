@@ -9,21 +9,21 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 ///
-/// The following are all examples of valid `StepId`s:
+/// The following are all examples of valid `ItemId`s:
 ///
 /// ```rust
-/// # use peace_core::{step_id, StepId};
+/// # use peace_core::{item_id, ItemId};
 /// #
-/// let _snake = step_id!("snake_case");
-/// let _camel = step_id!("camelCase");
-/// let _pascal = step_id!("PascalCase");
+/// let _snake = item_id!("snake_case");
+/// let _camel = item_id!("camelCase");
+/// let _pascal = item_id!("PascalCase");
 /// ```
 ///
 /// # Design Note
 ///
 /// TODO: Experiment with upgrades.
 ///
-/// For backward compatibility and migrating steps from old IDs to new IDs, e.g.
+/// For backward compatibility and migrating items from old IDs to new IDs, e.g.
 /// when they were deployed with an old version of the automation software,
 /// there needs to be a way to:
 ///
@@ -31,8 +31,8 @@ use serde::{Deserialize, Serialize};
 /// * Either clean up that state, or migrate that state into a Step with the
 ///   new ID.
 ///
-/// [`Step`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Step.html
+/// [`Item`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Item.html
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
-pub struct StepId(Cow<'static, str>);
+pub struct ItemId(Cow<'static, str>);
 
-crate::id_newtype!(StepId, StepIdInvalidFmt, step_id, code_inline);
+crate::id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);

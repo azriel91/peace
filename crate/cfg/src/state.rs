@@ -12,9 +12,9 @@ use std::{any::TypeId, fmt};
 
 use serde::{Deserialize, Serialize};
 
-/// Logical and physical states of a resource managed by a step.
+/// Logical and physical states of a managed item.
 ///
-/// This type can be used when the resource has both logical and physical
+/// This type can be used when the managed item has both logical and physical
 /// states. Otherwise, a type that represents the fully logical / fully physical
 /// state is sufficient.
 ///
@@ -64,9 +64,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Fully Logical
 ///
-/// If a resource's state can be fully described before the resource exists, and
-/// can be made to happen without interacting with an external service, then the
-/// state is fully logical.
+/// If a step's state can be fully described before the item exists, and can be
+/// made to happen without interacting with an external service, then the state
+/// is fully logical.
 ///
 /// For example, copying a file from one directory to another. The state of the
 /// file in the source directory and destination directories are fully
@@ -76,7 +76,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Logical and Physical
 ///
-/// If a step's goal state can be described before the resource exists, but
+/// If a step's goal state can be described before the item exists, but
 /// interacts with an external service which produces additional information to
 /// bring that goal state into existence, then the state has both logical and
 /// physical parts.

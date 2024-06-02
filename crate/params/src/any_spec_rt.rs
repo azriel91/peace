@@ -3,7 +3,7 @@ use crate::AnySpecDataType;
 /// Runtime logic of how to look up values for each field in this struct.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]` on an
-/// `Step::Params`, as well as in the `peace_params` crate for standard
+/// `Item::Params`, as well as in the `peace_params` crate for standard
 /// library types.
 pub trait AnySpecRt {
     /// Whether this `Spec` is usable to resolve values.
@@ -17,7 +17,7 @@ pub trait AnySpecRt {
     ///
     /// This means where `self` is `Self::Value`, `Self::InMemory`,
     /// `Self::MappingFn`, and `Self::FieldWise`, these would take priority over
-    /// any stored spec values.
+    /// any stored item variants.
     ///
     /// For `Self::FieldWise`, a recursive merge would happen per field
     /// `ValueSpec`.

@@ -1,18 +1,18 @@
-use peace_core::StepId;
+use peace_core::ItemId;
 use serde::{Deserialize, Serialize};
 
 /// Serializable representation of how a [`Step`] is configured.
 ///
-/// [`Step`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Step.html
+/// [`Item`]: https://docs.rs/peace_cfg/latest/peace_cfg/trait.Item.html
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct StepSpecInfo {
-    /// ID of the `Step`.
-    pub step_id: StepId,
+pub struct ItemSpecInfo {
+    /// ID of the `Item`.
+    pub item_id: ItemId,
 }
 
-impl StepSpecInfo {
-    /// Returns a new `StepSpecInfo`.
-    pub fn new(step_id: StepId) -> Self {
-        Self { step_id }
+impl ItemSpecInfo {
+    /// Returns a new `ItemSpecInfo`.
+    pub fn new(item_id: ItemId) -> Self {
+        Self { item_id }
     }
 }

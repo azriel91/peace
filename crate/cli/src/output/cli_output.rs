@@ -74,9 +74,9 @@ pub struct CliOutput<W> {
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
     pub(crate) progress_format: CliProgressFormat,
-    /// Width of the step ID column for progress bars
+    /// Width of the item ID column for progress bars
     #[cfg(feature = "output_progress")]
-    pub(crate) pb_step_id_width: Option<usize>,
+    pub(crate) pb_item_id_width: Option<usize>,
     /// The TTY guard that restores the terminal mode when `CliOutput` is
     /// dropped.
     ///
@@ -103,7 +103,7 @@ where
             debug_struct
                 .field("progress_target", &self.progress_target)
                 .field("progress_format", &self.progress_format)
-                .field("pb_step_id_width", &self.pb_step_id_width);
+                .field("pb_item_id_width", &self.pb_item_id_width);
         }
 
         debug_struct.field(
@@ -198,10 +198,10 @@ where
         self.progress_format
     }
 
-    /// Returns the number of characters used for the progress bar step ID.
+    /// Returns the number of characters used for the progress bar item ID.
     #[cfg(feature = "output_progress")]
-    pub fn pb_step_id_width(&self) -> Option<usize> {
-        self.pb_step_id_width
+    pub fn pb_item_id_width(&self) -> Option<usize> {
+        self.pb_item_id_width
     }
 
     async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
@@ -349,7 +349,7 @@ where
         //  17: blue dark (running background)
         // 208: yellow-orange (stalled)
         // 220: yellow (interrupted)
-        //  75: indigo pale (user pending, step id)
+        //  75: indigo pale (user pending, item id)
         //  35: green pale (success)
         //  22: green dark (success background)
         // 160: red slightly dim (fail)
@@ -434,7 +434,7 @@ where
                 }
             }
         };
-        let prefix_width = self.pb_step_id_width.unwrap_or(20);
+        let prefix_width = self.pb_item_id_width.unwrap_or(20);
         let prefix = format!("{{prefix:{prefix_width}}}");
 
         let (progress_is_complete, completion_is_successful) =
@@ -475,7 +475,7 @@ where
         // let mut format_str = format!("{icon} {progress_status:20} {prefix} {bar_or_spinner}");
         // ```
 
-        // `prefix` is the step ID.
+        // `prefix` is the item ID.
         let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
         if let Some(units) = units {
             format_str.push_str(units);
@@ -525,8 +525,8 @@ where
                     .multi_progress()
                     .set_draw_target(progress_draw_target);
 
-                // TODO: test with multiple step IDs of varying length
-                self.pb_step_id_width = {
+                // TODO: test with multiple item IDs of varying length
+                self.pb_item_id_width = {
                     if cmd_progress_tracker.progress_trackers().is_empty() {
                         Some(0)
                     } else {
@@ -542,21 +542,21 @@ where
                                 })
                                 .unwrap_or(0)
                         };
-                        let step_id_width = cmd_progress_tracker.progress_trackers().iter().fold(
+                        let item_id_width = cmd_progress_tracker.progress_trackers().iter().fold(
                             0,
-                            |pb_step_id_width, (step_id, _progress_tracker)| {
-                                std::cmp::max(step_id.len(), pb_step_id_width)
+                            |pb_item_id_width, (item_id, _progress_tracker)| {
+                                std::cmp::max(item_id.len(), pb_item_id_width)
                             },
                         );
 
-                        Some(list_digit_width + step_id_width)
+                        Some(list_digit_width + item_id_width)
                     }
                 };
                 cmd_progress_tracker
                     .progress_trackers()
                     .iter()
                     .enumerate()
-                    .for_each(|(index, (step_id, progress_tracker))| {
+                    .for_each(|(index, (item_id, progress_tracker))| {
                         let progress_bar = progress_tracker.progress_bar();
 
                         // Hack: colourization done in `progress_begin` to get
@@ -569,14 +569,14 @@ where
                                     .color256(15)
                                     .apply_to(format!("{index}."));
                                 // blue
-                                let step_id_colorized = console::Style::new()
+                                let item_id_colorized = console::Style::new()
                                     .color256(75)
-                                    .apply_to(format!("{step_id}"));
+                                    .apply_to(format!("{item_id}"));
                                 progress_bar
-                                    .set_prefix(format!("{index_colorized} {step_id_colorized}"));
+                                    .set_prefix(format!("{index_colorized} {item_id_colorized}"));
                             }
                             CliColorize::Uncolored => {
-                                progress_bar.set_prefix(format!("{index}. {step_id}"));
+                                progress_bar.set_prefix(format!("{index}. {item_id}"));
                             }
                         }
 
@@ -596,9 +596,9 @@ where
                     panic!("`ProgressStyle` template was invalid. Template: `\"\"`. Error: {error}")
                 });
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(step_id, progress_tracker)| {
+                    |(item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
-                        progress_bar.set_prefix(format!("{step_id}"));
+                        progress_bar.set_prefix(format!("{item_id}"));
                         progress_bar.set_style(progress_style.clone());
                     },
                 );
@@ -674,7 +674,7 @@ where
                     // progress information.
                     //
                     // We probably need to send more information in the `ProgressUpdate`, i.e. which
-                    // step it came from.
+                    // item it came from.
                     OutputFormat::Text | OutputFormat::Yaml => {
                         let _progress_display_unused =
                             serde_yaml::to_string(progress_update_and_id).map(|t_serialized| {
@@ -698,12 +698,12 @@ where
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
         match self.progress_format {
             CliProgressFormat::ProgressBar => {
-                self.pb_step_id_width = None;
+                self.pb_item_id_width = None;
 
                 // Hack: This should be done with a timer in `ApplyCmd`.
                 // This uses threads, which is not WASM compatible.
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(_step_id, progress_tracker)| {
+                    |(_item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.disable_steady_tick();
                         progress_bar.tick();

@@ -17,7 +17,7 @@ use crate::{
 /// For deserialization:
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
-///    registered from `StepId` to `ParamsSpecFieldlessDe<T, F, U>`, where `F`
+///    registered from `ItemId` to `ParamsSpecFieldlessDe<T, F, U>`, where `F`
 ///    and `U` are derived from the `ValueSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
@@ -27,7 +27,7 @@ use crate::{
 ///    around in a `CmdCtx`.
 ///
 /// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T>`
-///    when resolving values for step params and params partials.
+///    when resolving values for item params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(from = "crate::ParamsSpecFieldlessDe<T>")]
 pub enum ParamsSpecFieldless<T>

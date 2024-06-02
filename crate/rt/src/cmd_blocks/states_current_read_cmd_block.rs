@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{FlowId, StepId};
+use peace_cfg::{FlowId, ItemId};
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
@@ -41,7 +41,7 @@ where
 
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
     ) -> Result<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();

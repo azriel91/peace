@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This is used for referential param values, where a step param value is
 /// dependent on the state of a predecessor's state.
 ///
-/// A `Goal<Step::State>` is set to `Some` whenever a step's goal state
+/// A `Goal<Item::State>` is set to `Some` whenever a step's goal state
 /// is discovered. enabling a subsequent successor's params to access that value
 /// when the successor's goal state function is run.
 ///

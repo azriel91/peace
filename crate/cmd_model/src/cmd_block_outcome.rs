@@ -1,6 +1,6 @@
 use fn_graph::StreamOutcome;
 use indexmap::IndexMap;
-use peace_cfg::StepId;
+use peace_cfg::ItemId;
 
 use crate::{StreamOutcomeAndErrors, ValueAndStreamOutcome};
 
@@ -12,7 +12,7 @@ pub enum CmdBlockOutcome<T, E> {
     /// Relevant to command blocks that deal with a single atomic operation,
     /// e.g. loading a file.
     Single(T),
-    /// A value returned per step.
+    /// A value returned per item.
     ///
     /// # Design Note
     ///
@@ -35,19 +35,19 @@ pub enum CmdBlockOutcome<T, E> {
     /// having consumers return a `StreamOutcome<T>` allows them to use the
     /// `FnGraph` streaming methods, without having to split the value out of
     /// the `StreamOutcome`.
-    StepWise {
-        /// The values returned per step.
+    ItemWise {
+        /// The values returned per item.
         stream_outcome: StreamOutcome<T>,
         /// Errors from the command execution.
-        errors: IndexMap<StepId, E>,
+        errors: IndexMap<ItemId, E>,
     },
 }
 
 impl<T, E> CmdBlockOutcome<T, E> {
-    /// Returns a new `CmdBlockOutcome::StepWise` with the given value, and no
+    /// Returns a new `CmdBlockOutcome::ItemWise` with the given value, and no
     /// errors.
-    pub fn new_step_wise(stream_outcome: StreamOutcome<T>) -> Self {
-        Self::StepWise {
+    pub fn new_item_wise(stream_outcome: StreamOutcome<T>) -> Self {
+        Self::ItemWise {
             stream_outcome,
             errors: IndexMap::new(),
         }
@@ -57,7 +57,7 @@ impl<T, E> CmdBlockOutcome<T, E> {
     pub fn is_ok(&self) -> bool {
         match self {
             Self::Single(_) => true,
-            Self::StepWise {
+            Self::ItemWise {
                 stream_outcome: _,
                 errors,
             } => errors.is_empty(),
@@ -72,7 +72,7 @@ impl<T, E> CmdBlockOutcome<T, E> {
                 value,
                 stream_outcome: None,
             }),
-            Self::StepWise {
+            Self::ItemWise {
                 stream_outcome,
                 errors,
             } => {
@@ -96,7 +96,7 @@ impl<T, E> CmdBlockOutcome<T, E> {
     pub fn is_err(&self) -> bool {
         match self {
             Self::Single(_) => false,
-            Self::StepWise {
+            Self::ItemWise {
                 stream_outcome: _,
                 errors,
             } => !errors.is_empty(),
@@ -112,12 +112,12 @@ impl<T, E> CmdBlockOutcome<T, E> {
                 let u = f(t);
                 CmdBlockOutcome::Single(u)
             }
-            Self::StepWise {
+            Self::ItemWise {
                 stream_outcome,
                 errors,
             } => {
                 let stream_outcome = stream_outcome.map(f);
-                CmdBlockOutcome::StepWise {
+                CmdBlockOutcome::ItemWise {
                     stream_outcome,
                     errors,
                 }

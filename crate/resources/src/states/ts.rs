@@ -6,47 +6,47 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Clean / blank states of steps.
+/// Clean / blank states of items.
 ///
 /// Not to be confused with [`Cleaned`].
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Clean;
 
-/// Stored current states of steps.
+/// Stored current states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CurrentStored;
 
-/// Current states of steps.
+/// Current states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Current;
 
-/// Stored goal states of steps.
+/// Stored goal states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GoalStored;
 
-/// Goal states of steps.
+/// Goal states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Goal;
 
-/// States of steps after running the `EnsureCmd`.
+/// States of items after running the `EnsureCmd`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Ensured;
 
-/// States of steps after dry-running `EnsureCmd`.
+/// States of items after dry-running `EnsureCmd`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EnsuredDry;
 
-/// States of steps after running the `CleanCmd`.
+/// States of items after running the `CleanCmd`.
 ///
 /// Not to be confused with [`Clean`].
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cleaned;
 
-/// States of steps after dry-running `CleanCmd`.
+/// States of items after dry-running `CleanCmd`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CleanedDry;
 
-/// Previous states of steps.
+/// Previous states of items.
 ///
 /// This is intended as a record of `States` before an `ApplyCmd` (`EnsureCmd`
 /// or `CleanCmd`) are run.

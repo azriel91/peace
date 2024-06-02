@@ -24,7 +24,7 @@ cfg_if::cfg_if! {
 /// * Being in the `peace_cmd` crate, the type erased [`CmdBlockRt`] trait can
 ///   be implemented on this type within this crate.
 /// * The partial execution handler specifies how a command execution should
-///   finish, if execution is interrupted or there is an error with one step
+///   finish, if execution is interrupted or there is an error with one item
 ///   within the flow.
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
@@ -111,7 +111,7 @@ where
                 cmd_block.outcome_insert(cmd_view.resources, block_outcome);
                 Ok(())
             }
-            CmdBlockOutcome::StepWise {
+            CmdBlockOutcome::ItemWise {
                 stream_outcome,
                 errors,
             } => {
@@ -140,11 +140,11 @@ where
                         }
                     }
                 } else {
-                    // If possible, `CmdBlock` outcomes with step errors need to be mapped to
-                    // the `CmdExecution` outcome type, so we still return the step errors.
+                    // If possible, `CmdBlock` outcomes with item errors need to be mapped to
+                    // the `CmdExecution` outcome type, so we still return the item errors.
                     //
                     // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
-                    // steps fail to be ensured.
+                    // items fail to be ensured.
                     //
                     // Note, when discovering current and goal states for diffing, and a step
                     // error occurs, mapping the partially accumulated `(StatesCurrentMut,
@@ -152,7 +152,7 @@ where
                     // meaningful.
 
                     let stream_outcome = stream_outcome.map(self.fn_partial_exec_handler);
-                    Err(CmdBlockError::StepError {
+                    Err(CmdBlockError::ItemError {
                         stream_outcome,
                         errors,
                     })

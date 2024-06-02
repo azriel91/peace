@@ -36,17 +36,17 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         common_fns.extend(quote! {
             /// Sets a step's parameters.
             ///
-            /// Note: this **must** be called for each step in the flow.
-            pub fn with_step_params<I>(
+            /// Note: this **must** be called for each item in the flow.
+            pub fn with_item_params<I>(
                 mut self,
-                step_id: peace_cfg::StepId,
+                item_id: peace_cfg::ItemId,
                 params_spec: <I::Params<'_> as peace_params::Params>::Spec,
             ) -> Self
             where
-                I: peace_cfg::Step,
+                I: peace_cfg::Item,
                 AppError: From<I::Error>,
             {
-                self.scope_builder.params_specs_provided.insert(step_id, params_spec);
+                self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
             }
         });

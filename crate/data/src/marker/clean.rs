@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This is used for referential param values, where a step param value is
 /// dependent on the state of a predecessor's state.
 ///
-/// A `Clean<Step::State>` is set to `Some` whenever a step's clean state is
+/// A `Clean<Item::State>` is set to `Some` whenever a step's clean state is
 /// needed, e.g. preparing for applying the clean state. enabling a subsequent
 /// successor's params to access that value when the successor's `state_clean`
 /// function is run.

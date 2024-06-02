@@ -4,23 +4,23 @@ use crate::{
     progress::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId,
     },
-    StepId,
+    ItemId,
 };
 
 /// Submits progress for a step's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'exec> {
-    /// ID of the step this belongs to.
-    step_id: &'exec StepId,
+    /// ID of the item this belongs to.
+    item_id: &'exec ItemId,
     /// Channel sender to send progress updates to.
     progress_tx: &'exec Sender<CmdProgressUpdate>,
 }
 
 impl<'exec> ProgressSender<'exec> {
     /// Returns a new `ProgressSender`.
-    pub fn new(step_id: &'exec StepId, progress_tx: &'exec Sender<CmdProgressUpdate>) -> Self {
+    pub fn new(item_id: &'exec ItemId, progress_tx: &'exec Sender<CmdProgressUpdate>) -> Self {
         Self {
-            step_id,
+            item_id,
             progress_tx,
         }
     }
@@ -29,7 +29,7 @@ impl<'exec> ProgressSender<'exec> {
     pub fn inc(&self, unit_count: u64, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(
             ProgressUpdateAndId {
-                step_id: self.step_id.clone(),
+                item_id: self.item_id.clone(),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(unit_count)),
                 msg_update,
             }
@@ -48,7 +48,7 @@ impl<'exec> ProgressSender<'exec> {
     pub fn tick(&self, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(
             ProgressUpdateAndId {
-                step_id: self.step_id.clone(),
+                item_id: self.item_id.clone(),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
                 msg_update,
             }
@@ -60,7 +60,7 @@ impl<'exec> ProgressSender<'exec> {
     pub fn reset(&self) {
         let _progress_send_unused = self.progress_tx.try_send(
             ProgressUpdateAndId {
-                step_id: self.step_id.clone(),
+                item_id: self.item_id.clone(),
                 progress_update: ProgressUpdate::Reset,
                 msg_update: ProgressMsgUpdate::Clear,
             }
@@ -72,7 +72,7 @@ impl<'exec> ProgressSender<'exec> {
     pub fn reset_to_pending(&self) {
         let _progress_send_unused = self.progress_tx.try_send(
             ProgressUpdateAndId {
-                step_id: self.step_id.clone(),
+                item_id: self.item_id.clone(),
                 progress_update: ProgressUpdate::ResetToPending,
                 msg_update: ProgressMsgUpdate::Clear,
             }

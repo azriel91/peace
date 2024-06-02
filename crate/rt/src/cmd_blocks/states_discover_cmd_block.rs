@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::join;
-use peace_cfg::{FnCtx, StepId};
+use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
@@ -15,7 +15,7 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{fn_graph::StreamOpts, StepBoxed};
+use peace_rt_model::{fn_graph::StreamOpts, ItemBoxed};
 use peace_rt_model_core::IndexMap;
 use tokio::sync::mpsc::{self, Receiver};
 
@@ -129,25 +129,25 @@ where
         self
     }
 
-    async fn step_states_discover(
+    async fn item_states_discover(
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::Sender<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
-        step: &StepBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) {
-        let step_id = step.id();
+        let item_id = item.id();
         let fn_ctx = FnCtx::new(
-            step_id,
+            item_id,
             #[cfg(feature = "output_progress")]
-            ProgressSender::new(step_id, progress_tx),
+            ProgressSender::new(item_id, progress_tx),
         );
 
         let (states_current_result, states_goal_result) =
-            DiscoverFor::discover(step, params_specs, resources, fn_ctx).await;
+            DiscoverFor::discover(item, params_specs, resources, fn_ctx).await;
 
         // Send progress update.
         #[cfg(feature = "output_progress")]
@@ -156,15 +156,15 @@ where
             states_current_result.as_ref(),
             states_goal_result.as_ref(),
             progress_tx,
-            step_id,
+            item_id,
         );
 
-        let mut step_error = None;
+        let mut item_error = None;
         let state_current = if let Some(states_current_result) = states_current_result {
             match states_current_result {
                 Ok(state_current_opt) => state_current_opt,
                 Err(error) => {
-                    step_error = Some(error);
+                    item_error = Some(error);
                     None
                 }
             }
@@ -179,8 +179,8 @@ where
                     // It's probably more crucial to store the
                     // `states_current`
                     // error than the states goal error, if both err.
-                    if step_error.is_none() {
-                        step_error = Some(error);
+                    if item_error.is_none() {
+                        item_error = Some(error);
                     }
                     None
                 }
@@ -189,10 +189,10 @@ where
             None
         };
 
-        if let Some(error) = step_error {
+        if let Some(error) = item_error {
             outcomes_tx
-                .send(StepDiscoverOutcome::Fail {
-                    step_id: step_id.clone(),
+                .send(ItemDiscoverOutcome::Fail {
+                    item_id: item_id.clone(),
                     state_current,
                     state_goal,
                     error,
@@ -201,8 +201,8 @@ where
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
         } else {
             outcomes_tx
-                .send(StepDiscoverOutcome::Success {
-                    step_id: step_id.clone(),
+                .send(ItemDiscoverOutcome::Success {
+                    item_id: item_id.clone(),
                     state_current,
                     state_goal,
                 })
@@ -221,7 +221,7 @@ where
             &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         progress_tx: &Sender<CmdProgressUpdate>,
-        step_id: &StepId,
+        item_id: &ItemId,
     ) {
         if let Some((progress_update, msg_update)) = DiscoverFor::progress_update(
             progress_complete_on_success,
@@ -230,7 +230,7 @@ where
         ) {
             let _progress_send_unused = progress_tx.try_send(
                 ProgressUpdateAndId {
-                    step_id: step_id.clone(),
+                    item_id: item_id.clone(),
                     progress_update,
                     msg_update,
                 }
@@ -241,16 +241,16 @@ where
 }
 
 #[derive(Debug)]
-pub enum StepDiscoverOutcome<AppErrorT> {
+pub enum ItemDiscoverOutcome<AppErrorT> {
     /// Discover succeeded.
     Success {
-        step_id: StepId,
+        item_id: ItemId,
         state_current: Option<BoxDtDisplay>,
         state_goal: Option<BoxDtDisplay>,
     },
     /// Discover failed.
     Fail {
-        step_id: StepId,
+        item_id: ItemId,
         state_current: Option<BoxDtDisplay>,
         state_goal: Option<BoxDtDisplay>,
         error: AppErrorT,
@@ -292,13 +292,13 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
 
-            let step_states_discover_task = async move {
+            let item_states_discover_task = async move {
                 let stream_outcome = flow
                     .graph()
                     .for_each_concurrent_with(
@@ -306,8 +306,8 @@ where
                         StreamOpts::new()
                             .interruptibility_state(interruptibility_state.reborrow())
                             .interrupted_next_item_include(false),
-                        |step| {
-                            Self::step_states_discover(
+                        |item| {
+                            Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 #[cfg(feature = "output_progress")]
@@ -315,7 +315,7 @@ where
                                 params_specs,
                                 resources,
                                 &outcomes_tx,
-                                step,
+                                item,
                             )
                         },
                     )
@@ -328,12 +328,12 @@ where
 
             let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_current_mut);
 
-            join!(step_states_discover_task, outcome_collate_task)
+            join!(item_states_discover_task, outcome_collate_task)
         };
 
         outcome_collate.map(|(states_current, errors)| {
             let (stream_outcome, ()) = stream_outcome.replace(states_current);
-            CmdBlockOutcome::StepWise {
+            CmdBlockOutcome::ItemWise {
                 stream_outcome,
                 errors,
             }
@@ -347,19 +347,19 @@ where
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_current_mut: StatesMut<Current>,
     ) -> Result<
         (
             States<Current>,
-            IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
-        while let Some(step_outcome) = outcomes_rx.recv().await {
-            Self::outcome_collate(&mut states_current_mut, &mut errors, step_outcome)?;
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(&mut states_current_mut, &mut errors, item_outcome)?;
         }
 
         let states_current = States::<Current>::from(states_current_mut);
@@ -369,29 +369,29 @@ where
 
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
-        errors: &mut IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
-            StepDiscoverOutcome::Success {
-                step_id,
+            ItemDiscoverOutcome::Success {
+                item_id,
                 state_current,
                 state_goal: _,
             } => {
                 if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(step_id.clone(), state_current);
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
                 }
             }
-            StepDiscoverOutcome::Fail {
-                step_id,
+            ItemDiscoverOutcome::Fail {
+                item_id,
                 state_current,
                 state_goal: _,
                 error,
             } => {
-                errors.insert(step_id.clone(), error);
+                errors.insert(item_id.clone(), error);
 
                 if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(step_id.clone(), state_current);
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
                 }
             }
         }
@@ -435,13 +435,13 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
 
-            let step_states_discover_task = async move {
+            let item_states_discover_task = async move {
                 let stream_outcome = flow
                     .graph()
                     .for_each_concurrent_with(
@@ -449,8 +449,8 @@ where
                         StreamOpts::new()
                             .interruptibility_state(interruptibility_state.reborrow())
                             .interrupted_next_item_include(false),
-                        |step| {
-                            Self::step_states_discover(
+                        |item| {
+                            Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 #[cfg(feature = "output_progress")]
@@ -458,7 +458,7 @@ where
                                 params_specs,
                                 resources,
                                 &outcomes_tx,
-                                step,
+                                item,
                             )
                         },
                     )
@@ -471,12 +471,12 @@ where
 
             let outcome_collate_task = Self::outcome_collate_task(outcomes_rx, states_goal_mut);
 
-            join!(step_states_discover_task, outcome_collate_task)
+            join!(item_states_discover_task, outcome_collate_task)
         };
 
         outcome_collate.map(|(states_goal, errors)| {
             let (stream_outcome, ()) = stream_outcome.replace(states_goal);
-            CmdBlockOutcome::StepWise {
+            CmdBlockOutcome::ItemWise {
                 stream_outcome,
                 errors,
             }
@@ -490,19 +490,19 @@ where
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
             States<Goal>,
-            IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
-        while let Some(step_outcome) = outcomes_rx.recv().await {
-            Self::outcome_collate(&mut states_goal_mut, &mut errors, step_outcome)?;
+        while let Some(item_outcome) = outcomes_rx.recv().await {
+            Self::outcome_collate(&mut states_goal_mut, &mut errors, item_outcome)?;
         }
 
         let states_goal = States::<Goal>::from(states_goal_mut);
@@ -512,29 +512,29 @@ where
 
     fn outcome_collate(
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
-            StepDiscoverOutcome::Success {
-                step_id,
+            ItemDiscoverOutcome::Success {
+                item_id,
                 state_current: _,
                 state_goal,
             } => {
                 if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(step_id, state_goal);
+                    states_goal_mut.insert_raw(item_id, state_goal);
                 }
             }
-            StepDiscoverOutcome::Fail {
-                step_id,
+            ItemDiscoverOutcome::Fail {
+                item_id,
                 state_current: _,
                 state_goal,
                 error,
             } => {
-                errors.insert(step_id.clone(), error);
+                errors.insert(item_id.clone(), error);
 
                 if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(step_id, state_goal);
+                    states_goal_mut.insert_raw(item_id, state_goal);
                 }
             }
         }
@@ -591,14 +591,14 @@ where
         } = cmd_view;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
             let states_current_mut = StatesMut::<Current>::with_capacity(flow.graph().node_count());
             let states_goal_mut = StatesMut::<Goal>::with_capacity(flow.graph().node_count());
 
-            let step_states_discover_task = async move {
+            let item_states_discover_task = async move {
                 let stream_outcome = flow
                     .graph()
                     .for_each_concurrent_with(
@@ -606,8 +606,8 @@ where
                         StreamOpts::new()
                             .interruptibility_state(interruptibility_state.reborrow())
                             .interrupted_next_item_include(false),
-                        |step| {
-                            Self::step_states_discover(
+                        |item| {
+                            Self::item_states_discover(
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 #[cfg(feature = "output_progress")]
@@ -615,7 +615,7 @@ where
                                 params_specs,
                                 resources,
                                 &outcomes_tx,
-                                step,
+                                item,
                             )
                         },
                     )
@@ -629,12 +629,12 @@ where
             let outcome_collate_task =
                 Self::outcome_collate_task(outcomes_rx, states_current_mut, states_goal_mut);
 
-            join!(step_states_discover_task, outcome_collate_task)
+            join!(item_states_discover_task, outcome_collate_task)
         };
 
         outcome_collate.map(|(states_current, states_goal, errors)| {
             let (stream_outcome, ()) = stream_outcome.replace((states_current, states_goal));
-            CmdBlockOutcome::StepWise {
+            CmdBlockOutcome::ItemWise {
                 stream_outcome,
                 errors,
             }
@@ -648,7 +648,7 @@ where
 {
     async fn outcome_collate_task(
         mut outcomes_rx: Receiver<
-            StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         >,
         mut states_current_mut: StatesMut<Current>,
         mut states_goal_mut: StatesMut<Goal>,
@@ -656,17 +656,17 @@ where
         (
             States<Current>,
             States<Goal>,
-            IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         ),
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
     > {
         let mut errors = IndexMap::new();
-        while let Some(step_outcome) = outcomes_rx.recv().await {
+        while let Some(item_outcome) = outcomes_rx.recv().await {
             Self::outcome_collate(
                 &mut states_current_mut,
                 &mut states_goal_mut,
                 &mut errors,
-                step_outcome,
+                item_outcome,
             )?;
         }
 
@@ -679,35 +679,35 @@ where
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<StepId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: StepDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         match outcome_partial {
-            StepDiscoverOutcome::Success {
-                step_id,
+            ItemDiscoverOutcome::Success {
+                item_id,
                 state_current,
                 state_goal,
             } => {
                 if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(step_id.clone(), state_current);
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
                 }
                 if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(step_id, state_goal);
+                    states_goal_mut.insert_raw(item_id, state_goal);
                 }
             }
-            StepDiscoverOutcome::Fail {
-                step_id,
+            ItemDiscoverOutcome::Fail {
+                item_id,
                 state_current,
                 state_goal,
                 error,
             } => {
-                errors.insert(step_id.clone(), error);
+                errors.insert(item_id.clone(), error);
 
                 if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(step_id.clone(), state_current);
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
                 }
                 if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(step_id, state_goal);
+                    states_goal_mut.insert_raw(item_id, state_goal);
                 }
             }
         }
@@ -720,7 +720,7 @@ where
 #[async_trait::async_trait(?Send)]
 pub trait Discover {
     async fn discover<AppErrorT>(
-        step: &StepBoxed<AppErrorT>,
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
@@ -744,7 +744,7 @@ pub trait Discover {
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForCurrent {
     async fn discover<AppErrorT>(
-        step: &StepBoxed<AppErrorT>,
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
@@ -755,7 +755,7 @@ impl Discover for DiscoverForCurrent {
     where
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
-        let states_current_result = step
+        let states_current_result = item
             .state_current_try_exec(params_specs, resources, fn_ctx)
             .await;
 
@@ -792,7 +792,7 @@ impl Discover for DiscoverForCurrent {
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForGoal {
     async fn discover<AppErrorT>(
-        step: &StepBoxed<AppErrorT>,
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
@@ -803,7 +803,7 @@ impl Discover for DiscoverForGoal {
     where
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
-        let states_goal_result = step
+        let states_goal_result = item
             .state_goal_try_exec(params_specs, resources, fn_ctx)
             .await;
 
@@ -840,7 +840,7 @@ impl Discover for DiscoverForGoal {
 #[async_trait::async_trait(?Send)]
 impl Discover for DiscoverForCurrentAndGoal {
     async fn discover<AppErrorT>(
-        step: &StepBoxed<AppErrorT>,
+        item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
@@ -851,10 +851,10 @@ impl Discover for DiscoverForCurrentAndGoal {
     where
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
-        let states_current_result = step
+        let states_current_result = item
             .state_current_try_exec(params_specs, resources, fn_ctx)
             .await;
-        let states_goal_result = step
+        let states_goal_result = item
             .state_goal_try_exec(params_specs, resources, fn_ctx)
             .await;
 

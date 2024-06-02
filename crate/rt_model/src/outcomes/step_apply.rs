@@ -4,14 +4,14 @@ use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::outcomes::{StepApplyPartial, StepApplyRt};
+use crate::outcomes::{ItemApplyPartial, ItemApplyRt};
 
 /// Information about a step during an `ApplyCmd` execution.
 ///
-/// This is similar to [`StepApplyPartial`], with most fields being
+/// This is similar to [`ItemApplyPartial`], with most fields being
 /// non-optional, and the added `state_applied` field.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct StepApply<State, StateDiff> {
+pub struct ItemApply<State, StateDiff> {
     /// Current state stored on disk before the execution.
     pub state_current_stored: Option<State>,
     /// Current state discovered during the execution.
@@ -20,21 +20,21 @@ pub struct StepApply<State, StateDiff> {
     pub state_target: State,
     /// Diff between current and goal states.
     pub state_diff: StateDiff,
-    /// Whether step execution was required.
+    /// Whether item execution was required.
     pub apply_check: ApplyCheck,
     /// The state that was applyd, `None` if execution was not required.
     pub state_applied: Option<State>,
 }
 
-impl<State, StateDiff> TryFrom<(StepApplyPartial<State, StateDiff>, Option<State>)>
-    for StepApply<State, StateDiff>
+impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State>)>
+    for ItemApply<State, StateDiff>
 {
-    type Error = (StepApplyPartial<State, StateDiff>, Option<State>);
+    type Error = (ItemApplyPartial<State, StateDiff>, Option<State>);
 
     fn try_from(
-        (partial, state_applied): (StepApplyPartial<State, StateDiff>, Option<State>),
+        (partial, state_applied): (ItemApplyPartial<State, StateDiff>, Option<State>),
     ) -> Result<Self, Self::Error> {
-        let StepApplyPartial {
+        let ItemApplyPartial {
             state_current_stored,
             state_current,
             state_target,
@@ -61,7 +61,7 @@ impl<State, StateDiff> TryFrom<(StepApplyPartial<State, StateDiff>, Option<State
                 state_applied,
             })
         } else {
-            let partial = StepApplyPartial {
+            let partial = ItemApplyPartial {
                 state_current_stored,
                 state_current,
                 state_target,
@@ -73,7 +73,7 @@ impl<State, StateDiff> TryFrom<(StepApplyPartial<State, StateDiff>, Option<State
     }
 }
 
-impl<State, StateDiff> StepApplyRt for StepApply<State, StateDiff>
+impl<State, StateDiff> ItemApplyRt for ItemApply<State, StateDiff>
 where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,

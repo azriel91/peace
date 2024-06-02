@@ -4,12 +4,12 @@
 //! framework.
 //!
 //! This crate defines types and traits for implementors and users to work with
-//! step params.
+//! item params.
 //!
 //! # Design
 //!
 //! When a step is defined, implementors define the parameters type for
-//! that step.
+//! that item.
 //!
 //! For Peace to derive additional functionality from that type, this crate:
 //!
@@ -37,20 +37,20 @@
 //! :                            : '----------------------------' :                    :
 //! :                            :                                :                    :
 //! :                            :   .-------------------.        :                    :
-//! :                            :   | struct MyStep;    |        :                    :
+//! :                            :   | struct MyItem;    |        :                    :
 //! :                            :   |                   |        : ---.               :
-//! :                            :   | impl Step for     |        :    |               :
-//! :                            :   |   MyStep {        |        :    |               :
+//! :                            :   | impl Item for     |        :    |               :
+//! :                            :   |   MyItem {        |        :    |               :
 //! :                            :   |     type Params = |        :    '               :
 //! :                            :   |     MyParams;     |        :  exposes API       :
 //! :                            :   | }                 |        :  with constraints  :
 //! :                            :   '-------------------'        :  from              :
-//! :                            :                                :  <Step::Params     :
+//! :                            :                                :  <Item::Params     :
 //! : .------------------------. :                                :    as Params>      :
 //! : | cmd_ctx_builder        | :                                :    .               :
-//! : | .with_step_params      | <-------------------------------------'               :
+//! : | .with_item_params      | <-------------------------------------'               :
 //! : |    ::<IS>(             | :                                :                    :
-//! : |     step_id,           | :                                :                    :
+//! : |     item_id,           | :                                :                    :
 //! : |     my_p_spec_builder  | :                                :                    :
 //! : |       .with_f(123)     | :                                :                    :
 //! : |       .with_from(..)   | :                                :                    :

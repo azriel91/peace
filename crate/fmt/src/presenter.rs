@@ -54,14 +54,14 @@ pub trait Presenter<'output> {
     ///
     /// # Purposes
     ///
-    /// * An ID with no spaces, e.g. "my_step"
+    /// * An ID with no spaces, e.g. "my_item"
     async fn id(&mut self, id: &str) -> Result<(), Self::Error>;
 
     /// Presents text as a step name.
     ///
     /// # Purposes
     ///
-    /// * A display name with spaces, e.g. "My Step"
+    /// * A display name with spaces, e.g. "My Item"
     async fn name(&mut self, name: &str) -> Result<(), Self::Error>;
 
     /// Presents text as plain text.
@@ -95,7 +95,7 @@ pub trait Presenter<'output> {
     ///
     /// # Purposes
     ///
-    /// * A list of items.
+    /// * A list of steps.
     async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
         P: Presentable + ?Sized + 'f,
@@ -106,7 +106,7 @@ pub trait Presenter<'output> {
     ///
     /// # Purposes
     ///
-    /// * A list of items.
+    /// * A list of steps.
     async fn list_numbered_with<'f, P, I, T, F>(
         &mut self,
         iter: I,

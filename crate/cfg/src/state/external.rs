@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// value is a bug and must be surfaced as an issue to the user.
 ///
 /// The following type aliases are available to semantically name the type in
-/// step implementations:
+/// item implementations:
 ///
 /// * [`Generated`]
 /// * [`Fetched`]

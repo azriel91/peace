@@ -6,7 +6,7 @@ use syn::{
 use crate::util::{fields_deconstruct, fields_deconstruct_some, variant_match_arm};
 
 /// `impl From<Params> for ParamsPartial`, so that users can use
-/// `params_partial.try_into()` in `Step::try_state_*` without needing to
+/// `params_partial.try_into()` in `Item::try_state_*` without needing to
 /// deconstruct the `Params::Partial`.
 pub fn impl_from_params_for_params_partial(
     ast: &DeriveInput,

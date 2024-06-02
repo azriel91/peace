@@ -5,7 +5,7 @@ use crate::states::{
     States,
 };
 
-/// Stored current `State`s for all `Step`s.
+/// Stored current `State`s for all `Item`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
 /// from the [`StatesCurrentFile`].
@@ -20,7 +20,7 @@ use crate::states::{
 /// # Implementors
 ///
 /// If a `Step`'s state discovery depends on the `State` of a previous
-/// `Step`, then you should insert the predecessor's state into
+/// `Item`, then you should insert the predecessor's state into
 /// [`Resources`], and reference that in the subsequent `TryFnSpec`'s [`Data`]:
 ///
 /// ```rust
@@ -47,7 +47,7 @@ use crate::states::{
 ///
 /// You may reference [`StatesCurrentStored`] in `ApplyFns::Data` for reading.
 /// It is not mutable as `StatesCurrentStored` must remain unchanged so that all
-/// `Step`s operate over consistent data.
+/// `Item`s operate over consistent data.
 ///
 /// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
 /// [`Data`]: peace_data::Data

@@ -1,8 +1,8 @@
 use futures::Future;
 use indexmap::IndexMap;
-use peace_cfg::StepId;
+use peace_cfg::ItemId;
 
-use crate::{CmdBlockDesc, StepStreamOutcome};
+use crate::{CmdBlockDesc, ItemStreamOutcome};
 
 /// Outcome of a [`CmdExecution`].
 ///
@@ -25,7 +25,7 @@ pub enum CmdOutcome<T, E> {
     /// Execution ended due to an interruption during command block execution.
     BlockInterrupted {
         /// The stream outcome of the interrupted command block.
-        step_stream_outcome: StepStreamOutcome<T>,
+        item_stream_outcome: ItemStreamOutcome<T>,
         /// Descriptors of the `CmdBlock`s that were processed.
         ///
         /// This does not include the `CmdBlock` that was interrupted.
@@ -44,13 +44,13 @@ pub enum CmdOutcome<T, E> {
         /// Descriptors of the `CmdBlock`s that were not processed.
         cmd_blocks_not_processed: Vec<CmdBlockDesc>,
     },
-    /// Execution ended due to one or more step errors.
+    /// Execution ended due to one or more item errors.
     ///
     /// It is also possible for the stream to be interrupted when an error
-    /// occurs, so the value is wrapped in a `StepStreamOutcome`.
-    StepError {
+    /// occurs, so the value is wrapped in a `ItemStreamOutcome`.
+    ItemError {
         /// The outcome value.
-        step_stream_outcome: StepStreamOutcome<T>,
+        item_stream_outcome: ItemStreamOutcome<T>,
         /// Descriptors of the `CmdBlock`s that were processed.
         ///
         /// This does not include the `CmdBlock` that erred.
@@ -59,8 +59,8 @@ pub enum CmdOutcome<T, E> {
         ///
         /// The first block in this list is the one that erred.
         cmd_blocks_not_processed: Vec<CmdBlockDesc>,
-        /// Step error(s) from the last command block's execution.
-        errors: IndexMap<StepId, E>,
+        /// Item error(s) from the last command block's execution.
+        errors: IndexMap<ItemId, E>,
     },
 }
 
@@ -72,21 +72,21 @@ impl<T, E> CmdOutcome<T, E> {
                 cmd_blocks_processed: _,
             } => Some(value),
             CmdOutcome::BlockInterrupted {
-                step_stream_outcome,
+                item_stream_outcome,
                 cmd_blocks_processed: _,
                 cmd_blocks_not_processed: _,
-            } => Some(step_stream_outcome.value()),
+            } => Some(item_stream_outcome.value()),
             CmdOutcome::ExecutionInterrupted {
                 value,
                 cmd_blocks_processed: _,
                 cmd_blocks_not_processed: _,
             } => value.as_ref(),
-            CmdOutcome::StepError {
-                step_stream_outcome,
+            CmdOutcome::ItemError {
+                item_stream_outcome,
                 cmd_blocks_processed: _,
                 cmd_blocks_not_processed: _,
                 errors: _,
-            } => Some(step_stream_outcome.value()),
+            } => Some(item_stream_outcome.value()),
         }
     }
 
@@ -103,9 +103,9 @@ impl<T, E> CmdOutcome<T, E> {
         )
     }
 
-    /// Returns whether the command encountered step errors during execution.
+    /// Returns whether the command encountered item errors during execution.
     pub fn is_err(&self) -> bool {
-        matches!(self, Self::StepError { .. })
+        matches!(self, Self::ItemError { .. })
     }
 
     /// Maps the inner value to another, maintaining any collected errors.
@@ -125,13 +125,13 @@ impl<T, E> CmdOutcome<T, E> {
                 }
             }
             Self::BlockInterrupted {
-                step_stream_outcome,
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
             } => {
-                let step_stream_outcome = step_stream_outcome.map(f);
+                let item_stream_outcome = item_stream_outcome.map(f);
                 CmdOutcome::BlockInterrupted {
-                    step_stream_outcome,
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                 }
@@ -148,15 +148,15 @@ impl<T, E> CmdOutcome<T, E> {
                     cmd_blocks_not_processed,
                 }
             }
-            Self::StepError {
-                step_stream_outcome,
+            Self::ItemError {
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
                 errors,
             } => {
-                let step_stream_outcome = step_stream_outcome.map(f);
-                CmdOutcome::StepError {
-                    step_stream_outcome,
+                let item_stream_outcome = item_stream_outcome.map(f);
+                CmdOutcome::ItemError {
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                     errors,
@@ -184,15 +184,15 @@ impl<T, E> CmdOutcome<T, E> {
                 }
             }
             Self::BlockInterrupted {
-                step_stream_outcome,
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
             } => {
-                let (step_stream_outcome, value) = step_stream_outcome.replace(());
+                let (item_stream_outcome, value) = item_stream_outcome.replace(());
                 let value = f(value).await;
-                let (step_stream_outcome, ()) = step_stream_outcome.replace(value);
+                let (item_stream_outcome, ()) = item_stream_outcome.replace(value);
                 CmdOutcome::BlockInterrupted {
-                    step_stream_outcome,
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                 }
@@ -212,17 +212,17 @@ impl<T, E> CmdOutcome<T, E> {
                     cmd_blocks_not_processed,
                 }
             }
-            Self::StepError {
-                step_stream_outcome,
+            Self::ItemError {
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
                 errors,
             } => {
-                let (step_stream_outcome, value) = step_stream_outcome.replace(());
+                let (item_stream_outcome, value) = item_stream_outcome.replace(());
                 let value = f(value).await;
-                let (step_stream_outcome, ()) = step_stream_outcome.replace(value);
-                CmdOutcome::StepError {
-                    step_stream_outcome,
+                let (item_stream_outcome, ()) = item_stream_outcome.replace(value);
+                CmdOutcome::ItemError {
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                     errors,
@@ -248,16 +248,16 @@ impl<T, E> CmdOutcome<Result<T, E>, E> {
                 Err(e) => Err(e),
             },
             Self::BlockInterrupted {
-                step_stream_outcome,
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
             } => {
-                let (step_stream_outcome, value) = step_stream_outcome.replace(());
+                let (item_stream_outcome, value) = item_stream_outcome.replace(());
                 match value {
                     Ok(value) => {
-                        let (step_stream_outcome, ()) = step_stream_outcome.replace(value);
+                        let (item_stream_outcome, ()) = item_stream_outcome.replace(value);
                         Ok(CmdOutcome::BlockInterrupted {
-                            step_stream_outcome,
+                            item_stream_outcome,
                             cmd_blocks_processed,
                             cmd_blocks_not_processed,
                         })
@@ -277,18 +277,18 @@ impl<T, E> CmdOutcome<Result<T, E>, E> {
                 }),
                 Err(e) => Err(e),
             },
-            Self::StepError {
-                step_stream_outcome,
+            Self::ItemError {
+                item_stream_outcome,
                 cmd_blocks_processed,
                 cmd_blocks_not_processed,
                 errors,
             } => {
-                let (step_stream_outcome, value) = step_stream_outcome.replace(());
+                let (item_stream_outcome, value) = item_stream_outcome.replace(());
                 match value {
                     Ok(value) => {
-                        let (step_stream_outcome, ()) = step_stream_outcome.replace(value);
-                        Ok(CmdOutcome::StepError {
-                            step_stream_outcome,
+                        let (item_stream_outcome, ()) = item_stream_outcome.replace(value);
+                        Ok(CmdOutcome::ItemError {
+                            item_stream_outcome,
                             cmd_blocks_processed,
                             cmd_blocks_not_processed,
                             errors,

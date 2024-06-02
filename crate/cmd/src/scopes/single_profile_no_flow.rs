@@ -15,7 +15,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::ctx::CmdCtxTypes;
 
-/// A command that works with a single profile, not scoped to a flow.
+/// A command that works with a single profile, without any items.
 ///
 /// ```bash
 /// path/to/repo/.peace/envman
@@ -84,7 +84,7 @@ where
     >,
 }
 
-/// A command that works with a single profile, not scoped to a flow.
+/// A command that works with a single profile, without any items.
 ///
 /// ```bash
 /// path/to/repo/.peace/envman

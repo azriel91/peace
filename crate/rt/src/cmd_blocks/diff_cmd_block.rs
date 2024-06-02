@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::FutureExt;
-use peace_cfg::StepId;
+use peace_cfg::ItemId;
 use peace_cmd::{
     ctx::CmdCtxTypesConstrained, interruptible::InterruptibilityState,
     scopes::SingleProfileSingleFlowView,
@@ -54,21 +54,21 @@ impl<CmdCtxTypesT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypesT, StatesTs0, S
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Returns the [`state_diff`]` for each [`Step`].
+    /// Returns the [`state_diff`]` for each [`Item`].
     ///
     /// This does not take in `CmdCtx` as it may be used by both
     /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
     /// commands.
     ///
-    /// [`Step`]: peace_cfg::Step
-    /// [`state_diff`]: peace_cfg::Step::state_diff
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
         interruptibility_state: InterruptibilityState<'_, '_>,
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<StepId, BoxDtDisplay>,
-        states_b: &TypeMap<StepId, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<StreamOutcome<StateDiffs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
         let stream_outcome_result = flow
             .graph()
@@ -77,16 +77,16 @@ where
                 StreamOpts::new()
                     .interruptibility_state(interruptibility_state)
                     .interrupted_next_item_include(false),
-                |mut state_diffs_mut, step| {
+                |mut state_diffs_mut, item| {
                     async move {
                         let _params_specs = &params_specs;
 
-                        let state_diff_opt = step
+                        let state_diff_opt = item
                             .state_diff_exec(params_specs, resources, states_a, states_b)
                             .await?;
 
                         if let Some(state_diff) = state_diff_opt {
-                            state_diffs_mut.insert_raw(step.id().clone(), state_diff);
+                            state_diffs_mut.insert_raw(item.id().clone(), state_diff);
                         }
 
                         Result::<_, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>::Ok(
@@ -184,7 +184,7 @@ where
         .await?
         .map(move |state_diffs| (state_diffs, (states_ts0, states_ts1)));
 
-        Ok(CmdBlockOutcome::new_step_wise(stream_outcome))
+        Ok(CmdBlockOutcome::new_item_wise(stream_outcome))
     }
 }
 

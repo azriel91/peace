@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace_cfg::{FlowId, StepId};
+use peace_cfg::{FlowId, ItemId};
 use peace_resources::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{
@@ -10,7 +10,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeMapOpt, TypeReg},
 };
 
-use crate::{Error, StepGraph, Storage};
+use crate::{Error, ItemGraph, Storage};
 
 /// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
 /// from storage.
@@ -20,7 +20,7 @@ impl<E> StatesSerializer<E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
 {
-    /// Returns the [`StatesCurrentStored`] of all [`Step`]s if it exists on
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
     /// disk.
     ///
     /// # Parameters:
@@ -29,17 +29,17 @@ where
     /// * `states`: States to serialize.
     /// * `states_file_path`: Path to save the serialized states to.
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     pub async fn serialize<TS>(
         storage: &Storage,
-        step_graph: &StepGraph<E>,
+        item_graph: &ItemGraph<E>,
         states: &States<TS>,
         states_file_path: &Path,
     ) -> Result<(), E>
     where
         TS: Send + Sync,
     {
-        let states_serde = step_graph.states_serde::<serde_yaml::Value, _>(states);
+        let states_serde = item_graph.states_serde::<serde_yaml::Value, _>(states);
         storage
             .serialized_write(
                 #[cfg(not(target_arch = "wasm32"))]
@@ -53,21 +53,21 @@ where
         Ok(())
     }
 
-    /// Returns the [`StatesCurrentStored`] of all [`Step`]s if it exists on
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
     /// disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   step state.
+    ///   item state.
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_stored(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
     ) -> Result<StatesCurrentStored, E> {
         let states = Self::deserialize_internal::<CurrentStored>(
@@ -83,20 +83,20 @@ where
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
     }
 
-    /// Returns the [`StatesGoalStored`] of all [`Step`]s if it exists on disk.
+    /// Returns the [`StatesGoalStored`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   step state.
+    ///   item state.
     /// * `states_goal_file`: `StatesGoalFile` to deserialize.
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_goal(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_goal_file: &StatesGoalFile,
     ) -> Result<StatesGoalStored, E> {
         let states = Self::deserialize_internal::<GoalStored>(
@@ -112,21 +112,21 @@ where
         states.ok_or_else(|| E::from(Error::StatesGoalDiscoverRequired))
     }
 
-    /// Returns the [`StatesCurrentStored`] of all [`Step`]s if it exists on
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
     /// disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   step state.
+    ///   item state.
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_stored_opt(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
     ) -> Result<Option<StatesCurrentStored>, E> {
         Self::deserialize_internal(
@@ -140,13 +140,13 @@ where
         .await
     }
 
-    /// Returns the [`States`] of all [`Step`]s if it exists on disk.
+    /// Returns the [`States`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   step state.
+    ///   item state.
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// # Type Parameters
@@ -154,7 +154,7 @@ where
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
     ///   [`ts::CurrentStored`].
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(not(target_arch = "wasm32"))]
@@ -162,7 +162,7 @@ where
         thread_name: String,
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
@@ -208,13 +208,13 @@ where
         Ok(states_opt)
     }
 
-    /// Returns the [`States`] of all [`Step`]s if it exists on disk.
+    /// Returns the [`States`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   step state.
+    ///   item state.
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// # Type Parameters
@@ -222,14 +222,14 @@ where
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
     ///   [`ts::CurrentStored`].
     ///
-    /// [`Step`]: peace_cfg::Step
+    /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<StepId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where

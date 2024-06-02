@@ -4,7 +4,7 @@ use std::{
     marker::PhantomData,
 };
 
-use peace_core::StepId;
+use peace_core::ItemId;
 use peace_data::{
     fn_graph::{
         resman::{BorrowFail, Ref},
@@ -18,8 +18,8 @@ use serde::Serialize;
 /// The previously stored `T` state, if any.
 #[derive(Debug)]
 pub struct Stored<'borrow, T> {
-    /// ID of the step the state should be retrieved for.
-    step_id: &'borrow StepId,
+    /// ID of the item the state should be retrieved for.
+    item_id: &'borrow ItemId,
     /// The borrowed `StatesCurrentStored`.
     states_current_stored: Option<Ref<'borrow, StatesCurrentStored>>,
     /// Marker.
@@ -33,7 +33,7 @@ where
     pub fn get(&'borrow self) -> Option<&'borrow T> {
         self.states_current_stored
             .as_ref()
-            .and_then(|states_current_stored| states_current_stored.get(self.step_id))
+            .and_then(|states_current_stored| states_current_stored.get(self.item_id))
     }
 }
 
@@ -41,7 +41,7 @@ impl<'borrow, T> Data<'borrow> for Stored<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(step_id: &'borrow StepId, resources: &'borrow Resources) -> Self {
+    fn borrow(item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
         let states_current_stored = resources
             .try_borrow::<StatesCurrentStored>()
             .map_err(|borrow_fail| match borrow_fail {
@@ -53,7 +53,7 @@ where
             .ok();
 
         Self {
-            step_id,
+            item_id,
             states_current_stored,
             marker: PhantomData,
         }

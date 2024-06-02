@@ -126,16 +126,16 @@ where
     >,
     /// Stored current states for each profile for the selected flow.
     profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
-    /// Type registry for each step's [`Params`]`::Spec`.
+    /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Step::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     params_specs_type_reg: ParamsSpecsTypeReg,
-    /// Step params specs for each profile for the selected flow.
+    /// Item params specs for each profile for the selected flow.
     profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
-    /// Type registry for each step's `State`.
+    /// Type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
@@ -202,16 +202,16 @@ where
     >,
     /// Stored current states for each profile for the selected flow.
     pub profile_to_states_current_stored: &'view BTreeMap<Profile, Option<StatesCurrentStored>>,
-    /// Type registry for each step's [`Params`]`::Spec`.
+    /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Step::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub params_specs_type_reg: &'view ParamsSpecsTypeReg,
-    /// Step params specs for each profile for the selected flow.
+    /// Item params specs for each profile for the selected flow.
     pub profile_to_params_specs: &'view BTreeMap<Profile, Option<ParamsSpecs>>,
-    /// Type registry for each step's `State`.
+    /// Type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
@@ -403,7 +403,7 @@ where
     /// and [`FlowParams`] deserialization.
     ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    /// [`StepParams`]: peace_rt_model::StepParams
+    /// [`ItemParams`]: peace_rt_model::ItemParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<CmdCtxTypesT::ParamsKeys> {
@@ -418,23 +418,23 @@ where
         &self.profile_to_states_current_stored
     }
 
-    /// Returns the type registry for each step's [`Params`]`::Spec`.
+    /// Returns the type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::Step::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub fn params_specs_type_reg(&self) -> &ParamsSpecsTypeReg {
         &self.params_specs_type_reg
     }
 
-    /// Returns the step params specs for each profile for the selected
+    /// Returns the item params specs for each profile for the selected
     /// flow.
     pub fn profile_to_params_specs(&self) -> &BTreeMap<Profile, Option<ParamsSpecs>> {
         &self.profile_to_params_specs
     }
 
-    /// Returns the type registry for each step's `State`.
+    /// Returns the type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].

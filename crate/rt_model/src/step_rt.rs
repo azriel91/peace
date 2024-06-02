@@ -1,7 +1,7 @@
 use std::{any::Any, fmt::Debug};
 
 use dyn_clone::DynClone;
-use peace_cfg::{async_trait, FnCtx, StepId};
+use peace_cfg::{async_trait, FnCtx, ItemId};
 use peace_data::fn_graph::{DataAccess, DataAccessDyn};
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -12,29 +12,29 @@ use peace_resources::{
 };
 
 use crate::{
-    outcomes::{StepApplyBoxed, StepApplyPartialBoxed},
+    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
     ParamsSpecsTypeReg, StatesTypeReg,
 };
 
-/// Internal trait that erases the types from [`Step`]
+/// Internal trait that erases the types from [`Item`]
 ///
-/// This exists so that different implementations of [`Step`] can be held
+/// This exists so that different implementations of [`Item`] can be held
 /// under the same boxed trait.
 ///
-/// [`Step`]: peace_cfg::Step
+/// [`Item`]: peace_cfg::Item
 #[async_trait(?Send)]
-pub trait StepRt<E>:
+pub trait ItemRt<E>:
     Any + Debug + DataAccess + DataAccessDyn + DynClone + Send + Sync + 'static
 {
-    /// Returns the ID of this step.
+    /// Returns the ID of this item.
     ///
-    /// See [`Step::id`];
+    /// See [`Item::id`];
     ///
-    /// [`Step::id`]: peace_cfg::Step::id
-    fn id(&self) -> &StepId;
+    /// [`Item::id`]: peace_cfg::Item::id
+    fn id(&self) -> &ItemId;
 
-    /// Returns whether this step is equal to the other.
-    fn eq(&self, other: &dyn StepRt<E>) -> bool;
+    /// Returns whether this item is equal to the other.
+    fn eq(&self, other: &dyn ItemRt<E>) -> bool;
 
     /// Returns `&self` as `&dyn Any`.
     ///
@@ -42,7 +42,7 @@ pub trait StepRt<E>:
     /// requirement.
     fn as_any(&self) -> &dyn Any;
 
-    /// Initializes data for the step's functions.
+    /// Initializes data for the item's functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
@@ -50,7 +50,7 @@ pub trait StepRt<E>:
     /// Registers params and state types with the type registries for
     /// deserializing from disk.
     ///
-    /// This is necessary to deserialize `StepParamsFile`,
+    /// This is necessary to deserialize `ItemParamsFile`,
     /// `ParamsSpecsFile`, `StatesCurrentFile`, and `StatesGoalFile`.
     fn params_and_state_register(
         &self,
@@ -61,14 +61,14 @@ pub trait StepRt<E>:
     /// Returns if the given two states equal.
     ///
     /// This returns an error if the boxed states could not be downcasted to
-    /// this step's state, which indicates one of the following:
+    /// this item's state, which indicates one of the following:
     ///
-    /// * Peace contains a bug, and passed an incorrect box to this step.
-    /// * Step IDs were swapped, such that `StepA`'s state is passed to `StepB`.
+    /// * Peace contains a bug, and passed an incorrect box to this item.
+    /// * Item IDs were swapped, such that `ItemA`'s state is passed to `ItemB`.
     ///
-    ///     This needs some rework on how step IDs are implemented -- as in,
-    ///     whether we should use a string newtype for `StepId`s, or redesign
-    ///     how `Step`s or related types are keyed.
+    ///     This needs some rework on how item IDs are implemented -- as in,
+    ///     whether we should use a string newtype for `ItemId`s, or redesign
+    ///     how `Item`s or related types are keyed.
     ///
     /// Note: it is impossible to call this method if a `Step`'s state type has
     /// changed -- it would have failed on deserialization.
@@ -76,9 +76,9 @@ pub trait StepRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Step::state_clean`].
+    /// Runs [`Item::state_clean`].
     ///
-    /// [`Step::state_clean`]: peace_cfg::Step::state_clean
+    /// [`Item::state_clean`]: peace_cfg::Item::state_clean
     async fn state_clean(
         &self,
         params_specs: &ParamsSpecs,
@@ -87,9 +87,9 @@ pub trait StepRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Step::state_current`]`::`[`try_exec`].
+    /// Runs [`Item::state_current`]`::`[`try_exec`].
     ///
-    /// [`Step::state_current`]: peace_cfg::Step::state_current
+    /// [`Item::state_current`]: peace_cfg::Item::state_current
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_current_try_exec(
         &self,
@@ -100,9 +100,9 @@ pub trait StepRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Step::state_current`]`::`[`exec`].
+    /// Runs [`Item::state_current`]`::`[`exec`].
     ///
-    /// [`Step::state_current`]: peace_cfg::Step::state_current
+    /// [`Item::state_current`]: peace_cfg::Item::state_current
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_current_exec(
         &self,
@@ -113,9 +113,9 @@ pub trait StepRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Step::state_goal`]`::`[`try_exec`].
+    /// Runs [`Item::state_goal`]`::`[`try_exec`].
     ///
-    /// [`Step::state_goal`]: peace_cfg::Step::state_goal
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_goal_try_exec(
         &self,
@@ -126,9 +126,9 @@ pub trait StepRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Step::state_goal`]`::`[`exec`].
+    /// Runs [`Item::state_goal`]`::`[`exec`].
     ///
-    /// [`Step::state_goal`]: peace_cfg::Step::state_goal
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_goal_exec(
         &self,
@@ -156,8 +156,8 @@ pub trait StepRt<E>:
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        states_a: &TypeMap<StepId, BoxDtDisplay>,
-        states_b: &TypeMap<StepId, BoxDtDisplay>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
@@ -166,21 +166,21 @@ pub trait StepRt<E>:
     ///
     /// This runs the following functions in order:
     ///
-    /// * [`Step::state_current`]
-    /// * [`Step::state_goal`]
-    /// * [`Step::state_diff`]
+    /// * [`Item::state_current`]
+    /// * [`Item::state_goal`]
+    /// * [`Item::state_diff`]
     /// * [`ApplyFns::check`]
     ///
-    /// [`Step::state_current`]: peace_cfg::Step::state_current
-    /// [`Step::state_goal`]: peace_cfg::Step::state_goal
-    /// [`Step::state_diff`]: peace_cfg::Step::state_diff
-    /// [`ApplyFns::check`]: peace_cfg::Step::ApplyFns
+    /// [`Item::state_current`]: peace_cfg::Item::state_current
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
+    /// [`Item::state_diff`]: peace_cfg::Item::state_diff
+    /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
     async fn ensure_prepare(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-    ) -> Result<StepApplyBoxed, (E, StepApplyPartialBoxed)>
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;
 
@@ -188,25 +188,25 @@ pub trait StepRt<E>:
     ///
     /// This runs the following functions in order:
     ///
-    /// * [`Step::state_current`]
-    /// * [`Step::state_clean`]
-    /// * [`Step::state_diff`]
+    /// * [`Item::state_current`]
+    /// * [`Item::state_clean`]
+    /// * [`Item::state_diff`]
     /// * [`ApplyFns::check`]
     ///
-    /// [`Step::state_current`]: peace_cfg::Step::state_current
-    /// [`Step::state_clean`]: peace_cfg::Step::state_clean
-    /// [`Step::state_diff`]: peace_cfg::Step::state_diff
-    /// [`ApplyFns::check`]: peace_cfg::Step::ApplyFns
+    /// [`Item::state_current`]: peace_cfg::Item::state_current
+    /// [`Item::state_clean`]: peace_cfg::Item::state_clean
+    /// [`Item::state_diff`]: peace_cfg::Item::state_diff
+    /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
     async fn clean_prepare(
         &self,
         states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<StepApplyBoxed, (E, StepApplyPartialBoxed)>
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;
 
-    /// Dry applies the step from its current state to its goal state.
+    /// Dry applies the item from its current state to its goal state.
     ///
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:
@@ -216,20 +216,20 @@ pub trait StepRt<E>:
     /// # Parameters
     ///
     /// * `resources`: The resources in the current execution.
-    /// * `step_apply`: The information collected in `self.ensure_prepare`.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
     ///
-    /// [`ApplyFns::exec_dry`]: peace_cfg::Step::ApplyFns
+    /// [`ApplyFns::exec_dry`]: peace_cfg::Item::ApplyFns
     async fn apply_exec_dry(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-        step_apply: &mut StepApplyBoxed,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
-    /// Applies the step from its current state to its goal state.
+    /// Applies the item from its current state to its goal state.
     ///
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:
@@ -239,15 +239,15 @@ pub trait StepRt<E>:
     /// # Parameters
     ///
     /// * `resources`: The resources in the current execution.
-    /// * `step_apply`: The information collected in `self.ensure_prepare`.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
     ///
-    /// [`ApplyFns::exec`]: peace_cfg::Step::ApplyFns
+    /// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
     async fn apply_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
-        step_apply: &mut StepApplyBoxed,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;

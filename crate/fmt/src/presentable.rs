@@ -48,7 +48,7 @@ mod tuple_impl;
 ///
 /// # Examples
 ///
-/// Presenting a list step with a name and value:
+/// Presenting a list item with a name and value:
 ///
 /// ```rust
 /// # use peace_fmt::{Presentable, Presenter};
@@ -56,13 +56,13 @@ mod tuple_impl;
 /// // use peace::fmt::{Presentable, Presenter};
 ///
 /// #[derive(Clone, Deserialize, Serialize)]
-/// struct Step {
+/// struct Item {
 ///     name: String,
 ///     desc: String,
 /// }
 ///
 /// #[async_trait::async_trait(?Send)]
-/// impl Presentable for Step {
+/// impl Presentable for Item {
 ///     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
 ///     where
 ///         PR: Presenter<'output>,

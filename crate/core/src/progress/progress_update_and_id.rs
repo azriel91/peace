@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     progress::{ProgressMsgUpdate, ProgressUpdate},
-    StepId,
+    ItemId,
 };
 
-/// An step ID and its progress update.
+/// An item ID and its progress update.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ProgressUpdateAndId {
-    /// ID of the step whose progress is updated.
-    pub step_id: StepId,
+    /// ID of the item whose progress is updated.
+    pub item_id: ItemId,
     /// Delta update for the progress tracker.
     pub progress_update: ProgressUpdate,
     /// Whether to change the progress message.

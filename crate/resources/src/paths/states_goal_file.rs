@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::paths::FlowDir;
 
-/// Path to the file that stores steps' states.
+/// Path to the file that stores items' states.
 ///
 /// Typically `$workspace_dir/.peace/$profile/$flow_id/states_goal.yaml`.
 ///

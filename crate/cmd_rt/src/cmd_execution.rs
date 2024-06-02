@@ -11,7 +11,7 @@ use peace_cmd::{
 use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
 use peace_resources::{resources::ts::SetUp, Resources};
 
-use crate::{CmdBlockError, CmdBlockRtBox, StepStreamOutcomeMapper};
+use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -353,7 +353,7 @@ where
             }
             CmdBlockError::Exec(error) => Err(error),
             CmdBlockError::Interrupt { stream_outcome } => {
-                let step_stream_outcome = StepStreamOutcomeMapper::map(flow, stream_outcome);
+                let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
                 let cmd_blocks_processed = cmd_blocks
                     .range(0..cmd_block_index)
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
@@ -364,18 +364,18 @@ where
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
                     .collect::<Vec<CmdBlockDesc>>();
                 let cmd_outcome = CmdOutcome::BlockInterrupted {
-                    step_stream_outcome,
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                 };
 
                 Ok(cmd_outcome)
             }
-            CmdBlockError::StepError {
+            CmdBlockError::ItemError {
                 stream_outcome,
                 errors,
             } => {
-                let step_stream_outcome = StepStreamOutcomeMapper::map(flow, stream_outcome);
+                let item_stream_outcome = ItemStreamOutcomeMapper::map(flow, stream_outcome);
                 let cmd_blocks_processed = cmd_blocks
                     .range(0..cmd_block_index)
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
@@ -386,8 +386,8 @@ where
                     .map(|cmd_block_rt| cmd_block_rt.cmd_block_desc())
                     .collect::<Vec<CmdBlockDesc>>();
 
-                let cmd_outcome = CmdOutcome::StepError {
-                    step_stream_outcome,
+                let cmd_outcome = CmdOutcome::ItemError {
+                    item_stream_outcome,
                     cmd_blocks_processed,
                     cmd_blocks_not_processed,
                     errors,

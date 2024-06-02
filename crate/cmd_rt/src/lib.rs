@@ -7,12 +7,12 @@ pub use tynm;
 pub use crate::{
     cmd_block::{CmdBlock, CmdBlockError, CmdBlockRt, CmdBlockRtBox, CmdBlockWrapper},
     cmd_execution::{CmdExecution, CmdExecutionBuilder},
-    step_stream_outcome_mapper::StepStreamOutcomeMapper,
+    item_stream_outcome_mapper::ItemStreamOutcomeMapper,
 };
 
 mod cmd_block;
 mod cmd_execution;
-mod step_stream_outcome_mapper;
+mod item_stream_outcome_mapper;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

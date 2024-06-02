@@ -12,7 +12,7 @@ use peace_resources::{
     states::{StatesCurrent, StatesGoal},
     Resources,
 };
-use peace_rt_model::{StepGraph, Storage};
+use peace_rt_model::{ItemGraph, Storage};
 
 use crate::cmd_blocks::StatesDiscoverCmdBlock;
 
@@ -28,14 +28,14 @@ impl<CmdCtxTypesT> StatesDiscoverCmd<CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    /// Runs [`try_state_current`] for each [`Step`].
+    /// Runs [`try_state_current`] for each [`Item`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
     /// `$flow_dir/states_current.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
-    /// previous `Step`, it may automatically be referenced using [`Current<T>`]
+    /// previous `Item`, it may automatically be referenced using [`Current<T>`]
     /// where `T` us the predecessor's state. Peace will have automatically
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
@@ -44,8 +44,8 @@ where
     ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`Step`]: peace_cfg::Step
-    /// [`try_state_current`]: peace_cfg::Step::try_state_current
+    /// [`Item`]: peace_cfg::Item
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -58,7 +58,7 @@ where
         Self::current_with(cmd_ctx, true).await
     }
 
-    /// Runs [`try_state_current`] for each [`Step`].
+    /// Runs [`try_state_current`] for each [`Item`].
     ///
     /// See [`Self::current`] for full documentation.
     ///
@@ -71,7 +71,7 @@ where
     /// * `serialize_to_storage`: Whether to write states to storage after
     ///   discovery.
     ///
-    /// [`try_state_current`]: peace_cfg::Step::try_state_current
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
@@ -98,24 +98,24 @@ where
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
-            let (step_graph, resources) = (flow.graph(), resources);
+            let (item_graph, resources) = (flow.graph(), resources);
 
             if serialize_to_storage {
-                Self::serialize_current(step_graph, resources, states_current).await?;
+                Self::serialize_current(item_graph, resources, states_current).await?;
             }
         }
 
         Ok(cmd_outcome)
     }
 
-    /// Runs [`try_state_goal`] for each [`Step`].
+    /// Runs [`try_state_goal`] for each [`Item`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesGoal`], and will be serialized to
     /// `$flow_dir/states_goal.yaml`.
     ///
     /// If any `state_goal` function needs to read the `State` from a
-    /// previous `Step`, it may automatically be referenced using [`Goal<T>`]
+    /// previous `Item`, it may automatically be referenced using [`Goal<T>`]
     /// where `T` us the predecessor's state. Peace will have automatically
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
@@ -124,8 +124,8 @@ where
     ///
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
-    /// [`Step`]: peace_cfg::Step
-    /// [`try_state_goal`]: peace_cfg::Step::try_state_goal
+    /// [`Item`]: peace_cfg::Item
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -138,7 +138,7 @@ where
         Self::goal_with(cmd_ctx, true).await
     }
 
-    /// Runs [`try_state_goal`] for each [`Step`].
+    /// Runs [`try_state_goal`] for each [`Item`].
     ///
     /// See [`Self::goal`] for full documentation.
     ///
@@ -151,7 +151,7 @@ where
     /// * `serialize_to_storage`: Whether to write states to storage after
     ///   discovery.
     ///
-    /// [`try_state_goal`]: peace_cfg::Step::try_state_goal
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
@@ -178,10 +178,10 @@ where
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
-            let (step_graph, resources) = (flow.graph(), resources);
+            let (item_graph, resources) = (flow.graph(), resources);
 
             if serialize_to_storage {
-                Self::serialize_goal(step_graph, resources, states_goal).await?;
+                Self::serialize_goal(item_graph, resources, states_goal).await?;
             }
         }
 
@@ -189,7 +189,7 @@ where
     }
 
     /// Runs [`try_state_current`] and [`try_state_goal`]` for each
-    /// [`Step`].
+    /// [`Item`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`] and [`StatesGoal`], and states will be serialized
@@ -197,12 +197,12 @@ where
     /// `$flow_dir/states_goal.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
-    /// previous `Step`, the predecessor should insert a copy / clone of
+    /// previous `Item`, the predecessor should insert a copy / clone of
     /// their state into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
     /// If any `state_goal` function needs to read the `State` from a
-    /// previous `Step`, it may automatically be referenced using
+    /// previous `Item`, it may automatically be referenced using
     /// [`Goal<T>`] where `T` us the predecessor's state. Peace will have
     /// automatically inserted it into `Resources`, and the successor should
     /// references it in their [`Data`].
@@ -212,9 +212,9 @@ where
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
-    /// [`Step`]: peace_cfg::Step
-    /// [`try_state_current`]: peace_cfg::Step::try_state_current
-    /// [`try_state_goal`]: peace_cfg::Step::try_state_goal
+    /// [`Item`]: peace_cfg::Item
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
     ) -> Result<
@@ -228,7 +228,7 @@ where
     }
 
     /// Runs [`try_state_current`] and [`try_state_goal`]` for each
-    /// [`Step`].
+    /// [`Item`].
     ///
     /// See [`Self::goal`] for full documentation.
     ///
@@ -241,8 +241,8 @@ where
     /// * `serialize_to_storage`: Whether to write states to storage after
     ///   discovery.
     ///
-    /// [`try_state_current`]: peace_cfg::Step::try_state_current
-    /// [`try_state_goal`]: peace_cfg::Step::try_state_goal
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal_with<'ctx>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
         serialize_to_storage: bool,
@@ -282,11 +282,11 @@ where
             let SingleProfileSingleFlowView {
                 flow, resources, ..
             } = cmd_ctx.view();
-            let (step_graph, resources) = (flow.graph(), resources);
+            let (item_graph, resources) = (flow.graph(), resources);
 
             if serialize_to_storage {
-                Self::serialize_current(step_graph, resources, states_current).await?;
-                Self::serialize_goal(step_graph, resources, states_goal).await?;
+                Self::serialize_current(item_graph, resources, states_current).await?;
+                Self::serialize_goal(item_graph, resources, states_goal).await?;
             }
         }
 
@@ -295,7 +295,7 @@ where
 
     // TODO: This duplicates a bit of code with `EnsureCmd` and `CleanCmd`.
     async fn serialize_current(
-        step_graph: &StepGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
@@ -305,7 +305,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, step_graph, states_current, &states_current_file)
+        StatesSerializer::serialize(&storage, item_graph, states_current, &states_current_file)
             .await?;
 
         drop(flow_dir);
@@ -317,7 +317,7 @@ where
     }
 
     async fn serialize_goal(
-        step_graph: &StepGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         resources: &mut Resources<SetUp>,
         states_goal: &StatesGoal,
     ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
@@ -327,7 +327,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, step_graph, states_goal, &states_goal_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);

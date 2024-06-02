@@ -1,6 +1,6 @@
-//! Blocks of logic that run one [`Step`] function
+//! Blocks of logic that run one [`Item`] function
 //!
-//! [`Step`]: peace_cfg::Step
+//! [`Item`]: peace_cfg::Item
 
 pub use self::{
     apply_exec_cmd_block::ApplyExecCmdBlock,

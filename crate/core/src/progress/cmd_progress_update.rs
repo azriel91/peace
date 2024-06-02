@@ -7,13 +7,13 @@ use crate::progress::ProgressUpdateAndId;
 /// This is sent at the `CmdExecution` level.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum CmdProgressUpdate {
-    /// `ProgressUpdateAndId` for a single step.
+    /// `ProgressUpdateAndId` for a single item.
     ///
     /// # Design Note
     ///
     /// This isn't a tuple newtype as `serde_yaml` `0.9` is unable to serialize
     /// newtype enum variants.
-    Step {
+    Item {
         /// The update.
         progress_update_and_id: ProgressUpdateAndId,
     },
@@ -26,7 +26,7 @@ pub enum CmdProgressUpdate {
 
 impl From<ProgressUpdateAndId> for CmdProgressUpdate {
     fn from(progress_update_and_id: ProgressUpdateAndId) -> Self {
-        Self::Step {
+        Self::Item {
             progress_update_and_id,
         }
     }

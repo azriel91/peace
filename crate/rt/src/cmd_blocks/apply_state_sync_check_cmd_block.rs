@@ -9,7 +9,7 @@ use peace_resources::{
     ResourceFetchError, Resources,
 };
 use peace_rt_model::Error;
-use peace_rt_model_core::{ApplyCmdError, StepsStateStoredStale, StateStoredAndDiscovered};
+use peace_rt_model_core::{ApplyCmdError, ItemsStateStoredStale, StateStoredAndDiscovered};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -122,42 +122,42 @@ impl<CmdCtxTypesT, ApplyStoreStateSync>
 where
     CmdCtxTypesT: CmdCtxTypesConstrained,
 {
-    fn steps_state_stored_stale<StatesTsStored, StatesTs>(
+    fn items_state_stored_stale<StatesTsStored, StatesTs>(
         cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<StepsStateStoredStale, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
-        let steps_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
-            StepsStateStoredStale::new(),
-            |mut steps_state_stored_stale, step_rt| {
-                let step_id = step_rt.id();
-                let state_stored = states_stored.get_raw(step_id);
-                let state_discovered = states_discovered.get_raw(step_id);
+    ) -> Result<ItemsStateStoredStale, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+        let items_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
+            ItemsStateStoredStale::new(),
+            |mut items_state_stored_stale, item_rt| {
+                let item_id = item_rt.id();
+                let state_stored = states_stored.get_raw(item_id);
+                let state_discovered = states_discovered.get_raw(item_id);
 
                 match (state_stored, state_discovered) {
                     (None, None) => {
-                        // Step not discoverable, may be dependent on
+                        // Item not discoverable, may be dependent on
                         // predecessor
                     }
                     (None, Some(state_discovered)) => {
-                        let step_id = step_id.clone();
+                        let item_id = item_id.clone();
                         let state_discovered = state_discovered.clone();
-                        steps_state_stored_stale.insert(
-                            step_id,
+                        items_state_stored_stale.insert(
+                            item_id,
                             StateStoredAndDiscovered::OnlyDiscoveredExists { state_discovered },
                         );
                     }
                     (Some(state_stored), None) => {
-                        let step_id = step_id.clone();
+                        let item_id = item_id.clone();
                         let state_stored = state_stored.clone();
-                        steps_state_stored_stale.insert(
-                            step_id,
+                        items_state_stored_stale.insert(
+                            item_id,
                             StateStoredAndDiscovered::OnlyStoredExists { state_stored },
                         );
                     }
                     (Some(state_stored), Some(state_discovered)) => {
-                        let state_eq = step_rt.state_eq(state_stored, state_discovered);
+                        let state_eq = item_rt.state_eq(state_stored, state_discovered);
                         match state_eq {
                             Ok(true) => {
                                 #[cfg(feature = "output_progress")]
@@ -165,7 +165,7 @@ where
                                     let state_type = tynm::type_name::<StatesTs>();
                                     let _progress_send_unused = progress_tx.try_send(
                                         ProgressUpdateAndId {
-                                            step_id: step_id.clone(),
+                                            item_id: item_id.clone(),
                                             progress_update: ProgressUpdate::Delta(
                                                 ProgressDelta::Tick,
                                             ),
@@ -183,7 +183,7 @@ where
                                     let state_type = tynm::type_name::<StatesTs>();
                                     let _progress_send_unused = progress_tx.try_send(
                                         ProgressUpdateAndId {
-                                            step_id: step_id.clone(),
+                                            item_id: item_id.clone(),
                                             progress_update: ProgressUpdate::Complete(
                                                 ProgressComplete::Fail,
                                             ),
@@ -195,11 +195,11 @@ where
                                     );
                                 }
 
-                                let step_id = step_id.clone();
+                                let item_id = item_id.clone();
                                 let state_stored = state_stored.clone();
                                 let state_discovered = state_discovered.clone();
-                                steps_state_stored_stale.insert(
-                                    step_id,
+                                items_state_stored_stale.insert(
+                                    item_id,
                                     StateStoredAndDiscovered::ValuesDiffer {
                                         state_stored,
                                         state_discovered,
@@ -211,11 +211,11 @@ where
                     }
                 }
 
-                Ok(steps_state_stored_stale)
+                Ok(items_state_stored_stale)
             },
         )?;
 
-        Ok(steps_state_stored_stale)
+        Ok(items_state_stored_stale)
     }
 }
 
@@ -303,7 +303,7 @@ where
     > {
         let (states_current_stored, states_current) = &mut input;
 
-        let state_current_stale_result = Self::steps_state_stored_stale(
+        let state_current_stale_result = Self::items_state_stored_stale(
             cmd_view,
             states_current_stored,
             states_current,
@@ -311,12 +311,12 @@ where
             progress_tx,
         );
         match state_current_stale_result {
-            Ok(steps_state_stored_stale) => {
-                if steps_state_stored_stale.stale() {
+            Ok(items_state_stored_stale) => {
+                if items_state_stored_stale.stale() {
                     return outcome_collate(
                         input,
                         OutcomeResult::StatesCurrentOutOfSync {
-                            steps_state_stored_stale,
+                            items_state_stored_stale,
                         },
                     );
                 }
@@ -377,7 +377,7 @@ where
     > {
         let (states_goal_stored, states_goal) = &mut input;
 
-        let state_goal_stale_result = Self::steps_state_stored_stale(
+        let state_goal_stale_result = Self::items_state_stored_stale(
             cmd_view,
             states_goal_stored,
             states_goal,
@@ -385,12 +385,12 @@ where
             progress_tx,
         );
         match state_goal_stale_result {
-            Ok(steps_state_stored_stale) => {
-                if steps_state_stored_stale.stale() {
+            Ok(items_state_stored_stale) => {
+                if items_state_stored_stale.stale() {
                     return outcome_collate(
                         input,
                         OutcomeResult::StatesGoalOutOfSync {
-                            steps_state_stored_stale,
+                            items_state_stored_stale,
                         },
                     );
                 }
@@ -471,7 +471,7 @@ where
     > {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 
-        let state_current_stale_result = Self::steps_state_stored_stale(
+        let state_current_stale_result = Self::items_state_stored_stale(
             cmd_view,
             states_current_stored,
             states_current,
@@ -479,12 +479,12 @@ where
             progress_tx,
         );
         match state_current_stale_result {
-            Ok(steps_state_stored_stale) => {
-                if steps_state_stored_stale.stale() {
+            Ok(items_state_stored_stale) => {
+                if items_state_stored_stale.stale() {
                     return outcome_collate(
                         input,
                         OutcomeResult::StatesCurrentOutOfSync {
-                            steps_state_stored_stale,
+                            items_state_stored_stale,
                         },
                     );
                 }
@@ -494,7 +494,7 @@ where
             }
         };
 
-        let state_goal_stale_result = Self::steps_state_stored_stale(
+        let state_goal_stale_result = Self::items_state_stored_stale(
             cmd_view,
             states_goal_stored,
             states_goal,
@@ -502,12 +502,12 @@ where
             progress_tx,
         );
         match state_goal_stale_result {
-            Ok(steps_state_stored_stale) => {
-                if steps_state_stored_stale.stale() {
+            Ok(items_state_stored_stale) => {
+                if items_state_stored_stale.stale() {
                     return outcome_collate(
                         input,
                         OutcomeResult::StatesGoalOutOfSync {
-                            steps_state_stored_stale,
+                            items_state_stored_stale,
                         },
                     );
                 }
@@ -527,17 +527,17 @@ enum OutcomeResult<E> {
     Ok,
     /// Stored current states are not in sync with the actual current state.
     StatesCurrentOutOfSync {
-        /// Steps whose stored current state is out of sync with the discovered
+        /// Items whose stored current state is out of sync with the discovered
         /// state.
-        steps_state_stored_stale: StepsStateStoredStale,
+        items_state_stored_stale: ItemsStateStoredStale,
     },
     /// Stored goal states are not in sync with the actual goal state.
     StatesGoalOutOfSync {
-        /// Steps whose stored goal state is out of sync with the discovered
+        /// Items whose stored goal state is out of sync with the discovered
         /// state.
-        steps_state_stored_stale: StepsStateStoredStale,
+        items_state_stored_stale: ItemsStateStoredStale,
     },
-    /// Error downcasting a boxed step state to its concrete stype.
+    /// Error downcasting a boxed item state to its concrete stype.
     StatesDowncastError {
         /// The error from state downcast.
         error: E,
@@ -574,17 +574,17 @@ where
     match outcome_result {
         OutcomeResult::Ok => Ok(CmdBlockOutcome::Single(states_stored_and_discovered)),
         OutcomeResult::StatesCurrentOutOfSync {
-            steps_state_stored_stale,
+            items_state_stored_stale,
         } => Err(AppErrorT::from(Error::ApplyCmdError(
             ApplyCmdError::StatesCurrentOutOfSync {
-                steps_state_stored_stale,
+                items_state_stored_stale,
             },
         ))),
         OutcomeResult::StatesGoalOutOfSync {
-            steps_state_stored_stale,
+            items_state_stored_stale,
         } => Err(AppErrorT::from(Error::ApplyCmdError(
             ApplyCmdError::StatesGoalOutOfSync {
-                steps_state_stored_stale,
+                items_state_stored_stale,
             },
         ))),
         OutcomeResult::StatesDowncastError { error } => Err(error),

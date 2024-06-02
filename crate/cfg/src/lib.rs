@@ -10,10 +10,10 @@ pub use peace_core::progress;
 
 pub use peace_core::*;
 
-pub use crate::{fn_ctx::FnCtx, step::Step, state::State};
+pub use crate::{fn_ctx::FnCtx, item::Item, state::State};
 
 pub mod accessors;
 pub mod state;
 
 mod fn_ctx;
-mod step;
+mod item;

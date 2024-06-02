@@ -1,18 +1,18 @@
-use crate::outcomes::{StepApplyPartial, StepApplyPartialRt};
+use crate::outcomes::{ItemApplyPartial, ItemApplyPartialRt};
 
-/// A boxed `StepApplyPartial`.
+/// A boxed `ItemApplyPartial`.
 #[derive(Clone, serde::Serialize)]
-pub struct StepApplyPartialBoxed(pub(crate) Box<dyn StepApplyPartialRt>);
+pub struct ItemApplyPartialBoxed(pub(crate) Box<dyn ItemApplyPartialRt>);
 
-impl<State, StateDiff> From<StepApplyPartial<State, StateDiff>> for StepApplyPartialBoxed
+impl<State, StateDiff> From<ItemApplyPartial<State, StateDiff>> for ItemApplyPartialBoxed
 where
-    StepApplyPartial<State, StateDiff>: StepApplyPartialRt,
+    ItemApplyPartial<State, StateDiff>: ItemApplyPartialRt,
 {
     /// Returns a `StepApplyPartialBoxed` which erases an
-    /// `StepApplyPartial`'s type parameters.
-    fn from(step_apply: StepApplyPartial<State, StateDiff>) -> Self {
-        Self(Box::new(step_apply))
+    /// `ItemApplyPartial`'s type parameters.
+    fn from(item_apply: ItemApplyPartial<State, StateDiff>) -> Self {
+        Self(Box::new(item_apply))
     }
 }
 
-crate::outcomes::box_data_type_newtype!(StepApplyPartialBoxed, StepApplyPartialRt);
+crate::outcomes::box_data_type_newtype!(ItemApplyPartialBoxed, ItemApplyPartialRt);

@@ -6,7 +6,7 @@ use peace_cfg::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker,
         ProgressUpdate, ProgressUpdateAndId,
     },
-    StepId,
+    ItemId,
 };
 use peace_rt_model::{output::OutputWrite, IndexMap};
 use tokio::sync::mpsc::Receiver;
@@ -18,7 +18,7 @@ impl Progress {
     // TODO: write test for this
     pub async fn progress_render<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<StepId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         mut cmd_progress_rx: Receiver<CmdProgressUpdate>,
     ) where
         O: OutputWrite<E>,
@@ -32,14 +32,14 @@ impl Progress {
 
     async fn handle_cmd_progress_update<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<StepId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         cmd_progress_update: CmdProgressUpdate,
     ) -> ControlFlow<()>
     where
         O: OutputWrite<E>,
     {
         match cmd_progress_update {
-            CmdProgressUpdate::Step {
+            CmdProgressUpdate::Item {
                 progress_update_and_id,
             } => {
                 Self::handle_progress_update_and_id(
@@ -53,10 +53,10 @@ impl Progress {
             }
             CmdProgressUpdate::Interrupt => {
                 stream::iter(progress_trackers.iter_mut())
-                    .fold(output, |output, (step_id, progress_tracker)| async move {
-                        let step_id = step_id.clone();
+                    .fold(output, |output, (item_id, progress_tracker)| async move {
+                        let item_id = item_id.clone();
                         let progress_update_and_id = ProgressUpdateAndId {
-                            step_id,
+                            item_id,
                             progress_update: ProgressUpdate::Interrupt,
                             msg_update: ProgressMsgUpdate::NoChange,
                         };
@@ -76,10 +76,10 @@ impl Progress {
             }
             CmdProgressUpdate::ResetToPending => {
                 stream::iter(progress_trackers.iter_mut())
-                    .fold(output, |output, (step_id, progress_tracker)| async move {
-                        let step_id = step_id.clone();
+                    .fold(output, |output, (item_id, progress_tracker)| async move {
+                        let item_id = item_id.clone();
                         let progress_update_and_id = ProgressUpdateAndId {
-                            step_id,
+                            item_id,
                             progress_update: ProgressUpdate::ResetToPending,
                             msg_update: ProgressMsgUpdate::Clear,
                         };
@@ -102,14 +102,14 @@ impl Progress {
 
     async fn handle_progress_update_and_id<E, O>(
         output: &mut O,
-        progress_trackers: &mut IndexMap<StepId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         progress_update_and_id: ProgressUpdateAndId,
     ) where
         O: OutputWrite<E>,
     {
-        let step_id = &progress_update_and_id.step_id;
-        let Some(progress_tracker) = progress_trackers.get_mut(step_id) else {
-            panic!("Expected `progress_tracker` to exist for step: `{step_id}`.");
+        let item_id = &progress_update_and_id.item_id;
+        let Some(progress_tracker) = progress_trackers.get_mut(item_id) else {
+            panic!("Expected `progress_tracker` to exist for item: `{item_id}`.");
         };
 
         Self::handle_progress_tracker_progress_update(
@@ -128,7 +128,7 @@ impl Progress {
         O: OutputWrite<E>,
     {
         let ProgressUpdateAndId {
-            step_id: _,
+            item_id: _,
             progress_update,
             msg_update,
         } = &progress_update_and_id;

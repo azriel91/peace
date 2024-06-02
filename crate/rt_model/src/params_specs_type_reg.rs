@@ -1,10 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_cfg::StepId;
+use peace_cfg::ItemId;
 use peace_params::AnySpecRtBoxed;
 use peace_resources::type_reg::untagged::TypeReg;
 
-/// Type registry for each step's [`Params`]'s Spec.
+/// Type registry for each item's [`Params`]'s Spec.
 ///
 /// This is used to deserialize [`ParamsSpecsFile`].
 ///
@@ -13,10 +13,10 @@ use peace_resources::type_reg::untagged::TypeReg;
 ///
 /// [`AnySpecRtBoxed`]: peace_params::AnySpecRtBoxed
 /// [`BoxDtDisplay`]: peace_resources::type_reg::untagged::BoxDtDisplay
-/// [`Params`]: peace_cfg::Step::Params
+/// [`Params`]: peace_cfg::Item::Params
 /// [`StatesTypeReg`]: crate::StatesTypeReg
 #[derive(Debug, Default)]
-pub struct ParamsSpecsTypeReg(TypeReg<StepId, AnySpecRtBoxed>);
+pub struct ParamsSpecsTypeReg(TypeReg<ItemId, AnySpecRtBoxed>);
 
 impl ParamsSpecsTypeReg {
     /// Returns a new `ParamsSpecsTypeReg`.
@@ -26,7 +26,7 @@ impl ParamsSpecsTypeReg {
 }
 
 impl Deref for ParamsSpecsTypeReg {
-    type Target = TypeReg<StepId, AnySpecRtBoxed>;
+    type Target = TypeReg<ItemId, AnySpecRtBoxed>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

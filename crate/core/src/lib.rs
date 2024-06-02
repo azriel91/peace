@@ -3,8 +3,8 @@
 //! This crate exists because:
 //!
 //! * `peace_cfg` has a dependency on `peace_resources` for `Resources`, used in
-//!   `Step::setup`.
-//! * `peace_resources` has a dependency on `StepId`, as uses `TypeMap<StepId,
+//!   `Item::setup`.
+//! * `peace_resources` has a dependency on `ItemId`, as uses `TypeMap<ItemId,
 //!   _>` for the `States` maps.
 //!
 //!     When [peace#67] is implemented, the `progress` module can be moved out
@@ -13,13 +13,13 @@
 //! [peace#67]: https://github.com/azriel91/peace/issues/67
 
 // Re-exports
-pub use peace_static_check_macros::{app_name, flow_id, step_id, profile};
+pub use peace_static_check_macros::{app_name, flow_id, item_id, profile};
 
 pub use crate::{
     app_name::{AppName, AppNameInvalidFmt},
     apply_check::ApplyCheck,
     flow_id::{FlowId, FlowIdInvalidFmt},
-    step_id::{StepId, StepIdInvalidFmt},
+    item_id::{ItemId, ItemIdInvalidFmt},
     profile::{Profile, ProfileInvalidFmt},
 };
 
@@ -29,7 +29,7 @@ pub mod progress;
 mod app_name;
 mod apply_check;
 mod flow_id;
-mod step_id;
+mod item_id;
 mod profile;
 
 /// Implements common behaviour for an ID type.

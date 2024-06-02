@@ -5,15 +5,15 @@ use crate::states::{
     States,
 };
 
-/// Goal `State`s for all `Step`s.
+/// Goal `State`s for all `Item`s.
 ///
-/// These are the states that each step would be in, if `Step::apply` were to be
+/// These are the states that each item would be in, if `Item::apply` were to be
 /// run with `state_goal` as the target state.
 ///
 /// # Implementors
 ///
 /// If a `Step`'s goal state discovery depends on the goal `State` of
-/// a previous `Step`, then you should insert the predecessor's goal
+/// a previous `Item`, then you should insert the predecessor's goal
 /// state into [`Resources`], and reference that in the subsequent
 /// `TryFnSpec`'s [`Data`]:
 ///
@@ -41,7 +41,7 @@ use crate::states::{
 ///
 /// You may reference [`StatesGoal`] in `ApplyFns::Data` for reading. It
 /// is not mutable as `StatesGoal` must remain unchanged so that all
-/// `Step`s operate over consistent data.
+/// `Item`s operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources

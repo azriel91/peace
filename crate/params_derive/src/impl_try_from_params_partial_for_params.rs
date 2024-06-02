@@ -9,7 +9,7 @@ use crate::util::{
 };
 
 /// `impl TryFrom<ParamsPartial> for Params`, so that users can use
-/// `params_partial.try_into()` in `Step::try_state_*` without needing to
+/// `params_partial.try_into()` in `Item::try_state_*` without needing to
 /// deconstruct the `Params::Partial`.
 pub fn impl_try_from_params_partial_for_params(
     ast: &DeriveInput,

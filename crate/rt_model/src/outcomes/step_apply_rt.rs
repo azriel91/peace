@@ -1,8 +1,8 @@
 use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
-/// Trait to allow inspecting a type-erased `StepApply`.
-pub trait StepApplyRt: DataType {
+/// Trait to allow inspecting a type-erased `ItemApply`.
+pub trait ItemApplyRt: DataType {
     /// Returns `state_current_stored` as type-erased data.
     fn state_current_stored(&self) -> Option<BoxDtDisplay>;
 
@@ -28,9 +28,9 @@ pub trait StepApplyRt: DataType {
     fn as_data_type_mut(&mut self) -> &mut dyn DataType;
 }
 
-dyn_clone::clone_trait_object!(StepApplyRt);
+dyn_clone::clone_trait_object!(ItemApplyRt);
 
-impl StepApplyRt for Box<dyn StepApplyRt> {
+impl ItemApplyRt for Box<dyn ItemApplyRt> {
     fn state_current_stored(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_current_stored()
     }
@@ -64,7 +64,7 @@ impl StepApplyRt for Box<dyn StepApplyRt> {
     }
 }
 
-impl<'a> serde::Serialize for dyn StepApplyRt + 'a {
+impl<'a> serde::Serialize for dyn ItemApplyRt + 'a {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

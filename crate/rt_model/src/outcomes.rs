@@ -4,17 +4,17 @@
 //! outcomes to be redisplayed without re-executing commands.
 
 pub use self::{
-    step_apply::StepApply, step_apply_boxed::StepApplyBoxed, step_apply_partial::StepApplyPartial,
-    step_apply_partial_boxed::StepApplyPartialBoxed, step_apply_partial_rt::StepApplyPartialRt,
-    step_apply_rt::StepApplyRt,
+    item_apply::ItemApply, item_apply_boxed::ItemApplyBoxed, item_apply_partial::ItemApplyPartial,
+    item_apply_partial_boxed::ItemApplyPartialBoxed, item_apply_partial_rt::ItemApplyPartialRt,
+    item_apply_rt::ItemApplyRt,
 };
 
-mod step_apply;
-mod step_apply_boxed;
-mod step_apply_partial;
-mod step_apply_partial_boxed;
-mod step_apply_partial_rt;
-mod step_apply_rt;
+mod item_apply;
+mod item_apply_boxed;
+mod item_apply_partial;
+mod item_apply_partial_boxed;
+mod item_apply_partial_rt;
+mod item_apply_rt;
 
 macro_rules! box_data_type_newtype {
     ($ty_name:ident, $trait_path:path) => {

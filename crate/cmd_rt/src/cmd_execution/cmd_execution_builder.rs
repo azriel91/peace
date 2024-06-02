@@ -23,7 +23,7 @@ where
     ///
     /// This is intended for `*Cmd`s that do not have meaningful progress to
     /// render, such as deserializing a single file on disk, and there is no
-    /// benefit to presenting empty progress bars for each step to the user
+    /// benefit to presenting empty progress bars for each item to the user
     ///
     /// Defaults to `true`.
     #[cfg(feature = "output_progress")]
@@ -91,7 +91,7 @@ where
     ///
     /// This is intended for `*Cmd`s that do not have meaningful progress to
     /// render, such as deserializing a single file on disk, and there is no
-    /// benefit to presenting empty progress bars for each step to the user.
+    /// benefit to presenting empty progress bars for each item to the user.
     ///
     /// When this method is called multiple times, the last call wins.
     #[cfg(feature = "output_progress")]

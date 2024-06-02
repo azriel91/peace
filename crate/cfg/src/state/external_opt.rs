@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// the external source has been queried, but it did not return a value.
 ///
 /// The following type aliases are available to semantically name the type in
-/// step implementations:
+/// item implementations:
 ///
 /// * [`GeneratedOpt`]
 /// * [`FetchedOpt`]

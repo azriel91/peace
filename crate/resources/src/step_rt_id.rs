@@ -5,14 +5,14 @@ use peace_data::fn_graph::FnId;
 /// Runtime identifier for a [`Step`]. [`FnId`] newtype.
 ///
 /// This is a cheap identifier to copy around, instead of cloning
-/// [`StepId`].
+/// [`ItemId`].
 ///
-/// [`StepId`]: peace_cfg::StepId
+/// [`ItemId`]: peace_cfg::ItemId
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct StepRtId(FnId);
+pub struct ItemRtId(FnId);
 
-impl StepRtId {
-    /// Returns a new `StepRtId`.
+impl ItemRtId {
+    /// Returns a new `ItemRtId`.
     pub fn new(fn_id: FnId) -> Self {
         Self(fn_id)
     }
@@ -23,7 +23,7 @@ impl StepRtId {
     }
 }
 
-impl Deref for StepRtId {
+impl Deref for ItemRtId {
     type Target = FnId;
 
     fn deref(&self) -> &Self::Target {
@@ -31,19 +31,19 @@ impl Deref for StepRtId {
     }
 }
 
-impl DerefMut for StepRtId {
+impl DerefMut for ItemRtId {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl From<usize> for StepRtId {
+impl From<usize> for ItemRtId {
     fn from(index: usize) -> Self {
         Self(FnId::new(index))
     }
 }
 
-impl From<FnId> for StepRtId {
+impl From<FnId> for ItemRtId {
     fn from(fn_id: FnId) -> Self {
         Self(fn_id)
     }

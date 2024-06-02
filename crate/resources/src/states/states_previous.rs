@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::states::{ts::Previous, States, StatesCurrent};
 
-/// Previous `State`s for all `Step`s.
+/// Previous `State`s for all `Item`s.
 ///
 /// This is present when an `ApplyCmd` (`EnsureCmd` or `CleanCmd`) is run,
 /// whereby the current states have changed to the newly ensured states.

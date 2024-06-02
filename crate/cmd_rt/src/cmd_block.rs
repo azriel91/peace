@@ -22,26 +22,26 @@ mod cmd_block_rt;
 mod cmd_block_rt_box;
 mod cmd_block_wrapper;
 
-/// Runs one [`Step::*`] function for one iteration of steps.
+/// Runs one [`Item::*`] function for one iteration of items.
 ///
 /// A command may consist of:
 ///
 /// 1. Discovering the current state of an environment.
-/// 2. Ensuring new steps that are not blocked, e.g. launch new servers before
+/// 2. Ensuring new items that are not blocked, e.g. launch new servers before
 ///    taking old servers away.
-/// 3. Cleaning unused steps that block new steps from being ensured, e.g.
+/// 3. Cleaning unused items that block new items from being ensured, e.g.
 ///    terminating servers before resizing a subnet's CIDR block.
-/// 4. Ensuring new / modified steps that are newly unblocked, e.g. launching
+/// 4. Ensuring new / modified items that are newly unblocked, e.g. launching
 ///    new servers in the resized subnet.
-/// 5. Cleaning unused steps that are no longer needed, e.g. removing an old
+/// 5. Cleaning unused items that are no longer needed, e.g. removing an old
 ///    service.
 ///
-/// Each of these is an iteration through steps, running one of the [`Step::*`]
+/// Each of these is an iteration through items, running one of the [`Item::*`]
 /// functions.
 ///
 /// A `CmdBlock` is the unit of one iteration logic.
 ///
-/// [`Step::*`]: peace_cfg::Step
+/// [`Item::*`]: peace_cfg::Item
 #[async_trait(?Send)]
 pub trait CmdBlock: Debug {
     /// Type parameters passed to the `CmdCtx`.
@@ -160,19 +160,19 @@ pub trait CmdBlock: Debug {
         vec![tynm::type_name::<Self::Outcome>()]
     }
 
-    /// Producer function to process all steps.
+    /// Producer function to process all items.
     ///
     /// This is infallible because errors are expected to be returned associated
     /// with a step. This may change if there are errors that are related to
-    /// the block that are not associated with a specific step.
+    /// the block that are not associated with a specific item.
     ///
     /// # Implementors
     ///
     /// `StreamOutcome<()>` should be returned if the `CmdBlock` streams the
-    /// steps, as this captures whether or not the block execution was
+    /// items, as this captures whether or not the block execution was
     /// interrupted.
     ///
-    /// If the block does not stream steps, `None` should be returned.
+    /// If the block does not stream items, `None` should be returned.
     async fn exec(
         &self,
         input: Self::InputT,

@@ -37,7 +37,7 @@ use crate::cmd::scope_struct::ScopeStruct;
 ///     pub(crate) profile_params_selection: CmdCtxBuilderTypesT::ProfileParamsSelection,
 ///     /// Flow parameters.
 ///     pub(crate) flow_params_selection: CmdCtxBuilderTypesT::FlowParamsSelection,
-///     /// Map of step ID to its parameters. `TypeMap<StepId, AnySpecRtBoxed>` newtype.
+///     /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
 ///     pub(crate) params_specs_provided: peace_params::ParamsSpecs,
 /// }
 /// ```
@@ -129,7 +129,7 @@ mod fields {
     pub fn params_specs_push(fields_named: &mut FieldsNamed, scope: Scope) {
         if scope.flow_count() == FlowCount::One {
             let fields_params_specs: FieldsNamed = parse_quote!({
-                /// Map of step ID to its parameters. `TypeMap<StepId, AnySpecRtBoxed>` newtype.
+                /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
                 pub(crate) params_specs_provided: peace_params::ParamsSpecs
             });
             fields_named.named.extend(fields_params_specs.named);

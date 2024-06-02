@@ -1,8 +1,8 @@
 use indexmap::IndexMap;
 use indicatif::MultiProgress;
-use peace_core::{progress::ProgressTracker, StepId};
+use peace_core::{progress::ProgressTracker, ItemId};
 
-/// Tracks command execution progress for all steps.
+/// Tracks command execution progress for all items.
 ///
 /// The Peace framework initializes the `multi_progress` and `progress_trackers`
 /// and manages updating the `ProgressBar` values.
@@ -17,15 +17,15 @@ use peace_core::{progress::ProgressTracker, StepId};
 pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     pub multi_progress: MultiProgress,
-    /// Tracks progress for each step.
-    pub progress_trackers: IndexMap<StepId, ProgressTracker>,
+    /// Tracks progress for each item.
+    pub progress_trackers: IndexMap<ItemId, ProgressTracker>,
 }
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_trackers: IndexMap<StepId, ProgressTracker>,
+        progress_trackers: IndexMap<ItemId, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
@@ -44,14 +44,14 @@ impl CmdProgressTracker {
         &mut self.multi_progress
     }
 
-    /// Returns the `ProgressTracker`s for each step.
-    pub fn progress_trackers(&self) -> &IndexMap<StepId, ProgressTracker> {
+    /// Returns the `ProgressTracker`s for each item.
+    pub fn progress_trackers(&self) -> &IndexMap<ItemId, ProgressTracker> {
         &self.progress_trackers
     }
 
-    /// Returns a mutable reference to the `ProgressTracker`s for each step
+    /// Returns a mutable reference to the `ProgressTracker`s for each item
     /// spec.
-    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<StepId, ProgressTracker> {
+    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemId, ProgressTracker> {
         &mut self.progress_trackers
     }
 }
