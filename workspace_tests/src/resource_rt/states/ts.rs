@@ -1,5 +1,5 @@
 mod debug {
-    use peace::resources::states::ts::{
+    use peace::resource_rt::states::ts::{
         Clean, Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
         Previous,
     };
@@ -56,7 +56,7 @@ mod debug {
 }
 
 mod serde {
-    use peace::resources::states::ts::{
+    use peace::resource_rt::states::ts::{
         Clean, Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
         Previous,
     };

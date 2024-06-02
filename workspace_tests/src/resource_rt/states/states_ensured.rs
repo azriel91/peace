@@ -1,4 +1,4 @@
-use peace::resources::states::{StatesCurrent, StatesEnsured};
+use peace::resource_rt::states::{StatesCurrent, StatesEnsured};
 
 #[test]
 fn from_states_current() {

@@ -46,7 +46,7 @@ macro_rules! mapping_tests {
                     MappingFn, MappingFnImpl, ParamsResolveError,
                     ValueResolutionCtx, ValueResolutionMode,
                 },
-                resources::{resources::ts::SetUp, Resources},
+                resource_rt::{resources::ts::SetUp, Resources},
             };
 
             #[test]

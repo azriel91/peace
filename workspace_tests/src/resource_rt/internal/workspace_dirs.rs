@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use peace::resources::{
+use peace::resource_rt::{
     internal::WorkspaceDirs,
     paths::{PeaceAppDir, PeaceDir, WorkspaceDir},
 };

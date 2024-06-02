@@ -1,6 +1,6 @@
 use peace::{
     cfg::ApplyCheck,
-    resources::type_reg::untagged::BoxDataTypeDowncast,
+    resource_rt::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemApplyPartial, ItemApplyPartialRt},
 };
 

@@ -1,4 +1,4 @@
-use peace::resources::states::{StatesGoal, StatesGoalStored};
+use peace::resource_rt::states::{StatesGoal, StatesGoalStored};
 
 #[test]
 fn from_states_goal() {

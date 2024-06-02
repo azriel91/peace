@@ -5,7 +5,7 @@ use peace::{
         interruptible::{InterruptSignal, InterruptStrategy, Interruptibility},
     },
     cmd_model::{CmdBlockDesc, CmdOutcome},
-    resources::{
+    resource_rt::{
         paths::{StatesCurrentFile, StatesGoalFile},
         type_reg::untagged::BoxDataTypeDowncast,
     },

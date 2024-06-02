@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, path::Path};
 
-use peace::resources::paths::WorkspaceDir;
+use peace::resource_rt::paths::WorkspaceDir;
 
 #[test]
 pub fn debug() {

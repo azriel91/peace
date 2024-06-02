@@ -1,4 +1,4 @@
-use peace::resources::states::{StatesCleanedDry, StatesCurrent};
+use peace::resource_rt::states::{StatesCleanedDry, StatesCurrent};
 
 #[test]
 fn from_states_current() {

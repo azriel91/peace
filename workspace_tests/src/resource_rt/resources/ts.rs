@@ -1,5 +1,5 @@
 mod debug {
-    use peace::resources::resources::ts::{Empty, SetUp};
+    use peace::resource_rt::resources::ts::{Empty, SetUp};
 
     #[test]
     fn empty() {

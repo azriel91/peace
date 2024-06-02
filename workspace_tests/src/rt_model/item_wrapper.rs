@@ -3,7 +3,7 @@ use peace::{
     cfg::{item_id, ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Goal},
     params::{ParamsSpec, ParamsSpecs},
-    resources::{
+    resource_rt::{
         internal::StatesMut,
         resources::ts::SetUp,
         states::{self, StatesCurrent, StatesCurrentStored, StatesGoal},

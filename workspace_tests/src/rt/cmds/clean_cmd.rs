@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, FlowId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
-    resources::type_reg::untagged::BoxDataTypeDowncast,
+    resource_rt::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{
         ApplyStoredStateSync, CleanCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd,
         StatesGoalReadCmd,

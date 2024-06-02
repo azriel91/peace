@@ -12,7 +12,7 @@ Example of an any-map:
 
 
 ```rust ,edition2021,ignore
-# use peace::resources::Resources;
+# use peace::resource_rt::Resources;
 #
 let mut resources = Resources::new();
 resources.insert(1u32);
@@ -56,5 +56,5 @@ aLong = 3L;
 Rust's does not allow access to multiple mutable entries at the same time with the built in `HashMap`, so `Resources` is an implementation to bypass the compilation strictness.
 
 
-[`Resources`]: https://docs.rs/peace_resources_rt/latest/peace_resources_rt/struct.Resources.html
+[`Resources`]: https://docs.rs/peace_resource_rt/latest/peace_resource_rt/struct.Resources.html
 [`resman`]: https://github.com/azriel91/resman

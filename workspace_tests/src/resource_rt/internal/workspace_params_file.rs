@@ -5,7 +5,7 @@ use std::{
 
 use peace::{
     cfg::app_name,
-    resources::{
+    resource_rt::{
         internal::WorkspaceParamsFile,
         paths::{PeaceAppDir, PeaceDir},
     },

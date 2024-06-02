@@ -153,7 +153,12 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 None
             }
         })
-        .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
+        .unwrap_or_else(|| {
+            (
+                parse_quote!(peace::params),
+                parse_quote!(peace::resource_rt),
+            )
+        });
 
     type_parameters_constrain(ast);
     let value_name = &ast.ident;

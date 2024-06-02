@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace::{
     cfg::{state::External, ApplyCheck, State},
-    resources::type_reg::untagged::BoxDataTypeDowncast,
+    resource_rt::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemApplyPartial, ItemApplyPartialBoxed},
 };
 use pretty_assertions::assert_eq;

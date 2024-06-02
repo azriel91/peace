@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use peace::{
     params::{AnySpecDataType, AnySpecRtBoxed, ParamsSpec},
-    resources::type_reg::untagged::{BoxDataTypeDowncast, DataType, DataTypeWrapper},
+    resource_rt::type_reg::untagged::{BoxDataTypeDowncast, DataType, DataTypeWrapper},
 };
 
 use crate::mock_item::MockSrc;

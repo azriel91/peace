@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, profile},
     cmd::ctx::CmdCtx,
-    resources::paths::{ProfileDir, ProfileHistoryDir},
+    resource_rt::paths::{ProfileDir, ProfileHistoryDir},
 };
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};

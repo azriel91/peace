@@ -1,5 +1,5 @@
 use peace::{
-    resources::type_reg::untagged::{TypeMapOpt, TypeReg},
+    resource_rt::type_reg::untagged::{TypeMapOpt, TypeReg},
     rt_model::{params::WorkspaceParams, Error, Storage},
 };
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 use peace::{
     cfg::item_id,
-    resources::{internal::StateDiffsMut, type_reg::untagged::TypeMap},
+    resource_rt::{internal::StateDiffsMut, type_reg::untagged::TypeMap},
 };
 
 #[test]

@@ -5,7 +5,7 @@ use peace::{
         presentable::{Heading, HeadingLevel},
         presentln,
     },
-    resources::{resources::ts::SetUp, Resources},
+    resource_rt::{resources::ts::SetUp, Resources},
     rt_model::{output::OutputWrite, IndexMap},
 };
 

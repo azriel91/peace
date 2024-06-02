@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
-    resources::{resources::ts::Empty, Resources},
+    resource_rt::{resources::ts::Empty, Resources},
 };
 
 use crate::{

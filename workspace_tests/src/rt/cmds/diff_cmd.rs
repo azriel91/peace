@@ -5,7 +5,7 @@ use peace::{
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     params::ParamsSpec,
-    resources::states::{
+    resource_rt::states::{
         ts::{Current, CurrentStored, Goal, GoalStored},
         StatesCurrent, StatesGoal,
     },

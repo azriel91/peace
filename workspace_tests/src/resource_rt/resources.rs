@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 
-use peace::resources::{
+use peace::resource_rt::{
     resources::ts::{Empty, SetUp},
     states::{StatesCurrent, StatesGoal},
     Resources,
@@ -14,7 +14,7 @@ fn debug() {
     resources.insert(1u32);
 
     assert_eq!(
-        r#"Resources { inner: {u32: 1}, marker: PhantomData<peace_resources_rt::resources::ts::Empty> }"#,
+        r#"Resources { inner: {u32: 1}, marker: PhantomData<peace_resource_rt::resources::ts::Empty> }"#,
         format!("{resources:?}")
     );
 }

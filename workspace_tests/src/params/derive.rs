@@ -72,7 +72,7 @@ mod struct_params {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
@@ -271,7 +271,7 @@ mod struct_with_type_params {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
@@ -491,7 +491,7 @@ mod tuple_params {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
@@ -667,7 +667,7 @@ mod tuple_with_type_params {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
@@ -868,7 +868,7 @@ mod enum_params {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
@@ -1501,7 +1501,7 @@ mod struct_recursive_value {
     use peace::{
         cfg::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-        resources::{resources::ts::SetUp, Resources},
+        resource_rt::{resources::ts::SetUp, Resources},
     };
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use peace::{
     cmd_rt::CmdBlock,
-    resources::states::ts::{Current, CurrentStored, Goal, GoalStored},
+    resource_rt::states::ts::{Current, CurrentStored, Goal, GoalStored},
     rt::cmd_blocks::DiffCmdBlock,
 };
 
