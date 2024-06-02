@@ -5,7 +5,7 @@ use peace_cmd::{
     scopes::SingleProfileSingleFlow,
 };
 use peace_cmd_model::CmdOutcome;
-use peace_resources::states::StatesGoalStored;
+use peace_resources_rt::states::StatesGoalStored;
 
 use peace_rt_model_core::output::OutputWrite;
 

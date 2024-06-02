@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_resources::type_reg::{
+use peace_resources_rt::type_reg::{
     untagged::{BoxDataTypeDowncast, DataType, DataTypeWrapper, FromDataType},
     TypeNameLit,
 };

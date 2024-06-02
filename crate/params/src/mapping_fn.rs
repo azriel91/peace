@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use peace_resources::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
+use peace_resources_rt::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
 use serde::{Serialize, Serializer};
 
 use crate::{ParamsResolveError, ValueResolutionCtx};

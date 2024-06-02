@@ -100,8 +100,8 @@ fn impl_params_deserialize_for(
                         #params_keys_impl_type_params
                     >,
                 >,
-                // workspace_params_file: &peace_resources::internal::WorkspaceParamsFile,
-                #params_file_name: &peace_resources::internal::#params_file_type,
+                // workspace_params_file: &peace_resources_rt::internal::WorkspaceParamsFile,
+                #params_file_name: &peace_resources_rt::internal::#params_file_type,
             // ) -> Result<Option<WorkspaceParams<K>, peace_rt_model::Error> {
             ) -> Result<Option<peace_rt_model::params::#params_map_type<#p_keys_key_maybe_key>>, peace_rt_model::Error> {
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<

@@ -22,7 +22,7 @@ test = false
 [dependencies]
 base64 = { workspace = true }
 peace_core = { workspace = true }
-peace_resources = { workspace = true }
+peace_resources_rt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
 serde-wasm-bindgen = { workspace = true }

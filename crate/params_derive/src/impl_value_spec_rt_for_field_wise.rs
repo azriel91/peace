@@ -12,7 +12,7 @@ pub fn impl_value_spec_rt_for_field_wise(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
-    peace_resources_path: &Path,
+    peace_resources_rt_path: &Path,
     params_name: &Ident,
     params_field_wise_name: &Ident,
 ) -> proc_macro2::TokenStream {
@@ -99,7 +99,7 @@ pub fn impl_value_spec_rt_for_field_wise(
 
             fn resolve(
                 &self,
-                resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
+                resources: &#peace_resources_rt_path::Resources<#peace_resources_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
                 #resolve_body
@@ -107,7 +107,7 @@ pub fn impl_value_spec_rt_for_field_wise(
 
             fn try_resolve(
                 &self,
-                resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
+                resources: &#peace_resources_rt_path::Resources<#peace_resources_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<Option<#params_name #ty_generics>, #peace_params_path::ParamsResolveError> {
                 #try_resolve_body

@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fmt::Debug};
 
 use peace_cmd::ctx::CmdCtxTypesConstrained;
-use peace_resources::{resources::ts::SetUp, Resource, Resources};
+use peace_resources_rt::{resources::ts::SetUp, Resource, Resources};
 
 use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 

@@ -17,7 +17,7 @@ pub use peace_diff as diff;
 pub use peace_flow_model as flow_model;
 pub use peace_fmt as fmt;
 pub use peace_params as params;
-pub use peace_resources as resources;
+pub use peace_resources_rt as resources;
 pub use peace_rt as rt;
 pub use peace_rt_model as rt_model;
 #[cfg(feature = "webi")]

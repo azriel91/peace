@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace_cfg::ItemId;
 use peace_params::AnySpecRtBoxed;
-use peace_resources::type_reg::untagged::TypeReg;
+use peace_resources_rt::type_reg::untagged::TypeReg;
 
 /// Type registry for each item's [`Params`]'s Spec.
 ///
@@ -12,7 +12,7 @@ use peace_resources::type_reg::untagged::TypeReg;
 /// [`AnySpecRtBoxed`].
 ///
 /// [`AnySpecRtBoxed`]: peace_params::AnySpecRtBoxed
-/// [`BoxDtDisplay`]: peace_resources::type_reg::untagged::BoxDtDisplay
+/// [`BoxDtDisplay`]: peace_resources_rt::type_reg::untagged::BoxDtDisplay
 /// [`Params`]: peace_cfg::Item::Params
 /// [`StatesTypeReg`]: crate::StatesTypeReg
 #[derive(Debug, Default)]

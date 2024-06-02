@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use peace_cmd::ctx::CmdCtxTypesConstrained;
 use peace_cmd_model::{CmdBlockDesc, CmdExecutionError};
-use peace_resources::ResourceFetchError;
+use peace_resources_rt::ResourceFetchError;
 
 use crate::CmdBlockRtBox;
 

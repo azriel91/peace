@@ -14,7 +14,7 @@ fn debug() {
     resources.insert(1u32);
 
     assert_eq!(
-        r#"Resources { inner: {u32: 1}, marker: PhantomData<peace_resources::resources::ts::Empty> }"#,
+        r#"Resources { inner: {u32: 1}, marker: PhantomData<peace_resources_rt::resources::ts::Empty> }"#,
         format!("{resources:?}")
     );
 }

@@ -3,7 +3,9 @@ use std::{fmt::Debug, hash::Hash};
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_core::Profile;
-use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use peace_resources_rt::paths::{
+    PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir,
+};
 use peace_rt_model::{
     params::{
         KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,

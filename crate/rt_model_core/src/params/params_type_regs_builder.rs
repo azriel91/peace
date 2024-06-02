@@ -8,9 +8,9 @@ use crate::params::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, 
 /// Type registries to deserialize [`WorkspaceParamsFile`],
 /// [`ProfileParamsFile`] and [`FlowParamsFile`].
 ///
-/// [`WorkspaceParamsFile`]: peace_resources::internal::WorkspaceParamsFile
-/// [`ProfileParamsFile`]: peace_resources::internal::ProfileParamsFile
-/// [`FlowParamsFile`]: peace_resources::internal::FlowParamsFile
+/// [`WorkspaceParamsFile`]: peace_resources_rt::internal::WorkspaceParamsFile
+/// [`ProfileParamsFile`]: peace_resources_rt::internal::ProfileParamsFile
+/// [`FlowParamsFile`]: peace_resources_rt::internal::FlowParamsFile
 #[derive(Debug)]
 pub struct ParamsTypeRegsBuilder<PKeys>
 where

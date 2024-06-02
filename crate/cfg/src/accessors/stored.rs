@@ -12,7 +12,7 @@ use peace_data::{
     },
     Data,
 };
-use peace_resources::{states::StatesCurrentStored, type_reg::untagged::DataType};
+use peace_resources_rt::{states::StatesCurrentStored, type_reg::untagged::DataType};
 use serde::Serialize;
 
 /// The previously stored `T` state, if any.
