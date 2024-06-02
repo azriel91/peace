@@ -26,7 +26,7 @@ mod diff;
 mod flow_model;
 mod fmt;
 mod params;
-mod resources_rt;
+mod resource_rt;
 mod rt;
 mod rt_model;
 #[cfg(feature = "webi")]
