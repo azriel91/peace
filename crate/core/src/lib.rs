@@ -2,10 +2,10 @@
 //!
 //! This crate exists because:
 //!
-//! * `peace_cfg` has a dependency on `peace_resources_rt` for `Resources`, used in
-//!   `Item::setup`.
-//! * `peace_resources_rt` has a dependency on `ItemId`, as uses `TypeMap<ItemId,
-//!   _>` for the `States` maps.
+//! * `peace_cfg` has a dependency on `peace_resources_rt` for `Resources`, used
+//!   in `Item::setup`.
+//! * `peace_resources_rt` has a dependency on `ItemId`, as uses
+//!   `TypeMap<ItemId, _>` for the `States` maps.
 //!
 //!     When [peace#67] is implemented, the `progress` module can be moved out
 //!     of `peace_core` into `peace_cfg`.
