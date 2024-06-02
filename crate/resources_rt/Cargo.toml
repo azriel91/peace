@@ -1,7 +1,7 @@
 [package]
-name = "peace_resources_rt"
+name = "peace_resource_rt"
 description = "Runtime resources for the peace automation framework."
-documentation = "https://docs.rs/peace_resources_rt/"
+documentation = "https://docs.rs/peace_resource_rt/"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true

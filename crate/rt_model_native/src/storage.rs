@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash, io::Write, path::Path, sync::Mutex};
 
-use peace_resources_rt::type_reg::{
+use peace_resource_rt::type_reg::{
     common::UnknownEntriesSome,
     untagged::{DataTypeWrapper, TypeMapOpt, TypeReg},
 };

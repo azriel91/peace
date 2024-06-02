@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use fn_graph::StreamOutcome;
 use indexmap::IndexMap;
 use peace_cfg::ItemId;
-use peace_resources_rt::ResourceFetchError;
+use peace_resource_rt::ResourceFetchError;
 
 /// Error while executing a `CmdBlock`.
 ///

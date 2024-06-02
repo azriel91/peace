@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug};
 
-use peace_resources_rt::{resources::ts::SetUp, BorrowFail, Resources};
+use peace_resource_rt::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
@@ -139,7 +139,7 @@ where
 {
     pub fn resolve(
         &self,
-        resources: &Resources<peace_resources_rt::resources::ts::SetUp>,
+        resources: &Resources<peace_resource_rt::resources::ts::SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {

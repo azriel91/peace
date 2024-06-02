@@ -118,8 +118,8 @@ fn impl_params_merge_for(
                     &peace_rt_model::params::ParamsTypeRegsBuilder<#params_keys_type>,
                 // params: &mut peace_rt_model::params::WorkspaceParams<WorkspaceParamsK>,
                 params: &mut peace_rt_model::params::#params_map_type<#params_k_type_param>,
-                // workspace_params_file: &peace_resources_rt::internal::WorkspaceParamsFile,
-                #params_file_name: &peace_resources_rt::internal::#params_file_type,
+                // workspace_params_file: &peace_resource_rt::internal::WorkspaceParamsFile,
+                #params_file_name: &peace_resource_rt::internal::#params_file_type,
             ) -> Result<(), peace_rt_model::Error> {
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
                     // WorkspaceParamsK,

@@ -1,5 +1,5 @@
 use peace_cfg::ApplyCheck;
-use peace_resources_rt::type_reg::untagged::{BoxDtDisplay, DataType};
+use peace_resource_rt::type_reg::untagged::{BoxDtDisplay, DataType};
 
 /// Trait to allow inspecting a type-erased `ItemApply`.
 pub trait ItemApplyRt: DataType {

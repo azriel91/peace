@@ -5,7 +5,7 @@ use dyn_clone::DynClone;
 use peace_core::{ApplyCheck, ItemId};
 use peace_data::Data;
 use peace_params::{Params, ParamsSpec};
-use peace_resources_rt::{resources::ts::Empty, Resources};
+use peace_resource_rt::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::FnCtx;

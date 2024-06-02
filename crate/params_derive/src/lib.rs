@@ -141,14 +141,14 @@ pub fn value_impl(input: TokenStream) -> TokenStream {
 }
 
 fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenStream {
-    let (peace_params_path, peace_resources_rt_path): (Path, Path) = ast
+    let (peace_params_path, peace_resource_rt_path): (Path, Path) = ast
         .attrs
         .iter()
         .find_map(|attr| {
             if attr.path().is_ident("peace_internal") {
-                Some((parse_quote!(peace_params), parse_quote!(peace_resources_rt)))
+                Some((parse_quote!(peace_params), parse_quote!(peace_resource_rt)))
             } else if attr.path().is_ident("crate_internal") {
-                Some((parse_quote!(crate), parse_quote!(peace_resources_rt)))
+                Some((parse_quote!(crate), parse_quote!(peace_resource_rt)))
             } else {
                 None
             }
@@ -237,7 +237,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 ast,
                 &generics_split,
                 &peace_params_path,
-                &peace_resources_rt_path,
+                &peace_resource_rt_path,
                 &value_ty,
                 value_name,
                 &t_field_wise_name,
@@ -251,7 +251,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 ast,
                 &generics_split,
                 &peace_params_path,
-                &peace_resources_rt_path,
+                &peace_resource_rt_path,
                 value_name,
                 &t_field_wise_name,
                 &t_partial_name,
@@ -440,7 +440,7 @@ fn t_field_wise(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
-    peace_resources_rt_path: &Path,
+    peace_resource_rt_path: &Path,
     params_name: &Ident,
     t_field_wise_name: &Ident,
     t_partial_name: &Ident,
@@ -465,7 +465,7 @@ fn t_field_wise(
         ast,
         generics_split,
         peace_params_path,
-        peace_resources_rt_path,
+        peace_resource_rt_path,
         params_name,
         t_field_wise_name,
         t_partial_name,
@@ -475,7 +475,7 @@ fn t_field_wise(
         ast,
         generics_split,
         peace_params_path,
-        peace_resources_rt_path,
+        peace_resource_rt_path,
         params_name,
         t_field_wise_name,
     ));
@@ -509,7 +509,7 @@ fn t_field_wise_external(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
-    peace_resources_rt_path: &Path,
+    peace_resource_rt_path: &Path,
     params_ty: &Type,
     params_name: &Ident,
     t_field_wise_name: &Ident,
@@ -531,7 +531,7 @@ fn t_field_wise_external(
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise_external(
         generics_split,
         peace_params_path,
-        peace_resources_rt_path,
+        peace_resource_rt_path,
         params_name,
         t_field_wise_name,
         t_partial_name,

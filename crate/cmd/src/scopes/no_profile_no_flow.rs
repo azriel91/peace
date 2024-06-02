@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
-use peace_resources_rt::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
+use peace_resource_rt::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
 use peace_rt_model::{
     params::{KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, WorkspaceParams},
     Workspace,

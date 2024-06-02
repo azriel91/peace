@@ -3,7 +3,7 @@
 use std::{any::Any, fmt};
 
 use dyn_clone::DynClone;
-use peace_resources_rt::type_reg::untagged::DataType;
+use peace_resource_rt::type_reg::untagged::DataType;
 
 use crate::AnySpecRt;
 

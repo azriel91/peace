@@ -12,7 +12,7 @@ use peace_data::{
     Data,
 };
 use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
-use peace_resources_rt::{
+use peace_resource_rt::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},

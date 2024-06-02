@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use fn_graph::StreamOutcomeState;
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
-use peace_resources_rt::Resource;
+use peace_resource_rt::Resource;
 
 use tynm::TypeParamsFmtOpts;
 

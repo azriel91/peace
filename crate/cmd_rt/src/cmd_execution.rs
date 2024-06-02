@@ -9,7 +9,7 @@ use peace_cmd::{
     },
 };
 use peace_cmd_model::{CmdBlockDesc, CmdOutcome};
-use peace_resources_rt::{resources::ts::SetUp, Resources};
+use peace_resource_rt::{resources::ts::SetUp, Resources};
 
 use crate::{CmdBlockError, CmdBlockRtBox, ItemStreamOutcomeMapper};
 
