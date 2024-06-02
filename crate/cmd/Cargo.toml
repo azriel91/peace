@@ -29,7 +29,7 @@ peace_cfg = { workspace = true }
 peace_code_gen = { workspace = true }
 peace_core = { workspace = true }
 peace_params = { workspace = true }
-peace_resources = { workspace = true }
+peace_resources_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_value_traits = { workspace = true }
 serde = { workspace = true }

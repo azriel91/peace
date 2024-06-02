@@ -353,17 +353,17 @@ fn impl_build_for(
                 //     .fold((
                 //         std::collections::BTreeMap::<
                 //             peace_core::Profile,
-                //             peace_resources::paths::ProfileDir
+                //             peace_resources_rt::paths::ProfileDir
                 //         >::new(),
                 //         std::collections::BTreeMap::<
                 //             peace_core::Profile,
-                //             peace_resources::paths::ProfileHistoryDir
+                //             peace_resources_rt::paths::ProfileHistoryDir
                 //         >::new()
                 //     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
-                //         let profile_dir = peace_resources::paths::ProfileDir::from(
+                //         let profile_dir = peace_resources_rt::paths::ProfileDir::from(
                 //             (workspace_dirs.peace_app_dir(), profile)
                 //         );
-                //         let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+                //         let profile_history_dir = peace_resources_rt::paths::ProfileHistoryDir::from(&profile_dir);
                 //
                 //         profile_dirs.insert(profile.clone(), profile_dir);
                 //         profile_history_dirs.insert(profile.clone(), profile_history_dir);
@@ -380,10 +380,10 @@ fn impl_build_for(
                 //     .iter()
                 //     .fold(std::collections::BTreeMap::<
                 //             peace_core::Profile,
-                //             peace_resources::paths::ProfileDir
+                //             peace_resources_rt::paths::ProfileDir
                 //         >::new(
                 //     ), |mut flow_dirs, (profile, profile_dir)| {
-                //         let flow_dir = peace_resources::paths::FlowDir::from((
+                //         let flow_dir = peace_resources_rt::paths::FlowDir::from((
                 //             profile_dir,
                 //             self.scope_builder.flow_selection.0.flow_id()
                 //         ));
@@ -427,7 +427,7 @@ fn impl_build_for(
                 //     )
                 //     .and_then(|(profile, profile_dir)| async move {
                 //         let profile_params_file =
-                //             peace_resources::internal::ProfileParamsFile::from(profile_dir);
+                //             peace_resources_rt::internal::ProfileParamsFile::from(profile_dir);
                 //
                 //         let profile_params = self
                 //             .#params_deserialize_method_name(&profile_params_file)
@@ -462,7 +462,7 @@ fn impl_build_for(
                 //     )
                 //     .and_then(|(profile, flow_dir)| async move {
                 //         let flow_params_file =
-                //             peace_resources::internal::FlowParamsFile::from(flow_dir);
+                //             peace_resources_rt::internal::FlowParamsFile::from(flow_dir);
                 //
                 //         let flow_params = self
                 //             .#params_deserialize_method_name(&flow_params_file)
@@ -550,7 +550,7 @@ fn impl_build_for(
                 #flow_params_serialize
 
                 // Track items in memory.
-                let mut resources = peace_resources::Resources::new();
+                let mut resources = peace_resources_rt::Resources::new();
                 // === WorkspaceParamsSelected === //
                 // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
                 // resources.insert(workspace_params_file);
@@ -615,7 +615,7 @@ fn impl_build_for(
                 //         let params_specs_provided = params_specs_provided.clone();
                 //         async move {
                 //             let params_specs_file =
-                //                 peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                //                 peace_resources_rt::paths::ParamsSpecsFile::from(flow_dir);
                 //
                 //             let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                 //                 peace_rt_model::Error
@@ -659,7 +659,7 @@ fn impl_build_for(
                 //         .map(Result::<_, peace_rt_model::Error>::Ok)
                 //     )
                 //     .and_then(|(profile, flow_dir)| async move {
-                //         let states_current_file = peace_resources::paths::StatesCurrentFile::from(flow_dir);
+                //         let states_current_file = peace_resources_rt::paths::StatesCurrentFile::from(flow_dir);
                 //
                 //         let states_current_stored = peace_rt_model::StatesSerializer::<
                 //             peace_rt_model::Error
@@ -670,14 +670,14 @@ fn impl_build_for(
                 //             &states_current_file,
                 //         )
                 //         .await?
-                //         .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                //         .map(Into::<peace_resources_rt::states::StatesCurrentStored>::into);
                 //
                 //         Ok((profile.clone(), states_current_stored))
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
                 //             peace_core::Profile,
-                //             Option<peace_resources::states::StatesCurrentStored>
+                //             Option<peace_resources_rt::states::StatesCurrentStored>
                 //         >
                 //     >()
                 //     .await?;
@@ -699,7 +699,7 @@ fn impl_build_for(
                 //
                 // // Params specs loading and storage.
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
-                // let params_specs_file = peace_resources::paths::ParamsSpecsFile::from(&flow_dir);
+                // let params_specs_file = peace_resources_rt::paths::ParamsSpecsFile::from(&flow_dir);
                 // let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                 //     peace_rt_model::Error
                 // >::deserialize_opt(
@@ -726,7 +726,7 @@ fn impl_build_for(
                 //
                 // // States loading and storage.
                 // let states_type_reg_ref = &states_type_reg;
-                // let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
+                // let states_current_file = peace_resources_rt::paths::StatesCurrentFile::from(&flow_dir);
                 // let states_current_stored = peace_rt_model::StatesSerializer::<
                 //     peace_rt_model::Error
                 // >::deserialize_stored_opt(
@@ -736,7 +736,7 @@ fn impl_build_for(
                 //     &states_current_file,
                 // )
                 // .await?
-                // .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                // .map(Into::<peace_resources_rt::states::StatesCurrentStored>::into);
                 // if let Some(states_current_stored) = states_current_stored {
                 //     resources.insert(states_current_stored);
                 // }
@@ -977,7 +977,7 @@ fn workspace_params_load_save(
                 let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
                 let workspace_params = &mut self.scope_builder.workspace_params_selection.0;
 
-                let workspace_params_file = peace_resources::internal::WorkspaceParamsFile::from(
+                let workspace_params_file = peace_resources_rt::internal::WorkspaceParamsFile::from(
                     workspace_dirs.peace_app_dir()
                 );
 
@@ -1053,7 +1053,7 @@ fn profile_params_load_save(
                     let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
                     let profile_params = &mut self.scope_builder.profile_params_selection.0;
 
-                    let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
+                    let profile_params_file = peace_resources_rt::internal::ProfileParamsFile::from(
                         &profile_dir
                     );
 
@@ -1113,7 +1113,7 @@ fn profile_params_load_save(
                             )
                             .and_then(|(profile, profile_dir)| async move {
                                 let profile_params_file =
-                                    peace_resources::internal::ProfileParamsFile::from(profile_dir);
+                                    peace_resources_rt::internal::ProfileParamsFile::from(profile_dir);
 
                                 let profile_params = Self::#params_deserialize_method_name(
                                     storage,
@@ -1197,7 +1197,7 @@ fn flow_params_load_save(
                     let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
                     let flow_params = &mut self.scope_builder.flow_params_selection.0;
 
-                    let flow_params_file = peace_resources::internal::FlowParamsFile::from(
+                    let flow_params_file = peace_resources_rt::internal::FlowParamsFile::from(
                         &flow_dir
                     );
 
@@ -1256,7 +1256,7 @@ fn flow_params_load_save(
                             )
                             .and_then(|(profile, flow_dir)| async move {
                                 let flow_params_file =
-                                    peace_resources::internal::FlowParamsFile::from(flow_dir);
+                                    peace_resources_rt::internal::FlowParamsFile::from(flow_dir);
 
                                 let flow_params = Self::#params_deserialize_method_name(
                                     storage,
@@ -1391,8 +1391,8 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
         ProfileCount::None => {}
         ProfileCount::One => {
             dirs_tokens.extend(quote! {
-                let profile_dir = peace_resources::paths::ProfileDir::from((workspace_dirs.peace_app_dir(), profile_s_ref));
-                let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+                let profile_dir = peace_resources_rt::paths::ProfileDir::from((workspace_dirs.peace_app_dir(), profile_s_ref));
+                let profile_history_dir = peace_resources_rt::paths::ProfileHistoryDir::from(&profile_dir);
             });
         }
         ProfileCount::Multiple => {
@@ -1402,17 +1402,17 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                     .fold((
                         std::collections::BTreeMap::<
                             peace_core::Profile,
-                            peace_resources::paths::ProfileDir
+                            peace_resources_rt::paths::ProfileDir
                         >::new(),
                         std::collections::BTreeMap::<
                             peace_core::Profile,
-                            peace_resources::paths::ProfileHistoryDir
+                            peace_resources_rt::paths::ProfileHistoryDir
                         >::new()
                     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
-                        let profile_dir = peace_resources::paths::ProfileDir::from(
+                        let profile_dir = peace_resources_rt::paths::ProfileDir::from(
                             (workspace_dirs.peace_app_dir(), profile)
                         );
-                        let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+                        let profile_history_dir = peace_resources_rt::paths::ProfileHistoryDir::from(&profile_dir);
 
                         profile_dirs.insert(profile.clone(), profile_dir);
                         profile_history_dirs.insert(profile.clone(), profile_history_dir);
@@ -1428,7 +1428,7 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
             ProfileCount::None => {}
             ProfileCount::One => {
                 dirs_tokens.extend(quote! {
-                    let flow_dir = peace_resources::paths::FlowDir::from((
+                    let flow_dir = peace_resources_rt::paths::FlowDir::from((
                         &profile_dir,
                         self.scope_builder.flow_selection.0.flow_id()
                     ));
@@ -1440,10 +1440,10 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                         .iter()
                         .fold(std::collections::BTreeMap::<
                                 peace_core::Profile,
-                                peace_resources::paths::FlowDir
+                                peace_resources_rt::paths::FlowDir
                             >::new(
                         ), |mut flow_dirs, (profile, profile_dir)| {
-                            let flow_dir = peace_resources::paths::FlowDir::from((
+                            let flow_dir = peace_resources_rt::paths::FlowDir::from((
                                 profile_dir,
                                 self.scope_builder.flow_selection.0.flow_id()
                             ));
@@ -1622,7 +1622,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                         let params_specs_provided = params_specs_provided.clone();
                         async move {
                             let params_specs_file =
-                                peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                                peace_resources_rt::paths::ParamsSpecsFile::from(flow_dir);
 
                             let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                                 peace_rt_model::Error
@@ -1666,7 +1666,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                         .map(Result::<_, peace_rt_model::Error>::Ok)
                     )
                     .and_then(|(profile, flow_dir)| async move {
-                        let states_current_file = peace_resources::paths::StatesCurrentFile::from(flow_dir);
+                        let states_current_file = peace_resources_rt::paths::StatesCurrentFile::from(flow_dir);
 
                         let states_current_stored = peace_rt_model::StatesSerializer::<
                             peace_rt_model::Error
@@ -1677,14 +1677,14 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                             &states_current_file,
                         )
                         .await?
-                        .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                        .map(Into::<peace_resources_rt::states::StatesCurrentStored>::into);
 
                         Ok((profile.clone(), states_current_stored))
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
                             peace_core::Profile,
-                            Option<peace_resources::states::StatesCurrentStored>
+                            Option<peace_resources_rt::states::StatesCurrentStored>
                         >
                     >()
                     .await?;
@@ -1724,7 +1724,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
 
                 // Params specs loading and storage.
                 let params_specs_type_reg_ref = &params_specs_type_reg;
-                let params_specs_file = peace_resources::paths::ParamsSpecsFile::from(&flow_dir);
+                let params_specs_file = peace_resources_rt::paths::ParamsSpecsFile::from(&flow_dir);
                 let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                     peace_rt_model::Error
                 >::deserialize_opt(
@@ -1751,7 +1751,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
 
                 // States loading and storage.
                 let states_type_reg_ref = &states_type_reg;
-                let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
+                let states_current_file = peace_resources_rt::paths::StatesCurrentFile::from(&flow_dir);
                 let states_current_stored = peace_rt_model::StatesSerializer::<
                     peace_rt_model::Error
                 >::deserialize_stored_opt(
@@ -1761,7 +1761,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     &states_current_file,
                 )
                 .await?
-                .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                .map(Into::<peace_resources_rt::states::StatesCurrentStored>::into);
                 if let Some(states_current_stored) = states_current_stored {
                     resources.insert(states_current_stored);
                 }

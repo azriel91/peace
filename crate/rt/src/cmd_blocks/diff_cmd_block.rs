@@ -10,7 +10,7 @@ use peace_cmd::{
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_params::ParamsSpecs;
-use peace_resources::{
+use peace_resources_rt::{
     internal::StateDiffsMut,
     resources::ts::SetUp,
     states::{

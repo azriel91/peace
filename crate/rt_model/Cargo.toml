@@ -31,7 +31,7 @@ peace_data = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
-peace_resources = { workspace = true }
+peace_resources_rt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_rt_model_hack = { workspace = true, optional = true }
 serde = { workspace = true }

@@ -59,7 +59,7 @@ fn debug() {
     let states = test_states();
 
     assert_eq!(
-        r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#,
+        r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources_rt::states::ts::Current>)"#,
         format!("{states:?}")
     );
 }

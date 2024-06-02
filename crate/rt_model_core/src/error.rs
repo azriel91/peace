@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use peace_cmd_model::CmdExecutionError;
 use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
-use peace_resources::paths::ParamsSpecsFile;
+use peace_resources_rt::paths::ParamsSpecsFile;
 
 pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
 

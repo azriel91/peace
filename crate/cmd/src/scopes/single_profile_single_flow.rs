@@ -4,7 +4,7 @@ use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_core::Profile;
 use peace_params::ParamsSpecs;
-use peace_resources::{
+use peace_resources_rt::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     resources::ts::SetUp,
     Resources,
@@ -106,7 +106,7 @@ where
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::Item::Params
-    /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
+    /// [`ParamsSpecsFile`]: peace_resources_rt::paths::ParamsSpecsFile
     params_specs_type_reg: ParamsSpecsTypeReg,
     /// Item params specs for the selected flow.
     params_specs: ParamsSpecs,
@@ -115,8 +115,8 @@ where
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
     ///
-    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
-    /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
+    /// [`StatesCurrentFile`]: peace_resources_rt::paths::StatesCurrentFile
+    /// [`StatesGoalFile`]: peace_resources_rt::paths::StatesGoalFile
     states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
     resources: Resources<SetUp>,
@@ -199,7 +199,7 @@ where
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::Item::Params
-    /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
+    /// [`ParamsSpecsFile`]: peace_resources_rt::paths::ParamsSpecsFile
     pub params_specs_type_reg: &'view ParamsSpecsTypeReg,
     /// Item params specs for the selected flow.
     pub params_specs: &'view ParamsSpecs,
@@ -208,8 +208,8 @@ where
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
     ///
-    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
-    /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
+    /// [`StatesCurrentFile`]: peace_resources_rt::paths::StatesCurrentFile
+    /// [`StatesGoalFile`]: peace_resources_rt::paths::StatesGoalFile
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
     pub resources: &'view mut Resources<SetUp>,
@@ -485,7 +485,7 @@ where
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::Item::Params
-    /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
+    /// [`ParamsSpecsFile`]: peace_resources_rt::paths::ParamsSpecsFile
     pub fn params_specs_type_reg(&self) -> &ParamsSpecsTypeReg {
         &self.params_specs_type_reg
     }
@@ -500,8 +500,8 @@ where
     /// This is used to deserialize [`StatesCurrentFile`] and
     /// [`StatesGoalFile`].
     ///
-    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
-    /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
+    /// [`StatesCurrentFile`]: peace_resources_rt::paths::StatesCurrentFile
+    /// [`StatesGoalFile`]: peace_resources_rt::paths::StatesGoalFile
     pub fn states_type_reg(&self) -> &StatesTypeReg {
         &self.states_type_reg
     }

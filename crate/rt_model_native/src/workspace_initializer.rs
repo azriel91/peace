@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash, path::Path};
 
 use futures::{stream, StreamExt, TryStreamExt};
 
-use peace_resources::{
+use peace_resources_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     type_reg::untagged::{TypeMapOpt, TypeReg},
 };

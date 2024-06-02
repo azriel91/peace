@@ -1,7 +1,7 @@
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 
 use peace_core::ProfileInvalidFmt;
-use peace_resources::paths::WorkspaceDir;
+use peace_resources_rt::paths::WorkspaceDir;
 
 /// Peace runtime errors.
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]

@@ -45,7 +45,7 @@ macro_rules! box_data_type_newtype {
             }
         }
 
-        impl<T> peace_resources::type_reg::untagged::BoxDataTypeDowncast<T> for $ty_name
+        impl<T> peace_resources_rt::type_reg::untagged::BoxDataTypeDowncast<T> for $ty_name
         where
             T: $trait_path,
         {
@@ -58,9 +58,9 @@ macro_rules! box_data_type_newtype {
             }
         }
 
-        impl peace_resources::type_reg::untagged::DataTypeWrapper for $ty_name {
-            fn type_name(&self) -> peace_resources::type_reg::TypeNameLit {
-                peace_resources::type_reg::untagged::DataType::type_name(&*self.0)
+        impl peace_resources_rt::type_reg::untagged::DataTypeWrapper for $ty_name {
+            fn type_name(&self) -> peace_resources_rt::type_reg::TypeNameLit {
+                peace_resources_rt::type_reg::untagged::DataType::type_name(&*self.0)
             }
 
             fn clone(&self) -> Self {
@@ -71,7 +71,7 @@ macro_rules! box_data_type_newtype {
                 &self.0
             }
 
-            fn inner(&self) -> &dyn peace_resources::type_reg::untagged::DataType {
+            fn inner(&self) -> &dyn peace_resources_rt::type_reg::untagged::DataType {
                 &self.0
             }
         }

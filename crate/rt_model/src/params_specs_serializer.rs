@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace_cfg::{FlowId, Profile};
 use peace_params::ParamsSpecs;
-use peace_resources::{paths::ParamsSpecsFile, type_reg::untagged::TypeMapOpt};
+use peace_resources_rt::{paths::ParamsSpecsFile, type_reg::untagged::TypeMapOpt};
 
 use crate::{Error, ParamsSpecsTypeReg, Storage};
 

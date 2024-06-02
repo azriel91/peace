@@ -26,7 +26,7 @@ enser = { workspace = true }
 peace_core = { workspace = true }
 peace_data = { workspace = true }
 peace_params = { workspace = true }
-peace_resources = { workspace = true }
+peace_resources_rt = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tynm = { workspace = true }
 

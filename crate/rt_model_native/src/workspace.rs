@@ -8,7 +8,7 @@
 //! * A workflow that the command is executing, identified by the [`FlowId`].
 
 use peace_core::AppName;
-use peace_resources::internal::WorkspaceDirs;
+use peace_resources_rt::internal::WorkspaceDirs;
 use peace_rt_model_core::Error;
 
 use crate::{Storage, WorkspaceDirsBuilder, WorkspaceSpec};

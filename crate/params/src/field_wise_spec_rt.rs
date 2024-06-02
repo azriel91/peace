@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_resources_rt::{resources::ts::SetUp, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{AnySpecRt, ParamsResolveError, ValueResolutionCtx};

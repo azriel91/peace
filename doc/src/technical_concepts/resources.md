@@ -56,5 +56,5 @@ aLong = 3L;
 Rust's does not allow access to multiple mutable entries at the same time with the built in `HashMap`, so `Resources` is an implementation to bypass the compilation strictness.
 
 
-[`Resources`]: https://docs.rs/peace_resources/latest/peace_resources/struct.Resources.html
+[`Resources`]: https://docs.rs/peace_resources_rt/latest/peace_resources_rt/struct.Resources.html
 [`resman`]: https://github.com/azriel91/resman
