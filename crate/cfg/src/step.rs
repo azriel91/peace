@@ -10,7 +10,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::FnCtx;
 
-/// Defines all of the data and logic to manage a step.
+/// Defines all of the data and logic to manage an item.
 ///
 /// The item may be simple or complex, ranging from:
 ///
@@ -158,8 +158,8 @@ pub trait Item: DynClone {
     ///
     /// # Design Note
     ///
-    /// This is an instance method as logic for a `Step` may be used for
-    /// multiple tasks. For example, a `Step` implemented to download a
+    /// This is an instance method as logic for an `Item` may be used for
+    /// multiple tasks. For example, an `Item` implemented to download a
     /// file may be instantiated with different files to download, and each
     /// instance of the `Item` should have its own ID.
     ///

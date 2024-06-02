@@ -4,7 +4,7 @@ use peace_data::fn_graph::FnGraphBuilder;
 
 use crate::{ItemBoxed, ItemGraph};
 
-/// Builder for a [`StepGraph`], `FnGraphBuilder<ItemBoxed<E>>`
+/// Builder for an [`ItemGraph`], `FnGraphBuilder<ItemBoxed<E>>`
 /// newtype.
 #[derive(Debug)]
 pub struct ItemGraphBuilder<E>(FnGraphBuilder<ItemBoxed<E>>);

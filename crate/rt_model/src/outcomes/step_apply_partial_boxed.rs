@@ -8,7 +8,7 @@ impl<State, StateDiff> From<ItemApplyPartial<State, StateDiff>> for ItemApplyPar
 where
     ItemApplyPartial<State, StateDiff>: ItemApplyPartialRt,
 {
-    /// Returns a `StepApplyPartialBoxed` which erases an
+    /// Returns an `ItemApplyPartialBoxed` which erases an
     /// `ItemApplyPartial`'s type parameters.
     fn from(item_apply: ItemApplyPartial<State, StateDiff>) -> Self {
         Self(Box::new(item_apply))

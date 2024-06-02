@@ -3,7 +3,7 @@
 Execution progress output is most useful as it happens. Execution progress output should fulfill the following concerns:
 
 * easy for a human to understand
-* easy to be sent from a step implementation
+* easy to be sent from an item implementation
 * pushed to output in real time
 * pulled from client in real time
 

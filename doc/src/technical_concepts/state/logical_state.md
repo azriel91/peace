@@ -1,6 +1,6 @@
 # Logical State
 
-Logical state is the part of a step that is:
+Logical state is the part of an item that is:
 
 * Implementor / user definable
 * Controllable by automation
@@ -33,7 +33,7 @@ let state_diff = state_goal - state_current;
 
 ## Discovery Constraints
 
-In a step's parameters, there must be the following categories of information:
+In an item's parameters, there must be the following categories of information:
 
 * `src`: information of what the item should be, or where to look up that information.
 
@@ -61,7 +61,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
     1. `Item::state_goal` functions have to always cater for `src` not being available.
 
-        It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing a step would need knowledge beyond itself.
+        It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item would need knowledge beyond itself.
 
     2. the `peace` framework defaults to not running `state_current_fn` for items that have a logical dependency on things that `Item::apply_check` returns `ExecRequired`
 

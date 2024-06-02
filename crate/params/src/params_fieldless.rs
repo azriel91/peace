@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Serialize};
 
-/// Field of a `Step::Params`.
+/// Field of an `Item::Params`.
 ///
 /// This trait is automatically implemented by `#[derive(Value)]`.
 ///

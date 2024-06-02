@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::outcomes::{ItemApplyPartial, ItemApplyRt};
 
-/// Information about a step during an `ApplyCmd` execution.
+/// Information about an item during an `ApplyCmd` execution.
 ///
 /// This is similar to [`ItemApplyPartial`], with most fields being
 /// non-optional, and the added `state_applied` field.

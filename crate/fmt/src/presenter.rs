@@ -50,14 +50,14 @@ pub trait Presenter<'output> {
     /// Error returned during a presentation failure.
     type Error: std::error::Error;
 
-    /// Presents text as a step id.
+    /// Presents text as an item id.
     ///
     /// # Purposes
     ///
     /// * An ID with no spaces, e.g. "my_item"
     async fn id(&mut self, id: &str) -> Result<(), Self::Error>;
 
-    /// Presents text as a step name.
+    /// Presents text as an item name.
     ///
     /// # Purposes
     ///

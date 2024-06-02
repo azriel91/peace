@@ -1,6 +1,6 @@
 # Item Graph
 
-An item graph is a [function graph], whose logic type is a [step].
+An item graph is a [function graph], whose logic type is an [item].
 
 Instead of storing a single function in each node of the graph, each logic type is a collection of well-defined functions adhering to the [`Item`][`Item`] trait. <!-- Items that build upon other items are ordered through graph dependencies. -->
 

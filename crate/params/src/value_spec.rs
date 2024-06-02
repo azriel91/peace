@@ -8,7 +8,7 @@ use crate::{
     ValueSpecRt,
 };
 
-/// How to populate a field's value in a step's params.
+/// How to populate a field's value in an item's params.
 ///
 /// The `MappingFn` variant's mapping function is `None` when deserialized, as
 /// it is impossible to determine the underlying `F` and `U` type parameters for

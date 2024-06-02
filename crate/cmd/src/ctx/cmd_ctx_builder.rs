@@ -267,7 +267,7 @@ where
 /// Merges provided item parameters with previously stored item
 /// parameters.
 ///
-/// If a step's parameters are not provided, and nothing was previously
+/// If an item's parameters are not provided, and nothing was previously
 /// stored, then an error is returned.
 fn params_specs_merge<E>(
     flow: &Flow<E>,

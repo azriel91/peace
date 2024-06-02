@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::outcomes::ItemApplyPartialRt;
 
-/// Information about a step during an `ApplyCmd` execution.
+/// Information about an item during an `ApplyCmd` execution.
 ///
 /// # Design Note
 ///

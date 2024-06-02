@@ -8,7 +8,7 @@
 //!
 //! # Design
 //!
-//! When a step is defined, implementors define the parameters type for
+//! When an item is defined, implementors define the parameters type for
 //! that item.
 //!
 //! For Peace to derive additional functionality from that type, this crate:

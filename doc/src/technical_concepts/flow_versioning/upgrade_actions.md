@@ -12,12 +12,12 @@ The following table shows what is required for ensuring an environment to be in 
 
 > Notes:
 >
-> * "Data" refers to a step's `Params`, `State`, or `StateDiff`.
+> * "Data" refers to an item's `Params`, `State`, or `StateDiff`.
 > * Apply is associated with params, state, and diff.
 >
 >     `apply_clean` needs to know `state_clean` based on the parameters used to compute `state_goal` at the time of the previous `apply_goal`.
 >
-> * "Predecessor *action*" means what upgrade action is needed for *this* item, given a predecessor has had *action* applied to it. In other words, the change for a step can imply an upgrade action for successors.
+> * "Predecessor *action*" means what upgrade action is needed for *this* item, given a predecessor has had *action* applied to it. In other words, the change for an item can imply an upgrade action for successors.
 
 | Change                                    | Upgrade action                   |
 |:------------------------------------------|:---------------------------------|

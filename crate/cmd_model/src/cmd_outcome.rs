@@ -7,7 +7,7 @@ use crate::{CmdBlockDesc, ItemStreamOutcome};
 /// Outcome of a [`CmdExecution`].
 ///
 /// The variants indicate whether execution was successful, interrupted, or
-/// errored when processing a step.
+/// errored when processing an item.
 ///
 /// [`CmdExecution`]: https://docs.rs/peace_cmd_rt/latest/peace_cmd_rt/struct.CmdExecution.html
 #[derive(Clone, Debug, PartialEq, Eq)]

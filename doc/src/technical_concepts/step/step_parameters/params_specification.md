@@ -1,6 +1,6 @@
 # Params Specification
 
-For a step to work with different values, the values must be passed in.
+For an item to work with different values, the values must be passed in.
 
 Item implementors define these as part of the `Item` trait:
 

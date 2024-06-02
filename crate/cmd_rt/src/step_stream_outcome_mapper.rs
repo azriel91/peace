@@ -2,7 +2,7 @@ use fn_graph::StreamOutcome;
 use peace_cmd_model::ItemStreamOutcome;
 use peace_rt_model::Flow;
 
-/// Maps a `StreamOutcome<T>` to a `StepStreamOutcome<T>`.
+/// Maps a `StreamOutcome<T>` to an `ItemStreamOutcome<T>`.
 ///
 /// # Design Note
 ///

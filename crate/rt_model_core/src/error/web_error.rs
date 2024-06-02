@@ -54,9 +54,9 @@ pub enum WebError {
     )]
     SessionStorageNone,
 
-    /// Failed to base64 decode a step from browser storage.
+    /// Failed to base64 decode an item from browser storage.
     #[error(
-        "Failed to base64 decode a step in browser storage: `{path}`. Value: `{value}` Error: `{error}`"
+        "Failed to base64 decode an item in browser storage: `{path}`. Value: `{value}` Error: `{error}`"
     )]
     #[cfg_attr(
         feature = "error_reporting",
@@ -71,7 +71,7 @@ pub enum WebError {
         error: base64::DecodeError,
     },
 
-    /// Failed to get a step from browser storage.
+    /// Failed to get an item from browser storage.
     ///
     /// This failure mode happens when the `get_item` call to the browser fails.
     ///
@@ -85,7 +85,7 @@ pub enum WebError {
     ///
     /// This is because browsers are generally single threaded. The assumption
     /// would no longer be true if multiple threads are used, e.g. web workers.
-    #[error("Failed to get a step in browser storage: `{path}`. Error: `{error}`")]
+    #[error("Failed to get an item in browser storage: `{path}`. Error: `{error}`")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model_web::storage_get_item))
@@ -96,7 +96,7 @@ pub enum WebError {
         /// Stringified JS error.
         error: String,
     },
-    /// Failed to set a step in browser storage.
+    /// Failed to set an item in browser storage.
     ///
     /// Note: The original `JsValue` error is converted to a `String` to allow
     /// this type to be `Send`.
@@ -108,7 +108,7 @@ pub enum WebError {
     ///
     /// This is because browsers are generally single threaded. The assumption
     /// would no longer be true if multiple threads are used, e.g. web workers.
-    #[error("Failed to set a step in browser storage: `{path}`: `{value}`. Error: `{error}`")]
+    #[error("Failed to set an item in browser storage: `{path}`: `{value}`. Error: `{error}`")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model_web::storage_set_item))
@@ -121,13 +121,13 @@ pub enum WebError {
         /// Stringified JS error.
         error: String,
     },
-    /// Failed to remove a step from browser storage.
+    /// Failed to remove an item from browser storage.
     ///
     /// This failure mode happens when the `get_item` call to the browser fails.
     ///
     /// Note: The original `JsValue` error is converted to a `String` to allow
     /// this type to be `Send`.
-    #[error("Failed to remove a step from browser storage: `{path}`. Error: `{error}`")]
+    #[error("Failed to remove an item from browser storage: `{path}`. Error: `{error}`")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model_web::storage_remove_item))

@@ -109,13 +109,13 @@ pub enum Error {
     ///
     /// # Symptoms
     ///
-    /// * Provided params specs for a step ID has no corresponding item ID in
+    /// * Provided params specs for an item ID has no corresponding item ID in
     ///   the flow.
-    /// * Stored params specs for a step ID has no corresponding item ID in the
+    /// * Stored params specs for an item ID has no corresponding item ID in the
     ///   flow.
-    /// * ID of a step in the flow does not have a corresponding provided
+    /// * ID of an item in the flow does not have a corresponding provided
     ///   params spec.
-    /// * ID of a step in the flow does not have a corresponding stored params
+    /// * ID of an item in the flow does not have a corresponding stored params
     ///   spec.
     ///
     /// # Causes
@@ -502,8 +502,8 @@ pub enum Error {
         path: PathBuf,
     },
 
-    /// Error downcasting a `BoxDtDisplay` into a step's concrete state type.
-    #[error("Error downcasting a `BoxDtDisplay` into a step's concrete state type.")]
+    /// Error downcasting a `BoxDtDisplay` into an item's concrete state type.
+    #[error("Error downcasting a `BoxDtDisplay` into an item's concrete state type.")]
     StateDowncastError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]

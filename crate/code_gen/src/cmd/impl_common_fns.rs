@@ -34,7 +34,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
     if scope.flow_count() == FlowCount::One {
         common_fns.extend(quote! {
-            /// Sets a step's parameters.
+            /// Sets an item's parameters.
             ///
             /// Note: this **must** be called for each item in the flow.
             pub fn with_item_params<I>(

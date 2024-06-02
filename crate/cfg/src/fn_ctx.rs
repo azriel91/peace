@@ -5,7 +5,7 @@ use peace_core::ItemId;
 #[cfg(feature = "output_progress")]
 use peace_core::progress::ProgressSender;
 
-/// References to pass information between the Peace framework and a step.
+/// References to pass information between the Peace framework and an item.
 #[derive(Clone, Copy, Debug)]
 pub struct FnCtx<'exec> {
     /// ID of the item this belongs to.
