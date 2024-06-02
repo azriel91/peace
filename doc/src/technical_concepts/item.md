@@ -167,7 +167,7 @@ Cleans up the item from existence.
 
 Readers may notice the function breakdown is `git`-like. The following table compares the concepts:
 
-| Subject                | Peace                                                  | Git                                                                                      |
+| Concept                | Peace                                                  | Git                                                                                      |
 |:-----------------------|:-------------------------------------------------------|:-----------------------------------------------------------------------------------------|
 | Item                   | Any consumer defined item.                             | A directory of files.                                                                    |
 | Project initialization | `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
