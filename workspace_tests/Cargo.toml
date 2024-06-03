@@ -46,6 +46,7 @@ default = ["items", "output_in_memory", "webi"]
 error_reporting = ["peace/error_reporting"]
 output_in_memory = ["peace/output_in_memory"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]
+resource_interactions = ["peace/resource_interactions"]
 webi = ["peace/webi"]
 
 # `peace_items` features
