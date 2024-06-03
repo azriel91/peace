@@ -6,7 +6,7 @@
 * Move `OutputFormat` and `OutputFormatParseError` to `peace_cli_model` crate. ([#182], [#189])
 * Render progress and outcome diagram using `dot_ix`. ([#182], [#189], [#191])
 * Experimented renaming `Item` trait to `Step` (reverted). ([#187], [#192])
-* Rename `peace_resources` crate to `peace_resources_rt`. ([#182], [#187], [#193])
+* Rename `peace_resources` crate to `peace_resource_rt`. ([#182], [#187], [#193], [#194])
 
 
 [#182]: https://github.com/azriel91/peace/issues/182
@@ -15,6 +15,7 @@
 [#191]: https://github.com/azriel91/peace/pull/191
 [#192]: https://github.com/azriel91/peace/pull/192
 [#193]: https://github.com/azriel91/peace/pull/193
+[#194]: https://github.com/azriel91/peace/pull/194
 
 
 ## 0.0.13 (2024-02-03)
