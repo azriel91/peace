@@ -1,0 +1,23 @@
+{
+  "name": "download",
+  "collaborators": [
+    "Azriel Hoh <azriel91@gmail.com>"
+  ],
+  "description": "Peace framework file download example",
+  "version": "0.0.13",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azriel91/peace"
+  },
+  "files": [
+    "download_bg.wasm",
+    "download.js",
+    "download.d.ts"
+  ],
+  "module": "download.js",
+  "types": "download.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

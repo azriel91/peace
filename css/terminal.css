@@ -1,0 +1,17 @@
+.terminal {
+    padding: 0.6em;
+    background-color: #111111;
+    border-radius: 4px;
+    color: #dddddd;
+    font-size: 0.8em;
+}
+
+/* prompt arrow */
+.terminal .shell {
+    color: #22eeaa;
+    font-weight: bold;
+}
+
+.terminal .caret {
+    background-color: #dddddd;
+}
