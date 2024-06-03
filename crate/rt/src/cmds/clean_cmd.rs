@@ -6,7 +6,7 @@ use peace_cmd::{
 };
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
-use peace_resources_rt::{
+use peace_resource_rt::{
     paths::{FlowDir, StatesCurrentFile},
     resources::ts::SetUp,
     states::{States, StatesCleaned, StatesCleanedDry, StatesPrevious},

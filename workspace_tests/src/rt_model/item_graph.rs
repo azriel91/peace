@@ -1,6 +1,6 @@
 use peace::{
     cfg::item_id,
-    resources::{
+    resource_rt::{
         internal::StatesMut,
         states::{StatesCurrent, StatesSerde},
     },

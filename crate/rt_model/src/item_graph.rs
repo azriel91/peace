@@ -4,7 +4,7 @@ use std::{
 };
 
 use peace_data::fn_graph::FnGraph;
-use peace_resources_rt::states::{States, StatesSerde};
+use peace_resource_rt::states::{States, StatesSerde};
 
 use crate::ItemBoxed;
 

@@ -3,7 +3,7 @@ use std::any::TypeId;
 use peace::{
     cfg::{accessors::Stored, item_id, ItemId},
     data::{fn_graph::Resources, Data, DataAccess, DataAccessDyn, TypeIds},
-    resources::{internal::StatesMut, states::StatesCurrentStored},
+    resource_rt::{internal::StatesMut, states::StatesCurrentStored},
 };
 
 const ITEM_SPEC_ID_TEST: &ItemId = &item_id!("item_id_test");
@@ -100,13 +100,13 @@ fn debug() {
 
     let stored = Stored::<'_, u8>::borrow(ITEM_SPEC_ID_TEST, &resources);
     assert_eq!(
-        r#"Stored { item_id: ItemId("item_id_test"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources_rt::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
+        r#"Stored { item_id: ItemId("item_id_test"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resource_rt::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
         format!("{stored:?}")
     );
 
     let stored = Stored::<'_, u8>::borrow(ITEM_SPEC_ID_OTHER, &resources);
     assert_eq!(
-        r#"Stored { item_id: ItemId("item_id_other"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources_rt::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
+        r#"Stored { item_id: ItemId("item_id_other"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resource_rt::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
         format!("{stored:?}")
     );
 }

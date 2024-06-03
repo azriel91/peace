@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use async_trait::async_trait;
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
-use peace_resources_rt::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
+use peace_resource_rt::{resources::ts::SetUp, Resource, ResourceFetchError, Resources};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

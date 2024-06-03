@@ -14,7 +14,7 @@ use peace::{
         Data,
     },
     params::Params,
-    resources::{resources::ts::Empty, states::StatesCurrentStored, Resources},
+    resource_rt::{resources::ts::Empty, states::StatesCurrentStored, Resources},
 };
 use serde::{Deserialize, Serialize};
 

@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use peace_cfg::ItemId;
-use peace_resources_rt::type_reg::untagged::{BoxDtDisplay, TypeReg};
+use peace_resource_rt::type_reg::untagged::{BoxDtDisplay, TypeReg};
 
 /// Type registry for each item's `State`.
 ///
@@ -10,12 +10,12 @@ use peace_resources_rt::type_reg::untagged::{BoxDtDisplay, TypeReg};
 /// Note: [`ItemParamsTypeReg`] uses [`BoxDt`], whereas this uses
 /// [`BoxDtDisplay`].
 ///
-/// [`BoxDt`]: peace_resources_rt::type_reg::untagged::BoxDt
-/// [`BoxDtDisplay`]: peace_resources_rt::type_reg::untagged::BoxDtDisplay
+/// [`BoxDt`]: peace_resource_rt::type_reg::untagged::BoxDt
+/// [`BoxDtDisplay`]: peace_resource_rt::type_reg::untagged::BoxDtDisplay
 /// [`ItemParamsTypeReg`]: crate::ItemParamsTypeReg
 /// [`Params`]: peace_cfg::Item::Params
-/// [`StatesGoalFile`]: peace_resources_rt::paths::StatesGoalFile
-/// [`StatesCurrentFile`]: peace_resources_rt::paths::StatesCurrentFile
+/// [`StatesGoalFile`]: peace_resource_rt::paths::StatesGoalFile
+/// [`StatesCurrentFile`]: peace_resource_rt::paths::StatesCurrentFile
 #[derive(Debug, Default)]
 pub struct StatesTypeReg(TypeReg<ItemId, BoxDtDisplay>);
 

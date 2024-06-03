@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_core::Profile;
-use peace_resources_rt::paths::{
+use peace_resource_rt::paths::{
     PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir,
 };
 use peace_rt_model::{

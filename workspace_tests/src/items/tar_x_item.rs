@@ -6,7 +6,7 @@ use peace::{
     cmd_model::CmdOutcome,
     data::Data,
     params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
-    resources::paths::{FlowDir, ProfileDir},
+    resource_rt::paths::{FlowDir, ProfileDir},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{Flow, InMemoryTextOutput, ItemGraph, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };

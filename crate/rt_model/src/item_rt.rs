@@ -4,7 +4,7 @@ use dyn_clone::DynClone;
 use peace_cfg::{async_trait, FnCtx, ItemId};
 use peace_data::fn_graph::{DataAccess, DataAccessDyn};
 use peace_params::ParamsSpecs;
-use peace_resources_rt::{
+use peace_resource_rt::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},

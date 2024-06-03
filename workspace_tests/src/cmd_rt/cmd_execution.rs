@@ -3,7 +3,7 @@ use peace::{
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     cmd_rt::{CmdBlockRt, CmdBlockWrapper, CmdExecution},
-    resources::states::{
+    resource_rt::states::{
         ts::{Current, Goal},
         StateDiffs, StatesCurrent,
     },

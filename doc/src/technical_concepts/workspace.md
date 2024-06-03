@@ -200,4 +200,4 @@ path/to/repo
 ```
 
 
-[workspace directory]: https://docs.rs/peace_resources_rt/latest/peace_resources_rt/paths/struct.WorkspaceDir.html
+[workspace directory]: https://docs.rs/peace_resource_rt/latest/peace_resource_rt/paths/struct.WorkspaceDir.html

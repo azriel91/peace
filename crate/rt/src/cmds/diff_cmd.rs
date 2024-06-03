@@ -9,7 +9,7 @@ use peace_cmd::{
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_params::ParamsSpecs;
-use peace_resources_rt::{
+use peace_resource_rt::{
     internal::StateDiffsMut,
     resources::ts::SetUp,
     states::{

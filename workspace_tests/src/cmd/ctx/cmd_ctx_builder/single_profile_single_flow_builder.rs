@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, flow_id, item_id, profile, Item, Profile},
     cmd::ctx::CmdCtx,
     params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-    resources::{
+    resource_rt::{
         paths::{FlowDir, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::BoxDataTypeDowncast,
     },

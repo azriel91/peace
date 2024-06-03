@@ -4,7 +4,7 @@ use peace::{
         AnySpecRt, AnySpecRtBoxed, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless,
         ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
     },
-    resources::{resources::ts::SetUp, Resources},
+    resource_rt::{resources::ts::SetUp, Resources},
 };
 
 use crate::mock_item::MockSrc;

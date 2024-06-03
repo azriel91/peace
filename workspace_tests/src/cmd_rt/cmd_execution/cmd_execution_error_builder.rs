@@ -3,7 +3,7 @@ use peace::{
     cmd::ctx::CmdCtx,
     cmd_model::CmdExecutionError,
     cmd_rt::{CmdBlockWrapper, CmdExecution},
-    resources::states::{
+    resource_rt::states::{
         ts::{Current, Goal},
         StateDiffs,
     },
@@ -71,7 +71,7 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
             assert_eq!(1, cmd_block_index);
             assert_eq!("States<Current>", input_name_short);
             assert_eq!(
-                "peace_resources_rt::states::States<peace_resources_rt::states::ts::Current>",
+                "peace_resource_rt::states::States<peace_resource_rt::states::ts::Current>",
                 input_name_full
             );
             #[cfg(feature = "error_reporting")]
@@ -160,7 +160,7 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
             assert_eq!(1, cmd_block_index);
             assert_eq!("States<Goal>", input_name_short);
             assert_eq!(
-                "peace_resources_rt::states::States<peace_resources_rt::states::ts::Goal>",
+                "peace_resource_rt::states::States<peace_resource_rt::states::ts::Goal>",
                 input_name_full
             );
             #[cfg(feature = "error_reporting")]

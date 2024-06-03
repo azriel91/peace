@@ -6,7 +6,7 @@ use peace_cmd::{
 };
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
-use peace_resources_rt::states::StatesGoalStored;
+use peace_resource_rt::states::StatesGoalStored;
 
 use crate::cmd_blocks::StatesGoalReadCmdBlock;
 

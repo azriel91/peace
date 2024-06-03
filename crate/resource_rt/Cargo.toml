@@ -1,0 +1,29 @@
+[package]
+name = "peace_resource_rt"
+description = "Runtime resources for the peace automation framework."
+documentation = "https://docs.rs/peace_resource_rt/"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
+peace_core = { workspace = true }
+peace_data = { workspace = true }
+peace_fmt = { workspace = true }
+resman = { workspace = true, features = ["debug"] }
+serde = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["sync"] }
+type_reg = { workspace = true }

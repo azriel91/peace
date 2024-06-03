@@ -2,7 +2,7 @@ use peace::{
     cfg::{item_id, State},
     cli::output::{CliColorizeOpt, CliOutput, CliOutputBuilder},
     cli_model::OutputFormat,
-    resources::{
+    resource_rt::{
         internal::{StateDiffsMut, StatesMut},
         states::{StateDiffs, StatesCurrentStored},
     },

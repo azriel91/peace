@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use peace_cfg::ApplyCheck;
-use peace_resources_rt::type_reg::untagged::{BoxDtDisplay, DataType};
+use peace_resource_rt::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::outcomes::{ItemApplyPartial, ItemApplyRt};

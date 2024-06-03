@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, item_id},
-    resources::{
+    resource_rt::{
         internal::StatesMut, paths::StatesCurrentFile, states::StatesCurrentStored,
         type_reg::untagged::TypeReg,
     },

@@ -4,7 +4,7 @@ use peace::{
         AnySpecRt, AnySpecRtBoxed, FieldNameAndType, FieldWiseSpecRt, Params, ParamsResolveError,
         ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec, ValueSpecRt,
     },
-    resources::{resources::ts::SetUp, Resources},
+    resource_rt::{resources::ts::SetUp, Resources},
 };
 
 use crate::{

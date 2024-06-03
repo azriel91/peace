@@ -1,6 +1,6 @@
 use peace::{
     cmd_rt::CmdBlock,
-    resources::states::ts::{Cleaned, CleanedDry, Ensured, EnsuredDry},
+    resource_rt::states::ts::{Cleaned, CleanedDry, Ensured, EnsuredDry},
     rt::cmd_blocks::ApplyExecCmdBlock,
 };
 

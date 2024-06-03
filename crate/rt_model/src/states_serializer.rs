@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace_cfg::{FlowId, ItemId};
-use peace_resources_rt::{
+use peace_resource_rt::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{
         ts::{CurrentStored, GoalStored},
@@ -155,8 +155,8 @@ where
     ///   [`ts::CurrentStored`].
     ///
     /// [`Item`]: peace_cfg::Item
-    /// [`ts::Current`]: peace_resources_rt::states::ts::Current
-    /// [`ts::CurrentStored`]: peace_resources_rt::states::ts::CurrentStored
+    /// [`ts::Current`]: peace_resource_rt::states::ts::Current
+    /// [`ts::CurrentStored`]: peace_resource_rt::states::ts::CurrentStored
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal<TS>(
         thread_name: String,
@@ -223,8 +223,8 @@ where
     ///   [`ts::CurrentStored`].
     ///
     /// [`Item`]: peace_cfg::Item
-    /// [`ts::Current`]: peace_resources_rt::states::ts::Current
-    /// [`ts::CurrentStored`]: peace_resources_rt::states::ts::CurrentStored
+    /// [`ts::Current`]: peace_resource_rt::states::ts::Current
+    /// [`ts::CurrentStored`]: peace_resource_rt::states::ts::CurrentStored
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
         flow_id: &FlowId,

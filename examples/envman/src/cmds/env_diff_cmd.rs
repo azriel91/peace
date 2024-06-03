@@ -9,7 +9,7 @@ use peace::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
         PresentableExt,
     },
-    resources::states::StateDiffs,
+    resource_rt::states::StateDiffs,
     rt::cmds::DiffCmd,
     rt_model::{output::OutputWrite, Flow},
 };
