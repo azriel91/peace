@@ -141,7 +141,7 @@ impl Item for FileDownload {
 
         let mut item_locations = Vec::new();
         if let Some(host) = host {
-            item_locations.push(ItemLocation::Server { host, port });
+            item_locations.push(ItemLocation::Host { host, port });
 
             if let Some(url) = url {
                 // May be rendered using the last segment of the URL as the node name.
@@ -248,21 +248,22 @@ Cloud provider name, region, availability zone, etc.
     ```rust ,ignore
     #[derive(Debug)]
     enum ItemLocation {
-        Server(ItemLocationServer),
+        Host(ItemLocationHost),
+        Url(Url),
     }
 
-    struct ItemLocationServer {
+    struct ItemLocationHost {
         host: Host<String>,
         port: Option<u16>,
     }
 
     impl ItemLocation {
         fn from_url(url: &Url) -> Self {
-            Self::Url(ItemLocationUrl::from(url))
+            Self::Url(url.clone())
         }
     }
 
-    impl From<&Url> for ItemLocationServer {
+    impl From<&Url> for ItemLocationHost {
         fn from(url: &Url) -> Self {
             let host = url
                 .map(Url::host)
@@ -333,7 +334,7 @@ Cloud provider name, region, availability zone, etc.
         ) -> ItemLocation {
 
             match level {
-                MyItemLocationLevel::Server => {
+                MyItemLocationLevel::Host => {
                     let host = params_partial
                         .src()
                         .map(Url::host)
@@ -341,7 +342,7 @@ Cloud provider name, region, availability zone, etc.
                     let port = params_partial
                         .src()
                         .map(Url::port_or_known_default);
-                    ItemLocation::Server { host, port }
+                    ItemLocation::Host { host, port }
                 }
                 _ => todo!(),
             }
@@ -459,7 +460,7 @@ It can be confusing to follow if these keep changing, which is counter productiv
     May mean every `ItemLocation` that is unknown, is still populated:
 
     ```rust ,ignore
-    let item_location_server = item_location_server.unwrap_or(ItemLocation::ServerUnknown);
+    let item_location_server = item_location_server.unwrap_or(ItemLocation::HostUnknown);
     let item_location_url = item_location_url.unwrap_or(ItemLocation::UrlUnknown);
 
     vec![
