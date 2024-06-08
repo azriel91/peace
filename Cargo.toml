@@ -78,6 +78,7 @@ output_progress = [
 ]
 resource_interactions = [
     "dep:peace_resource_model",
+    "peace_cfg/resource_interactions",
 ]
 ssr = [
     "peace_webi?/ssr",
