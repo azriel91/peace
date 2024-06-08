@@ -75,22 +75,8 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<I::State, E> {
         let state_clean = {
-            let params_partial = {
-                let item_id = self.id();
-                let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
-                    })?;
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
-                    ValueResolutionMode::Clean,
-                    item_id.clone(),
-                    tynm::type_name::<I::Params<'_>>(),
-                );
-                params_spec
-                    .resolve_partial(resources, &mut value_resolution_ctx)
-                    .map_err(crate::Error::ParamsResolveError)?
-            };
+            let params_partial =
+                self.params_partial(params_specs, resources, ValueResolutionMode::Clean)?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_clean(&params_partial, data).await?
         };
@@ -106,22 +92,8 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<I::State>, E> {
         let state_current = {
-            let params_partial = {
-                let item_id = self.id();
-                let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
-                    })?;
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
-                    ValueResolutionMode::Current,
-                    item_id.clone(),
-                    tynm::type_name::<I::Params<'_>>(),
-                );
-                params_spec
-                    .resolve_partial(resources, &mut value_resolution_ctx)
-                    .map_err(crate::Error::ParamsResolveError)?
-            };
+            let params_partial =
+                self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::try_state_current(fn_ctx, &params_partial, data).await?
         };
@@ -139,22 +111,7 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<I::State, E> {
         let state_current = {
-            let params = {
-                let item_id = self.id();
-                let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
-                    })?;
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
-                    ValueResolutionMode::Current,
-                    item_id.clone(),
-                    tynm::type_name::<I::Params<'_>>(),
-                );
-                params_spec
-                    .resolve(resources, &mut value_resolution_ctx)
-                    .map_err(crate::Error::ParamsResolveError)?
-            };
+            let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_current(fn_ctx, &params, data).await?
         };
@@ -169,22 +126,8 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<I::State>, E> {
-        let params_partial = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Goal,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve_partial(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
+        let params_partial =
+            self.params_partial(params_specs, resources, ValueResolutionMode::Goal)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_goal = I::try_state_goal(fn_ctx, &params_partial, data).await?;
         if let Some(state_goal) = state_goal.as_ref() {
@@ -216,22 +159,7 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<I::State, E> {
-        let params = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                value_resolution_mode,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
+        let params = self.params(params_specs, resources, value_resolution_mode)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_goal = I::state_goal(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Goal<I::State>>().0 = Some(state_goal.clone());
@@ -276,36 +204,21 @@ where
         state_b: &I::State,
     ) -> Result<I::StateDiff, E> {
         let state_diff: I::StateDiff = {
-            let params_partial = {
-                let item_id = self.id();
-                let params_spec = params_specs
-                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                        item_id: item_id.clone(),
-                    })?;
-
-                // Running `diff` for a single profile will be between the current and goal
-                // states, and parameters are not really intended to be used for diffing.
-                //
-                // However for `ShCmdItem`, the shell script for diffing's path is in
-                // params, which *likely* would be provided as direct `Value`s instead of
-                // mapped from predecessors' state(s). Iff the values are mapped from a
-                // predecessor's state, then we would want it to be the goal state, as that
-                // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
-                // `Item::apply_dry`, and `ValueResolutionMode::Apply` is used in
-                // `Item::apply`.
-                //
-                // Running `diff` for multiple profiles will likely be between two profiles'
-                // current states.
-                let mut value_resolution_ctx = ValueResolutionCtx::new(
-                    ValueResolutionMode::Goal,
-                    item_id.clone(),
-                    tynm::type_name::<I::Params<'_>>(),
-                );
-                params_spec
-                    .resolve_partial(resources, &mut value_resolution_ctx)
-                    .map_err(crate::Error::ParamsResolveError)?
-            };
+            // Running `diff` for a single profile will be between the current and goal
+            // states, and parameters are not really intended to be used for diffing.
+            //
+            // However for `ShCmdItem`, the shell script for diffing's path is in
+            // params, which *likely* would be provided as direct `Value`s instead of
+            // mapped from predecessors' state(s). Iff the values are mapped from a
+            // predecessor's state, then we would want it to be the goal state, as that
+            // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
+            // `Item::apply_dry`, and `ValueResolutionMode::Apply` is used in
+            // `Item::apply`.
+            //
+            // Running `diff` for multiple profiles will likely be between two profiles'
+            // current states.
+            let params_partial =
+                self.params_partial(params_specs, resources, ValueResolutionMode::Goal)?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_diff(&params_partial, data, state_a, state_b)
                 .await
@@ -324,30 +237,15 @@ where
         state_diff: &I::StateDiff,
         value_resolution_mode: ValueResolutionMode,
     ) -> Result<ApplyCheck, E> {
-        let params_partial = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
+        // Normally an `apply_check` only compares the states / state diff.
+        //
+        // We use `ValueResolutionMode::Goal` because an apply is between the current
+        // and goal states, and when resolving values, we want the target state's
+        // parameters to be used. Note that during an apply, the goal state is
+        // resolved as execution happens -- values that rely on predecessors' applied
+        // state will be fed into successors' goal state.
+        let params_partial = self.params_partial(params_specs, resources, value_resolution_mode)?;
 
-            // Normally an `apply_check` only compares the states / state diff.
-            //
-            // We use `ValueResolutionMode::Goal` because an apply is between the current
-            // and goal states, and when resolving values, we want the target state's
-            // parameters to be used. Note that during an apply, the goal state is
-            // resolved as execution happens -- values that rely on predecessors' applied
-            // state will be fed into successors' goal state.
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                value_resolution_mode,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve_partial(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         if let Ok(params) = params_partial.try_into() {
             I::apply_check(&params, data, state_current, state_target, state_diff)
@@ -372,22 +270,7 @@ where
         state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
-        let params = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::ApplyDry,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
+        let params = self.params(params_specs, resources, ValueResolutionMode::ApplyDry)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry =
             I::apply_dry(fn_ctx, &params, data, state_current, state_goal, state_diff)
@@ -408,22 +291,7 @@ where
         state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
-        let params = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Current,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
+        let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = I::apply(fn_ctx, &params, data, state_current, state_goal, state_diff)
             .await
@@ -432,6 +300,50 @@ where
         resources.borrow_mut::<Current<I::State>>().0 = Some(state_ensured.clone());
 
         Ok(state_ensured)
+    }
+
+    fn params_partial(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        value_resolution_mode: ValueResolutionMode,
+    ) -> Result<<<I as Item>::Params<'_> as Params>::Partial, E> {
+        let item_id = self.id();
+        let params_spec = params_specs
+            .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_id: item_id.clone(),
+            })?;
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            value_resolution_mode,
+            item_id.clone(),
+            tynm::type_name::<I::Params<'_>>(),
+        );
+        Ok(params_spec
+            .resolve_partial(resources, &mut value_resolution_ctx)
+            .map_err(crate::Error::ParamsResolveError)?)
+    }
+
+    fn params(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        value_resolution_mode: ValueResolutionMode,
+    ) -> Result<<I as Item>::Params<'_>, E> {
+        let item_id = self.id();
+        let params_spec = params_specs
+            .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_id: item_id.clone(),
+            })?;
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            value_resolution_mode,
+            item_id.clone(),
+            tynm::type_name::<I::Params<'_>>(),
+        );
+        Ok(params_spec
+            .resolve(resources, &mut value_resolution_ctx)
+            .map_err(crate::Error::ParamsResolveError)?)
     }
 }
 
@@ -986,22 +898,8 @@ where
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<peace_resource_model::ResourceInteraction, E> {
-        let params_partial = {
-            let item_id = self.id();
-            let params_spec = params_specs
-                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_id: item_id.clone(),
-                })?;
-            let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Clean,
-                item_id.clone(),
-                tynm::type_name::<I::Params<'_>>(),
-            );
-            params_spec
-                .resolve_partial(resources, &mut value_resolution_ctx)
-                .map_err(crate::Error::ParamsResolveError)?
-        };
+        let params_partial =
+            self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
         let resource_interaction = I::resource_interaction(&params_partial, data);
