@@ -385,4 +385,45 @@ pub trait Item: DynClone {
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error>;
+
+    /// Returns the physical resources that this item interacts with.
+    ///
+    /// # Examples
+    ///
+    /// ## File Download Item
+    ///
+    /// This may be from:
+    ///
+    /// * host server
+    /// * URL
+    ///
+    /// to:
+    ///
+    /// * localhost
+    /// * file system path
+    ///
+    ///
+    /// ### Server Launch Item
+    ///
+    /// This may be from:
+    ///
+    /// * localhost
+    ///
+    /// to:
+    ///
+    /// * cloud provider
+    /// * region
+    /// * subnet
+    /// * host
+    ///
+    ///
+    /// # Implementors
+    ///
+    /// The returned list should be in order of least specific to most specific
+    /// location.
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        data: Self::Data<'_>,
+    ) -> peace_resource_model::ResourceInteraction;
 }
