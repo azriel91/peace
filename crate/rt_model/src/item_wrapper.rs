@@ -979,4 +979,33 @@ where
 
         Ok(())
     }
+
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<peace_resource_model::ResourceInteraction, E> {
+        let params_partial = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Clean,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve_partial(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+
+        let resource_interaction = I::resource_interaction(&params_partial, data);
+
+        Ok(resource_interaction)
+    }
 }
