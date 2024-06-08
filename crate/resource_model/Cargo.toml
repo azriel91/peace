@@ -20,3 +20,5 @@ doctest = false
 test = false
 
 [dependencies]
+serde = { workspace = true, features = ["derive"] }
+url = { workspace = true, features = ["serde"] }
