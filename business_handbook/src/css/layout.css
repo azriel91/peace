@@ -1,0 +1,22 @@
+code {
+    border-radius: 4px;
+}
+main pre code.hljs {
+    padding: 0.6em; /* override hljs padding */
+}
+
+hr {
+    border-top-width: 2px;
+    border-bottom-width: 0px;
+    border-color: #7f7f7f7f;
+}
+
+/* === highlightjs code === */
+:not(pre) > code.hljs {
+    background-color: #e0e0e0;
+}
+
+.hljs-ln-n {
+    border: none;
+    padding: 0.1em 0.5em;
+}
