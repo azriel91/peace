@@ -151,4 +151,18 @@ where
     ) -> Result<Self::State, Self::Error> {
         TarXApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
+
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
+    ) -> peace::resource_model::ResourceInteraction {
+        use peace::resource_model::{ResourceInteractionWithin, ResourceLocation};
+
+        let mut location = vec![ResourceLocation::localhost()];
+        if let Some(dest) = params_partial.dest() {
+            location.push(ResourceLocation::path(dest.display().to_string()));
+        }
+        ResourceInteractionWithin::new(location).into()
+    }
 }

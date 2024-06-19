@@ -31,3 +31,21 @@ pub enum ResourceInteraction {
     /// server.
     Within(ResourceInteractionWithin),
 }
+
+impl From<ResourceInteractionPush> for ResourceInteraction {
+    fn from(resource_interaction_push: ResourceInteractionPush) -> Self {
+        Self::Push(resource_interaction_push)
+    }
+}
+
+impl From<ResourceInteractionPull> for ResourceInteraction {
+    fn from(resource_interaction_pull: ResourceInteractionPull) -> Self {
+        Self::Pull(resource_interaction_pull)
+    }
+}
+
+impl From<ResourceInteractionWithin> for ResourceInteraction {
+    fn from(resource_interaction_within: ResourceInteractionWithin) -> Self {
+        Self::Within(resource_interaction_within)
+    }
+}
