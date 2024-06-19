@@ -222,6 +222,26 @@ impl Item for VecCopyItem {
         resources.insert(vec_b);
         Ok(())
     }
+
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
+    ) -> peace::resource_model::ResourceInteraction {
+        use peace::resource_model::{ResourceInteractionPush, ResourceLocation};
+
+        ResourceInteractionPush::new(
+            vec![
+                ResourceLocation::localhost(),
+                ResourceLocation::path("Vec A".to_string()),
+            ],
+            vec![
+                ResourceLocation::localhost(),
+                ResourceLocation::path("Vec B".to_string()),
+            ],
+        )
+        .into()
+    }
 }
 
 #[cfg(feature = "error_reporting")]

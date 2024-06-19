@@ -364,6 +364,16 @@ where
         resources.insert(mock_dest);
         Ok(())
     }
+
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
+    ) -> peace::resource_model::ResourceInteraction {
+        use peace::resource_model::{ResourceInteractionWithin, ResourceLocation};
+
+        ResourceInteractionWithin::new(vec![ResourceLocation::localhost()]).into()
+    }
 }
 
 #[cfg(feature = "error_reporting")]

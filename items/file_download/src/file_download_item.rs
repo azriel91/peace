@@ -160,4 +160,32 @@ where
         FileDownloadApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
             .await
     }
+
+    #[cfg(feature = "resource_interactions")]
+    fn resource_interaction(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
+    ) -> peace::resource_model::ResourceInteraction {
+        use peace::resource_model::{ResourceInteractionPull, ResourceLocation};
+
+        let location_server = if let Some(src) = params_partial.src() {
+            let mut location_server = vec![ResourceLocation::host_from_url(src)];
+            location_server.push(ResourceLocation::path(src.to_string()));
+
+            location_server
+        } else {
+            vec![ResourceLocation::host_unknown()]
+        };
+
+        let mut location_client = vec![ResourceLocation::localhost()];
+        if let Some(dest) = params_partial.dest() {
+            location_client.push(ResourceLocation::path(dest.display().to_string()));
+        }
+
+        ResourceInteractionPull {
+            location_client,
+            location_server,
+        }
+        .into()
+    }
 }

@@ -13,7 +13,7 @@ pub enum ResourceLocationType {
     ///
     /// * Cloud provider
     /// * Network / subnet
-    Grouping,
+    Group,
     /// Rendered with solid lines.
     ///
     /// Suitable for concepts like:

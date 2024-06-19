@@ -267,7 +267,8 @@ Cloud provider name, region, availability zone, etc.
         fn from(url: &Url) -> Self {
             let host = url
                 .map(Url::host)
-                .map(Host::to_owned);
+                .map(Host::to_owned)
+                .expect("Expected URL to contain a host.");
             let port = url
                 .map(Url::port_or_known_default);
 

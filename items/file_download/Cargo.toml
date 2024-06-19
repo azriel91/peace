@@ -40,3 +40,4 @@ tokio = { workspace = true }
 default = []
 error_reporting = ["peace/error_reporting"]
 output_progress = ["peace/output_progress"]
+resource_interactions = ["peace/resource_interactions"]

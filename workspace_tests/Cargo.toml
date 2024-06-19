@@ -40,13 +40,13 @@ tokio = { workspace = true, features = ["rt", "macros"] }
 tynm = { workspace = true }
 
 [features]
-default = ["items", "output_in_memory", "webi"]
+default = ["items", "output_in_memory", "webi", "resource_interactions"]
 
 # `peace` features
 error_reporting = ["peace/error_reporting"]
 output_in_memory = ["peace/output_in_memory"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]
-resource_interactions = ["peace/resource_interactions"]
+resource_interactions = ["peace/resource_interactions", "peace_items/resource_interactions"]
 webi = ["peace/webi"]
 
 # `peace_items` features

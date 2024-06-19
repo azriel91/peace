@@ -49,6 +49,13 @@ output_progress = [
     "peace_item_sh_cmd?/output_progress",
     "peace_item_tar_x?/output_progress",
 ]
+resource_interactions = [
+    "peace/resource_interactions",
+    "peace_item_blank?/resource_interactions",
+    "peace_item_file_download?/resource_interactions",
+    "peace_item_sh_cmd?/resource_interactions",
+    "peace_item_tar_x?/resource_interactions",
+]
 
 # Subcrates
 blank = ["dep:peace_item_blank"]
