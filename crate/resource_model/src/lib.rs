@@ -1,7 +1,7 @@
 //! Data types for resource interactions for the Peace framework.
 
 // Re-exports
-pub use url::Host;
+pub use url::{self, Host, Url};
 
 pub use crate::{
     resource_interaction::{
