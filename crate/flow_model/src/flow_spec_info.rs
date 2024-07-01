@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use dot_ix::model::{
     common::{EdgeId, Edges, NodeHierarchy, NodeId, NodeNames},
-    info_graph::{GraphDir, InfoGraph},
+    info_graph::{GraphDir, GraphStyle, InfoGraph},
 };
 use fn_graph::{daggy::Walker, Edge, FnId, GraphInfo};
 use peace_core::FlowId;
@@ -50,12 +50,12 @@ impl FlowSpecInfo {
         let edges = progress_node_edges(graph_info);
         let node_names = node_names(graph_info);
 
-        InfoGraph::builder()
+        InfoGraph::default()
+            .with_graph_style(GraphStyle::Circle)
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
             .with_node_names(node_names)
-            .build()
     }
 
     /// Returns an [`InfoGraph`] that represents the outcome of the flow's
@@ -84,12 +84,11 @@ impl FlowSpecInfo {
         let edges = outcome_node_edges(graph_info);
         let node_names = node_names(graph_info);
 
-        InfoGraph::builder()
+        InfoGraph::default()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(hierarchy)
             .with_edges(edges)
             .with_node_names(node_names)
-            .build()
     }
 }
 
