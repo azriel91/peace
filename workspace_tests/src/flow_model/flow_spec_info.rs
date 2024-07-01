@@ -7,7 +7,7 @@ use peace::{
             model::{
                 common::{Edges, NodeHierarchy, NodeNames},
                 edge_id,
-                info_graph::{GraphDir, InfoGraph},
+                info_graph::{GraphDir, GraphStyle, InfoGraph},
                 node_id,
             },
         },
@@ -50,12 +50,12 @@ fn to_progress_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         node_names.insert(node_id!("e"), String::from("e"));
         node_names.insert(node_id!("f"), String::from("f"));
 
-        InfoGraph::builder()
+        InfoGraph::default()
+            .with_graph_style(GraphStyle::Circle)
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(node_hierarchy)
             .with_node_names(node_names)
             .with_edges(edges)
-            .build()
     };
 
     assert_eq!(info_graph_expected, info_graph);
@@ -97,12 +97,11 @@ fn to_outcome_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         node_names.insert(node_id!("e"), String::from("e"));
         node_names.insert(node_id!("f"), String::from("f"));
 
-        InfoGraph::builder()
+        InfoGraph::default()
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(node_hierarchy)
             .with_node_names(node_names)
             .with_edges(edges)
-            .build()
     };
 
     assert_eq!(info_graph_expected, info_graph);
