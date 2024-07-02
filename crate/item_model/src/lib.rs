@@ -8,10 +8,10 @@ pub use crate::{
         ItemInteraction, ItemInteractionPull, ItemInteractionPush,
         ItemInteractionWithin,
     },
-    resource_location::ItemLocation,
-    resource_location_type::ItemLocationType,
+    item_location::ItemLocation,
+    item_location_type::ItemLocationType,
 };
 
 mod resource_interaction;
-mod resource_location;
-mod resource_location_type;
+mod item_location;
+mod item_location_type;
