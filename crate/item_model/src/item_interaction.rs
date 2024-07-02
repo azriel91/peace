@@ -5,8 +5,7 @@ mod item_interaction_push;
 mod item_interaction_within;
 
 pub use self::{
-    item_interaction_pull::ItemInteractionPull,
-    item_interaction_push::ItemInteractionPush,
+    item_interaction_pull::ItemInteractionPull, item_interaction_push::ItemInteractionPush,
     item_interaction_within::ItemInteractionWithin,
 };
 

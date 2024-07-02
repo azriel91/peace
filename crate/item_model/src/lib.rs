@@ -5,8 +5,7 @@ pub use url::{self, Host, Url};
 
 pub use crate::{
     item_interaction::{
-        ItemInteraction, ItemInteractionPull, ItemInteractionPush,
-        ItemInteractionWithin,
+        ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin,
     },
     item_location::ItemLocation,
     item_location_type::ItemLocationType,

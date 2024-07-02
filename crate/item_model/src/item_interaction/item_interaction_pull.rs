@@ -26,10 +26,7 @@ pub struct ItemInteractionPull {
 
 impl ItemInteractionPull {
     /// Returns a new `ItemInteractionPull`.
-    pub fn new(
-        location_client: Vec<ItemLocation>,
-        location_server: Vec<ItemLocation>,
-    ) -> Self {
+    pub fn new(location_client: Vec<ItemLocation>, location_server: Vec<ItemLocation>) -> Self {
         Self {
             location_client,
             location_server,

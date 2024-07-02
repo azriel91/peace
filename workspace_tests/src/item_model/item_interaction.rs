@@ -1,6 +1,5 @@
 use peace::item_model::{
-    ItemInteraction, ItemInteractionPull, ItemInteractionPush,
-    ItemInteractionWithin, ItemLocation,
+    ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin, ItemLocation,
 };
 
 mod item_interaction_pull;
@@ -37,8 +36,7 @@ fn from_item_interaction_pull() {
 
 #[test]
 fn from_item_interaction_within() {
-    let item_interaction_within =
-        ItemInteractionWithin::new(vec![ItemLocation::localhost()]);
+    let item_interaction_within = ItemInteractionWithin::new(vec![ItemLocation::localhost()]);
     let item_interaction = ItemInteraction::from(item_interaction_within.clone());
 
     assert_eq!(

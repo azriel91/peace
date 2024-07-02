@@ -41,8 +41,7 @@ fn host_unknown() {
 
 #[test]
 fn host_from_url_https() -> Result<(), ParseError> {
-    let item_location =
-        ItemLocation::host_from_url(&Url::parse("https://example.com/resource")?);
+    let item_location = ItemLocation::host_from_url(&Url::parse("https://example.com/resource")?);
 
     assert_eq!(
         ItemLocation::new(
@@ -57,8 +56,7 @@ fn host_from_url_https() -> Result<(), ParseError> {
 
 #[test]
 fn host_from_url_file() -> Result<(), ParseError> {
-    let item_location =
-        ItemLocation::host_from_url(&Url::parse("file:///path/to/resource")?);
+    let item_location = ItemLocation::host_from_url(&Url::parse("file:///path/to/resource")?);
 
     assert_eq!(
         ItemLocation::new(
