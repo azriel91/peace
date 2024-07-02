@@ -1,4 +1,4 @@
-use peace::resource_model::{ItemInteractionPull, ItemLocation};
+use peace::item_model::{ItemInteractionPull, ItemLocation};
 
 #[test]
 fn location_client() {

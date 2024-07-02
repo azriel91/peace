@@ -165,8 +165,8 @@ where
     fn item_interaction(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::resource_model::ItemInteraction {
-        use peace::resource_model::{ItemInteractionPull, ItemLocation};
+    ) -> peace::item_model::ItemInteraction {
+        use peace::item_model::{ItemInteractionPull, ItemLocation};
 
         let location_server = if let Some(src) = params_partial.src() {
             let mut location_server = vec![ItemLocation::host_from_url(src)];

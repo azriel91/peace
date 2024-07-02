@@ -156,8 +156,8 @@ where
     fn item_interaction(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::resource_model::ItemInteraction {
-        use peace::resource_model::{ItemInteractionWithin, ItemLocation};
+    ) -> peace::item_model::ItemInteraction {
+        use peace::item_model::{ItemInteractionWithin, ItemLocation};
 
         let mut location = vec![ItemLocation::localhost()];
         if let Some(dest) = params_partial.dest() {

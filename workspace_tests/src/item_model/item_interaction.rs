@@ -1,4 +1,4 @@
-use peace::resource_model::{
+use peace::item_model::{
     ItemInteraction, ItemInteractionPull, ItemInteractionPush,
     ItemInteractionWithin, ItemLocation,
 };

@@ -1,4 +1,4 @@
-use peace::resource_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
+use peace::item_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
 
 #[test]
 fn group() {
@@ -7,7 +7,7 @@ fn group() {
     assert_eq!(
         ItemLocation::new(
             "Cloud".to_string(),
-            peace::resource_model::ItemLocationType::Group
+            peace::item_model::ItemLocationType::Group
         ),
         item_location
     );
@@ -20,7 +20,7 @@ fn host() {
     assert_eq!(
         ItemLocation::new(
             "Server".to_string(),
-            peace::resource_model::ItemLocationType::Host
+            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -33,7 +33,7 @@ fn host_unknown() {
     assert_eq!(
         ItemLocation::new(
             ItemLocation::HOST_UNKNOWN.to_string(),
-            peace::resource_model::ItemLocationType::Host
+            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -47,7 +47,7 @@ fn host_from_url_https() -> Result<(), ParseError> {
     assert_eq!(
         ItemLocation::new(
             "example.com".to_string(),
-            peace::resource_model::ItemLocationType::Host
+            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -63,7 +63,7 @@ fn host_from_url_file() -> Result<(), ParseError> {
     assert_eq!(
         ItemLocation::new(
             ItemLocation::LOCALHOST.to_string(),
-            peace::resource_model::ItemLocationType::Host
+            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -78,7 +78,7 @@ fn localhost() {
     assert_eq!(
         ItemLocation::new(
             ItemLocation::LOCALHOST.to_string(),
-            peace::resource_model::ItemLocationType::Host
+            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -91,7 +91,7 @@ fn path() {
     assert_eq!(
         ItemLocation::new(
             "/path/to/resource".to_string(),
-            peace::resource_model::ItemLocationType::Path
+            peace::item_model::ItemLocationType::Path
         ),
         item_location
     );

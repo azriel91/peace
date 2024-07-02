@@ -227,8 +227,8 @@ impl Item for VecCopyItem {
     fn item_interaction(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::resource_model::ItemInteraction {
-        use peace::resource_model::{ItemInteractionPush, ItemLocation};
+    ) -> peace::item_model::ItemInteraction {
+        use peace::item_model::{ItemInteractionPush, ItemLocation};
 
         ItemInteractionPush::new(
             vec![

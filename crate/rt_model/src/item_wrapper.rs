@@ -897,7 +897,7 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_resource_model::ItemInteraction, E> {
+    ) -> Result<peace_item_model::ItemInteraction, E> {
         let params_partial =
             self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
