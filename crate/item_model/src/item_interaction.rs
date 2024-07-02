@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-mod resource_interaction_pull;
-mod resource_interaction_push;
-mod resource_interaction_within;
+mod item_interaction_pull;
+mod item_interaction_push;
+mod item_interaction_within;
 
 pub use self::{
-    resource_interaction_pull::ItemInteractionPull,
-    resource_interaction_push::ItemInteractionPush,
-    resource_interaction_within::ItemInteractionWithin,
+    item_interaction_pull::ItemInteractionPull,
+    item_interaction_push::ItemInteractionPush,
+    item_interaction_within::ItemInteractionWithin,
 };
 
 /// Represents the resources that are read from / written to.
@@ -33,19 +33,19 @@ pub enum ItemInteraction {
 }
 
 impl From<ItemInteractionPush> for ItemInteraction {
-    fn from(resource_interaction_push: ItemInteractionPush) -> Self {
-        Self::Push(resource_interaction_push)
+    fn from(item_interaction_push: ItemInteractionPush) -> Self {
+        Self::Push(item_interaction_push)
     }
 }
 
 impl From<ItemInteractionPull> for ItemInteraction {
-    fn from(resource_interaction_pull: ItemInteractionPull) -> Self {
-        Self::Pull(resource_interaction_pull)
+    fn from(item_interaction_pull: ItemInteractionPull) -> Self {
+        Self::Pull(item_interaction_pull)
     }
 }
 
 impl From<ItemInteractionWithin> for ItemInteraction {
-    fn from(resource_interaction_within: ItemInteractionWithin) -> Self {
-        Self::Within(resource_interaction_within)
+    fn from(item_interaction_within: ItemInteractionWithin) -> Self {
+        Self::Within(item_interaction_within)
     }
 }

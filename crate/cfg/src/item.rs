@@ -421,8 +421,8 @@ pub trait Item: DynClone {
     ///
     /// The returned list should be in order of least specific to most specific
     /// location.
-    #[cfg(feature = "resource_interactions")]
-    fn resource_interaction(
+    #[cfg(feature = "item_interactions")]
+    fn item_interaction(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> peace_resource_model::ItemInteraction;

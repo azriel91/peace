@@ -223,8 +223,8 @@ impl Item for VecCopyItem {
         Ok(())
     }
 
-    #[cfg(feature = "resource_interactions")]
-    fn resource_interaction(
+    #[cfg(feature = "item_interactions")]
+    fn item_interaction(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::resource_model::ItemInteraction {

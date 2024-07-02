@@ -76,9 +76,9 @@ output_progress = [
     "peace_rt_model/output_progress",
     "peace_webi?/output_progress",
 ]
-resource_interactions = [
+item_interactions = [
     "dep:peace_resource_model",
-    "peace_cfg/resource_interactions",
+    "peace_cfg/item_interactions",
 ]
 ssr = [
     "peace_webi?/ssr",

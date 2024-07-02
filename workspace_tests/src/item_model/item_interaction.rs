@@ -3,46 +3,46 @@ use peace::resource_model::{
     ItemInteractionWithin, ItemLocation,
 };
 
-mod resource_interaction_pull;
-mod resource_interaction_push;
-mod resource_interaction_within;
+mod item_interaction_pull;
+mod item_interaction_push;
+mod item_interaction_within;
 
 #[test]
-fn from_resource_interaction_push() {
-    let resource_interaction_push = ItemInteractionPush::new(
+fn from_item_interaction_push() {
+    let item_interaction_push = ItemInteractionPush::new(
         vec![ItemLocation::localhost()],
         vec![ItemLocation::host("server".to_string())],
     );
-    let resource_interaction = ItemInteraction::from(resource_interaction_push.clone());
+    let item_interaction = ItemInteraction::from(item_interaction_push.clone());
 
     assert_eq!(
-        ItemInteraction::Push(resource_interaction_push),
-        resource_interaction
+        ItemInteraction::Push(item_interaction_push),
+        item_interaction
     );
 }
 
 #[test]
-fn from_resource_interaction_pull() {
-    let resource_interaction_pull = ItemInteractionPull::new(
+fn from_item_interaction_pull() {
+    let item_interaction_pull = ItemInteractionPull::new(
         vec![ItemLocation::localhost()],
         vec![ItemLocation::host("server".to_string())],
     );
-    let resource_interaction = ItemInteraction::from(resource_interaction_pull.clone());
+    let item_interaction = ItemInteraction::from(item_interaction_pull.clone());
 
     assert_eq!(
-        ItemInteraction::Pull(resource_interaction_pull),
-        resource_interaction
+        ItemInteraction::Pull(item_interaction_pull),
+        item_interaction
     );
 }
 
 #[test]
-fn from_resource_interaction_within() {
-    let resource_interaction_within =
+fn from_item_interaction_within() {
+    let item_interaction_within =
         ItemInteractionWithin::new(vec![ItemLocation::localhost()]);
-    let resource_interaction = ItemInteraction::from(resource_interaction_within.clone());
+    let item_interaction = ItemInteraction::from(item_interaction_within.clone());
 
     assert_eq!(
-        ItemInteraction::Within(resource_interaction_within),
-        resource_interaction
+        ItemInteraction::Within(item_interaction_within),
+        item_interaction
     );
 }

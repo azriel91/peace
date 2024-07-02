@@ -58,6 +58,6 @@ output_progress = [
     "peace_cfg/output_progress",
     "peace_rt_model_hack/output_progress"
 ]
-resource_interactions = [
+item_interactions = [
     "dep:peace_resource_model",
 ]

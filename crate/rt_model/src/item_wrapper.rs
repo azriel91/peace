@@ -892,8 +892,8 @@ where
         Ok(())
     }
 
-    #[cfg(feature = "resource_interactions")]
-    fn resource_interaction(
+    #[cfg(feature = "item_interactions")]
+    fn item_interaction(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -902,8 +902,8 @@ where
             self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
-        let resource_interaction = I::resource_interaction(&params_partial, data);
+        let item_interaction = I::item_interaction(&params_partial, data);
 
-        Ok(resource_interaction)
+        Ok(item_interaction)
     }
 }

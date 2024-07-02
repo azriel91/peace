@@ -4,7 +4,7 @@
 pub use url::{self, Host, Url};
 
 pub use crate::{
-    resource_interaction::{
+    item_interaction::{
         ItemInteraction, ItemInteractionPull, ItemInteractionPush,
         ItemInteractionWithin,
     },
@@ -12,6 +12,6 @@ pub use crate::{
     item_location_type::ItemLocationType,
 };
 
-mod resource_interaction;
+mod item_interaction;
 mod item_location;
 mod item_location_type;

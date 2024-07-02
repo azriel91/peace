@@ -26,7 +26,7 @@ mod diff;
 mod flow_model;
 mod fmt;
 mod params;
-#[cfg(feature = "resource_interactions")]
+#[cfg(feature = "item_interactions")]
 mod resource_model;
 mod resource_rt;
 mod rt;

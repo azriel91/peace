@@ -177,8 +177,8 @@ where
         ShCmdApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 
-    #[cfg(feature = "resource_interactions")]
-    fn resource_interaction(
+    #[cfg(feature = "item_interactions")]
+    fn item_interaction(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::resource_model::ItemInteraction {
