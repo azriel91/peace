@@ -370,9 +370,9 @@ where
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::resource_model::ResourceInteraction {
-        use peace::resource_model::{ResourceInteractionWithin, ResourceLocation};
+        use peace::resource_model::{ResourceInteractionWithin, ItemLocation};
 
-        ResourceInteractionWithin::new(vec![ResourceLocation::localhost()]).into()
+        ResourceInteractionWithin::new(vec![ItemLocation::localhost()]).into()
     }
 }
 

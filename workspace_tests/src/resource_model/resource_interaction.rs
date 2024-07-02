@@ -1,6 +1,6 @@
 use peace::resource_model::{
     ResourceInteraction, ResourceInteractionPull, ResourceInteractionPush,
-    ResourceInteractionWithin, ResourceLocation,
+    ResourceInteractionWithin, ItemLocation,
 };
 
 mod resource_interaction_pull;
@@ -10,8 +10,8 @@ mod resource_interaction_within;
 #[test]
 fn from_resource_interaction_push() {
     let resource_interaction_push = ResourceInteractionPush::new(
-        vec![ResourceLocation::localhost()],
-        vec![ResourceLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()],
+        vec![ItemLocation::host("server".to_string())],
     );
     let resource_interaction = ResourceInteraction::from(resource_interaction_push.clone());
 
@@ -24,8 +24,8 @@ fn from_resource_interaction_push() {
 #[test]
 fn from_resource_interaction_pull() {
     let resource_interaction_pull = ResourceInteractionPull::new(
-        vec![ResourceLocation::localhost()],
-        vec![ResourceLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()],
+        vec![ItemLocation::host("server".to_string())],
     );
     let resource_interaction = ResourceInteraction::from(resource_interaction_pull.clone());
 
@@ -38,7 +38,7 @@ fn from_resource_interaction_pull() {
 #[test]
 fn from_resource_interaction_within() {
     let resource_interaction_within =
-        ResourceInteractionWithin::new(vec![ResourceLocation::localhost()]);
+        ResourceInteractionWithin::new(vec![ItemLocation::localhost()]);
     let resource_interaction = ResourceInteraction::from(resource_interaction_within.clone());
 
     assert_eq!(

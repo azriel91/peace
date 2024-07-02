@@ -228,16 +228,16 @@ impl Item for VecCopyItem {
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::resource_model::ResourceInteraction {
-        use peace::resource_model::{ResourceInteractionPush, ResourceLocation};
+        use peace::resource_model::{ResourceInteractionPush, ItemLocation};
 
         ResourceInteractionPush::new(
             vec![
-                ResourceLocation::localhost(),
-                ResourceLocation::path("Vec A".to_string()),
+                ItemLocation::localhost(),
+                ItemLocation::path("Vec A".to_string()),
             ],
             vec![
-                ResourceLocation::localhost(),
-                ResourceLocation::path("Vec B".to_string()),
+                ItemLocation::localhost(),
+                ItemLocation::path("Vec B".to_string()),
             ],
         )
         .into()

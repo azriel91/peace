@@ -1,12 +1,12 @@
-use peace::resource_model::{ResourceInteractionWithin, ResourceLocation};
+use peace::resource_model::{ResourceInteractionWithin, ItemLocation};
 
 #[test]
 fn location() {
     let resource_interaction_within =
-        ResourceInteractionWithin::new(vec![ResourceLocation::localhost()]);
+        ResourceInteractionWithin::new(vec![ItemLocation::localhost()]);
 
     assert_eq!(
-        vec![ResourceLocation::localhost()],
+        vec![ItemLocation::localhost()],
         resource_interaction_within.location()
     );
 }

@@ -1,25 +1,25 @@
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::ResourceLocationType;
+use crate::ItemLocationType;
 
 /// One layer of where a resource is located.
 ///
 /// These will be merged into the same node based on their variant and name.
 ///
 /// For example, if two different items provide the following
-/// `ResourceLocation`s:
+/// `ItemLocation`s:
 ///
 /// Item 1:
 ///
-/// 1. `ResourceLocation::Group("cloud")`
-/// 2. `ResourceLocation::Host("app.domain.com")`
-/// 3. `ResourceLocation::Path("/path/to/a_file")`
+/// 1. `ItemLocation::Group("cloud")`
+/// 2. `ItemLocation::Host("app.domain.com")`
+/// 3. `ItemLocation::Path("/path/to/a_file")`
 ///
 /// Item 2:
 ///
-/// 1. `ResourceLocation::Host("app.domain.com")`
-/// 2. `ResourceLocation::Path("/path/to/another_file")`
+/// 1. `ItemLocation::Host("app.domain.com")`
+/// 2. `ItemLocation::Path("/path/to/another_file")`
 ///
 /// Then the resultant node hierarchy will be:
 ///
@@ -33,8 +33,8 @@ use crate::ResourceLocationType;
 /// # Implementors
 ///
 /// Item implementors should endeavour to use the same name for each
-/// `ResourceLocation`, as that is how the Peace framework determines if two
-/// `ResourceLocation`s are the same.
+/// `ItemLocation`, as that is how the Peace framework determines if two
+/// `ItemLocation`s are the same.
 ///
 /// # Design
 ///
@@ -43,23 +43,23 @@ use crate::ResourceLocationType;
 ///
 /// ```rust,ignore
 /// #[derive(Debug)]
-/// enum ResourceLocation {
-///     Host(ResourceLocationHost),
+/// enum ItemLocation {
+///     Host(ItemLocationHost),
 ///     Url(Url),
 /// }
 ///
-/// struct ResourceLocationHost {
+/// struct ItemLocationHost {
 ///     host: Host<String>,
 ///     port: Option<u16>,
 /// }
 ///
-/// impl ResourceLocation {
+/// impl ItemLocation {
 ///     fn from_url(url: &Url) -> Self {
 ///         Self::Url(url.clone())
 ///     }
 /// }
 ///
-/// impl From<&Url> for ResourceLocationHost {
+/// impl From<&Url> for ItemLocationHost {
 ///     type Error = ();
 ///
 ///     fn from(url: &Url) -> Result<Self, ()> {
@@ -74,7 +74,7 @@ use crate::ResourceLocationType;
 /// }
 /// ```
 ///
-/// However, the purpose of `ResourceLocation` is primarily for rendering, and
+/// However, the purpose of `ItemLocation` is primarily for rendering, and
 /// providing accurate variants for each kind of resource location causes
 /// additional burden on:
 ///
@@ -83,60 +83,60 @@ use crate::ResourceLocationType;
 /// * item implementors to select a variant consistent with other item
 ///   implementors
 ///
-/// A less accurate model with a limited number of [`ResourceLocationType`]s
+/// A less accurate model with a limited number of [`ItemLocationType`]s
 /// balances the modelling accuracy, rendering, and maintenance burden.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct ResourceLocation {
+pub struct ItemLocation {
     /// The name of the resource location.
     pub name: String,
     /// The type of the resource location.
-    pub r#type: ResourceLocationType,
+    pub r#type: ItemLocationType,
 }
 
-impl ResourceLocation {
+impl ItemLocation {
     /// The string used for an unknown host.
     pub const HOST_UNKNOWN: &'static str = "unknown";
     /// The string used for localhost.
     pub const LOCALHOST: &'static str = "localhost";
 
-    /// Returns a new `ResourceLocation`.
+    /// Returns a new `ItemLocation`.
     ///
     /// See also:
     ///
-    /// * [`ResourceLocation::group`]
-    /// * [`ResourceLocation::host`]
-    /// * [`ResourceLocation::localhost`]
-    /// * [`ResourceLocation::path`]
-    pub fn new(name: String, r#type: ResourceLocationType) -> Self {
+    /// * [`ItemLocation::group`]
+    /// * [`ItemLocation::host`]
+    /// * [`ItemLocation::localhost`]
+    /// * [`ItemLocation::path`]
+    pub fn new(name: String, r#type: ItemLocationType) -> Self {
         Self { name, r#type }
     }
 
-    /// Returns `ResourceLocation::new(name, ResourceLocationType::Group)`.
+    /// Returns `ItemLocation::new(name, ItemLocationType::Group)`.
     pub fn group(name: String) -> Self {
         Self {
             name,
-            r#type: ResourceLocationType::Group,
+            r#type: ItemLocationType::Group,
         }
     }
 
-    /// Returns `ResourceLocation::new(name, ResourceLocationType::Host)`.
+    /// Returns `ItemLocation::new(name, ItemLocationType::Host)`.
     pub fn host(name: String) -> Self {
         Self {
             name,
-            r#type: ResourceLocationType::Host,
+            r#type: ItemLocationType::Host,
         }
     }
 
-    /// Returns `ResourceLocation::new("unknown".to_string(),
-    /// ResourceLocationType::Host)`.
+    /// Returns `ItemLocation::new("unknown".to_string(),
+    /// ItemLocationType::Host)`.
     pub fn host_unknown() -> Self {
         Self {
             name: Self::HOST_UNKNOWN.to_string(),
-            r#type: ResourceLocationType::Host,
+            r#type: ItemLocationType::Host,
         }
     }
 
-    /// Returns `ResourceLocation::new(name, ResourceLocationType::Host)`.
+    /// Returns `ItemLocation::new(name, ItemLocationType::Host)`.
     ///
     /// This is "lossy" in the sense that if the URL doesn't have a [`Host`],
     /// this will return localhost, as URLs without a host may be unix sockets,
@@ -147,24 +147,24 @@ impl ResourceLocation {
         url.host_str()
             .map(|host_str| Self {
                 name: host_str.to_string(),
-                r#type: ResourceLocationType::Host,
+                r#type: ItemLocationType::Host,
             })
             .unwrap_or_else(Self::localhost)
     }
 
-    /// Returns `ResourceLocation::host("localhost".to_string())`.
+    /// Returns `ItemLocation::host("localhost".to_string())`.
     pub fn localhost() -> Self {
         Self {
             name: Self::LOCALHOST.to_string(),
-            r#type: ResourceLocationType::Host,
+            r#type: ItemLocationType::Host,
         }
     }
 
-    /// Returns `ResourceLocation::new(name, ResourceLocationType::Path)`.
+    /// Returns `ItemLocation::new(name, ItemLocationType::Path)`.
     pub fn path(name: String) -> Self {
         Self {
             name,
-            r#type: ResourceLocationType::Path,
+            r#type: ItemLocationType::Path,
         }
     }
 
@@ -174,7 +174,7 @@ impl ResourceLocation {
     }
 
     /// Returns the type of the resource location.
-    pub fn r#type(&self) -> ResourceLocationType {
+    pub fn r#type(&self) -> ItemLocationType {
         self.r#type
     }
 }

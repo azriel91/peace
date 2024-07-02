@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 
 /// The type of resource locaction.
 ///
-/// This affects how the [`ResourceLocation`] is rendered.
+/// This affects how the [`ItemLocation`] is rendered.
 ///
-/// [`ResourceLocation`]: crate::ResourceLocation
+/// [`ItemLocation`]: crate::ItemLocation
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum ResourceLocationType {
+pub enum ItemLocationType {
     /// Rendered with dashed lines.
     ///
     /// Suitable for concepts like:

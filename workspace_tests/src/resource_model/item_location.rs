@@ -1,13 +1,13 @@
-use peace::resource_model::{url::ParseError, ResourceLocation, ResourceLocationType, Url};
+use peace::resource_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
 
 #[test]
 fn group() {
-    let resource_location = ResourceLocation::group("Cloud".to_string());
+    let resource_location = ItemLocation::group("Cloud".to_string());
 
     assert_eq!(
-        ResourceLocation::new(
+        ItemLocation::new(
             "Cloud".to_string(),
-            peace::resource_model::ResourceLocationType::Group
+            peace::resource_model::ItemLocationType::Group
         ),
         resource_location
     );
@@ -15,12 +15,12 @@ fn group() {
 
 #[test]
 fn host() {
-    let resource_location = ResourceLocation::host("Server".to_string());
+    let resource_location = ItemLocation::host("Server".to_string());
 
     assert_eq!(
-        ResourceLocation::new(
+        ItemLocation::new(
             "Server".to_string(),
-            peace::resource_model::ResourceLocationType::Host
+            peace::resource_model::ItemLocationType::Host
         ),
         resource_location
     );
@@ -28,12 +28,12 @@ fn host() {
 
 #[test]
 fn host_unknown() {
-    let resource_location = ResourceLocation::host_unknown();
+    let resource_location = ItemLocation::host_unknown();
 
     assert_eq!(
-        ResourceLocation::new(
-            ResourceLocation::HOST_UNKNOWN.to_string(),
-            peace::resource_model::ResourceLocationType::Host
+        ItemLocation::new(
+            ItemLocation::HOST_UNKNOWN.to_string(),
+            peace::resource_model::ItemLocationType::Host
         ),
         resource_location
     );
@@ -42,12 +42,12 @@ fn host_unknown() {
 #[test]
 fn host_from_url_https() -> Result<(), ParseError> {
     let resource_location =
-        ResourceLocation::host_from_url(&Url::parse("https://example.com/resource")?);
+        ItemLocation::host_from_url(&Url::parse("https://example.com/resource")?);
 
     assert_eq!(
-        ResourceLocation::new(
+        ItemLocation::new(
             "example.com".to_string(),
-            peace::resource_model::ResourceLocationType::Host
+            peace::resource_model::ItemLocationType::Host
         ),
         resource_location
     );
@@ -58,12 +58,12 @@ fn host_from_url_https() -> Result<(), ParseError> {
 #[test]
 fn host_from_url_file() -> Result<(), ParseError> {
     let resource_location =
-        ResourceLocation::host_from_url(&Url::parse("file:///path/to/resource")?);
+        ItemLocation::host_from_url(&Url::parse("file:///path/to/resource")?);
 
     assert_eq!(
-        ResourceLocation::new(
-            ResourceLocation::LOCALHOST.to_string(),
-            peace::resource_model::ResourceLocationType::Host
+        ItemLocation::new(
+            ItemLocation::LOCALHOST.to_string(),
+            peace::resource_model::ItemLocationType::Host
         ),
         resource_location
     );
@@ -73,12 +73,12 @@ fn host_from_url_file() -> Result<(), ParseError> {
 
 #[test]
 fn localhost() {
-    let resource_location = ResourceLocation::localhost();
+    let resource_location = ItemLocation::localhost();
 
     assert_eq!(
-        ResourceLocation::new(
-            ResourceLocation::LOCALHOST.to_string(),
-            peace::resource_model::ResourceLocationType::Host
+        ItemLocation::new(
+            ItemLocation::LOCALHOST.to_string(),
+            peace::resource_model::ItemLocationType::Host
         ),
         resource_location
     );
@@ -86,12 +86,12 @@ fn localhost() {
 
 #[test]
 fn path() {
-    let resource_location = ResourceLocation::path("/path/to/resource".to_string());
+    let resource_location = ItemLocation::path("/path/to/resource".to_string());
 
     assert_eq!(
-        ResourceLocation::new(
+        ItemLocation::new(
             "/path/to/resource".to_string(),
-            peace::resource_model::ResourceLocationType::Path
+            peace::resource_model::ItemLocationType::Path
         ),
         resource_location
     );
@@ -99,14 +99,14 @@ fn path() {
 
 #[test]
 fn name() {
-    let resource_location = ResourceLocation::path("/path/to/resource".to_string());
+    let resource_location = ItemLocation::path("/path/to/resource".to_string());
 
     assert_eq!("/path/to/resource", resource_location.name());
 }
 
 #[test]
 fn r#type() {
-    let resource_location = ResourceLocation::path("/path/to/resource".to_string());
+    let resource_location = ItemLocation::path("/path/to/resource".to_string());
 
-    assert_eq!(ResourceLocationType::Path, resource_location.r#type());
+    assert_eq!(ItemLocationType::Path, resource_location.r#type());
 }

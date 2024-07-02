@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ResourceLocation;
+use crate::ItemLocation;
 
 /// Represents a location-to-location pull interaction.
 ///
@@ -11,24 +11,24 @@ pub struct ResourceInteractionPull {
     ///
     /// e.g.
     ///
-    /// 1. `ResourceLocation::localhost()`
-    /// 2. `ResourceLocation::new("/path/to/file", ResourceLocationType::Path)`
-    pub location_client: Vec<ResourceLocation>,
+    /// 1. `ItemLocation::localhost()`
+    /// 2. `ItemLocation::new("/path/to/file", ItemLocationType::Path)`
+    pub location_client: Vec<ItemLocation>,
     /// Where the interaction goes to.
     ///
     /// e.g.
     ///
-    /// 1. `ResourceLocation::new("app.domain.com", ResourceLocationType::Host)`
-    /// 2. `ResourceLocation::new("http://app.domain.com/resource",
-    ///    ResourceLocationType::Path)`
-    pub location_server: Vec<ResourceLocation>,
+    /// 1. `ItemLocation::new("app.domain.com", ItemLocationType::Host)`
+    /// 2. `ItemLocation::new("http://app.domain.com/resource",
+    ///    ItemLocationType::Path)`
+    pub location_server: Vec<ItemLocation>,
 }
 
 impl ResourceInteractionPull {
     /// Returns a new `ResourceInteractionPull`.
     pub fn new(
-        location_client: Vec<ResourceLocation>,
-        location_server: Vec<ResourceLocation>,
+        location_client: Vec<ItemLocation>,
+        location_server: Vec<ItemLocation>,
     ) -> Self {
         Self {
             location_client,
@@ -40,9 +40,9 @@ impl ResourceInteractionPull {
     ///
     /// e.g.
     ///
-    /// 1. `ResourceLocation::localhost()`
-    /// 2. `ResourceLocation::new("/path/to/file", ResourceLocationType::Path)`
-    pub fn location_client(&self) -> &[ResourceLocation] {
+    /// 1. `ItemLocation::localhost()`
+    /// 2. `ItemLocation::new("/path/to/file", ItemLocationType::Path)`
+    pub fn location_client(&self) -> &[ItemLocation] {
         &self.location_client
     }
 
@@ -50,10 +50,10 @@ impl ResourceInteractionPull {
     ///
     /// e.g.
     ///
-    /// 1. `ResourceLocation::new("app.domain.com", ResourceLocationType::Host)`
-    /// 2. `ResourceLocation::new("http://app.domain.com/resource",
-    ///    ResourceLocationType::Path)`
-    pub fn location_server(&self) -> &[ResourceLocation] {
+    /// 1. `ItemLocation::new("app.domain.com", ItemLocationType::Host)`
+    /// 2. `ItemLocation::new("http://app.domain.com/resource",
+    ///    ItemLocationType::Path)`
+    pub fn location_server(&self) -> &[ItemLocation] {
         &self.location_server
     }
 }
