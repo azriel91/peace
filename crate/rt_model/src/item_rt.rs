@@ -292,5 +292,5 @@ pub trait ItemRt<E>:
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_resource_model::ResourceInteraction, E>;
+    ) -> Result<peace_resource_model::ItemInteraction, E>;
 }

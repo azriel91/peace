@@ -1,8 +1,8 @@
-use peace::resource_model::{ResourceInteractionPush, ItemLocation};
+use peace::resource_model::{ItemInteractionPush, ItemLocation};
 
 #[test]
 fn location_from() {
-    let resource_interaction_push = ResourceInteractionPush::new(
+    let resource_interaction_push = ItemInteractionPush::new(
         vec![ItemLocation::localhost()],
         vec![ItemLocation::host("server".to_string())],
     );
@@ -15,7 +15,7 @@ fn location_from() {
 
 #[test]
 fn location_to() {
-    let resource_interaction_push = ResourceInteractionPush::new(
+    let resource_interaction_push = ItemInteractionPush::new(
         vec![ItemLocation::localhost()],
         vec![ItemLocation::host("server".to_string())],
     );

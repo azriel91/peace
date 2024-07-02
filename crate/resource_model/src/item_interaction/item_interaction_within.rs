@@ -7,7 +7,7 @@ use crate::ItemLocation;
 /// This can represent application installation / startup happening on a
 /// server.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ResourceInteractionWithin {
+pub struct ItemInteractionWithin {
     /// Where the interaction is happening.
     ///
     /// e.g.
@@ -16,8 +16,8 @@ pub struct ResourceInteractionWithin {
     pub location: Vec<ItemLocation>,
 }
 
-impl ResourceInteractionWithin {
-    /// Returns a new `ResourceInteractionWithin`.
+impl ItemInteractionWithin {
+    /// Returns a new `ItemInteractionWithin`.
     pub fn new(location: Vec<ItemLocation>) -> Self {
         Self { location }
     }

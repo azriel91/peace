@@ -425,5 +425,5 @@ pub trait Item: DynClone {
     fn resource_interaction(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
-    ) -> peace_resource_model::ResourceInteraction;
+    ) -> peace_resource_model::ItemInteraction;
 }

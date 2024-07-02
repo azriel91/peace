@@ -6,7 +6,7 @@ use crate::ItemLocation;
 ///
 /// This can represent a file download from a server.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ResourceInteractionPull {
+pub struct ItemInteractionPull {
     /// Where the interaction begins from.
     ///
     /// e.g.
@@ -24,8 +24,8 @@ pub struct ResourceInteractionPull {
     pub location_server: Vec<ItemLocation>,
 }
 
-impl ResourceInteractionPull {
-    /// Returns a new `ResourceInteractionPull`.
+impl ItemInteractionPull {
+    /// Returns a new `ItemInteractionPull`.
     pub fn new(
         location_client: Vec<ItemLocation>,
         location_server: Vec<ItemLocation>,

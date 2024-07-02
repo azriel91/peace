@@ -181,9 +181,9 @@ where
     fn resource_interaction(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::resource_model::ResourceInteraction {
-        use peace::resource_model::{ResourceInteractionWithin, ItemLocation};
+    ) -> peace::resource_model::ItemInteraction {
+        use peace::resource_model::{ItemInteractionWithin, ItemLocation};
 
-        ResourceInteractionWithin::new(vec![ItemLocation::localhost()]).into()
+        ItemInteractionWithin::new(vec![ItemLocation::localhost()]).into()
     }
 }

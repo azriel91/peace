@@ -6,7 +6,7 @@ use crate::ItemLocation;
 ///
 /// This can represent a file transfer from one host to another.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ResourceInteractionPush {
+pub struct ItemInteractionPush {
     /// Where the interaction begins from.
     ///
     /// e.g.
@@ -24,8 +24,8 @@ pub struct ResourceInteractionPush {
     pub location_to: Vec<ItemLocation>,
 }
 
-impl ResourceInteractionPush {
-    /// Returns a new `ResourceInteractionPush`.
+impl ItemInteractionPush {
+    /// Returns a new `ItemInteractionPush`.
     pub fn new(location_from: Vec<ItemLocation>, location_to: Vec<ItemLocation>) -> Self {
         Self {
             location_from,
