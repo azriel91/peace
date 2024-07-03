@@ -490,6 +490,17 @@ Conceptually, `Item`s can be thought of either an edge or a node:
 * **Node:** The item represents the destination thing.
 
 
+### Use Cases
+
+1. Upload a file -- one source, one dest.
+2. Download a file -- one source, one dest.
+3. Launch servers -- one source (localhost), one dest (AWS).
+4. Wait for servers to start up -- multiple within (do we need the `ItemLocationTree` for the cloud provider / subnet context? or leverage previous resource tracking to work it out?).
+5. Wait for endpoints to become available -- one source, multiple dest (query each endpoint).
+6. Do we want `ItemInteraction`s to be queried multiple times while `Apply` is happening? -- i.e. some servers may have started up, and so we need the `Item` to report that to us.
+7. Notably, we want these `ItemInteraction`s to be queriable without the items actually existing -- so we can generate diagrams to demonstrate what *would* happen upon execution.
+
+
 ### Naive
 
 Consider the following diagram, which is the first attempt at rendering an outcome diagram on 2024-02-18 -- this uses edges / hierarchy to draw nodes and edges:
@@ -524,7 +535,7 @@ then what is happening becomes slightly clearer:
 
 1. There is only one level of detail.
 2. It is useful to have expandable detail, e.g. hide a full URL, and allow the user to expand it if they need to.
-3. It is useful to show and hide animated edges while that step is in progress.
+3. It is useful to show animated edges while that step is in progress, and hide them after.
 
 
 <details><summary>Old idea for code</summary>
