@@ -166,18 +166,19 @@ where
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::item_model::ItemInteraction {
-        use peace::item_model::{ItemInteractionPull, ItemLocation};
+        use peace::item_model::{ItemInteractionPull, ItemLocation, ItemLocationAncestors};
 
         let location_server = if let Some(src) = params_partial.src() {
-            let mut location_server = vec![ItemLocation::host_from_url(src)];
+            let mut location_server: ItemLocationAncestors =
+                vec![ItemLocation::host_from_url(src)].into();
             location_server.push(ItemLocation::path(src.to_string()));
 
             location_server
         } else {
-            vec![ItemLocation::host_unknown()]
+            vec![ItemLocation::host_unknown()].into()
         };
 
-        let mut location_client = vec![ItemLocation::localhost()];
+        let mut location_client: ItemLocationAncestors = vec![ItemLocation::localhost()].into();
         if let Some(dest) = params_partial.dest() {
             location_client.push(ItemLocation::path(dest.display().to_string()));
         }

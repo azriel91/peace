@@ -157,9 +157,9 @@ where
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> peace::item_model::ItemInteraction {
-        use peace::item_model::{ItemInteractionWithin, ItemLocation};
+        use peace::item_model::{ItemInteractionWithin, ItemLocation, ItemLocationAncestors};
 
-        let mut location = vec![ItemLocation::localhost()];
+        let mut location: ItemLocationAncestors = vec![ItemLocation::localhost()].into();
         if let Some(dest) = params_partial.dest() {
             location.push(ItemLocation::path(dest.display().to_string()));
         }

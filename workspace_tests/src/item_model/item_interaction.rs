@@ -9,8 +9,8 @@ mod item_interaction_within;
 #[test]
 fn from_item_interaction_push() {
     let item_interaction_push = ItemInteractionPush::new(
-        vec![ItemLocation::localhost()],
-        vec![ItemLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()].into(),
+        vec![ItemLocation::host("server".to_string())].into(),
     );
     let item_interaction = ItemInteraction::from(item_interaction_push.clone());
 
@@ -23,8 +23,8 @@ fn from_item_interaction_push() {
 #[test]
 fn from_item_interaction_pull() {
     let item_interaction_pull = ItemInteractionPull::new(
-        vec![ItemLocation::localhost()],
-        vec![ItemLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()].into(),
+        vec![ItemLocation::host("server".to_string())].into(),
     );
     let item_interaction = ItemInteraction::from(item_interaction_pull.clone());
 
@@ -36,7 +36,8 @@ fn from_item_interaction_pull() {
 
 #[test]
 fn from_item_interaction_within() {
-    let item_interaction_within = ItemInteractionWithin::new(vec![ItemLocation::localhost()]);
+    let item_interaction_within =
+        ItemInteractionWithin::new(vec![ItemLocation::localhost()].into());
     let item_interaction = ItemInteraction::from(item_interaction_within.clone());
 
     assert_eq!(

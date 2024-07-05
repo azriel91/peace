@@ -184,6 +184,6 @@ where
     ) -> peace::item_model::ItemInteraction {
         use peace::item_model::{ItemInteractionWithin, ItemLocation};
 
-        ItemInteractionWithin::new(vec![ItemLocation::localhost()]).into()
+        ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into()
     }
 }

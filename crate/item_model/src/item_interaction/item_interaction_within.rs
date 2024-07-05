@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ItemLocation;
+use crate::{ItemLocation, ItemLocationAncestors};
 
 /// Represents a resource interaction that happens within a location.
 ///
@@ -10,15 +10,15 @@ use crate::ItemLocation;
 pub struct ItemInteractionWithin {
     /// Where the interaction is happening.
     ///
-    /// e.g.
+    /// Example:
     ///
     /// 1. `ItemLocation::Server { address, port: None }`
-    pub location: Vec<ItemLocation>,
+    pub location: ItemLocationAncestors,
 }
 
 impl ItemInteractionWithin {
     /// Returns a new `ItemInteractionWithin`.
-    pub fn new(location: Vec<ItemLocation>) -> Self {
+    pub fn new(location: ItemLocationAncestors) -> Self {
         Self { location }
     }
 

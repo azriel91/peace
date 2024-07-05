@@ -234,11 +234,13 @@ impl Item for VecCopyItem {
             vec![
                 ItemLocation::localhost(),
                 ItemLocation::path("Vec A".to_string()),
-            ],
+            ]
+            .into(),
             vec![
                 ItemLocation::localhost(),
                 ItemLocation::path("Vec B".to_string()),
-            ],
+            ]
+            .into(),
         )
         .into()
     }

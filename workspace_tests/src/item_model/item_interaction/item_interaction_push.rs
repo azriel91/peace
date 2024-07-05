@@ -3,8 +3,8 @@ use peace::item_model::{ItemInteractionPush, ItemLocation};
 #[test]
 fn location_from() {
     let item_interaction_push = ItemInteractionPush::new(
-        vec![ItemLocation::localhost()],
-        vec![ItemLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()].into(),
+        vec![ItemLocation::host("server".to_string())].into(),
     );
 
     assert_eq!(
@@ -16,8 +16,8 @@ fn location_from() {
 #[test]
 fn location_to() {
     let item_interaction_push = ItemInteractionPush::new(
-        vec![ItemLocation::localhost()],
-        vec![ItemLocation::host("server".to_string())],
+        vec![ItemLocation::localhost()].into(),
+        vec![ItemLocation::host("server".to_string())].into(),
     );
 
     assert_eq!(

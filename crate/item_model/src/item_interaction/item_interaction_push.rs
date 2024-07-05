@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ItemLocation;
+use crate::{ItemLocation, ItemLocationAncestors};
 
 /// Represents a location-to-location push interaction.
 ///
@@ -9,24 +9,24 @@ use crate::ItemLocation;
 pub struct ItemInteractionPush {
     /// Where the interaction begins from.
     ///
-    /// e.g.
+    /// Example:
     ///
     /// 1. `ItemLocation::localhost()`
     /// 2. `ItemLocation::new("/path/to/file", ItemLocationType::Path)`
-    pub location_from: Vec<ItemLocation>,
+    pub location_from: ItemLocationAncestors,
     /// Where the interaction goes to.
     ///
-    /// e.g.
+    /// Example:
     ///
     /// 1. `ItemLocation::new("app.domain.com", ItemLocationType::Host)`
     /// 2. `ItemLocation::new("http://app.domain.com/resource",
     ///    ItemLocationType::Path)`
-    pub location_to: Vec<ItemLocation>,
+    pub location_to: ItemLocationAncestors,
 }
 
 impl ItemInteractionPush {
     /// Returns a new `ItemInteractionPush`.
-    pub fn new(location_from: Vec<ItemLocation>, location_to: Vec<ItemLocation>) -> Self {
+    pub fn new(location_from: ItemLocationAncestors, location_to: ItemLocationAncestors) -> Self {
         Self {
             location_from,
             location_to,
@@ -35,7 +35,7 @@ impl ItemInteractionPush {
 
     /// Returns where the interaction begins from.
     ///
-    /// e.g.
+    /// Example:
     ///
     /// 1. `ItemLocation::localhost()`
     /// 2. `ItemLocation::new("/path/to/file", ItemLocationType::Path)`
@@ -45,7 +45,7 @@ impl ItemInteractionPush {
 
     /// Returns where the interaction goes to.
     ///
-    /// e.g.
+    /// Example:
     ///
     /// 1. `ItemLocation::new("app.domain.com", ItemLocationType::Host)`
     /// 2. `ItemLocation::new("http://app.domain.com/resource",
