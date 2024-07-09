@@ -422,8 +422,8 @@ pub trait Item: DynClone {
     /// The returned list should be in order of least specific to most specific
     /// location.
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
-    ) -> peace_item_model::ItemInteraction;
+    ) -> Vec<peace_item_model::ItemInteraction>;
 }

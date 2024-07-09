@@ -153,16 +153,18 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::item_model::ItemInteraction {
+    ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionWithin, ItemLocation, ItemLocationAncestors};
 
         let mut location: ItemLocationAncestors = vec![ItemLocation::localhost()].into();
         if let Some(dest) = params_partial.dest() {
             location.push(ItemLocation::path(dest.display().to_string()));
         }
-        ItemInteractionWithin::new(location).into()
+        let item_interaction = ItemInteractionWithin::new(location).into();
+
+        vec![item_interaction]
     }
 }

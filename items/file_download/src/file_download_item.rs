@@ -162,10 +162,10 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::item_model::ItemInteraction {
+    ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPull, ItemLocation, ItemLocationAncestors};
 
         let location_server = if let Some(src) = params_partial.src() {
@@ -183,10 +183,12 @@ where
             location_client.push(ItemLocation::path(dest.display().to_string()));
         }
 
-        ItemInteractionPull {
+        let item_interaction = ItemInteractionPull {
             location_client,
             location_server,
         }
-        .into()
+        .into();
+
+        vec![item_interaction]
     }
 }

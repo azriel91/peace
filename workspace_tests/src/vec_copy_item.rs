@@ -224,13 +224,13 @@ impl Item for VecCopyItem {
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::item_model::ItemInteraction {
+    ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation};
 
-        ItemInteractionPush::new(
+        let item_interaction = ItemInteractionPush::new(
             vec![
                 ItemLocation::localhost(),
                 ItemLocation::path("Vec A".to_string()),
@@ -242,7 +242,9 @@ impl Item for VecCopyItem {
             ]
             .into(),
         )
-        .into()
+        .into();
+
+        vec![item_interaction]
     }
 }
 

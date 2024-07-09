@@ -288,9 +288,9 @@ pub trait ItemRt<E>:
     /// The returned list should be in order of least specific to most specific
     /// location.
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_item_model::ItemInteraction, E>;
+    ) -> Result<Vec<peace_item_model::ItemInteraction>, E>;
 }

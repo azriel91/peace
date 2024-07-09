@@ -159,12 +159,15 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interaction(
+    fn item_interactions(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
-    ) -> peace::item_model::ItemInteraction {
+    ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionWithin, ItemLocation};
 
-        ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into()
+        let item_interaction =
+            ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into();
+
+        vec![item_interaction]
     }
 }
