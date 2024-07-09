@@ -1,4 +1,17 @@
 [alias]
+clippy_cli = [
+    "clippy",
+    "--workspace",
+    "--features",
+    "cli error_reporting output_progress item_interactions",
+    "--fix",
+    "--exclude",
+    "peace_rt_model_web",
+    "--",
+    "-D",
+    "warnings",
+]
+
 # Nextest for different feature combinations
 test_0 = ["nextest", "run", "--workspace", "--no-default-features"]
 test_1 = ["nextest", "run", "--workspace", "--all-features"]

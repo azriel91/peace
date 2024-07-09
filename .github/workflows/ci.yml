@@ -83,12 +83,7 @@ jobs:
       - name: 'Run clippy'
         # we cannot use `--all-features` because `envman` has features that are mutually exclusive.
         run: |
-          cargo clippy \
-            --workspace \
-            --features "cli error_reporting output_progress" \
-            --fix \
-            --exclude peace_rt_model_web \
-            -- -D warnings
+          cargo clippy_cli
 
         # Ideally we'd also run it for WASM, but:
         #
