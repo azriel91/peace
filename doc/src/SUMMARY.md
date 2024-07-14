@@ -165,6 +165,8 @@
         - [Real Crates](learning_material/interruptible_software/real_crates.md)
         - [Summary](learning_material/interruptible_software/summary.md)
         - [Q & A](learning_material/interruptible_software/qna.md)
+    - [Dot IX: Diagram Design Tool](learning_material/dot_ix_diagram_design_tool.md)
+        - [Everyday Diagrams](learning_material/dot_ix_diagram_design_tool/everyday_diagrams.md)
 - [Ideas](ideas.md)
     - [Feature Gated Incremental Functionality](ideas/feature_gated_incremental_functionality.md)
 - [Licenses](licenses.html)
