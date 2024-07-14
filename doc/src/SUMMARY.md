@@ -39,6 +39,7 @@
             - [Render Technology](technical_concepts/diagrams/outcome/render_technology.md)
             - [HTML + Flexbox](technical_concepts/diagrams/outcome/html_flexbox.md)
             - [Div Diag](technical_concepts/diagrams/outcome/div_diag.md)
+            - [API Design](technical_concepts/diagrams/outcome/api_design.md)
     - [Endpoints and Interaction](technical_concepts/endpoints_and_interaction.md)
         - [Cmd Invocation](technical_concepts/endpoints_and_interaction/cmd_invocation.md)
         - [Interruption](technical_concepts/endpoints_and_interaction/interruption.md)
