@@ -159,4 +159,40 @@ where
     ) -> Result<Self::State, Self::Error> {
         S3ObjectApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
+
+    #[cfg(feature = "item_interactions")]
+    fn item_interactions(
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let file_path = params_partial
+            .bucket_name()
+            .unwrap_or_else(|| todo!())
+            .to_string();
+
+        let bucket_name = params_partial
+            .bucket_name()
+            .unwrap_or_else(|| &**item_id)
+            .to_string();
+        let object_name = params_partial
+            .object_key()
+            .unwrap_or_else(|| todo!())
+            .to_string();
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![
+                ItemLocation::localhost(),
+                ItemLocation::path(file_path),
+            ]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::path(String::from(bucket_name)),
+                ItemLocation::path(String::from(object_name)),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
+    }
 }

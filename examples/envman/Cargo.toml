@@ -111,6 +111,9 @@ error_reporting = [
     "peace/error_reporting",
     "peace_items/error_reporting",
 ]
+item_interactions = [
+    "peace/item_interactions",
+]
 output_progress = [
     "peace/output_progress",
     "peace_items/output_progress",
