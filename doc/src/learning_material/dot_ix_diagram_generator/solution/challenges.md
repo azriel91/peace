@@ -54,9 +54,6 @@ Adhering to these constraints without subtracting from:
 2. Encoding that into the diagram:
     1. SVG `fill="url(#gradient)"` doesn't work across all browsers.
     2. Effort to write it can be high.
-
-        [CSS_motion_path](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_motion_path)
-
 3. Provide an abstraction in the data model to reduce effort.
 
 </details>
