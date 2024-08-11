@@ -1,6 +1,33 @@
-# Dot IX: Diagram Generator
+<div style="
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 80vh;
+">
+    <div>
+        <object
+            type="image/svg+xml"
+            data="dot_ix_diagram_generator/landing_diagram.svg"
+            width="200"
+            style="margin-right: -50px;"></object>
+        <object
+            type="image/svg+xml"
+            data="why_rust/rustacean-flat-happy.svg"
+            width="200"></object>
+        <br />
+        <small><a href="https://azriel.im/dot_ix/#src=MQAgogHghgtgDgGwKYC4QAUBOB7AxkgZwJAHUBLAFwAsQBJAOwDNsAoAWg5YBMzMlcKZbPTQA3JJkG4oCFlTISomXFQCeKFiBC5hFKGXoSNWrVDQBvAL6aTAIwvWT2hza1cXLeti5IA+vVhCY21dfUNMNAAiSJszEEitGK17eMSbXCi0t0z4lhYkLgBzINiUgG0oABoQWwBdG1sMkDLbatx65Pdm1pAuDu04stxqswIAd36uQa4RlAIkepZCzCg4KlEyAC9fKAoKTAJgguLfHXp9sIpD1wG0Rhl5m6m7h6Q86iQYVBsCClVka5OBBkQpUChoABkwNBFBuWkYZAQCF8BCoUB8-mwmBgMjQAHIAIwABiJeLhIARSJRaIxVGw4giIDxAFZSeTKcjUei-MxcABXQ5M4lspzwxGcml+KACMjifHCsmikC-HAAaz8XIxXmxuKZABYSYrRSrsOrqdzfHSGfiAMyG8kms2aqUyuVM1ki437U0av7INBcbB7Ap5JxnPQGIzkgA80bQACpoWCHWi4H4dAgsfjbAg+UgyUA">source</a></small>
+    </div>
+    <div style="font-size: 3.5em; font-weight: bold;">Dot IX: Diagram Generator</div>
+    <div style="font-size: 2.5em;">Picture Your Understanding</div>
+    <div style="height: 100px;"></div>
+    <div style="font-size: 2.0em;">Azriel Hoh</div>
+    <div style="font-size: 1.5em;">August 2024</div>
+</div>
 
-Picture Your Understanding
+<div class="hidden">
 
 1. Problem: Diverge
     1. Diagram types:
@@ -71,3 +98,5 @@ Picture Your Understanding
         1. Visual drawing tool
         2. Structured input, e.g. YAML, pass through graphviz for layout
         3. Software library
+
+</div>
