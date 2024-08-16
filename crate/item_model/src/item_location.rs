@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -161,9 +163,31 @@ impl ItemLocation {
     }
 
     /// Returns `ItemLocation::new(name, ItemLocationType::Path)`.
+    ///
+    /// See also [`ItemLocation::path_lossy`].
+    ///
+    /// [`ItemLocation::path_lossy`]: Self::path_lossy
     pub fn path(name: String) -> Self {
         Self {
             name,
+            r#type: ItemLocationType::Path,
+        }
+    }
+
+    /// Returns `ItemLocation::new(name, ItemLocationType::Path)`, using the
+    /// lossy conversion from the given path.
+    pub fn path_lossy(name: &Path) -> Self {
+        Self {
+            // For some reason, calling `to_string_lossy()` on the path itself doesn't return the
+            // replacement character, and breaks the `item_model::item_location::path_lossy` test.
+            //
+            // The rust source code on 1.80.0 stable uses `String::from_utf8_lossy` internally:
+            // <https://doc.rust-lang.org/src/std/sys/os_str/bytes.rs.html#271>
+            //
+            // ```rust
+            // name.to_string_lossy().to_string()
+            // ```
+            name: String::from_utf8_lossy(name.as_os_str().as_encoded_bytes()).to_string(),
             r#type: ItemLocationType::Path,
         }
     }

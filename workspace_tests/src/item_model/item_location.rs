@@ -1,3 +1,5 @@
+use std::{ffi::OsStr, path::Path};
+
 use peace::item_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
 
 #[test]
@@ -89,6 +91,24 @@ fn path() {
     assert_eq!(
         ItemLocation::new(
             "/path/to/resource".to_string(),
+            peace::item_model::ItemLocationType::Path
+        ),
+        item_location
+    );
+}
+
+#[test]
+fn path_lossy() {
+    let path = unsafe {
+        Path::new(OsStr::from_encoded_bytes_unchecked(
+            b"/path/to/lossy_fo\xF0\x90\x80.txt",
+        ))
+    };
+    let item_location = ItemLocation::path_lossy(path);
+
+    assert_eq!(
+        ItemLocation::new(
+            "/path/to/lossy_fo�.txt".to_string(),
             peace::item_model::ItemLocationType::Path
         ),
         item_location
