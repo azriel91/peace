@@ -181,6 +181,7 @@
             - [Supported Usages](learning_material/dot_ix_diagram_generator/solution/supported_usages.md)
             - [Generation Process](learning_material/dot_ix_diagram_generator/solution/generation_process.md)
             - [Challenges](learning_material/dot_ix_diagram_generator/solution/challenges.md)
+        - [What's Next](learning_material/dot_ix_diagram_generator/whats_next.md)
         - [Q & A](learning_material/dot_ix_diagram_generator/qna.md)
 - [Ideas](ideas.md)
     - [Feature Gated Incremental Functionality](ideas/feature_gated_incremental_functionality.md)
