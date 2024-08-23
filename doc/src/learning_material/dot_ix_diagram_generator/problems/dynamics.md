@@ -2,7 +2,7 @@
 
 ## Static
 
-<details>
+<details><summary>Example 1</summary>
 
 <div>
 <object
@@ -15,14 +15,43 @@
 
 </details>
 
+<details><summary>Example 2</summary>
+
+<div>
+<object
+    type="image/svg+xml"
+    data="dynamics/static_big.svg"
+    ></object>
+<br/>
+<small><a href="https://azriel.im/dot_ix/#src=MQAgogHghgtgDgGwKYC4QBEkwPYCgC0huA5gE5RwAWA+gM4AuAnsmgMYCWpryIoARtggAaEBy7JcAE05JW9dtgB2aAG5JS81lAS5K7dVC6VGKXCBAJsWhJWwNT58xTjVJ2AO6LLUSWgDeAL5mjs7USBD05HL+QcHE7PSUAK58Do7xiSnUoQBe7HAxuMFQ7rRp5uyw1HDYCOysJiCBwRVVpLWoTUGOIOyKDFCKrEjV7QBm7CxdLSC0AMzUfEmsANZI9OWO89TYfABWshvTuIrYkiOKsEhlwZbWtvY9PQBEd9oP9M-FpWhPf+bPEq0L7mDLJVL-F5glIgkDQvjZOAuPIFRyApEAOhRsNCbk83l8T3RLjxXmwPhxSLCESiRyJoXCkSgclhlRg1Vq9Uaf2ebI5dQarLaHV+-15wuQrP69EGw1G2AmU150tlIzg40mSFh2yWq3WoqJOuWa0+wW2uwO0Uhz3N+0OXxOZxG51orBu5jeNjsdJ5AE1sElSKJsPAkvR1DifpCeQBBGBQHJKEAAdSQfBAAGV1Cp6tdYfCDWKAOIJcGw0DwxHI-KigDkAD9a8UqaSCYXiVj8pSXIzaYWQM8APTYOD0QfOIXsmoC7lEsAAYQATGgYwhLO5M3MQAAlJAU4J89pTa0LxcgACSMYAsiBp1yQFB6DLWJQYEhFKaKiqhmqNUrT7037DCAR5IA+T7Mq+76frMCy6ia-YAucOD4IY8hjMy9DAmaCwWociEDs4nZwA6pznGEOB7Ow7oWFY7zegRgC8G4A3TvfGU0ZPIAgGSAPB-cSlikBGOIxgCYO3xmQIrkNZCYAgzvNiSHhkj4haMYApztydSTJWk8jGAEM7B5VHeDSIYxgC7O-p7KgYJjGAAy7B5Ab+CqamggA8G4A7-u8eYRp6j6TyAHwbgDFezhOx2lpfyMbJuBIJIxDXGkuIKQS1BVhpfYgAA2vF+LkpIIgMjSmEALrmfyXJJYeIrpXyhmMCI5XIEVrQWR0ZX2fKiqdGldVILVrXqo59Xqa22VJbalpHBlLYJdlIijYcDW9AZnINCNuEheNVVLTVsHBWN82VpJLjJUNPjUKQSAAI5JNc437VSKIoLQ7i5ZNWVKYo7h7fxEl3fkSWZYpkindcNT9B1t3VgUtDdQ+L0AygihIEVJDkFQOY5NkT6kDRUUxdQrBKAw5B9Fhmzg9QKJ-bDiVnZd11oJEV0zGTFNHVNJ1nbQINQ-TpCMz0-2JXQq1jTzfMgDjIwwH0yCKK4SAYUkCBHAAjMEEvUFLXjvjRoJfclLMC8NNNXY8qs9Mzv2s69gMc1znRm+L0XOpw7GgGM2CkO4hg5SAfDMisIgCIkIinAjTN6wdlPydbQO048furMEcD+xrTpoICpDkIw1CmrgiRYKgZpMMgOsgGRzry1AiskzM5iKggdCUD4Fwe-GCBoLWcwAAxd02fz143zfULYaikB33e97XIAD7QTfkZh7BqOPPd908hPYGsg-kSP6gdwAbCvU+sIGtAe2gVf0HgfwBvQdQI9Q7jsJIiQd5PPTq+cCtK6X5jH1jZ8PjDFfRwdRiCUCOAAMlAeAqeM854t1IG3DuytD790mA3WeQ8d5jxALWFBb8nhwKHu7Y+7E8GoMIegreIwF5L1wfg1ePR16b0weRU4iDtAdwACwUKYZEDeIxWEjGwdw3hWx+EsPgdkOQi9Oi1h4QQvh7QWHF06G4J8UUp7J0kNIRQxBx6MIfD8KeAAeExaAABU0D6BT0wXAEY+NLA4NgHwdQU8b53wcbUABjAkBrg8DMT0HxNjmDMZY6xtim72Lxt4nBfAEBi11uJEJIAwkgCsewMBNi-h2K8U4tAZAoCMBmF5BCsCqFCOoOwpBuDFxiLrhUqRIjan1Ono04hVgkhkLqYoxwRD54yLobWHphjPISMEVI6pnDcEAFZWnMImVg7Ao8O5zN6WM5RiyBnyCGWs0Zsxxl0FUWgdR4ZJBaJ8Lo-RuC5j7NyTE-JD4YCuNILgIAA">source</a></small>
+</div>
+
+</details>
+
+<details><summary>Example 3</summary>
+
+<div>
+<object
+    type="image/svg+xml"
+    data="dynamics/static_deps.svg"
+    width="800"
+    ></object>
+</div>
+
+</details>
+
+<div class="hidden">
+
 1. 🟢 Good for showing a snapshot in time.
 2. 🟢 Good for printing.
 3. 🔴 Messy when showing a lot of overlapping information.
 
+</div>
+
 
 ## Animated
 
-<details>
+<details><summary>Example 1</summary>
 
 <object
     type="image/svg+xml"
@@ -33,13 +62,17 @@
 
 </details>
 
+<div class="hidden">
+
 1. 🟢 Able to show the sequence of things on screen.
 2. 🔴 Still susceptible to information overload.
+
+</div>
 
 
 ## Interactive
 
-<details>
+<details><summary>Example 1</summary>
 
 <object
     type="image/svg+xml"
@@ -50,6 +83,9 @@
 
 </details>
 
+<div class="hidden">
 
 1. Highlight / Focus on the part of the diagram that is relevant.
 2. Hide / dim parts of the diagram that are not relevant.
+
+</div>
