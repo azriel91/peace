@@ -404,7 +404,7 @@ where
                     states_applied_mut.insert_raw(item_id.clone(), state_applied);
                 }
 
-                // Save `state_target` (which is state_target) if we are not cleaning
+                // Save `state_target` (which is `state_goal`) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {

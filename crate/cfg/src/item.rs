@@ -315,16 +315,19 @@ pub trait Item: DynClone {
     /// This should mirror the logic in [`apply`], with the following
     /// differences:
     ///
-    /// * When state will actually be altered, this would skip the logic.
+    /// 1. When state will actually be altered, this would skip the logic.
     ///
-    /// * Where there would be IDs received from an external system, a
+    /// 2. Where there would be IDs received from an external system, a
     ///   placeholder ID should still be inserted into the runtime data. This
     ///   should allow subsequent `Item`s that rely on this one to use those
     ///   placeholders in their logic.
     ///
     /// # Implementors
     ///
-    /// This function call is intended to be read-only and cheap.
+    /// This function call is intended to be read-only and relatively cheap.
+    /// Values in `params` and `data` cannot be guaranteed to truly exist.
+    /// [#196] tracks the work to resolve what this function's contract should
+    /// be.
     ///
     /// # Parameters
     ///
@@ -345,6 +348,7 @@ pub trait Item: DynClone {
     /// [`state_goal`]: crate::Item::state_goal
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::Item::state_diff
+    /// [#196]: https://github.com/azriel91/peace/issues/196
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
