@@ -134,21 +134,40 @@ Options:
         4. 🔵 If a dry run is intended to detect issues that *would* happen from an actual run, then we *do* want external systems to be called with the parameters passed in. e.g. detect credentials that are incorrect.
         5. 🔵 If a dry run is **NOT** intended to detect issues, then we will have simpler code implementation -- never make any external system calls (network, file IO).
 
-    3. Choosing a default cloud provider in one item, could make a nonsensical diagram if another item uses a different cloud provider.
+    3. 🟡 Choosing a default cloud provider in one item, could make a nonsensical diagram if another item uses a different cloud provider.
+
+        Note that an `Item` may still generate sensible example state based on example parameter values.
+
+    4. 🔴 Code has complexity of either another derive macro generated type with `RealOrExample<T>` for each state field, or a wrapper for `RealOrExample<Item::State>`.
+
+2. 🟡 **B:** Add `Item::state_example`, which provide fake state.
+
+    Pros:
+
+    1. 🟢 Can always generate a diagram and show what might be, even if we don't actually have values to do so.
+    2. 🟢 Whether using `dot` or `FlexDiag`, the diagram layout will more consistent from the clean state to the final state if nodes are styled to be invisible, rather than not present.
+
+    Cons:
+
+    1. 🔴 Even more functions in the `Item` trait, creating more burden on item implementors.
+    2. 🟡 Choosing a default cloud provider in one item, could make a nonsensical diagram if another item uses a different cloud provider.
 
         Note that an `Item` may still generate sensible example state based on example parameter values.
 
 
-2. 🟡 **B:** Return `Option<T>` for each value that is unknown.
+3. 🟡 **C:** Return `Option<T>` for each value that is unknown.
 
     Pros:
 
     1. 🟢 Never have false information in diagrams.
-    2. 🟢 Code is easier.
+    2. 🟢 Code can put `None` for unknown values.
 
     Cons:
 
     1. 🔴 Unable to generate useful diagram when starting from a clean state. i.e. cannot visualize the fully deployed state before deploying anything.
+    2. 🔴 Code has complexity of another derive macro generated type with `Option<T>` for each state field.
+
+Let's go with **B**.
 
 
 ### Notes From Designing Diagrams
