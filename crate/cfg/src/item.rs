@@ -174,9 +174,59 @@ pub trait Item: DynClone {
     /// must be inserted into the map so that item functions can borrow the
     /// instance of that type.
     ///
+    /// ## External Parameters
+    ///
+    /// If the item works with an external source for parameters, such as:
+    ///
+    /// * a version controlled package file that specifies dependency versions
+    /// * (discouraged) a web service with project configuration
+    ///
+    /// then this is the function to include the logic to read those files.
+    ///
+    /// ## Fallibility
+    ///
+    /// The function signature allows for fallibility, to allow issues to be
+    /// reported early, such as:
+    ///
+    /// * Credentials to SDK clients not present on the user's system.
+    /// * Incompatible / invalid values specified in project configuration
+    ///   files, or expected project configuration files don't exist.
+    ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Self::Error>;
+
+    /// Returns an example fully deployed state of the managed item.
+    ///
+    /// # Implementors
+    ///
+    /// This is *expected* to always return a value, as it is used to:
+    ///
+    /// * Display a diagram that shows the user what the item looks like when it
+    ///   is fully deployed, without actually interacting with any external
+    ///   state.
+    ///
+    /// As much as possible, use the values in the provided params and data.
+    ///
+    /// This function should **NOT** interact with any external services, or
+    /// read from files that are part of the automation process, e.g.
+    /// querying data from a web endpoint, or reading files that may be
+    /// downloaded by a predecessor.
+    ///
+    /// ## Infallibility
+    ///
+    /// The signature is deliberately infallible to signal to implementors that
+    /// calling an external service / read from a file is incorrect
+    /// implementation for this method -- values in params / data may be example
+    /// values from other items that may not resolve.
+    ///
+    /// ## Non-async
+    ///
+    /// Similar to infallibility, this signals to implementors that this
+    /// function should be a cheap example state computation that is relatively
+    /// realistic rather than determining an accurate value.
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, data: Self::Data<'_>) -> Self::State;
 
     /// Returns the current state of the managed item, if possible.
     ///

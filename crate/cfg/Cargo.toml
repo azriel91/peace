@@ -35,6 +35,5 @@ tynm = { workspace = true }
 default = []
 error_reporting = ["peace_params/error_reporting"]
 output_progress = ["peace_core/output_progress"]
-item_interactions = [
-    "dep:peace_item_model",
-]
+item_interactions = ["dep:peace_item_model"]
+item_state_example = []

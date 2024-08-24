@@ -80,6 +80,9 @@ item_interactions = [
     "dep:peace_item_model",
     "peace_cfg/item_interactions",
 ]
+item_state_example = [
+    "peace_cfg/item_state_example",
+]
 ssr = [
     "peace_webi?/ssr",
     "peace_webi_components?/ssr",
