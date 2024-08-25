@@ -175,7 +175,7 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interactions(
+    fn interactions(
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {
@@ -183,7 +183,7 @@ where
 
         let location: ItemLocationAncestors = vec![
             ItemLocation::localhost(),
-            ItemLocation::path(params_partial.dest().display().to_string()),
+            ItemLocation::path(params.dest().display().to_string()),
         ]
         .into();
         let item_interaction = ItemInteractionWithin::new(location).into();

@@ -288,7 +288,7 @@ pub trait ItemRt<E>:
     /// The returned list should be in order of least specific to most specific
     /// location.
     #[cfg(feature = "item_interactions")]
-    fn item_interactions(
+    fn interactions(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,

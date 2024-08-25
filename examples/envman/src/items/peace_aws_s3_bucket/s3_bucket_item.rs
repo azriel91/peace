@@ -172,7 +172,7 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interactions(
+    fn interactions(
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {

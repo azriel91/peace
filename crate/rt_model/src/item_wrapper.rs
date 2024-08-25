@@ -893,16 +893,15 @@ where
     }
 
     #[cfg(feature = "item_interactions")]
-    fn item_interactions(
+    fn interactions(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<Vec<peace_item_model::ItemInteraction>, E> {
-        let params_partial =
-            self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
+        let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
-        let item_interactions = I::item_interactions(&params_partial, data);
+        let item_interactions = I::interactions(&params, data);
 
         Ok(item_interactions)
     }
