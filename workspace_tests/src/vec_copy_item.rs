@@ -225,7 +225,7 @@ impl Item for VecCopyItem {
 
     #[cfg(feature = "item_interactions")]
     fn item_interactions(
-        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation};

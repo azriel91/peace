@@ -196,24 +196,14 @@ where
 
     #[cfg(feature = "item_interactions")]
     fn item_interactions(
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
 
-        let file_path = params_partial
-            .bucket_name()
-            .unwrap_or_else(|| todo!())
-            .to_string();
-
-        let bucket_name = params_partial
-            .bucket_name()
-            .unwrap_or_else(|| todo!())
-            .to_string();
-        let object_name = params_partial
-            .object_key()
-            .unwrap_or_else(|| todo!())
-            .to_string();
+        let file_path = params.bucket_name().to_string();
+        let bucket_name = params.bucket_name().to_string();
+        let object_name = params.object_key().to_string();
 
         let item_interaction = ItemInteractionPush::new(
             ItemLocationAncestors::new(vec![
@@ -221,8 +211,8 @@ where
                 ItemLocation::path(file_path),
             ]),
             ItemLocationAncestors::new(vec![
-                ItemLocation::path(String::from(bucket_name)),
-                ItemLocation::path(String::from(object_name)),
+                ItemLocation::path(bucket_name),
+                ItemLocation::path(object_name),
             ]),
         )
         .into();

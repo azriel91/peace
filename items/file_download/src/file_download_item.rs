@@ -176,25 +176,22 @@ where
 
     #[cfg(feature = "item_interactions")]
     fn item_interactions(
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPull, ItemLocation, ItemLocationAncestors};
 
-        let location_server = if let Some(src) = params_partial.src() {
-            let mut location_server: ItemLocationAncestors =
-                vec![ItemLocation::host_from_url(src)].into();
-            location_server.push(ItemLocation::path(src.to_string()));
+        let location_server: ItemLocationAncestors = vec![
+            ItemLocation::host_from_url(params.src()),
+            ItemLocation::path(params.src().to_string()),
+        ]
+        .into();
 
-            location_server
-        } else {
-            vec![ItemLocation::host_unknown()].into()
-        };
-
-        let mut location_client: ItemLocationAncestors = vec![ItemLocation::localhost()].into();
-        if let Some(dest) = params_partial.dest() {
-            location_client.push(ItemLocation::path(dest.display().to_string()));
-        }
+        let location_client: ItemLocationAncestors = vec![
+            ItemLocation::localhost(),
+            ItemLocation::path(params.dest().display().to_string()),
+        ]
+        .into();
 
         let item_interaction = ItemInteractionPull {
             location_client,

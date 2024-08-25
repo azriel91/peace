@@ -173,12 +173,12 @@ where
 
     #[cfg(feature = "item_interactions")]
     fn item_interactions(
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
 
-        let s3_bucket_name = params_partial.name().unwrap_or_else(|| todo!()).to_string();
+        let s3_bucket_name = params.name().to_string();
 
         let item_interaction = ItemInteractionPush::new(
             ItemLocationAncestors::new(vec![ItemLocation::localhost()]),

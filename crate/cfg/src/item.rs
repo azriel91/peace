@@ -477,7 +477,7 @@ pub trait Item: DynClone {
     /// location.
     #[cfg(feature = "item_interactions")]
     fn item_interactions(
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Vec<peace_item_model::ItemInteraction>;
 }
