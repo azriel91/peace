@@ -79,6 +79,40 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use std::fmt::Write;
+
+        use peace::cfg::state::Generated;
+
+        let example_content = b"s3_object_example";
+
+        let content_md5_hexstr = {
+            let content_md5_bytes = {
+                let mut md5_ctx = md5_rs::Context::new();
+                md5_ctx.read(example_content);
+                md5_ctx.finish()
+            };
+            content_md5_bytes
+                .iter()
+                .try_fold(
+                    String::with_capacity(content_md5_bytes.len() * 2),
+                    |mut hexstr, x| {
+                        write!(&mut hexstr, "{:02x}", x)?;
+                        Result::<_, std::fmt::Error>::Ok(hexstr)
+                    },
+                )
+                .expect("Failed to construct hexstring from S3 object MD5.")
+        };
+
+        S3ObjectState::Some {
+            bucket_name: params.bucket_name().to_string(),
+            object_key: params.object_key().to_string(),
+            content_md5_hexstr: Some(content_md5_hexstr.clone()),
+            e_tag: Generated::Value(content_md5_hexstr),
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -174,7 +208,7 @@ where
 
         let bucket_name = params_partial
             .bucket_name()
-            .unwrap_or_else(|| &**item_id)
+            .unwrap_or_else(|| todo!())
             .to_string();
         let object_name = params_partial
             .object_key()

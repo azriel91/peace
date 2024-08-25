@@ -63,6 +63,11 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        Ok(BlankState(params.dest.0))
+    }
+
     async fn try_state_current(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,

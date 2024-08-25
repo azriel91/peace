@@ -72,6 +72,28 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(_params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use std::{
+            path::PathBuf,
+            time::{Duration, SystemTime, UNIX_EPOCH},
+        };
+
+        use crate::FileMetadata;
+
+        let mtime = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .as_ref()
+            .map(Duration::as_secs)
+            .unwrap_or(0u64);
+        let files_extracted = vec![
+            FileMetadata::new(PathBuf::from(String::from("tar_x_example_1.txt")), mtime),
+            FileMetadata::new(PathBuf::from(String::from("tar_x_example_2.txt")), mtime),
+        ];
+
+        FileMetadatas::from(files_extracted)
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,

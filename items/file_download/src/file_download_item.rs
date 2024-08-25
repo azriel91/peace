@@ -69,6 +69,19 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        let dest = params.dest();
+
+        State::new(
+            FileDownloadState::StringContents {
+                path: dest.to_path_buf(),
+                contents: "example contents".to_string(),
+            },
+            FetchedOpt::None,
+        )
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,

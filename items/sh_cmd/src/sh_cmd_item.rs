@@ -70,6 +70,12 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, data: Self::Data<'_>) -> Self::State {
+        let state_example_sh_cmd = params.state_example_sh_cmd();
+        ShCmdExecutor::exec(state_example_sh_cmd)
+    }
+
     async fn try_state_current(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
