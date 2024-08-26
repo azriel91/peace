@@ -61,3 +61,7 @@ output_progress = [
 item_interactions = [
     "dep:peace_item_model",
 ]
+item_state_example = [
+    "peace_data/item_state_example",
+    "peace_params/item_state_example",
+]

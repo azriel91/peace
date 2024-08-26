@@ -25,6 +25,9 @@ use crate::{
     ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
 };
 
+#[cfg(feature = "item_state_example")]
+use peace_data::marker::Example;
+
 /// Wraps a type implementing [`Item`].
 ///
 /// # Type Parameters
@@ -456,6 +459,8 @@ where
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
         // Insert `XMarker<I::State>` to create entries in `Resources`.
         // This is used for referential param values (#94)
+        #[cfg(feature = "item_state_example")]
+        resources.insert(Example::<I::State>(None));
         resources.insert(Clean::<I::State>(None));
         resources.insert(Current::<I::State>(None));
         resources.insert(Goal::<I::State>(None));
@@ -899,6 +904,7 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<Vec<peace_item_model::ItemInteraction>, E> {
         let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
+
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
         let item_interactions = I::interactions(&params, data);

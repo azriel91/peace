@@ -11,6 +11,9 @@ use crate::{
     FromFunc, Func, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
 };
 
+#[cfg(feature = "item_state_example")]
+use peace_data::marker::Example;
+
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MappingFnImpl<T, F, Args> {
@@ -141,8 +144,17 @@ macro_rules! impl_mapping_fn_impl {
                 // We have to duplicate code because the return type from
                 // `resources.try_borrow` is different per branch.
                 match value_resolution_ctx.value_resolution_mode() {
-                    ValueResolutionMode::ApplyDry => {
-                        $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
+                    #[cfg(feature = "item_state_example")]
+                    ValueResolutionMode::Example => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
+
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                            value_resolution_ctx: value_resolution_ctx.clone(),
+                            from_type_name: tynm::type_name::<($($Arg,)+)>(),
+                        })
+                    }
+                    ValueResolutionMode::Clean => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
                         fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
@@ -165,8 +177,8 @@ macro_rules! impl_mapping_fn_impl {
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
                     }
-                    ValueResolutionMode::Clean => {
-                        $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
+                    ValueResolutionMode::ApplyDry => {
+                        $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
                         fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
@@ -205,8 +217,14 @@ macro_rules! impl_mapping_fn_impl {
                 // We have to duplicate code because the return type from
                 // `resources.try_borrow` is different per branch.
                 match value_resolution_ctx.value_resolution_mode() {
-                    ValueResolutionMode::ApplyDry => {
-                        $(try_arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
+                    #[cfg(feature = "item_state_example")]
+                    ValueResolutionMode::Example => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
+
+                        Ok(fn_map($(&$var,)+))
+                    }
+                    ValueResolutionMode::Clean => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
                         Ok(fn_map($(&$var,)+))
                     }
@@ -220,8 +238,8 @@ macro_rules! impl_mapping_fn_impl {
 
                         Ok(fn_map($(&$var,)+))
                     }
-                    ValueResolutionMode::Clean => {
-                        $(try_arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
+                    ValueResolutionMode::ApplyDry => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
                         Ok(fn_map($(&$var,)+))
                     }
