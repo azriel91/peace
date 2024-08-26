@@ -72,6 +72,22 @@ where
         TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
     for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
 {
+    #[cfg(feature = "item_state_example")]
+    fn state_example(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<I::State, E> {
+        let state_example = {
+            let params = self.params(params_specs, resources, ValueResolutionMode::Example)?;
+            let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+            I::state_example(&params, data)
+        };
+        resources.borrow_mut::<Example<I::State>>().0 = Some(state_example.clone());
+
+        Ok(state_example)
+    }
+
     async fn state_clean(
         &self,
         params_specs: &ParamsSpecs,
@@ -506,6 +522,16 @@ where
             ),
             (Some(state_a), Some(state_b)) => Ok(state_a == state_b),
         }
+    }
+
+    #[cfg(feature = "item_state_example")]
+    fn state_example(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_example(params_specs, resources)
+            .map(BoxDtDisplay::new)
     }
 
     async fn state_clean(
