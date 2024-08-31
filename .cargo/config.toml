@@ -23,5 +23,17 @@ coverage_1 = ["llvm-cov", "--no-report", "nextest", "--workspace", "--all-featur
 coverage_merge = 'llvm-cov report --lcov --output-path ./target/coverage/lcov.info'
 coverage_open = 'llvm-cov report --open --output-dir ./target/coverage'
 
+# Build envman example
+# cargo leptos build --project "envman" --bin-features "cli item_interactions item_state_example" --release
+envman_build_release = [
+    "leptos",
+    "build",
+    "--project",
+    "envman",
+    "--bin-features",
+    "cli item_interactions item_state_example",
+    "--release",
+]
+
 [env]
 CLICOLOR_FORCE = "1"
