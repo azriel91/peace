@@ -39,7 +39,7 @@ impl WebiServer {
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(move || view! {  <Home /> });
+        let routes = leptos_axum::generate_route_list(move || view! { <Home /> });
 
         stream::iter(crate::assets::ASSETS.iter())
             .map(Result::<_, WebiError>::Ok)
@@ -78,8 +78,11 @@ impl WebiServer {
             .leptos_routes_with_context(
                 &leptos_options,
                 routes,
-                move || leptos::provide_context(flow_spec_info.clone()),
-                move || view! {  <Home /> },
+                move || {
+                    leptos::provide_context(flow_spec_info.clone());
+                    // TODO: provide item interactions channel receiver
+                },
+                move || view! { <Home /> },
             )
             .with_state(leptos_options);
 
