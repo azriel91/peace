@@ -199,6 +199,11 @@ where
         &self.id
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        MockState(params.0)
+    }
+
     async fn state_clean(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,

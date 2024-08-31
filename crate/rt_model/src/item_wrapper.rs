@@ -11,7 +11,9 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Goal},
     Data,
 };
-use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
+use peace_params::{
+    Params, ParamsMergeExt, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode,
+};
 use peace_resource_rt::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -444,9 +446,10 @@ where
         + From<<I as Item>::Error>
         + From<crate::Error>
         + 'static,
-    for<'params> <I as Item>::Params<'params>:
-        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
-    for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
+    for<'params> I::Params<'params>:
+        ParamsMergeExt + TryFrom<<I::Params<'params> as Params>::Partial>,
+    for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>
+        + From<<I::Params<'params> as TryFrom<<I::Params<'params> as Params>::Partial>>::Error>,
 {
     fn id(&self) -> &ItemId {
         <I as Item>::id(self)
@@ -923,17 +926,55 @@ where
         Ok(())
     }
 
-    #[cfg(feature = "item_interactions")]
-    fn interactions(
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_example(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<Vec<peace_item_model::ItemInteraction>, E> {
-        let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
+    ) -> Result<peace_item_model::ItemInteractionsExample, E> {
+        let params = self.params(params_specs, resources, ValueResolutionMode::Example)?;
 
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
         let item_interactions = I::interactions(&params, data);
+
+        Ok(peace_item_model::ItemInteractionsExample::from(
+            item_interactions,
+        ))
+    }
+
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_try_current<'params>(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E> {
+        let params_partial_current =
+            self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
+        let mut params_example =
+            self.params(params_specs, resources, ValueResolutionMode::Example)?;
+        let params_current_result: Result<I::Params<'_>, _> =
+            TryFrom::<_>::try_from(params_partial_current);
+
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        let item_interactions = match params_current_result {
+            Ok(params_current) => {
+                let item_interactions = I::interactions(&params_current, data);
+
+                peace_item_model::ItemInteractionsCurrent::from(item_interactions).into()
+            }
+            Err(params_partial_current) => {
+                // Rust cannot guarantee that `I::Params.try_from(params_partial)`'s
+                // `TryFrom::Error` type is exactly the same as `Params::Partial`, so we have to
+                // explicitly add the `ParamsPartial: From<TryFrom::Error>` bound, and call
+                // `.into()` over here.
+                ParamsMergeExt::merge(&mut params_example, params_partial_current.into());
+                let params_merged = params_example;
+                let item_interactions = I::interactions(&params_merged, data);
+
+                peace_item_model::ItemInteractionsExample::from(item_interactions).into()
+            }
+        };
 
         Ok(item_interactions)
     }

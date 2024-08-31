@@ -137,6 +137,16 @@ impl From<&ShCmd> for Command {
     }
 }
 
+#[cfg(feature = "item_state_example")]
+impl From<&ShCmd> for std::process::Command {
+    fn from(sh_cmd: &ShCmd) -> std::process::Command {
+        let mut command = std::process::Command::new(&sh_cmd.program);
+        command.args(&sh_cmd.args);
+
+        command
+    }
+}
+
 impl fmt::Display for ShCmd {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.program.to_string_lossy().fmt(f)?;

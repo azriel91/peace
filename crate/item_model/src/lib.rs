@@ -7,6 +7,9 @@ pub use crate::{
     item_interaction::{
         ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin,
     },
+    item_interactions_current::ItemInteractionsCurrent,
+    item_interactions_current_or_example::ItemInteractionsCurrentOrExample,
+    item_interactions_example::ItemInteractionsExample,
     item_location::ItemLocation,
     item_location_ancestors::ItemLocationAncestors,
     item_location_tree::ItemLocationTree,
@@ -14,6 +17,9 @@ pub use crate::{
 };
 
 mod item_interaction;
+mod item_interactions_current;
+mod item_interactions_current_or_example;
+mod item_interactions_example;
 mod item_location;
 mod item_location_ancestors;
 mod item_location_tree;

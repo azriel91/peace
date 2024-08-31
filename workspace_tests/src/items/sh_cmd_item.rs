@@ -30,6 +30,10 @@ impl TestFileCreationShCmdItem {
     fn params() -> ShCmdParams<TestFileCreationShCmdItem> {
         #[cfg(unix)]
         let sh_cmd_params = {
+            #[cfg(feature = "item_state_example")]
+            let state_example_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item/unix/test_file_creation_state_example.sh"
+            ));
             let state_clean_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item/unix/test_file_creation_state_clean.sh"
             ));
@@ -49,6 +53,8 @@ impl TestFileCreationShCmdItem {
                 "sh_cmd_item/unix/test_file_creation_apply_exec.sh"
             ));
             ShCmdParams::<TestFileCreationShCmdItem>::new(
+                #[cfg(feature = "item_state_example")]
+                state_example_sh_cmd,
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_goal_sh_cmd,
@@ -60,6 +66,13 @@ impl TestFileCreationShCmdItem {
 
         #[cfg(windows)]
         let sh_cmd_params = {
+            #[cfg(feature = "item_state_example")]
+            let state_example_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item/windows/test_file_creation_state_example.ps1"
+                    ));
             let state_clean_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
@@ -93,6 +106,8 @@ impl TestFileCreationShCmdItem {
                 " }"
             ));
             ShCmdParams::<TestFileCreationShCmdItem>::new(
+                #[cfg(feature = "item_state_example")]
+                state_example_sh_cmd,
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_goal_sh_cmd,

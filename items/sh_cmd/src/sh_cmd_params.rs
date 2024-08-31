@@ -99,6 +99,8 @@ impl<Id> ShCmdParams<Id> {
         apply_exec_sh_cmd: ShCmd,
     ) -> Self {
         Self {
+            #[cfg(feature = "item_state_example")]
+            state_example_sh_cmd,
             state_clean_sh_cmd,
             state_current_sh_cmd,
             state_goal_sh_cmd,

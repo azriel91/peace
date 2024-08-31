@@ -25,6 +25,7 @@ use crate::{
     impl_field_wise_spec_rt_for_field_wise_external::impl_field_wise_spec_rt_for_field_wise_external,
     impl_from_params_for_params_field_wise::impl_from_params_for_params_field_wise,
     impl_from_params_for_params_partial::impl_from_params_for_params_partial,
+    impl_params_merge_ext_for_params::impl_params_merge_ext_for_params,
     impl_try_from_params_partial_for_params::impl_try_from_params_partial_for_params,
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
@@ -41,6 +42,7 @@ mod impl_field_wise_spec_rt_for_field_wise;
 mod impl_field_wise_spec_rt_for_field_wise_external;
 mod impl_from_params_for_params_field_wise;
 mod impl_from_params_for_params_partial;
+mod impl_params_merge_ext_for_params;
 mod impl_try_from_params_partial_for_params;
 mod impl_value_spec_rt_for_field_wise;
 mod spec_is_usable;
@@ -57,10 +59,17 @@ mod util;
 /// references the `peace_params` crate instead of the `peace::params`
 /// re-export.
 ///
-/// For types derived from `struct` `Param`s -- `Spec`, `Partial` -- we also:
+/// # Generated Types
 ///
-/// * Generate getters and mut getters for non-`pub`, non-`PhantomData` fields.
-/// * Generate a constructor if not all fields are `pub`.
+/// * `*ParamsSpec`: Similar to `Params`, with each field taking in a
+///   specification of how the value is set.
+/// * `*ParamsPartial`: Similar to `Params`, with each field wrapped in
+///   `Option`.
+///
+/// Both of these generated types will have:
+///
+/// * A constructor if not all fields are `pub`.
+/// * Getters and mut getters for non-`pub`, non-`PhantomData` fields.
 ///
 /// Maybe we should also generate a `SpecBuilder` -- see commit `10f63611` which
 /// removed builder generation.
@@ -233,7 +242,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         quote!(#ty_generics)
     };
 
-    let (t_partial, t_field_wise, t_field_wise_builder) =
+    let (t_partial, t_field_wise, t_field_wise_builder, impl_params_merge_ext_for_params) =
         if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
             let ty_generics = &generics_split.1;
             let value_ty: Type = parse_quote!(#value_name #ty_generics);
@@ -249,7 +258,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 &t_partial_name,
             );
 
-            (t_partial, t_field_wise, None)
+            (t_partial, t_field_wise, None, None)
         } else {
             let t_partial = t_partial(ast, &generics_split, value_name, &t_partial_name);
             let t_field_wise = t_field_wise(
@@ -271,8 +280,20 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 impl_mode,
                 &field_wise_enum_builder_ctx,
             );
+            let impl_params_merge_ext_for_params = impl_params_merge_ext_for_params(
+                ast,
+                &generics_split,
+                &peace_params_path,
+                value_name,
+                &t_partial_name,
+            );
 
-            (t_partial, t_field_wise, Some(t_field_wise_builder))
+            (
+                t_partial,
+                t_field_wise,
+                Some(t_field_wise_builder),
+                Some(impl_params_merge_ext_for_params),
+            )
         };
     let (impl_generics, ty_generics, where_clause) = &generics_split;
 
@@ -310,6 +331,8 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         #t_field_wise
 
         #t_field_wise_builder
+
+        #impl_params_merge_ext_for_params
     });
 
     impl_value_tokens

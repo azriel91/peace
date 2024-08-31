@@ -245,6 +245,11 @@ pub fn is_phantom_data(field_ty: &Type) -> bool {
         if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
 }
 
+/// Returns idents as `field_name_partial`.
+pub fn field_name_partial(field_name: &Ident) -> Ident {
+    format_ident!("{}_partial", field_name)
+}
+
 /// Returns tuple idents as `_n` where `n` is the index of the field.
 pub fn tuple_ident_from_field_index(field_index: usize) -> Ident {
     Ident::new(&format!("_{field_index}"), Span::call_site())
@@ -263,6 +268,25 @@ pub fn tuple_index_from_field_index(field_index: usize) -> LitInt {
 /// `::std::marker::PhantomData`.
 pub fn fields_deconstruct(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
     fields_deconstruct_retain(fields, false)
+}
+
+/// Returns a comma separated list of deconstructed fields, with a `_partial`
+/// suffix.
+///
+/// Named fields are returned as `field_name_partial`, whose type is
+/// `Option<T>`.
+///
+/// Tuple fields are returned as `_n_partial`, and marker fields are returned as
+/// `::std::marker::PhantomData`.
+pub fn fields_deconstruct_partial(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain_map(
+        fields,
+        false,
+        Some(|field_name| {
+            let field_name_partial = field_name_partial(field_name);
+            quote!(#field_name_partial)
+        }),
+    )
 }
 
 /// Returns a comma separated list of deconstructed fields, deconstructed as
@@ -576,6 +600,55 @@ pub fn variant_match_arm(
                 #enum_name::#variant_name => {
                     #match_arm_body
                 }
+            }
+        }
+    }
+}
+
+/// Generates an enum variant match arm.
+///
+/// # Parameters
+///
+/// * `enum_name`: e.g. `MyParams`
+/// * `enum_partial_name`: e.g. `MyParamsPartial`
+/// * `variant`: Variant to generate the match arm for.
+/// * `match_arm_body`: Tokens to insert as the match arm body.
+pub fn variant_and_partial_match_arm(
+    enum_name: &Ident,
+    enum_partial_name: &Ident,
+    variant: &Variant,
+    match_arm_body: proc_macro2::TokenStream,
+) -> proc_macro2::TokenStream {
+    let variant_name = &variant.ident;
+    let fields_deconstructed = fields_deconstruct(&variant.fields);
+    let fields_deconstructed_partial = fields_deconstruct_partial(&variant.fields);
+    match &variant.fields {
+        Fields::Named(_fields_named) => {
+            quote! {
+                (
+                    #enum_name::#variant_name { #(#fields_deconstructed),* },
+                    #enum_partial_name::#variant_name { #(#fields_deconstructed_partial),* },
+                ) => {
+                    #match_arm_body
+                }
+            }
+        }
+        Fields::Unnamed(_) => {
+            quote! {
+                (
+                    #enum_name::#variant_name(#(#fields_deconstructed),*),
+                    #enum_partial_name::#variant_name(#(#fields_deconstructed_partial),*),
+                ) => {
+                    #match_arm_body
+                }
+            }
+        }
+        Fields::Unit => {
+            quote! {
+                (
+                    #enum_name::#variant_name,
+                    #enum_partial_name::#variant_name
+                ) => {}
             }
         }
     }

@@ -296,45 +296,60 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Returns the physical resources that this item interacts with.
+    /// Returns the physical resources that this item interacts with, purely
+    /// using example state.
     ///
-    /// # Examples
+    /// # Design
     ///
-    /// ## File Download Item
+    /// This method returns interactions from [`Item::interactions`], passing in
+    /// parameters computed from example state.
     ///
-    /// This may be from:
+    /// ## Fallibility
     ///
-    /// * host server
-    /// * URL
+    /// [`Item::interactions`] is infallible as computing `ItemInteractions`
+    /// should purely be instantiating objects.
     ///
-    /// to:
-    ///
-    /// * localhost
-    /// * file system path
-    ///
-    ///
-    /// ### Server Launch Item
-    ///
-    /// This may be from:
-    ///
-    /// * localhost
-    ///
-    /// to:
-    ///
-    /// * cloud provider
-    /// * region
-    /// * subnet
-    /// * host
-    ///
-    ///
-    /// # Implementors
-    ///
-    /// The returned list should be in order of least specific to most specific
-    /// location.
-    #[cfg(feature = "item_interactions")]
-    fn interactions(
+    /// [`ItemRt::interactions_example`] *is* fallible as value resolution for
+    /// parameters may fail, e.g. if there is a bug in Peace, or an item's
+    /// parameters requests a type that doesn't exist in [`Resources`].
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_example(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<Vec<peace_item_model::ItemInteraction>, E>;
+    ) -> Result<peace_item_model::ItemInteractionsExample, E>;
+
+    /// Returns the physical resources that this item interacts with, merging
+    /// any available current state over example state.
+    ///
+    /// # Design
+    ///
+    /// This method returns interactions from [`Item::interactions`], passing in
+    /// parameters computed from current state, or if not available, example
+    /// state.
+    ///
+    /// For tracking which item interactions are known, for the purpose of
+    /// styling unknown state differently, we could return the
+    /// `ItemInteractions` alongside with how they were constructed:
+    ///
+    /// 1. One for `ItemInteraction`s where params are fully computed using
+    ///    fully known state.
+    /// 2. One for `ItemInteraction`s where params are computed using some or
+    ///    all example state.
+    ///
+    /// ## Fallibility
+    ///
+    /// [`Item::interactions`] is infallible as computing `ItemInteractions`
+    /// should purely be instantiating objects.
+    ///
+    /// [`ItemRt::interactions_current`] *is* fallible as value resolution
+    /// for parameters may fail, e.g. if there is a bug in Peace, or an
+    /// item's parameters requests a type that doesn't exist in
+    /// [`Resources`].
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_try_current(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E>;
 }

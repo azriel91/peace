@@ -91,6 +91,11 @@ impl Item for VecCopyItem {
         &self.id
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        VecCopyState(params.0.clone())
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         _params_partial: &<Self::Params<'_> as Params>::Partial,

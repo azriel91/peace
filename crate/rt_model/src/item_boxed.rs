@@ -17,7 +17,7 @@ use std::{
 
 use peace_cfg::Item;
 use peace_data::fn_graph::{DataAccessDyn, TypeIds};
-use peace_params::Params;
+use peace_params::{Params, ParamsMergeExt};
 
 use crate::{ItemRt, ItemWrapper};
 
@@ -76,7 +76,12 @@ where
         + From<crate::Error>
         + 'static,
     for<'params> <I as Item>::Params<'params>:
-        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+        ParamsMergeExt + TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+    for<'params> <<I as Item>::Params<'params> as Params>::Partial: From<
+        <<I as Item>::Params<'params> as TryFrom<
+            <<I as Item>::Params<'params> as Params>::Partial,
+        >>::Error,
+    >,
     for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
 {
     fn from(item: I) -> Self {

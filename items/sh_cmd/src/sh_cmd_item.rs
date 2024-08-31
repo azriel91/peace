@@ -71,9 +71,10 @@ where
     }
 
     #[cfg(feature = "item_state_example")]
-    fn state_example(params: &Self::Params<'_>, data: Self::Data<'_>) -> Self::State {
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
         let state_example_sh_cmd = params.state_example_sh_cmd();
-        ShCmdExecutor::exec(state_example_sh_cmd)
+        ShCmdExecutor::exec_blocking(state_example_sh_cmd)
+            .expect("ShCmd failed to return example state.")
     }
 
     async fn try_state_current(
