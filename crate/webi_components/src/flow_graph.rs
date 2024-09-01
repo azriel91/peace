@@ -14,13 +14,6 @@ pub fn FlowGraph() -> impl IntoView {
         || (),
         move |()| async move { progress_dot_graph().await.unwrap() },
     );
-    let progress_dot_graph = move || {
-        let progress_dot_graph = progress_dot_resource
-            .get()
-            .expect("Expected `progress_dot_graph` to always be generated successfully.");
-
-        Some(progress_dot_graph)
-    };
 
     let outcome_info_graph_resource = leptos::create_resource(
         || (),
@@ -35,10 +28,27 @@ pub fn FlowGraph() -> impl IntoView {
         }
     };
 
+    let progress_info_graph = move || {
+        let progress_info_graph_and_dot_src_and_styles = progress_dot_resource
+            .get()
+            .expect("Expected `progress_info_graph_and_dot_src_and_styles` to always be generated successfully.");
+
+        progress_info_graph_and_dot_src_and_styles.0
+    };
+
+    let progress_dot_graph = move || {
+        let progress_info_graph_and_dot_src_and_styles = progress_dot_resource
+            .get()
+            .expect("Expected `progress_info_graph_and_dot_src_and_styles` to always be generated successfully.");
+
+        Some(progress_info_graph_and_dot_src_and_styles.1)
+    };
+
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <div class="flex items-center justify-center">
                 <DotSvg
+                    info_graph=progress_info_graph.into()
                     dot_src_and_styles=progress_dot_graph.into()
                 />
                 {outcome_info_graph}
@@ -49,7 +59,8 @@ pub fn FlowGraph() -> impl IntoView {
 
 /// Returns the graph representing item execution progress.
 #[leptos::server(endpoint = "/flow_graph")]
-pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCustomError>> {
+pub async fn progress_dot_graph()
+-> Result<(InfoGraph, DotSrcAndStyles), ServerFnError<NoCustomError>> {
     use dot_ix::{model::common::GraphvizDotTheme, rt::IntoGraphvizDotSrc};
     use peace_flow_model::FlowSpecInfo;
 
@@ -58,10 +69,9 @@ pub async fn progress_dot_graph() -> Result<DotSrcAndStyles, ServerFnError<NoCus
     })?;
 
     let progress_info_graph = flow_spec_info.to_progress_info_graph();
-    Ok(IntoGraphvizDotSrc::into(
-        &progress_info_graph,
-        &GraphvizDotTheme::default(),
-    ))
+    let dot_src_and_styles =
+        IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
+    Ok((progress_info_graph, dot_src_and_styles))
 }
 
 /// Returns the graph representing item outcomes.
