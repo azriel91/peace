@@ -3,7 +3,7 @@ clippy_cli = [
     "clippy",
     "--workspace",
     "--features",
-    "cli error_reporting output_progress item_interactions",
+    "cli error_reporting output_progress item_interactions item_state_example",
     "--fix",
     "--exclude",
     "peace_rt_model_web",
