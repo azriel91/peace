@@ -79,7 +79,7 @@ macro_rules! id_newtype {
             /// compile time checks and returns a `const` value.
             ///
             #[doc = concat!("[`", stringify!($macro_name), "!`]: peace_static_check_macros::profile")]
-            pub fn new(s: &'static str) -> Result<Self, $ty_err_name> {
+            pub fn new(s: &'static str) -> Result<Self, $ty_err_name<'static>> {
                 Self::try_from(s)
             }
 
