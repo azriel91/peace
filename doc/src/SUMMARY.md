@@ -41,6 +41,7 @@
             - [Div Diag](technical_concepts/diagrams/outcome/div_diag.md)
             - [API Design](technical_concepts/diagrams/outcome/api_design.md)
             - [Interaction Merging](technical_concepts/diagrams/outcome/interaction_merging.md)
+            - [Aesthetics and Clarity](technical_concepts/diagrams/outcome/aesthetics_and_clarity.md)
     - [Endpoints and Interaction](technical_concepts/endpoints_and_interaction.md)
         - [Cmd Invocation](technical_concepts/endpoints_and_interaction/cmd_invocation.md)
         - [Interruption](technical_concepts/endpoints_and_interaction/interruption.md)
