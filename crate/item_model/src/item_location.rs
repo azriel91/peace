@@ -87,12 +87,12 @@ use crate::ItemLocationType;
 ///
 /// A less accurate model with a limited number of [`ItemLocationType`]s
 /// balances the modelling accuracy, rendering, and maintenance burden.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct ItemLocation {
-    /// The name of the resource location.
-    pub name: String,
     /// The type of the resource location.
     pub r#type: ItemLocationType,
+    /// The name of the resource location.
+    pub name: String,
 }
 
 impl ItemLocation {
@@ -109,23 +109,23 @@ impl ItemLocation {
     /// * [`ItemLocation::host`]
     /// * [`ItemLocation::localhost`]
     /// * [`ItemLocation::path`]
-    pub fn new(name: String, r#type: ItemLocationType) -> Self {
-        Self { name, r#type }
+    pub fn new(r#type: ItemLocationType, name: String) -> Self {
+        Self { r#type, name }
     }
 
     /// Returns `ItemLocation::new(name, ItemLocationType::Group)`.
     pub fn group(name: String) -> Self {
         Self {
-            name,
             r#type: ItemLocationType::Group,
+            name,
         }
     }
 
     /// Returns `ItemLocation::new(name, ItemLocationType::Host)`.
     pub fn host(name: String) -> Self {
         Self {
-            name,
             r#type: ItemLocationType::Host,
+            name,
         }
     }
 
@@ -133,8 +133,8 @@ impl ItemLocation {
     /// ItemLocationType::Host)`.
     pub fn host_unknown() -> Self {
         Self {
-            name: Self::HOST_UNKNOWN.to_string(),
             r#type: ItemLocationType::Host,
+            name: Self::HOST_UNKNOWN.to_string(),
         }
     }
 
@@ -148,8 +148,8 @@ impl ItemLocation {
     pub fn host_from_url(url: &Url) -> Self {
         url.host_str()
             .map(|host_str| Self {
-                name: host_str.to_string(),
                 r#type: ItemLocationType::Host,
+                name: host_str.to_string(),
             })
             .unwrap_or_else(Self::localhost)
     }
@@ -157,8 +157,8 @@ impl ItemLocation {
     /// Returns `ItemLocation::host("localhost".to_string())`.
     pub fn localhost() -> Self {
         Self {
-            name: Self::LOCALHOST.to_string(),
             r#type: ItemLocationType::Host,
+            name: Self::LOCALHOST.to_string(),
         }
     }
 
@@ -169,8 +169,8 @@ impl ItemLocation {
     /// [`ItemLocation::path_lossy`]: Self::path_lossy
     pub fn path(name: String) -> Self {
         Self {
-            name,
             r#type: ItemLocationType::Path,
+            name,
         }
     }
 

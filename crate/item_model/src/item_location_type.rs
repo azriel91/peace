@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This affects how the [`ItemLocation`] is rendered.
 ///
 /// [`ItemLocation`]: crate::ItemLocation
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Ord, Eq, Hash, Deserialize, Serialize)]
 pub enum ItemLocationType {
     /// Rendered with dashed lines.
     ///
