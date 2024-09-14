@@ -128,13 +128,16 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
+            use std::sync::{Arc, Mutex};
+
             use envman::flows::EnvDeployFlow;
             use peace::webi::output::WebiOutput;
 
             let flow = EnvDeployFlow::flow().await?;
-            let flow_spec_info = flow.flow_spec_info();
-            let webi_output =
-                WebiOutput::new(Some(SocketAddr::from((address, port))), flow_spec_info);
+            let webi_output = WebiOutput::new(
+                Some(SocketAddr::from((address, port))),
+                Arc::new(Mutex::new(flow)),
+            );
             webi_output.start().await?;
         }
     }

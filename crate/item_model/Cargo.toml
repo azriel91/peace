@@ -20,5 +20,14 @@ doctest = false
 test = false
 
 [dependencies]
+indexmap = { workspace = true, optional = true, features = ["serde"] }
+peace_core = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 url = { workspace = true, features = ["serde"] }
+
+[features]
+default = []
+item_locations_and_interactions = [
+    "dep:indexmap",
+    "dep:peace_core",
+]

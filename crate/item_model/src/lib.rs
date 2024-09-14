@@ -14,7 +14,11 @@ pub use crate::{
     item_location_ancestors::ItemLocationAncestors,
     item_location_tree::ItemLocationTree,
     item_location_type::ItemLocationType,
+    item_locations_combined::ItemLocationsCombined,
 };
+
+#[cfg(feature = "item_locations_and_interactions")]
+pub use crate::item_locations_and_interactions::ItemLocationsAndInteractions;
 
 mod item_interaction;
 mod item_interactions_current;
@@ -24,3 +28,7 @@ mod item_location;
 mod item_location_ancestors;
 mod item_location_tree;
 mod item_location_type;
+mod item_locations_combined;
+
+#[cfg(feature = "item_locations_and_interactions")]
+mod item_locations_and_interactions;

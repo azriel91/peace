@@ -4,7 +4,7 @@ use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
 use leptos::view;
 use leptos_axum::LeptosRoutes;
-use peace_flow_model::FlowSpecInfo;
+use peace_rt_model::Flow;
 use peace_webi_components::Home;
 use peace_webi_model::WebiError;
 use tokio::io::AsyncWriteExt;
@@ -12,28 +12,28 @@ use tower_http::services::ServeDir;
 
 /// An `OutputWrite` implementation that writes to web elements.
 #[derive(Clone, Debug)]
-pub struct WebiServer {
+pub struct WebiServer<E> {
     /// IP address and port to listen on.
     socket_addr: Option<SocketAddr>,
-    /// Flow to display to the user.
-    flow_spec_info: FlowSpecInfo,
+    /// Flow to work with.
+    ///
+    /// # Design
+    ///
+    /// Currently we only take in one flow, but in the future we want to take in
+    /// multiple `Flow`s (or functions so we can lazily instantiate them).
+    flow: Flow<E>,
 }
 
-impl WebiServer {
-    pub fn new(socket_addr: Option<SocketAddr>, flow_spec_info: FlowSpecInfo) -> Self {
-        Self {
-            socket_addr,
-            flow_spec_info,
-        }
+impl<E> WebiServer<E>
+where
+    E: Clone + Debug + 'static,
+{
+    pub fn new(socket_addr: Option<SocketAddr>, flow: Flow<E>) -> Self {
+        Self { socket_addr, flow }
     }
-}
 
-impl WebiServer {
     pub async fn start(&mut self) -> Result<(), WebiError> {
-        let Self {
-            socket_addr,
-            flow_spec_info,
-        } = self;
+        let Self { socket_addr, flow } = self;
 
         // Setting this to None means we'll be using cargo-leptos and its env vars
         let conf = leptos::get_configuration(None).await.unwrap();
@@ -65,7 +65,7 @@ impl WebiServer {
             })
             .await?;
 
-        let flow_spec_info = flow_spec_info.clone();
+        let flow = flow.clone();
         let router = Router::new()
             // serve the pkg directory
             .nest_service(
@@ -79,8 +79,7 @@ impl WebiServer {
                 &leptos_options,
                 routes,
                 move || {
-                    leptos::provide_context(flow_spec_info.clone());
-                    // TODO: provide item interactions channel receiver
+                    leptos::provide_context(flow.clone());
                 },
                 move || view! { <Home /> },
             )

@@ -30,11 +30,13 @@ leptos_router = { workspace = true }
 peace_core = { workspace = true, optional = true }
 peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
+peace_item_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
+peace_rt_model = { workspace = true }
 peace_value_traits = { workspace = true }
 peace_webi_components = { workspace = true }
 peace_webi_model = { workspace = true }
-tokio = { workspace = true, features = ["net"] }
+tokio = { workspace = true, features = ["net", "sync"] }
 tower-http = { workspace = true, features = ["fs"] }
 
 [features]
@@ -43,6 +45,7 @@ output_progress = [
     "dep:peace_core",
     "peace_core/output_progress",
     "peace_rt_model_core/output_progress",
+    "peace_rt_model/output_progress",
 ]
 ssr = [
     "leptos/ssr",

@@ -1,7 +1,7 @@
 use std::{fmt::Debug, net::SocketAddr};
 
-use peace_flow_model::FlowSpecInfo;
 use peace_fmt::Presentable;
+use peace_rt_model::Flow;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
 use peace_value_traits::AppError;
 use peace_webi_model::WebiError;
@@ -24,37 +24,38 @@ cfg_if::cfg_if! {
 
 /// An `OutputWrite` implementation that writes to web elements.
 #[derive(Clone, Debug)]
-pub struct WebiOutput {
+pub struct WebiOutput<E> {
     /// IP address and port to listen on.
     socket_addr: Option<SocketAddr>,
-    /// Flow to display to the user.
-    flow_spec_info: FlowSpecInfo,
+    /// Flow to work with.
+    ///
+    /// # Design
+    ///
+    /// Currently we only take in one flow, but in the future we want to take in
+    /// multiple `Flow`s (or functions so we can lazily instantiate them).
+    flow: Flow<E>,
 }
 
-impl WebiOutput {
-    pub fn new(socket_addr: Option<SocketAddr>, flow_spec_info: FlowSpecInfo) -> Self {
-        Self {
-            socket_addr,
-            flow_spec_info,
-        }
+impl<E> WebiOutput<E>
+where
+    E: Clone + Debug + 'static,
+{
+    pub fn new(socket_addr: Option<SocketAddr>, flow: Flow<E>) -> Self {
+        Self { socket_addr, flow }
     }
-}
 
-impl WebiOutput {
     pub async fn start(&self) -> Result<(), WebiError> {
-        let Self {
-            socket_addr,
-            flow_spec_info,
-        } = self.clone();
+        let Self { socket_addr, flow } = self.clone();
 
-        WebiServer::new(socket_addr, flow_spec_info).start().await
+        WebiServer::new(socket_addr, flow).start().await
     }
 }
 
 #[async_trait(?Send)]
-impl<AppErrorT> OutputWrite<AppErrorT> for WebiOutput
+impl<AppErrorT, E> OutputWrite<AppErrorT> for WebiOutput<E>
 where
     AppErrorT: AppError,
+    E: std::fmt::Debug,
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}

@@ -24,21 +24,22 @@ cfg-if = { workspace = true }
 dyn-clone = { workspace = true }
 erased-serde = { workspace = true }
 futures = { workspace = true }
+indexmap = { workspace = true, optional = true }
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
 peace_data = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
-peace_params = { workspace = true }
 peace_item_model = { workspace = true, optional = true }
+peace_params = { workspace = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_rt_model_hack = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
-type_reg = { workspace = true, features = ["resman"] }
 tynm = { workspace = true }
+type_reg = { workspace = true, features = ["resman"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace_rt_model_native = { workspace = true }
@@ -59,8 +60,10 @@ output_progress = [
     "peace_rt_model_hack/output_progress"
 ]
 item_interactions = [
+    "dep:indexmap",
     "dep:peace_item_model",
     "peace_cfg/item_interactions",
+    "peace_item_model/item_locations_and_interactions",
 ]
 item_state_example = [
     "peace_cfg/item_state_example",
