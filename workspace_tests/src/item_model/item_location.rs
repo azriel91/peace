@@ -8,8 +8,8 @@ fn group() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Group,
             "Cloud".to_string(),
-            peace::item_model::ItemLocationType::Group
         ),
         item_location
     );
@@ -21,8 +21,8 @@ fn host() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Host,
             "Server".to_string(),
-            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -34,8 +34,8 @@ fn host_unknown() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Host,
             ItemLocation::HOST_UNKNOWN.to_string(),
-            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -47,8 +47,8 @@ fn host_from_url_https() -> Result<(), ParseError> {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Host,
             "example.com".to_string(),
-            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -62,8 +62,8 @@ fn host_from_url_file() -> Result<(), ParseError> {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Host,
             ItemLocation::LOCALHOST.to_string(),
-            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -77,8 +77,8 @@ fn localhost() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Host,
             ItemLocation::LOCALHOST.to_string(),
-            peace::item_model::ItemLocationType::Host
         ),
         item_location
     );
@@ -90,8 +90,8 @@ fn path() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Path,
             "/path/to/resource".to_string(),
-            peace::item_model::ItemLocationType::Path
         ),
         item_location
     );
@@ -108,8 +108,8 @@ fn path_lossy() {
 
     assert_eq!(
         ItemLocation::new(
+            peace::item_model::ItemLocationType::Path,
             "/path/to/lossy_fo�.txt".to_string(),
-            peace::item_model::ItemLocationType::Path
         ),
         item_location
     );
