@@ -220,7 +220,7 @@ where
 
         cmd_ctx_builder
             .with_profile_from_workspace_param(profile_key.into())
-            .with_flow(flow)
+            .with_flow(flow.into())
             .with_item_params::<FileDownloadItem<WebApp>>(
                 item_id!("app_download"),
                 app_download_params_spec,
@@ -263,7 +263,7 @@ where
 
         cmd_ctx_builder
             .with_profile_from_workspace_param(profile_key.into())
-            .with_flow(flow)
+            .with_flow(flow.into())
             .with_item_params::<FileDownloadItem<WebApp>>(
                 item_id!("app_download"),
                 app_download_params_spec,

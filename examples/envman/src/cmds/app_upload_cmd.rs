@@ -66,7 +66,7 @@ impl AppUploadCmd {
 
             cmd_ctx_builder
                 .with_profile_from_workspace_param(profile_key.into())
-                .with_flow(&flow)
+                .with_flow((&flow).into())
                 .with_item_params::<S3ObjectItem<WebApp>>(
                     item_id!("s3_object"),
                     s3_object_params_spec,
@@ -125,7 +125,7 @@ impl AppUploadCmd {
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
-                .with_flow(&flow)
+                .with_flow((&flow).into())
                 .with_item_params::<S3ObjectItem<WebApp>>(
                     item_id!("s3_object"),
                     s3_object_params_spec,

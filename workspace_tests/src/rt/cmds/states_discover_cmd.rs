@@ -42,7 +42,7 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -141,7 +141,7 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -193,7 +193,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -212,7 +212,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -228,7 +228,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -280,7 +280,7 @@ async fn current_returns_error_when_try_state_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -359,7 +359,7 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -441,7 +441,7 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -548,7 +548,7 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -657,7 +657,7 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -748,7 +748,7 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -807,7 +807,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -830,7 +830,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
     // Overwrite states current.
     cmd_ctx
@@ -889,7 +889,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -908,7 +908,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -968,7 +968,7 @@ async fn current_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1028,7 +1028,7 @@ async fn goal_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1088,7 +1088,7 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

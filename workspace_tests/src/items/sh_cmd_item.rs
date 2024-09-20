@@ -155,7 +155,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -204,7 +204,7 @@ async fn state_current_returns_shell_command_current_state()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -254,7 +254,7 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -304,7 +304,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -349,7 +349,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -403,7 +403,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -474,7 +474,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),

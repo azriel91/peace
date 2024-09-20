@@ -43,7 +43,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -110,7 +110,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -213,7 +213,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -275,7 +275,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -350,7 +350,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -374,7 +374,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -463,7 +463,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -487,7 +487,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -578,7 +578,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -602,7 +602,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -690,7 +690,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -714,7 +714,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -810,7 +810,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -915,7 +915,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -963,7 +963,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
 
     let CmdOutcome::ItemError {

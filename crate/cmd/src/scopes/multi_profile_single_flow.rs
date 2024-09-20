@@ -98,7 +98,7 @@ where
     /// Directories of each profile's execution history.
     profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
     /// The chosen process flow.
-    flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+    flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Flow directory that stores params and states.
     flow_dirs: BTreeMap<Profile, FlowDir>,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -236,7 +236,7 @@ where
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
-        flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+        flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
         flow_dirs: BTreeMap<Profile, FlowDir>,
         params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
         workspace_params: WorkspaceParams<
@@ -391,7 +391,7 @@ where
 
     /// Returns the flow.
     pub fn flow(&self) -> &Flow<CmdCtxTypesT::AppError> {
-        self.flow
+        &*self.flow
     }
 
     /// Returns the flow directories keyed by each profile.

@@ -599,8 +599,9 @@ fn impl_build_for(
                 #resources_insert
 
                 // === MultiProfileSingleFlow === //
-                // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let flow_ref = &flow;
+                // let flow_id = flow_ref.flow_id();
+                // let item_graph = flow_ref.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -632,7 +633,7 @@ fn impl_build_for(
                 //             // so that multi-profile diffs can be done.
                 //             let params_specs = params_specs_stored.map(|params_specs_stored| {
                 //                 crate::ctx::cmd_ctx_builder::params_specs_merge(
-                //                     &flow,
+                //                     flow_ref,
                 //                     params_specs_provided,
                 //                     Some(params_specs_stored),
                 //                 )
@@ -691,8 +692,9 @@ fn impl_build_for(
                 //
                 // === SingleProfileSingleFlow === //
                 // // Set up resources for the flow's item graph
-                // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let flow_ref = &flow;
+                // let flow_id = flow_ref.flow_id();
+                // let item_graph = flow_ref.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -712,7 +714,7 @@ fn impl_build_for(
                 // .await?;
                 //
                 // let params_specs = crate::ctx::cmd_ctx_builder::params_specs_merge(
-                //     &flow,
+                //     flow_ref,
                 //     params_specs_provided,
                 //     params_specs_stored,
                 // )?;
@@ -1606,8 +1608,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             //
             // These are then held in the scope for easy access for consumers.
             quote! {
-                let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let flow_ref = &flow;
+                let flow_id = flow_ref.flow_id();
+                let item_graph = flow_ref.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -1639,7 +1642,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                             // so that multi-profile diffs can be done.
                             let params_specs = params_specs_stored.map(|params_specs_stored| {
                                 crate::ctx::cmd_ctx_builder::params_specs_merge(
-                                    &flow,
+                                    flow_ref,
                                     params_specs_provided,
                                     Some(params_specs_stored),
                                 )
@@ -1716,8 +1719,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             // It also requires multiple item graph setups to work without conflicting
             // with each other.
             quote! {
-                let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let flow_ref = &flow;
+                let flow_id = flow_ref.flow_id();
+                let item_graph = flow_ref.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -1737,7 +1741,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 .await?;
 
                 let params_specs = crate::ctx::cmd_ctx_builder::params_specs_merge(
-                    &flow,
+                    flow_ref,
                     params_specs_provided,
                     params_specs_stored,
                 )?;

@@ -80,7 +80,7 @@ where
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
     /// The chosen process flow.
-    flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+    flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -255,7 +255,7 @@ where
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+        flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
         flow_dir: FlowDir,
         params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
         workspace_params: WorkspaceParams<
@@ -461,7 +461,7 @@ where
 
     /// Returns a reference to the flow.
     pub fn flow(&self) -> &Flow<CmdCtxTypesT::AppError> {
-        self.flow
+        &*self.flow
     }
 
     /// Returns a reference to the flow directory.

@@ -55,7 +55,7 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -101,7 +101,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -148,7 +148,7 @@ async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std:
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -194,7 +194,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -252,7 +252,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -312,7 +312,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -370,7 +370,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -434,7 +434,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -492,7 +492,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -537,7 +537,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -611,7 +611,7 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -670,7 +670,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
@@ -739,7 +739,7 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile.clone())
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<TarXItem<TarXTest>>(
             TarXTest::ID.clone(),
             TarXParams::<TarXTest>::new(tar_path, dest.clone()).into(),
