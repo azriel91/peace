@@ -33,13 +33,13 @@ impl ProfileShowCmd {
 
         let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow::<EnvManError, O>(
             output.into(),
-            (&workspace).into(),
+            workspace.into(),
         );
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let profile_key = WorkspaceParamsKey::Profile;
         let mut cmd_ctx = cmd_ctx_builder
-            .with_profile_from_workspace_param(&profile_key)
+            .with_profile_from_workspace_param(profile_key.into())
             .await?;
         let SingleProfileNoFlowView {
             output,

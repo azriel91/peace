@@ -182,7 +182,7 @@ pub fn impl_with_profile_from_workspace_param(
         {
             pub fn with_profile_from_workspace_param<'key>(
                 self,
-                workspace_param_k: &'key WorkspaceParamsK,
+                workspace_param_k: own::OwnedOrRef<'key, WorkspaceParamsK>,
             ) ->
                 // crate::ctx::CmdCtxBuilder<
                 //     'ctx,

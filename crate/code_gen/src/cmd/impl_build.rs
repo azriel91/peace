@@ -324,7 +324,7 @@ fn impl_build_for(
                 //     .scope_builder
                 //     .workspace_params_selection
                 //     .0
-                //     .get(self.scope_builder.profile_selection.0)
+                //     .get(&*self.scope_builder.profile_selection.0)
                 //     .cloned()
                 //     .ok_or(Error::WorkspaceParamsProfileNone)?;
                 #profile_from_workspace
@@ -570,7 +570,7 @@ fn impl_build_for(
                 //
                 // === MultiProfileSingleFlow === //
                 // {
-                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                 //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
                 //
                 //     resources.insert(app_name);
@@ -582,7 +582,7 @@ fn impl_build_for(
                 // }
                 // === SingleProfileSingleFlow === //
                 // {
-                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                 //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
                 //
                 //     resources.insert(app_name);
@@ -1305,7 +1305,7 @@ fn profile_from_workspace(profile_selection: ProfileSelection) -> proc_macro2::T
                 .scope_builder
                 .workspace_params_selection
                 .0
-                .get(self.scope_builder.profile_selection.0)
+                .get(&*self.scope_builder.profile_selection.0)
                 .cloned()
                 .ok_or(peace_rt_model::Error::WorkspaceParamsProfileNone)?;
         }
@@ -1801,7 +1801,7 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::MultiProfileSingleFlow => {
             quote! {
                 {
-                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
 
                     resources.insert(app_name);
@@ -1816,7 +1816,7 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::SingleProfileSingleFlow => {
             quote! {
                 {
-                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
 
                     resources.insert(app_name);

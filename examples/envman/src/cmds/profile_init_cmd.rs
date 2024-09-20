@@ -219,7 +219,7 @@ where
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         cmd_ctx_builder
-            .with_profile_from_workspace_param(profile_key)
+            .with_profile_from_workspace_param(profile_key.into())
             .with_flow(flow)
             .with_item_params::<FileDownloadItem<WebApp>>(
                 item_id!("app_download"),
@@ -262,7 +262,7 @@ where
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         cmd_ctx_builder
-            .with_profile_from_workspace_param(profile_key)
+            .with_profile_from_workspace_param(profile_key.into())
             .with_flow(flow)
             .with_item_params::<FileDownloadItem<WebApp>>(
                 item_id!("app_download"),

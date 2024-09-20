@@ -182,7 +182,7 @@ leptos_meta = { version = "0.6" }
 leptos_router = { version = "0.6" }
 libc = "0.2.158"
 miette = "7.2.0"
-own = "0.1.2"
+own = "0.1.3"
 pretty_assertions = "1.4.0"
 proc-macro2 = "1.0.86"
 quote = "1.0.37"

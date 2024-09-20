@@ -168,7 +168,7 @@ async fn build_with_workspace_params_with_profile_from_params()
         String::from("ws_param_1"),
         Some("ws_param_1_value".to_string()),
     )
-    .with_profile_from_workspace_param(&String::from("profile"))
+    .with_profile_from_workspace_param(String::from("profile").into())
     .build()
     .await?;
 
@@ -210,7 +210,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
         String::from("ws_param_1"),
         Some("ws_param_1_value".to_string()),
     )
-    .with_profile_from_workspace_param(&String::from("profile"))
+    .with_profile_from_workspace_param(String::from("profile").into())
     .build()
     .await?;
 
