@@ -1,45 +1,53 @@
-use std::{fmt::Debug, net::SocketAddr, path::Path};
+use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
 use leptos::view;
 use leptos_axum::LeptosRoutes;
-use peace_rt_model::Flow;
-use peace_webi_components::Home;
+use peace_webi_components::{ChildrenFn, Home};
 use peace_webi_model::WebiError;
 use tokio::io::AsyncWriteExt;
 use tower_http::services::ServeDir;
 
 /// An `OutputWrite` implementation that writes to web elements.
 #[derive(Clone, Debug)]
-pub struct WebiServer<E> {
+pub struct WebiServer {
     /// IP address and port to listen on.
     socket_addr: Option<SocketAddr>,
-    /// Flow to work with.
+    /// Function that renders the web components for the flow.
     ///
     /// # Design
     ///
     /// Currently we only take in one flow, but in the future we want to take in
     /// multiple `Flow`s (or functions so we can lazily instantiate them).
-    flow: Flow<E>,
+    flow_component: ChildrenFn,
 }
 
-impl<E> WebiServer<E>
-where
-    E: Clone + Debug + 'static,
-{
-    pub fn new(socket_addr: Option<SocketAddr>, flow: Flow<E>) -> Self {
-        Self { socket_addr, flow }
+impl WebiServer {
+    pub fn new(socket_addr: Option<SocketAddr>, flow_component: ChildrenFn) -> Self {
+        Self {
+            socket_addr,
+            flow_component,
+        }
     }
 
     pub async fn start(&mut self) -> Result<(), WebiError> {
-        let Self { socket_addr, flow } = self;
+        let Self {
+            socket_addr,
+            flow_component,
+        } = self.clone();
 
         // Setting this to None means we'll be using cargo-leptos and its env vars
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(move || view! { <Home /> });
+        let routes = {
+            let flow_component = flow_component.clone();
+            leptos_axum::generate_route_list(move || {
+                let flow_component = flow_component.clone();
+                view! { <Home flow_component />}
+            })
+        };
 
         stream::iter(crate::assets::ASSETS.iter())
             .map(Result::<_, WebiError>::Ok)
@@ -65,7 +73,6 @@ where
             })
             .await?;
 
-        let flow = flow.clone();
         let router = Router::new()
             // serve the pkg directory
             .nest_service(
@@ -79,9 +86,13 @@ where
                 &leptos_options,
                 routes,
                 move || {
-                    leptos::provide_context(flow.clone());
+                    // Add global state here if necessary
+                    // leptos::provide_context(flow.clone());
                 },
-                move || view! { <Home /> },
+                move || {
+                    let flow_component = flow_component.clone();
+                    view! { <Home flow_component /> }
+                },
             )
             .with_state(leptos_options);
 

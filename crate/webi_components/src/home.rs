@@ -1,25 +1,18 @@
 use leptos::{component, view, IntoView};
 use leptos_meta::{provide_meta_context, Link, Stylesheet};
 use leptos_router::{Route, Router, Routes};
-use peace_rt_model::Flow;
 
-use crate::FlowGraph;
+use crate::ChildrenFn;
 
 /// Top level component of the `WebiOutput`.
 ///
 /// # Parameters:
 ///
-/// * `flow`: The flow available to the web UI.
+/// * `flow_component`: The web component to render for the flow.
 #[component]
-pub fn Home<E>(flow: Flow<E>) -> impl IntoView
-where
-    E: 'static,
-{
+pub fn Home(flow_component: ChildrenFn) -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
-
-    // TODO: when multiple flows are supported, set flow.
-    let (flow, _flow_set) = leptos::create_signal(flow);
 
     let site_prefix = option_env!("SITE_PREFIX").unwrap_or("");
     let favicon_path = format!("{site_prefix}/webi/favicon.ico");
@@ -31,9 +24,10 @@ where
         <Router>
             <main>
                 <Routes>
-                    <Route path=site_prefix view=move || view! {
-                        <FlowGraph flow />
-                    }/>
+                    <Route
+                        path=site_prefix
+                        view=move || flow_component.call()
+                    />
                 </Routes>
             </main>
         </Router>

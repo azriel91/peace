@@ -6,14 +6,13 @@ use dot_ix::{
     rt::IntoGraphvizDotSrc,
     web_components::DotSvg,
 };
-use leptos::{component, view, IntoView, ReadSignal, Signal, SignalGet, Transition};
-use peace_cmd::{ctx::CmdCtxTypes, scopes::SingleProfileSingleFlowView};
+use leptos::{component, view, IntoView, ReadSignal, Signal, SignalGet, SignalWith, Transition};
 use peace_item_model::{
     ItemLocation, ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
+use peace_params::ParamsSpecs;
+use peace_resource_rt::{resources::ts::SetUp, Resources};
 use peace_rt_model::Flow;
-
-use crate::ArcMutCmdCtxSpsf;
 
 /// Renders the flow graph.
 ///
@@ -24,19 +23,19 @@ use crate::ArcMutCmdCtxSpsf;
 /// * Take in values so they can be rendered, or `WriteSignal`s, to notify the
 ///   component that will render values about which node is selected.
 #[component]
-pub fn FlowGraph<CmdCtxTypesT, E>(
-    cmd_ctx: ReadSignal<ArcMutCmdCtxSpsf<CmdCtxTypesT>>,
+pub fn FlowGraph<E>(
     flow: ReadSignal<Flow<E>>,
+    params_specs: ReadSignal<ParamsSpecs>,
+    resources: ReadSignal<Resources<SetUp>>,
 ) -> impl IntoView
 where
-    CmdCtxTypesT: peace_cmd::ctx::CmdCtxTypes + 'static,
     E: 'static,
 {
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <div class="flex items-center justify-center">
                 <ProgressGraph flow />
-                <OutcomeGraph cmd_ctx />
+                <OutcomeGraph flow params_specs resources />
             </div>
         </Transition>
     }
@@ -67,53 +66,48 @@ where
 }
 
 #[component]
-pub fn OutcomeGraph<CmdCtxTypesT>(
-    cmd_ctx: ReadSignal<ArcMutCmdCtxSpsf<CmdCtxTypesT>>,
+pub fn OutcomeGraph<E>(
+    flow: ReadSignal<Flow<E>>,
+    params_specs: ReadSignal<ParamsSpecs>,
+    resources: ReadSignal<Resources<SetUp>>,
 ) -> impl IntoView
 where
-    CmdCtxTypesT: CmdCtxTypes + 'static,
+    E: 'static,
 {
     let outcome_info_graph = Signal::from(move || {
-        // TODO: Move all of this logic into a resource that manages execution.
-        // So that only one thing needs to lock the cmd ctx.
-        let cmd_ctx = cmd_ctx.get();
-        let mut cmd_ctx = cmd_ctx.lock().expect("Expected to access `cmd_ctx`.");
-        let SingleProfileSingleFlowView {
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_ctx.view();
-
         let outcome_info_graph = {
-            let item_locations_and_interactions =
-                flow.item_locations_and_interactions_example(params_specs, resources);
-            let ItemLocationsAndInteractions {
-                item_location_trees,
+            let flow = flow.get();
+            let params_specs = params_specs.get();
+            resources.with(|resources| {
+                let item_locations_and_interactions =
+                    flow.item_locations_and_interactions_example(&params_specs, resources);
+                let ItemLocationsAndInteractions {
+                    item_location_trees,
 
-                // TODO: add edges
-                item_to_item_interactions,
-            } = item_locations_and_interactions;
+                    // TODO: add edges
+                    item_to_item_interactions,
+                } = item_locations_and_interactions;
 
-            let node_hierarchy = item_location_trees
-                .iter()
-                .map(|item_location_tree| {
-                    let item_location = item_location_tree.item_location();
-                    let node_id = node_id_from_item_location(item_location);
-                    (
-                        node_id,
-                        node_hierarchy_from_item_location_tree(item_location_tree),
-                    )
-                })
-                .fold(
-                    NodeHierarchy::with_capacity(item_location_trees.len()),
-                    |mut node_hierarchy_all, (node_id, node_hierarchy_top_level)| {
-                        node_hierarchy_all.insert(node_id, node_hierarchy_top_level);
-                        node_hierarchy_all
-                    },
-                );
+                let node_hierarchy = item_location_trees
+                    .iter()
+                    .map(|item_location_tree| {
+                        let item_location = item_location_tree.item_location();
+                        let node_id = node_id_from_item_location(item_location);
+                        (
+                            node_id,
+                            node_hierarchy_from_item_location_tree(item_location_tree),
+                        )
+                    })
+                    .fold(
+                        NodeHierarchy::with_capacity(item_location_trees.len()),
+                        |mut node_hierarchy_all, (node_id, node_hierarchy_top_level)| {
+                            node_hierarchy_all.insert(node_id, node_hierarchy_top_level);
+                            node_hierarchy_all
+                        },
+                    );
 
-            InfoGraph::default().with_hierarchy(node_hierarchy)
+                InfoGraph::default().with_hierarchy(node_hierarchy)
+            })
         };
 
         outcome_info_graph
