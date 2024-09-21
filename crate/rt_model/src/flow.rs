@@ -10,7 +10,13 @@ cfg_if::cfg_if! {
 
         use indexmap::IndexMap;
         use peace_cfg::ItemId;
-        use peace_item_model::{ItemInteraction, ItemLocation, ItemLocationTree, ItemLocationsAndInteractions};
+        use peace_item_model::{
+            ItemInteraction,
+            ItemInteractionsCurrentOrExample,
+            ItemLocation,
+            ItemLocationsAndInteractions,
+            ItemLocationTree,
+        };
         use peace_params::ParamsSpecs;
         use peace_resource_rt::{resources::ts::SetUp, Resources};
     }
@@ -158,6 +164,128 @@ impl<E> Flow<E> {
 
                     item_to_item_interactions
                         .insert(item_id, item_interactions_example.into_inner());
+
+                    (item_location_direct_descendents, item_to_item_interactions)
+                },
+            );
+
+        let item_locations_top_level = item_location_direct_descendents
+            .keys()
+            .filter(|item_location| {
+                // this item_location is not in any descendents
+                !item_location_direct_descendents
+                    .values()
+                    .any(|item_location_descendents| {
+                        item_location_descendents.contains(item_location)
+                    })
+            })
+            .cloned()
+            .collect::<Vec<ItemLocation>>();
+
+        let item_locations_top_level_len = item_locations_top_level.len();
+        let (_item_location_direct_descendents, item_location_trees) =
+            item_locations_top_level.into_iter().fold(
+                (
+                    item_location_direct_descendents,
+                    Vec::with_capacity(item_locations_top_level_len),
+                ),
+                |(mut item_location_direct_descendents, mut item_location_trees), item_location| {
+                    let item_location_tree = item_location_tree_collect(
+                        &mut item_location_direct_descendents,
+                        item_location,
+                    );
+                    item_location_trees.push(item_location_tree);
+
+                    (item_location_direct_descendents, item_location_trees)
+                },
+            );
+
+        ItemLocationsAndInteractions::new(item_location_trees, item_to_item_interactions)
+    }
+
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    pub fn item_locations_and_interactions_current(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> ItemLocationsAndInteractions
+    where
+        E: 'static,
+    {
+        // Build the flattened hierarchy.
+        //
+        // Regardless of how nested each `ItemLocation` is, the map will have an entry
+        // for it.
+        //
+        // The entry key is the `ItemLocation`, and the values are a list of its direct
+        // descendent `ItemLocation`s.
+        //
+        // This means a lot of cloning of `ItemLocation`s.
+
+        let (item_location_direct_descendents, item_to_item_interactions) = self
+            .graph()
+            .iter()
+            // Note: This will silently drop the item locations if `interactions_try_current` fails
+            // to return.
+            .filter_map(|item| {
+                item.interactions_try_current(params_specs, resources)
+                    .ok()
+                    .map(|item_interactions_current_or_example| {
+                        (item.id().clone(), item_interactions_current_or_example)
+                    })
+            })
+            .fold(
+                (
+                    BTreeMap::<ItemLocation, BTreeSet<ItemLocation>>::new(),
+                    IndexMap::<ItemId, Vec<ItemInteraction>>::with_capacity(
+                        self.graph().node_count(),
+                    ),
+                ),
+                |(mut item_location_direct_descendents, mut item_to_item_interactions),
+                 (item_id, item_interactions_current_or_example)| {
+                    // TODO: we need to hide the nodes if they came from `Example`.
+                    let item_interactions_current_or_example =
+                        match item_interactions_current_or_example {
+                            ItemInteractionsCurrentOrExample::Current(
+                                item_interactions_current,
+                            ) => item_interactions_current.into_inner(),
+                            ItemInteractionsCurrentOrExample::Example(
+                                item_interactions_example,
+                            ) => item_interactions_example.into_inner(),
+                        };
+
+                    item_interactions_current_or_example
+                        .iter()
+                        .for_each(|item_interaction| match &item_interaction {
+                            ItemInteraction::Push(item_interaction_push) => {
+                                item_location_descendents_insert(
+                                    &mut item_location_direct_descendents,
+                                    item_interaction_push.location_from(),
+                                );
+                                item_location_descendents_insert(
+                                    &mut item_location_direct_descendents,
+                                    item_interaction_push.location_to(),
+                                );
+                            }
+                            ItemInteraction::Pull(item_interaction_pull) => {
+                                item_location_descendents_insert(
+                                    &mut item_location_direct_descendents,
+                                    item_interaction_pull.location_client(),
+                                );
+                                item_location_descendents_insert(
+                                    &mut item_location_direct_descendents,
+                                    item_interaction_pull.location_server(),
+                                );
+                            }
+                            ItemInteraction::Within(item_interaction_within) => {
+                                item_location_descendents_insert(
+                                    &mut item_location_direct_descendents,
+                                    item_interaction_within.location(),
+                                );
+                            }
+                        });
+
+                    item_to_item_interactions.insert(item_id, item_interactions_current_or_example);
 
                     (item_location_direct_descendents, item_to_item_interactions)
                 },
