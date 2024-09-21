@@ -65,7 +65,7 @@ js-sys = "0.3.70"
 web-sys = "0.3.70"
 
 [features]
-default = []
+default = ["cli", "item_interactions", "item_state_example"]
 
 # === envman modes === #
 cli = [

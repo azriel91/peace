@@ -27,6 +27,7 @@ peace_webi_output = { workspace = true, optional = true }
 [features]
 default = []
 output_progress = [
+    "peace_webi_model/output_progress",
     "peace_webi_output?/output_progress",
 ]
 ssr = [

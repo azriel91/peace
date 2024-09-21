@@ -128,17 +128,34 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
-            use std::sync::{Arc, Mutex};
+            use leptos::view;
+            use peace::{
+                webi::output::{FlowWebiFns, WebiServer},
+                webi_components::ChildrenFn,
+            };
 
-            use envman::flows::EnvDeployFlow;
-            use peace::webi::output::WebiOutput;
+            use envman::{cmds::EnvCmd, flows::EnvDeployFlow, web_components::EnvDeployHome};
 
-            let flow = EnvDeployFlow::flow().await?;
-            let webi_output = WebiOutput::new(
+            let flow = EnvDeployFlow::flow()
+                .await
+                .expect("Failed to instantiate EnvDeployFlow.");
+
+            let flow_webi_fns = FlowWebiFns {
+                flow_id: flow.flow_id().clone(),
+                outcome_info_graph_fn: Box::new(|webi_output, outcome_info_graph_gen| {
+                    let cmd_ctx = EnvCmd::cmd_ctx(webi_output);
+
+                    outcome_info_graph_gen(flow, params_specs, resources)
+                }),
+                cmd_exec_spawn_fn: todo!(),
+            };
+
+            WebiServer::start(
                 Some(SocketAddr::from((address, port))),
-                Arc::new(Mutex::new(flow)),
-            );
-            webi_output.start().await?;
+                ChildrenFn::new(view! { <EnvDeployHome /> }),
+                flow_webi_fns,
+            )
+            .await?;
         }
     }
 

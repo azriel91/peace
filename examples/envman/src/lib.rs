@@ -80,3 +80,6 @@ cfg_if::cfg_if! {
         }
     }
 }
+
+#[cfg(feature = "web_server")]
+pub mod web_components;

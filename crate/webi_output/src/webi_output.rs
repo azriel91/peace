@@ -1,12 +1,8 @@
-use std::{fmt::Debug, net::SocketAddr};
-
 use peace_fmt::Presentable;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
 use peace_value_traits::AppError;
-use peace_webi_components::ChildrenFn;
-use peace_webi_model::WebiError;
-
-use crate::WebiServer;
+use peace_webi_model::WebUiUpdate;
+use tokio::sync::mpsc;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -25,32 +21,20 @@ cfg_if::cfg_if! {
 /// An `OutputWrite` implementation that writes to web elements.
 #[derive(Clone, Debug)]
 pub struct WebiOutput {
-    /// IP address and port to listen on.
-    socket_addr: Option<SocketAddr>,
-    /// Function that renders the web components for the flow.
+    /// Channel to notify the `CmdExecution` task / `leptos` to update the UI.
     ///
-    /// # Design
+    /// This can be:
     ///
-    /// Currently we only take in one flow, but in the future we want to take in
-    /// multiple `Flow`s (or functions so we can lazily instantiate them).
-    flow_component: ChildrenFn,
+    /// * Progress `InfoGraph` diagram needs to be restyled.
+    /// * Outcome `InfoGraph` diagram needs to be restyled.
+    /// * Execution result to show to the user.
+    web_ui_update_tx: mpsc::Sender<WebUiUpdate>,
 }
 
 impl WebiOutput {
-    pub fn new(socket_addr: Option<SocketAddr>, flow_component: ChildrenFn) -> Self {
-        Self {
-            socket_addr,
-            flow_component,
-        }
-    }
-
-    pub async fn start(&self) -> Result<(), WebiError> {
-        let Self {
-            socket_addr,
-            flow_component,
-        } = self.clone();
-
-        WebiServer::new(socket_addr, flow_component).start().await
+    /// Returns a new `WebiOutput`.
+    pub fn new(web_ui_update_tx: mpsc::Sender<WebUiUpdate>) -> Self {
+        Self { web_ui_update_tx }
     }
 }
 
@@ -65,9 +49,23 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_update(
         &mut self,
-        _progress_tracker: &ProgressTracker,
-        _progress_update_and_id: &ProgressUpdateAndId,
+        progress_tracker: &ProgressTracker,
+        progress_update_and_id: &ProgressUpdateAndId,
     ) {
+        let item_id = progress_update_and_id.item_id.clone();
+        let progress_status = progress_tracker.progress_status().clone();
+        let progress_limit = progress_tracker.progress_limit().clone();
+        let message = progress_tracker.message().cloned();
+
+        let _result = self
+            .web_ui_update_tx
+            .send(WebUiUpdate::ItemProgressStatus {
+                item_id,
+                progress_status,
+                progress_limit,
+                message,
+            })
+            .await;
     }
 
     #[cfg(feature = "output_progress")]
@@ -78,7 +76,13 @@ where
         AppErrorT: std::error::Error,
         P: Presentable,
     {
-        todo!()
+        // TODO: send rendered / renderable markdown to the channel.
+        let markdown_src = String::from("TODO: presentable.present(md_presenter).");
+        let _result = self
+            .web_ui_update_tx
+            .send(WebUiUpdate::Markdown { markdown_src })
+            .await;
+        Ok(())
     }
 
     async fn write_err(&mut self, _error: &AppErrorT) -> Result<(), AppErrorT>

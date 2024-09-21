@@ -25,11 +25,13 @@ leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
 peace_cmd = { workspace = true }
+peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_item_model = { workspace = true }
 peace_params = { workspace = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true, features = ["item_interactions", "item_state_example"] }
+peace_webi_model = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 
 [features]
