@@ -17,6 +17,6 @@ pub fn EnvDeployHome() -> impl IntoView {
     );
 
     view! {
-        <FlowGraph flow />
+        <FlowGraph />
     }
 }

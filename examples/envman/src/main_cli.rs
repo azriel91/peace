@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use clap::Parser;
 use envman::{
     cmds::{
-        EnvCleanCmd, EnvDeployCmd, EnvDiffCmd, EnvDiscoverCmd, EnvGoalCmd, EnvStatusCmd,
+        CmdOpts, EnvCleanCmd, EnvDeployCmd, EnvDiffCmd, EnvDiscoverCmd, EnvGoalCmd, EnvStatusCmd,
         ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
@@ -128,34 +128,57 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
-            use leptos::view;
+            use futures::FutureExt;
             use peace::{
-                webi::output::{FlowWebiFns, WebiServer},
-                webi_components::ChildrenFn,
+                cmd::scopes::SingleProfileSingleFlowView,
+                webi::output::{CmdExecSpawnCtx, FlowWebiFns, WebiServer},
             };
 
-            use envman::{cmds::EnvCmd, flows::EnvDeployFlow, web_components::EnvDeployHome};
+            use envman::{cmds::EnvCmd, flows::EnvDeployFlow};
 
             let flow = EnvDeployFlow::flow()
                 .await
                 .expect("Failed to instantiate EnvDeployFlow.");
 
             let flow_webi_fns = FlowWebiFns {
-                flow_id: flow.flow_id().clone(),
+                flow: flow.clone(),
                 outcome_info_graph_fn: Box::new(|webi_output, outcome_info_graph_gen| {
-                    let cmd_ctx = EnvCmd::cmd_ctx(webi_output);
+                    async move {
+                        let mut cmd_ctx = EnvCmd::cmd_ctx(webi_output)
+                            .await
+                            .expect("Expected CmdCtx to be successfully constructed.");
 
-                    outcome_info_graph_gen(flow, params_specs, resources)
+                        // TODO: consolidate the `flow` above with this?
+                        let SingleProfileSingleFlowView {
+                            flow,
+                            params_specs,
+                            resources,
+                            ..
+                        } = cmd_ctx.view();
+
+                        outcome_info_graph_gen(flow, params_specs, resources)
+                    }
+                    .boxed_local()
                 }),
-                cmd_exec_spawn_fn: todo!(),
+                cmd_exec_spawn_fn: Box::new(|mut webi_output| {
+                    use peace::rt::cmds::StatesDiscoverCmd;
+                    let cmd_exec_task = async move {
+                        let _ = EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                            async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
+                                .boxed_local()
+                        })
+                        .await;
+                    }
+                    .boxed_local();
+
+                    CmdExecSpawnCtx {
+                        interrupt_tx: None,
+                        cmd_exec_task,
+                    }
+                }),
             };
 
-            WebiServer::start(
-                Some(SocketAddr::from((address, port))),
-                ChildrenFn::new(view! { <EnvDeployHome /> }),
-                flow_webi_fns,
-            )
-            .await?;
+            WebiServer::start(Some(SocketAddr::from((address, port))), flow_webi_fns).await?;
         }
     }
 

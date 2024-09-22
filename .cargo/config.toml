@@ -24,7 +24,7 @@ coverage_merge = 'llvm-cov report --lcov --output-path ./target/coverage/lcov.in
 coverage_open = 'llvm-cov report --open --output-dir ./target/coverage'
 
 # Build envman example
-# cargo leptos build --project "envman" --bin-features "cli item_interactions item_state_example" --release
+# cargo leptos build --project "envman" --features "item_interactions item_state_example" --bin-features "cli" --release
 envman_build_debug = [
     "leptos",
     "build",

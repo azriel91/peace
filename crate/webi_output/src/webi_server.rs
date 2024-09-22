@@ -5,7 +5,8 @@ use futures::stream::{self, StreamExt, TryStreamExt};
 use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
-use peace_webi_components::{ChildrenFn, Home};
+use peace_core::FlowId;
+use peace_webi_components::Home;
 use peace_webi_model::{CmdExecRequest, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
@@ -31,15 +32,8 @@ impl WebiServer {
     /// ## Parameters
     ///
     /// * `socker_addr`: IP address and port to listen on.
-    ///
-    /// # Design
-    ///
-    /// Currently we only take in one `flow_component` and can only render
-    /// components for one flow, but in the future we want to take in
-    /// multiple `Flow`s (or functions so we can lazily instantiate them).
     pub async fn start<E>(
         socket_addr: Option<SocketAddr>,
-        flow_component: ChildrenFn,
         flow_webi_fns: FlowWebiFns<E>,
     ) -> Result<(), WebiError>
     where
@@ -49,11 +43,12 @@ impl WebiServer {
         let (cmd_exec_request_tx, cmd_exec_request_rx) =
             mpsc::channel(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
 
+        let flow_id = flow_webi_fns.flow.flow_id().clone();
         let webi_server_task = Self::leptos_server_start(
             socket_addr,
-            flow_component,
             cmd_exec_request_tx,
             cmd_exec_to_leptos_ctx.clone(),
+            flow_id,
         );
         let cmd_execution_listener_task = Self::cmd_execution_listener(
             cmd_exec_request_rx,
@@ -79,13 +74,15 @@ impl WebiServer {
         // 3. Calculate example `info_graph`s
         // 4. Insert into `FlowInfoGraphs`.
         let FlowWebiFns {
-            flow_id,
+            flow,
             outcome_info_graph_fn,
             cmd_exec_spawn_fn,
         } = flow_webi_fns;
         let outcome_info_graph_fn = &outcome_info_graph_fn;
 
         let CmdExecToLeptosCtx {
+            flow_progress_example_info_graphs,
+            flow_progress_actual_info_graphs,
             flow_outcome_example_info_graphs,
             flow_outcome_actual_info_graphs,
             mut cmd_exec_interrupt_txs,
@@ -95,13 +92,23 @@ impl WebiServer {
         // Should we have one WebiOutput for the whole server? doesn't seem right.
         let (web_ui_update_tx, _web_ui_update_rx) = mpsc::channel(128);
         let mut webi_output_mock = WebiOutput::new(web_ui_update_tx);
+        let flow_spec_info = flow.flow_spec_info();
+        let flow_progress_example_info_graph = flow_spec_info.to_progress_info_graph();
         let flow_outcome_example_info_graph = outcome_info_graph_fn(
             &mut webi_output_mock,
             OutcomeInfoGraphCalculator::calculate_example::<E>,
-        );
+        )
+        .await;
 
+        let flow_id = flow.flow_id();
+        if let Ok(mut flow_progress_example_info_graphs) = flow_progress_example_info_graphs.lock()
+        {
+            flow_progress_example_info_graphs
+                .insert(flow_id.clone(), flow_progress_example_info_graph);
+        }
         if let Ok(mut flow_outcome_example_info_graphs) = flow_outcome_example_info_graphs.lock() {
-            flow_outcome_example_info_graphs.insert(flow_id, flow_outcome_example_info_graph);
+            flow_outcome_example_info_graphs
+                .insert(flow_id.clone(), flow_outcome_example_info_graph);
         }
 
         let (cmd_exec_join_handle_tx, mut cmd_exec_join_handle_rx) = mpsc::channel(128);
@@ -122,7 +129,7 @@ impl WebiServer {
                 let cmd_execution_id = cmd_execution_id_next;
                 cmd_execution_id_next = CmdExecutionId::new(*cmd_execution_id + 1);
 
-                let cmd_exec_join_handle = tokio::task::spawn(cmd_exec_task);
+                let cmd_exec_join_handle = tokio::task::spawn_local(cmd_exec_task);
                 cmd_exec_join_handle_tx
                     .send((
                         cmd_execution_id,
@@ -133,7 +140,9 @@ impl WebiServer {
                     .await
                     .expect("Expected `cmd_execution_receiver_task` to be running.");
 
-                cmd_exec_interrupt_txs.insert(cmd_execution_id, interrupt_tx);
+                if let Some(interrupt_tx) = interrupt_tx {
+                    cmd_exec_interrupt_txs.insert(cmd_execution_id, interrupt_tx);
+                }
             }
         };
 
@@ -145,18 +154,31 @@ impl WebiServer {
                 mut web_ui_update_rx,
             )) = cmd_exec_join_handle_rx.recv().await
             {
+                let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();
                 let flow_outcome_actual_info_graphs = flow_outcome_actual_info_graphs.clone();
+                let flow_spec_info = flow_spec_info.clone();
 
                 // Update `InfoGraph`s every time `progress_update` is sent.
                 let web_ui_update_task = async move {
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
+                        if let Ok(mut flow_progress_actual_info_graphs) =
+                            flow_progress_actual_info_graphs.lock()
+                        {
+                            // TODO: augment progress information.
+                            let flow_progress_actual_info_graph =
+                                flow_spec_info.to_progress_info_graph();
+
+                            flow_progress_actual_info_graphs
+                                .insert(cmd_execution_id, flow_progress_actual_info_graph);
+                        }
                         if let Ok(mut flow_outcome_actual_info_graphs) =
                             flow_outcome_actual_info_graphs.lock()
                         {
                             let flow_outcome_actual_info_graph = outcome_info_graph_fn(
                                 &mut webi_output,
                                 OutcomeInfoGraphCalculator::calculate_current::<E>,
-                            );
+                            )
+                            .await;
 
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
@@ -189,30 +211,17 @@ impl WebiServer {
     /// # Parameters
     ///
     /// * `socket_addr`: IP address and port to listen on.
-    /// * `flow_component`: Function that renders the web components for the
-    ///   flow.
-    ///
-    /// # Design
-    ///
-    /// Currently we only take in one flow, but in the future we want to take in
-    /// multiple `Flow`s (or functions so we can lazily instantiate them).
     async fn leptos_server_start(
         socket_addr: Option<SocketAddr>,
-        flow_component: ChildrenFn,
         cmd_exec_request_tx: mpsc::Sender<CmdExecRequest>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
+        flow_id: FlowId,
     ) -> Result<(), WebiError> {
         // Setting this to None means we'll be using cargo-leptos and its env vars
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = {
-            let flow_component = flow_component.clone();
-            leptos_axum::generate_route_list(move || {
-                let flow_component = flow_component.clone();
-                view! { <Home flow_component />}
-            })
-        };
+        let routes = leptos_axum::generate_route_list(move || view! { <Home /> });
 
         stream::iter(crate::assets::ASSETS.iter())
             .map(Result::<_, WebiError>::Ok)
@@ -253,20 +262,25 @@ impl WebiServer {
                 move || {
                     // Add global state here if necessary
                     let CmdExecToLeptosCtx {
+                        flow_progress_example_info_graphs,
+                        flow_progress_actual_info_graphs,
                         flow_outcome_example_info_graphs,
                         flow_outcome_actual_info_graphs,
                         cmd_exec_interrupt_txs,
                     } = cmd_exec_to_leptos_ctx.clone();
 
+                    let (flow_id, flow_id_set) = leptos::create_signal(flow_id.clone());
+
+                    leptos::provide_context(flow_id);
+                    leptos::provide_context(flow_id_set);
+                    leptos::provide_context(flow_progress_example_info_graphs.clone());
+                    leptos::provide_context(flow_progress_actual_info_graphs.clone());
                     leptos::provide_context(flow_outcome_example_info_graphs.clone());
                     leptos::provide_context(flow_outcome_actual_info_graphs.clone());
                     leptos::provide_context(cmd_exec_interrupt_txs.clone());
                     leptos::provide_context(cmd_exec_request_tx.clone());
                 },
-                move || {
-                    let flow_component = flow_component.clone();
-                    view! { <Home flow_component /> }
-                },
+                move || view! { <Home /> },
             )
             .with_state(leptos_options);
 
