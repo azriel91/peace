@@ -57,6 +57,31 @@ fn calculate_info_graph(
         item_location_count,
     } = item_locations_and_interactions;
 
+    let (node_id_to_item_locations, node_hierarchy) =
+        node_id_to_item_locations_and_hierarchy(&item_location_trees, item_location_count);
+
+    let node_names = node_id_to_item_locations.iter().fold(
+        NodeNames::with_capacity(item_location_count),
+        |mut node_names, (node_id, item_location)| {
+            node_names.insert(node_id.clone(), item_location.name().to_string());
+            node_names
+        },
+    );
+
+    InfoGraph::default()
+        .with_hierarchy(node_hierarchy)
+        .with_node_names(node_names)
+}
+
+/// Returns a map of `NodeId` to the `ItemLocation` it is associated with, and
+/// the `NodeHierarchy` constructed from the `ItemLocationTree`s.
+fn node_id_to_item_locations_and_hierarchy<'item_location>(
+    item_location_trees: &'item_location [ItemLocationTree],
+    item_location_count: usize,
+) -> (
+    IndexMap<NodeId, &'item_location ItemLocation>,
+    NodeHierarchy,
+) {
     let (node_id_to_item_locations, node_hierarchy) = item_location_trees.iter().fold(
         (
             IndexMap::<NodeId, &ItemLocation>::with_capacity(item_location_count),
@@ -77,18 +102,7 @@ fn calculate_info_graph(
             (node_id_to_item_locations, node_hierarchy_all)
         },
     );
-
-    let node_names = node_id_to_item_locations.iter().fold(
-        NodeNames::with_capacity(item_location_count),
-        |mut node_names, (node_id, item_location)| {
-            node_names.insert(node_id.clone(), item_location.name().to_string());
-            node_names
-        },
-    );
-
-    InfoGraph::default()
-        .with_hierarchy(node_hierarchy)
-        .with_node_names(node_names)
+    (node_id_to_item_locations, node_hierarchy)
 }
 
 fn node_id_from_item_location(item_location: &ItemLocation) -> NodeId {
