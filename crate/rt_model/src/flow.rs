@@ -200,7 +200,18 @@ impl<E> Flow<E> {
                 },
             );
 
-        ItemLocationsAndInteractions::new(item_location_trees, item_to_item_interactions)
+        let item_location_count = item_location_trees.iter().fold(
+            item_location_trees.len(),
+            |item_location_count_acc, item_location_tree| {
+                item_location_count_acc + item_location_tree.item_location_count()
+            },
+        );
+
+        ItemLocationsAndInteractions::new(
+            item_location_trees,
+            item_to_item_interactions,
+            item_location_count,
+        )
     }
 
     #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
@@ -322,7 +333,18 @@ impl<E> Flow<E> {
                 },
             );
 
-        ItemLocationsAndInteractions::new(item_location_trees, item_to_item_interactions)
+        let item_location_count = item_location_trees.iter().fold(
+            item_location_trees.len(),
+            |item_location_count_acc, item_location_tree| {
+                item_location_count_acc + item_location_tree.item_location_count()
+            },
+        );
+
+        ItemLocationsAndInteractions::new(
+            item_location_trees,
+            item_to_item_interactions,
+            item_location_count,
+        )
     }
 }
 

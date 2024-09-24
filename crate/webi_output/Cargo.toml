@@ -24,6 +24,7 @@ axum = { workspace = true }
 cfg-if = { workspace = true }
 dot_ix_model = { workspace = true }
 futures = { workspace = true }
+indexmap = { workspace = true }
 interruptible = { workspace = true }
 leptos = { workspace = true }
 leptos_axum = { workspace = true }

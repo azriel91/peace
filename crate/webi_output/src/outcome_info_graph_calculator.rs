@@ -1,7 +1,8 @@
 use dot_ix_model::{
-    common::{NodeHierarchy, NodeId},
+    common::{NodeHierarchy, NodeId, NodeNames},
     info_graph::InfoGraph,
 };
+use indexmap::IndexMap;
 use peace_item_model::{
     ItemLocation, ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
@@ -53,27 +54,41 @@ fn calculate_info_graph(
 
         // TODO: add edges
         item_to_item_interactions,
+        item_location_count,
     } = item_locations_and_interactions;
 
-    let node_hierarchy = item_location_trees
-        .iter()
-        .map(|item_location_tree| {
+    let (node_id_to_item_locations, node_hierarchy) = item_location_trees.iter().fold(
+        (
+            IndexMap::<NodeId, &ItemLocation>::with_capacity(item_location_count),
+            NodeHierarchy::with_capacity(item_location_trees.len()),
+        ),
+        |(mut node_id_to_item_locations, mut node_hierarchy_all), item_location_tree| {
             let item_location = item_location_tree.item_location();
             let node_id = node_id_from_item_location(item_location);
-            (
-                node_id,
-                node_hierarchy_from_item_location_tree(item_location_tree),
-            )
-        })
-        .fold(
-            NodeHierarchy::with_capacity(item_location_trees.len()),
-            |mut node_hierarchy_all, (node_id, node_hierarchy_top_level)| {
-                node_hierarchy_all.insert(node_id, node_hierarchy_top_level);
-                node_hierarchy_all
-            },
-        );
 
-    InfoGraph::default().with_hierarchy(node_hierarchy)
+            node_id_to_item_locations.insert(node_id.clone(), item_location);
+
+            let node_hierarchy_top_level = node_hierarchy_build_and_item_location_insert(
+                item_location_tree,
+                &mut node_id_to_item_locations,
+            );
+            node_hierarchy_all.insert(node_id, node_hierarchy_top_level);
+
+            (node_id_to_item_locations, node_hierarchy_all)
+        },
+    );
+
+    let node_names = node_id_to_item_locations.iter().fold(
+        NodeNames::with_capacity(item_location_count),
+        |mut node_names, (node_id, item_location)| {
+            node_names.insert(node_id.clone(), item_location.name().to_string());
+            node_names
+        },
+    );
+
+    InfoGraph::default()
+        .with_hierarchy(node_hierarchy)
+        .with_node_names(node_names)
 }
 
 fn node_id_from_item_location(item_location: &ItemLocation) -> NodeId {
@@ -98,16 +113,37 @@ fn node_id_from_item_location(item_location: &ItemLocation) -> NodeId {
     node_id
 }
 
-fn node_hierarchy_from_item_location_tree(item_location_tree: &ItemLocationTree) -> NodeHierarchy {
+/// Recursively constructs the `NodeHierarchy` and populates a map to facilitate
+/// calculation of `InfoGraph` representing `ItemLocation`s.
+///
+/// Each `Node` corresponds to one `ItemLocation`.
+///
+/// Because:
+///
+/// * Each `ItemInteraction` can include multiple `ItemLocation`s -- both nested
+///   and separate, and
+/// * We need to style each node
+///
+/// it is useful to be able to retrieve the `ItemLocation` for each `Node` we
+/// are adding attributes for.
+fn node_hierarchy_build_and_item_location_insert<'item_location>(
+    item_location_tree: &'item_location ItemLocationTree,
+    node_id_to_item_locations: &mut IndexMap<NodeId, &'item_location ItemLocation>,
+) -> NodeHierarchy {
     let mut node_hierarchy = NodeHierarchy::with_capacity(item_location_tree.children().len());
 
     item_location_tree
         .children()
         .iter()
-        .for_each(|item_location_tree_child| {
-            let child_node_id =
-                node_id_from_item_location(item_location_tree_child.item_location());
-            let child_hierarchy = node_hierarchy_from_item_location_tree(item_location_tree_child);
+        .for_each(|child_item_location_tree| {
+            let child_item_location = child_item_location_tree.item_location();
+            let child_node_id = node_id_from_item_location(child_item_location);
+            node_id_to_item_locations.insert(child_node_id.clone(), child_item_location);
+
+            let child_hierarchy = node_hierarchy_build_and_item_location_insert(
+                child_item_location_tree,
+                node_id_to_item_locations,
+            );
             node_hierarchy.insert(child_node_id, child_hierarchy);
         });
 

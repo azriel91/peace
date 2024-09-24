@@ -29,4 +29,14 @@ impl ItemLocationTree {
     pub fn children(&self) -> &[ItemLocationTree] {
         &self.children
     }
+
+    /// Returns the total number of [`ItemLocation`]s within this tree,
+    /// including itself.
+    pub fn item_location_count(&self) -> usize {
+        1 + self
+            .children
+            .iter()
+            .map(ItemLocationTree::item_location_count)
+            .sum::<usize>()
+    }
 }
