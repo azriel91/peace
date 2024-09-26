@@ -93,6 +93,8 @@ impl<E> Flow<E> {
         FlowSpecInfo::new(flow_id, graph_info)
     }
 
+    // TODO: Refactor -- there is a lot of duplication between this method and
+    // `item_locations_and_interactions_current`
     #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
     pub fn item_locations_and_interactions_example(
         &self,
@@ -214,6 +216,8 @@ impl<E> Flow<E> {
         )
     }
 
+    // TODO: Refactor -- there is a lot of duplication between this method and
+    // `item_locations_and_interactions_example`
     #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
     pub fn item_locations_and_interactions_current(
         &self,
