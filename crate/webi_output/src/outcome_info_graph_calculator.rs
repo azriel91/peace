@@ -98,7 +98,7 @@ fn calculate_info_graph(
         .fold(
             (
                 Edges::with_capacity(item_location_count),
-                GraphvizAttrs::new(),
+                GraphvizAttrs::new().with_edge_minlen_default(3),
                 Theme::new(),
             ),
             // TODO: Use `item_id` to compute `tags` and `tag_items`.
