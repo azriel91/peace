@@ -147,11 +147,11 @@ fn calculate_info_graph(
 }
 @keyframes stroke-dashoffset-move-request {
   0%   { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 228; }
+  100% { stroke-dashoffset: 198; }
 }
 @keyframes stroke-dashoffset-move-response {
   0%   { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -248; }
+  100% { stroke-dashoffset: -218; }
 }
 "#,
         ))
@@ -258,33 +258,37 @@ fn process_item_interaction_pull(
             .edge_dirs
             .insert(edge_id_request.clone(), EdgeDir::Back);
 
-        let mut css_class_partials_request = CssClassPartials::with_capacity(4);
+        let mut css_class_partials_request = CssClassPartials::with_capacity(6);
         css_class_partials_request.insert(
             ThemeAttr::Animate,
-            "[stroke-dashoffset-move-request_2s_linear_infinite]".to_string(),
+            "[stroke-dashoffset-move-request_1.5s_linear_infinite]".to_string(),
         );
         css_class_partials_request.insert(ThemeAttr::ShapeColor, "blue".to_string());
         css_class_partials_request.insert(
             ThemeAttr::StrokeStyle,
-            "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80".to_string(),
+            "dasharray:0,50,12,2,4,2,2,2,1,2,1,120".to_string(),
         );
         css_class_partials_request.insert(ThemeAttr::StrokeWidth, "[1px]".to_string());
+        css_class_partials_request.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+        css_class_partials_request.insert(ThemeAttr::FillShadeNormal, "500".to_string());
         theme.styles.insert(
             AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
             css_class_partials_request,
         );
 
-        let mut css_class_partials_response = CssClassPartials::with_capacity(4);
+        let mut css_class_partials_response = CssClassPartials::with_capacity(6);
         css_class_partials_response.insert(
             ThemeAttr::Animate,
-            "[stroke-dashoffset-move-response_2s_linear_infinite]".to_string(),
+            "[stroke-dashoffset-move-response_1.5s_linear_infinite]".to_string(),
         );
         css_class_partials_response.insert(ThemeAttr::ShapeColor, "blue".to_string());
         css_class_partials_response.insert(
             ThemeAttr::StrokeStyle,
-            "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80".to_string(),
+            "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
         );
         css_class_partials_response.insert(ThemeAttr::StrokeWidth, "[2px]".to_string());
+        css_class_partials_response.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+        css_class_partials_response.insert(ThemeAttr::FillShadeNormal, "500".to_string());
         theme.styles.insert(
             AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
             css_class_partials_response,
