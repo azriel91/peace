@@ -39,6 +39,11 @@ tokio = { workspace = true, features = ["fs"] }
 
 [features]
 default = []
+item_state_example = [
+    "peace_cfg/item_state_example",
+    "peace_rt_model/item_state_example",
+    "peace_params/item_state_example",
+]
 output_progress = [
     "dep:indicatif",
     "peace_core/output_progress",

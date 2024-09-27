@@ -166,6 +166,7 @@ fn impl_build_for(
     let scope_fields = scope_fields(scope);
     let states_and_params_read_and_pg_init = states_and_params_read_and_pg_init(scope);
     let resources_insert = resources_insert(scope);
+    let states_example_insert = states_example_insert(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -771,6 +772,17 @@ fn impl_build_for(
                 #states_and_params_read_and_pg_init
 
                 let params_type_regs = params_type_regs_builder.build();
+
+                // === SingleProfileSingleFlow === //
+                // // Fetching state example inserts it into resources.
+                // #[cfg(feature = "item_state_example")]
+                // {
+                //     let () = flow.graph().iter().try_for_each(|item| {
+                //         let _state_example = item.state_example(&params_specs, &resources)?;
+                //         Ok::<_, AppError>(())
+                //     })?;
+                // }
+                #states_example_insert
 
                 let scope = #scope_type_path::new(
                     // output,
@@ -1839,5 +1851,26 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
             proc_macro2::TokenStream::new()
         }
+    }
+}
+
+fn states_example_insert(scope: Scope) -> proc_macro2::TokenStream {
+    match scope {
+        Scope::SingleProfileSingleFlow => {
+            quote! {
+                // Fetching state example inserts it into resources.
+                #[cfg(feature = "item_state_example")]
+                {
+                    let () = flow.graph().iter().try_for_each(|item| {
+                        let _state_example = item.state_example(&params_specs, &resources)?;
+                        Ok::<_, AppError>(())
+                    })?;
+                }
+            }
+        }
+        Scope::MultiProfileSingleFlow
+        | Scope::MultiProfileNoFlow
+        | Scope::NoProfileNoFlow
+        | Scope::SingleProfileNoFlow => proc_macro2::TokenStream::new(),
     }
 }

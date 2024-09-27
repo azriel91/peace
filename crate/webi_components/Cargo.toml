@@ -24,7 +24,7 @@ dot_ix = { workspace = true, features = ["rt", "web_components"] }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
-peace_cmd = { workspace = true }
+peace_cmd = { workspace = true, features = ["item_state_example"] }
 peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_item_model = { workspace = true }
