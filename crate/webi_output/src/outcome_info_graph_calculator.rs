@@ -142,7 +142,7 @@ fn calculate_info_graph(
         .with_css(String::from(
             r#"
 @keyframes stroke-dashoffset-move {
-  0%   { stroke-dashoffset: 228; }
+  0%   { stroke-dashoffset: 136; }
   100% { stroke-dashoffset: 0; }
 }
 @keyframes stroke-dashoffset-move-request {
@@ -190,12 +190,12 @@ fn process_item_interaction_push(
         let mut css_class_partials = CssClassPartials::with_capacity(5);
         css_class_partials.insert(
             ThemeAttr::Animate,
-            "[stroke-dashoffset-move_2s_linear_infinite]".to_string(),
+            "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
         );
         css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
         css_class_partials.insert(
             ThemeAttr::StrokeStyle,
-            "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80".to_string(),
+            "dasharray:0,40,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
         );
         css_class_partials.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
         css_class_partials.insert(ThemeAttr::FillShadeNormal, "500".to_string());
