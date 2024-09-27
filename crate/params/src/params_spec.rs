@@ -5,7 +5,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
     AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFn, MappingFnImpl, Params,
-    ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
+    ParamsResolveError, ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
 };
 
 /// How to populate a field's value in an item's params.
@@ -144,19 +144,45 @@ where
     ) -> Result<T, ParamsResolveError> {
         match self {
             ParamsSpec::Value { value } => Ok(value.clone()),
-            ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
-                Ok(value) => Ok((*value).clone()),
-                Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                    }),
-                    BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::InMemoryBorrowConflict {
-                            value_resolution_ctx: value_resolution_ctx.clone(),
-                        })
+            ParamsSpec::Stored | ParamsSpec::InMemory => {
+                // Try resolve `T`, through the `value_resolution_ctx` first
+                let params_resolved = match value_resolution_ctx.value_resolution_mode() {
+                    #[cfg(feature = "item_state_example")]
+                    ValueResolutionMode::Example => resources
+                        .try_borrow::<peace_data::marker::Example<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Clean => resources
+                        .try_borrow::<peace_data::marker::Clean<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Current => resources
+                        .try_borrow::<peace_data::marker::Current<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Goal => resources
+                        .try_borrow::<peace_data::marker::Goal<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::ApplyDry => resources
+                        .try_borrow::<peace_data::marker::ApplyDry<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                }
+                .and_then(|param_opt| param_opt.ok_or(BorrowFail::ValueNotFound));
+
+                params_resolved.or_else(|_e| {
+                    // Try resolve `T` again without the `value_resolution_ctx` wrapper.
+                    match resources.try_borrow::<T>() {
+                        Ok(value) => Ok((*value).clone()),
+                        Err(borrow_fail) => match borrow_fail {
+                            BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
+                                value_resolution_ctx: value_resolution_ctx.clone(),
+                            }),
+                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                                Err(ParamsResolveError::InMemoryBorrowConflict {
+                                    value_resolution_ctx: value_resolution_ctx.clone(),
+                                })
+                            }
+                        },
                     }
-                },
-            },
+                })
+            }
             ParamsSpec::MappingFn(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
             ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve(resources, value_resolution_ctx)
@@ -171,17 +197,43 @@ where
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
             ParamsSpec::Value { value } => Ok(T::Partial::from((*value).clone())),
-            ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
-                Ok(value) => Ok(T::Partial::from((*value).clone())),
-                Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Ok(T::Partial::default()),
-                    BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::InMemoryBorrowConflict {
-                            value_resolution_ctx: value_resolution_ctx.clone(),
-                        })
+            ParamsSpec::Stored | ParamsSpec::InMemory => {
+                // Try resolve `T`, through the `value_resolution_ctx` first
+                let params_partial_resolved = match value_resolution_ctx.value_resolution_mode() {
+                    #[cfg(feature = "item_state_example")]
+                    ValueResolutionMode::Example => resources
+                        .try_borrow::<peace_data::marker::Example<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Clean => resources
+                        .try_borrow::<peace_data::marker::Clean<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Current => resources
+                        .try_borrow::<peace_data::marker::Current<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::Goal => resources
+                        .try_borrow::<peace_data::marker::Goal<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                    ValueResolutionMode::ApplyDry => resources
+                        .try_borrow::<peace_data::marker::ApplyDry<T>>()
+                        .map(|data_marker| data_marker.0.clone()),
+                }
+                .and_then(|param_opt| param_opt.ok_or(BorrowFail::ValueNotFound));
+
+                params_partial_resolved.map(T::Partial::from).or_else(|_e| {
+                    // Try resolve `T` again without the `value_resolution_ctx` wrapper.
+                    match resources.try_borrow::<T>() {
+                        Ok(value) => Ok(T::Partial::from((*value).clone())),
+                        Err(borrow_fail) => match borrow_fail {
+                            BorrowFail::ValueNotFound => Ok(T::Partial::default()),
+                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                                Err(ParamsResolveError::InMemoryBorrowConflict {
+                                    value_resolution_ctx: value_resolution_ctx.clone(),
+                                })
+                            }
+                        },
                     }
-                },
-            },
+                })
+            }
             ParamsSpec::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_default()),
