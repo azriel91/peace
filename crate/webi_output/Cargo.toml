@@ -42,6 +42,7 @@ peace_rt_model_core = { workspace = true }
 peace_value_traits = { workspace = true }
 peace_webi_components = { workspace = true }
 peace_webi_model = { workspace = true }
+smallvec = { workspace = true }
 tokio = { workspace = true, features = ["net", "sync"] }
 tower-http = { workspace = true, features = ["fs"] }
 

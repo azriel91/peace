@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use dot_ix_model::{
     common::{
@@ -16,6 +16,7 @@ use peace_item_model::{
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{resources::ts::SetUp, Resources};
 use peace_rt_model::Flow;
+use smallvec::SmallVec;
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
 #[derive(Debug)]
@@ -67,6 +68,7 @@ fn calculate_info_graph(
     let NodeIdMappingsAndHierarchy {
         node_id_to_item_locations,
         item_location_to_node_ids,
+        item_location_to_node_id_segments: _,
         node_hierarchy,
     } = node_id_mappings_and_hierarchy;
 
@@ -378,19 +380,30 @@ fn node_id_mappings_and_hierarchy<'item_location>(
     let node_id_mappings_and_hierarchy = NodeIdMappingsAndHierarchy {
         node_id_to_item_locations: IndexMap::with_capacity(item_location_count),
         item_location_to_node_ids: IndexMap::with_capacity(item_location_count),
+        item_location_to_node_id_segments: HashMap::with_capacity(item_location_count),
         node_hierarchy: NodeHierarchy::with_capacity(item_location_trees.len()),
     };
+
     item_location_trees.iter().fold(
         node_id_mappings_and_hierarchy,
         |mut node_id_mappings_and_hierarchy, item_location_tree| {
             let NodeIdMappingsAndHierarchy {
                 node_id_to_item_locations,
                 item_location_to_node_ids,
+                item_location_to_node_id_segments,
                 node_hierarchy,
             } = &mut node_id_mappings_and_hierarchy;
 
             let item_location = item_location_tree.item_location();
-            let node_id = node_id_from_item_location(item_location);
+
+            // Probably won't go more than 8 deep.
+            let mut item_location_ancestors = SmallVec::<[&ItemLocation; 8]>::new();
+            item_location_ancestors.push(item_location);
+
+            let node_id = node_id_from_item_location(
+                item_location_to_node_id_segments,
+                item_location_ancestors.as_slice(),
+            );
 
             node_id_to_item_locations.insert(node_id.clone(), item_location);
             item_location_to_node_ids.insert(item_location, node_id.clone());
@@ -399,6 +412,8 @@ fn node_id_mappings_and_hierarchy<'item_location>(
                 item_location_tree,
                 node_id_to_item_locations,
                 item_location_to_node_ids,
+                item_location_to_node_id_segments,
+                item_location_ancestors,
             );
             node_hierarchy.insert(node_id, node_hierarchy_top_level);
 
@@ -407,7 +422,53 @@ fn node_id_mappings_and_hierarchy<'item_location>(
     )
 }
 
-fn node_id_from_item_location(item_location: &ItemLocation) -> NodeId {
+/// Returns the [`NodeId`] for the given [`ItemLocation`].
+///
+/// This is computed from all of the node ID segments from all of the node's
+/// ancestors.
+fn node_id_from_item_location<'item_location>(
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
+    item_location_ancestors: &[&'item_location ItemLocation],
+) -> NodeId {
+    let capacity =
+        item_location_ancestors
+            .iter()
+            .fold(0usize, |capacity_acc, item_location_ancestor| {
+                let node_id_segment = item_location_to_node_id_segments
+                    .entry(item_location_ancestor)
+                    .or_insert_with(move || {
+                        node_id_segment_from_item_location(item_location_ancestor)
+                    });
+
+                capacity_acc + node_id_segment.len() + 3
+            });
+    let mut node_id = item_location_ancestors
+        .iter()
+        .filter_map(|item_location_ancestor| {
+            item_location_to_node_id_segments.get(item_location_ancestor)
+        })
+        .fold(
+            String::with_capacity(capacity),
+            |mut node_id_buffer, node_id_segment| {
+                node_id_buffer.push_str(&node_id_segment);
+                node_id_buffer.push_str("___");
+                node_id_buffer
+            },
+        );
+    node_id.truncate(node_id.len() - "___".len());
+
+    let node_id =
+        NodeId::try_from(node_id).expect("Expected node ID from item location ID to be valid.");
+    node_id
+}
+
+/// Returns a `&str` segment that can be used as part of the `NodeId` for the
+/// given [`ItemLocation`].
+///
+/// An [`ItemLocation`]'s [`NodeId`] needs to be joined with the parent segments
+/// from its ancestors, otherwise two different `path__path_to_file`
+/// [`ItemLocation`]s may be accidentally merged.
+fn node_id_segment_from_item_location(item_location: &ItemLocation) -> String {
     let item_location_type = match item_location.r#type() {
         ItemLocationType::Group => "group",
         ItemLocationType::Host => "host",
@@ -424,9 +485,8 @@ fn node_id_from_item_location(item_location: &ItemLocation) -> NodeId {
                 }
                 name_acc
             });
-    let node_id = NodeId::try_from(format!("{item_location_type}___{name_transformed}"))
-        .expect("Expected node ID from item location ID to be valid.");
-    node_id
+
+    format!("{item_location_type}___{name_transformed}")
 }
 
 /// Recursively constructs the `NodeHierarchy` and populates a map to facilitate
@@ -446,6 +506,8 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
     item_location_tree: &'item_location ItemLocationTree,
     node_id_to_item_locations: &mut IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_ids: &mut IndexMap<&'item_location ItemLocation, NodeId>,
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
+    item_location_ancestors: SmallVec<[&'item_location ItemLocation; 8]>,
 ) -> NodeHierarchy {
     let mut node_hierarchy = NodeHierarchy::with_capacity(item_location_tree.children().len());
 
@@ -454,7 +516,13 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
         .iter()
         .for_each(|child_item_location_tree| {
             let child_item_location = child_item_location_tree.item_location();
-            let child_node_id = node_id_from_item_location(child_item_location);
+            let mut child_item_location_ancestors = item_location_ancestors.clone();
+            child_item_location_ancestors.push(child_item_location);
+
+            let child_node_id = node_id_from_item_location(
+                item_location_to_node_id_segments,
+                child_item_location_ancestors.as_slice(),
+            );
             node_id_to_item_locations.insert(child_node_id.clone(), child_item_location);
             item_location_to_node_ids.insert(child_item_location, child_node_id.clone());
 
@@ -462,6 +530,8 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
                 child_item_location_tree,
                 node_id_to_item_locations,
                 item_location_to_node_ids,
+                item_location_to_node_id_segments,
+                child_item_location_ancestors,
             );
             node_hierarchy.insert(child_node_id, child_hierarchy);
         });
@@ -472,5 +542,6 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
 struct NodeIdMappingsAndHierarchy<'item_location> {
     node_id_to_item_locations: IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_ids: IndexMap<&'item_location ItemLocation, NodeId>,
+    item_location_to_node_id_segments: HashMap<&'item_location ItemLocation, String>,
     node_hierarchy: NodeHierarchy,
 }
