@@ -165,8 +165,8 @@ chrono = { version = "0.4.38", default-features = false, features = ["clock", "s
 console = "0.15.8"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
-dot_ix = { version = "0.8.0", default-features = false }
-dot_ix_model = "0.8.0"
+dot_ix = { version = "0.8.1", default-features = false }
+dot_ix_model = "0.8.1"
 downcast-rs = "1.2.1"
 dyn-clone = "1.0.17"
 enser = "0.1.4"
