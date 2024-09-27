@@ -199,6 +199,7 @@ where
             ItemLocationAncestors::new(vec![ItemLocation::localhost()]),
             ItemLocationAncestors::new(vec![
                 ItemLocation::group(String::from("IAM")),
+                ItemLocation::group(String::from("Roles")),
                 ItemLocation::path(iam_role_name),
             ]),
         )
