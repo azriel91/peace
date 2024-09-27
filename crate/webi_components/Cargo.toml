@@ -33,6 +33,7 @@ peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true, features = ["item_interactions", "item_state_example"] }
 peace_webi_model = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
+serde_yaml = { workspace = true }
 
 [features]
 default = []

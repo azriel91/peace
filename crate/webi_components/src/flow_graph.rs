@@ -109,6 +109,12 @@ pub fn OutcomeGraph() -> impl IntoView {
         },
     );
     let outcome_info_graph = Signal::from(move || {
+        if let Some(info_graph) = outcome_info_graph_resource.get() {
+            let serialized = serde_yaml::to_string(&info_graph)
+                .unwrap_or("Failed to serialize info_graph".to_string());
+            leptos::logging::log!("{serialized}");
+        }
+
         outcome_info_graph_resource
             .get()
             .unwrap_or_else(InfoGraph::default)
