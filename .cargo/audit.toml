@@ -1,0 +1,8 @@
+[advisories]
+ignore = [
+  # `proc-macro-error` is Unmaintained.
+  #
+  # Transitive dependency of `syn_derive`.
+  # Pending https://github.com/Kyuuhachi/syn_derive/issues/4.
+  "RUSTSEC-2024-0370",
+]

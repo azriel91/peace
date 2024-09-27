@@ -70,7 +70,11 @@ yanked = "warn"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
-    #"RUSTSEC-0000-0000",
+    # `proc-macro-error` is Unmaintained.
+    #
+    # Transitive dependency of `syn_derive`.
+    # Pending https://github.com/Kyuuhachi/syn_derive/issues/4.
+    "RUSTSEC-2024-0370",
 ]
 
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
