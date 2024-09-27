@@ -18,12 +18,10 @@ use peace_webi_model::{FlowOutcomeInfoGraphs, FlowProgressInfoGraphs};
 #[component]
 pub fn FlowGraph() -> impl IntoView {
     view! {
-        <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
-            <div class="flex items-center justify-center">
-                <ProgressGraph />
-                <OutcomeGraph />
-            </div>
-        </Transition>
+        <div class="flex items-center justify-center">
+            <ProgressGraph />
+            <OutcomeGraph />
+        </div>
     }
 }
 
@@ -77,10 +75,12 @@ pub fn ProgressGraph() -> impl IntoView {
             .into();
 
     view! {
-        <DotSvg
-            info_graph=progress_info_graph
-            dot_src_and_styles
-        />
+        <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
+            <DotSvg
+                info_graph=progress_info_graph
+                dot_src_and_styles
+            />
+        </Transition>
     }
 }
 
@@ -91,17 +91,21 @@ pub fn OutcomeGraph() -> impl IntoView {
     let outcome_info_graph_resource = leptos::create_resource(
         move || flow_id.as_ref().map(SignalGet::get),
         move |flow_id| async move {
-            let flow_outcome_info_graphs =
-                leptos::expect_context::<FlowOutcomeInfoGraphs<FlowId>>();
-            let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
+            let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<FlowId>>();
 
-            flow_id
-                .as_ref()
-                .zip(flow_outcome_info_graphs)
-                .and_then(|(flow_id, flow_outcome_info_graphs)| {
-                    flow_outcome_info_graphs.get(flow_id).cloned()
-                })
-                .unwrap_or_else(InfoGraph::default)
+            if let Some(flow_outcome_info_graphs) = flow_outcome_info_graphs {
+                let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
+
+                flow_id
+                    .as_ref()
+                    .zip(flow_outcome_info_graphs)
+                    .and_then(|(flow_id, flow_outcome_info_graphs)| {
+                        flow_outcome_info_graphs.get(flow_id).cloned()
+                    })
+                    .unwrap_or_else(InfoGraph::default)
+            } else {
+                InfoGraph::default()
+            }
         },
     );
     let outcome_info_graph = Signal::from(move || {
@@ -118,9 +122,11 @@ pub fn OutcomeGraph() -> impl IntoView {
     .into();
 
     view! {
-        <DotSvg
-            info_graph=outcome_info_graph
-            dot_src_and_styles=dot_src_and_styles
-        />
+        <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
+            <DotSvg
+                info_graph=outcome_info_graph
+                dot_src_and_styles=dot_src_and_styles
+            />
+        </Transition>
     }
 }
