@@ -90,7 +90,7 @@ fn calculate_info_graph(
     //    `Map<ItemLocation, NodeId>`.
     // 6. Then we can iterate through `item_to_item_interactions`, and for each
     //    `ItemLocation`, look up the map from 5, and add an edge.
-    let (edges, graphviz_attrs, theme) = item_to_item_interactions
+    let (edges, graphviz_attrs, mut theme) = item_to_item_interactions
         .iter()
         // The capacity could be worked out through the sum of all `ItemInteraction`s.
         //
@@ -132,6 +132,8 @@ fn calculate_info_graph(
             },
         );
 
+    theme_styles_augment(&item_location_trees, &node_id_to_item_locations, &mut theme);
+
     InfoGraph::default()
         .with_direction(GraphDir::Vertical)
         .with_hierarchy(node_hierarchy)
@@ -155,6 +157,75 @@ fn calculate_info_graph(
 }
 "#,
         ))
+}
+
+/// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
+fn theme_styles_augment(
+    item_location_trees: &[ItemLocationTree],
+    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
+    theme: &mut Theme,
+) {
+    // Use light styling for `ItemLocationType::Group` nodes.
+    let mut css_class_partials_light = CssClassPartials::with_capacity(10);
+    css_class_partials_light.insert(ThemeAttr::StrokeStyle, "dotted".to_string());
+    css_class_partials_light.insert(ThemeAttr::StrokeShadeNormal, "300".to_string());
+    css_class_partials_light.insert(ThemeAttr::StrokeShadeHover, "300".to_string());
+    css_class_partials_light.insert(ThemeAttr::StrokeShadeFocus, "400".to_string());
+    css_class_partials_light.insert(ThemeAttr::StrokeShadeActive, "500".to_string());
+    css_class_partials_light.insert(ThemeAttr::FillShadeNormal, "50".to_string());
+    css_class_partials_light.insert(ThemeAttr::FillShadeHover, "50".to_string());
+    css_class_partials_light.insert(ThemeAttr::FillShadeFocus, "100".to_string());
+    css_class_partials_light.insert(ThemeAttr::FillShadeActive, "200".to_string());
+
+    node_id_to_item_locations
+        .iter()
+        .for_each(|(node_id, item_location)| {
+            let css_class_partials = match item_location.r#type() {
+                ItemLocationType::Host => {
+                    // Specially colour some known hosts.
+                    match item_location.name() {
+                        ItemLocation::LOCALHOST => {
+                            let mut css_class_partials = css_class_partials_light.clone();
+                            css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+
+                            Some(css_class_partials)
+                        }
+                        "github.com" => {
+                            let mut css_class_partials = css_class_partials_light.clone();
+                            css_class_partials.insert(ThemeAttr::ShapeColor, "purple".to_string());
+
+                            Some(css_class_partials)
+                        }
+                        _ => {
+                            // Not all hosts should be styled light -- only the ones that are top
+                            // level. i.e. if the host is inside a group, then it should likely be
+                            // styled darker.
+                            if item_location_trees
+                                .iter()
+                                .map(ItemLocationTree::item_location)
+                                .find(|item_location_top_level| {
+                                    item_location_top_level == item_location
+                                })
+                                .is_some()
+                            {
+                                Some(css_class_partials_light.clone())
+                            } else {
+                                None
+                            }
+                        }
+                    }
+                }
+                ItemLocationType::Group => Some(css_class_partials_light.clone()),
+                _ => None,
+            };
+
+            if let Some(css_class_partials) = css_class_partials {
+                theme.styles.insert(
+                    AnyIdOrDefaults::AnyId(AnyId::from(node_id.clone())),
+                    css_class_partials,
+                );
+            }
+        });
 }
 
 /// Inserts an edge between the `from` and `to` nodes of an
