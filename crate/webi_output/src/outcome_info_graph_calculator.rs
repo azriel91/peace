@@ -2,8 +2,9 @@ use std::{collections::HashMap, str::FromStr};
 
 use dot_ix_model::{
     common::{
-        graphviz_attrs::EdgeDir, AnyId, EdgeId, Edges, GraphvizAttrs, NodeHierarchy, NodeId,
-        NodeNames, TagId, TagItems, TagNames, TagStyles,
+        graphviz_attrs::{EdgeDir, PackMode, PackModeFlag},
+        AnyId, EdgeId, Edges, GraphvizAttrs, NodeHierarchy, NodeId, NodeNames, TagId, TagItems,
+        TagNames, TagStyles,
     },
     info_graph::{GraphDir, InfoGraph},
     theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr, ThemeStyles},
@@ -196,7 +197,11 @@ fn process_item_interactions<'f, 'item_location>(
     } = item_interactions_process_ctx;
 
     let edges = Edges::with_capacity(item_location_count);
-    let graphviz_attrs = GraphvizAttrs::new().with_edge_minlen_default(3);
+    let mut graphviz_attrs = GraphvizAttrs::new().with_edge_minlen_default(3);
+    graphviz_attrs.pack_mode = PackMode::Array {
+        flags: vec![PackModeFlag::T],
+        number: None,
+    };
     let mut theme = Theme::new();
     theme.styles.insert(AnyIdOrDefaults::EdgeDefaults, {
         let mut css_class_partials = CssClassPartials::with_capacity(1);
@@ -507,7 +512,7 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
         node_id_to_item_locations,
         item_location_to_node_id_segments,
         edges,
-        theme,
+        theme: _,
         tag_items,
         tag_id,
         tag_styles_focus,
