@@ -11,8 +11,8 @@ use dot_ix_model::{
 };
 use indexmap::IndexMap;
 use peace_item_model::{
-    ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemLocation, ItemLocationTree,
-    ItemLocationType, ItemLocationsAndInteractions,
+    ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin, ItemLocation,
+    ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{resources::ts::SetUp, Resources};
@@ -328,7 +328,11 @@ fn process_item_interactions_example<'item_location>(
                             );
                         }
                         ItemInteraction::Within(item_interaction_within) => {
-                            // TODO: compute theme
+                            process_item_interaction_within_example(
+                                item_interactions_processing_ctx,
+                                &mut graphviz_attrs,
+                                item_interaction_within,
+                            );
                         }
                     }
                 });
@@ -615,6 +619,75 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
     }
 }
 
+/// Indicates the nodes that are being waited upon by [`ItemInteractionWithin`].
+fn process_item_interaction_within_example<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
+    graphviz_attrs: &mut GraphvizAttrs,
+    item_interaction_within: &'item_location ItemInteractionWithin,
+) {
+    let ItemInteractionsProcessingCtx {
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges,
+        theme: _,
+        tag_items,
+        tag_id,
+        tag_styles_focus,
+    } = item_interactions_processing_ctx;
+
+    // Use the outermost `ItemLocationType::Host` node.
+    let node_id = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_within.location().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
+
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
+
+        let node_id_client = node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
+    };
+
+    let css_class_partials = item_interaction_within_css_class_partials();
+
+    if let Some(any_ids) = tag_items.get_mut(tag_id) {
+        any_ids.push(AnyId::from(node_id.clone()));
+    } else {
+        let any_ids = vec![AnyId::from(node_id.clone())];
+        tag_items.insert(tag_id.clone(), any_ids);
+    }
+
+    if let Some(theme_styles) = tag_styles_focus.get_mut(tag_id) {
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(node_id)),
+            css_class_partials,
+        );
+    } else {
+        let mut theme_styles = ThemeStyles::with_capacity(1);
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(node_id)),
+            css_class_partials,
+        );
+        tag_styles_focus.insert(tag_id.clone(), theme_styles);
+    }
+}
+
+/// Returns [`CssClassPartials`] for the edge between the `from` and `to`
+/// [`ItemLocation`]s of an [`ItemInteractionPush`].
 fn item_interaction_push_css_class_partials() -> CssClassPartials {
     let mut css_class_partials = CssClassPartials::with_capacity(6);
     css_class_partials.insert(ThemeAttr::Visibility, "visible".to_string());
@@ -632,6 +705,8 @@ fn item_interaction_push_css_class_partials() -> CssClassPartials {
     css_class_partials
 }
 
+/// Returns [`CssClassPartials`] for the edge for the `client` to `server`
+/// [`ItemLocation`] of an [`ItemInteractionPull`].
 fn item_interaction_pull_request_css_class_partials() -> CssClassPartials {
     let mut css_class_partials_request = CssClassPartials::with_capacity(7);
     css_class_partials_request.insert(ThemeAttr::Visibility, "visible".to_string());
@@ -650,6 +725,8 @@ fn item_interaction_pull_request_css_class_partials() -> CssClassPartials {
     css_class_partials_request
 }
 
+/// Returns [`CssClassPartials`] for the edge for the `server` to `client`
+/// [`ItemLocation`] of an [`ItemInteractionPull`].
 fn item_interaction_pull_response_css_class_partials() -> CssClassPartials {
     let mut css_class_partials_response = CssClassPartials::with_capacity(7);
     css_class_partials_response.insert(ThemeAttr::Visibility, "visible".to_string());
@@ -666,6 +743,19 @@ fn item_interaction_pull_response_css_class_partials() -> CssClassPartials {
     css_class_partials_response.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
     css_class_partials_response.insert(ThemeAttr::FillShadeNormal, "500".to_string());
     css_class_partials_response
+}
+
+/// Returns [`CssClassPartials`] for the node for an [`ItemLocation`] of an
+/// [`ItemInteractionWithin`].
+fn item_interaction_within_css_class_partials() -> CssClassPartials {
+    let mut css_class_partials = CssClassPartials::with_capacity(4);
+    css_class_partials.insert(
+        ThemeAttr::Animate,
+        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+    );
+    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+    css_class_partials
 }
 
 /// Returns the node ID that ends with the calculated node ID, in case another
