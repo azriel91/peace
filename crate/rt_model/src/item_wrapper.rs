@@ -978,4 +978,30 @@ where
 
         Ok(item_interactions)
     }
+
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_tag_name(&self) -> String {
+        use std::borrow::Cow;
+
+        let type_name = tynm::type_name::<I>();
+        let (operation, prefix) = type_name
+            .split_once("<")
+            .map(|(operation, prefix_plus_extra)| {
+                let prefix_end = prefix_plus_extra.find(|c| c == '<' || c == '>');
+                let prefix = prefix_end
+                    .map(|prefix_end| &prefix_plus_extra[..prefix_end])
+                    .unwrap_or(prefix_plus_extra);
+                (Cow::Borrowed(operation), Some(Cow::Borrowed(prefix)))
+            })
+            .unwrap_or_else(|| (Cow::Borrowed(&type_name), None));
+
+        match prefix {
+            Some(prefix) => {
+                let prefix = heck::AsTitleCase(prefix).to_string();
+                let operation = heck::AsTitleCase(operation).to_string();
+                format!("{prefix}: {operation}")
+            }
+            None => heck::AsTitleCase(operation).to_string(),
+        }
+    }
 }

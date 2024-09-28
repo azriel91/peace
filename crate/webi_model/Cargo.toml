@@ -21,12 +21,13 @@ test = false
 
 [dependencies]
 dot_ix_model = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
 miette = { workspace = true, optional = true }
-peace_core = { workspace = true, optional = true }
+peace_core = { workspace = true }
 peace_cmd_model = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
 
 [features]
 error_reporting = ["dep:miette"]
-output_progress = ["dep:peace_core"]
+output_progress = []

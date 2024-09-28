@@ -3,7 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 use dot_ix_model::{
     common::{
         graphviz_attrs::EdgeDir, AnyId, EdgeId, Edges, GraphvizAttrs, NodeHierarchy, NodeId,
-        NodeNames,
+        NodeNames, TagId, TagNames,
     },
     info_graph::{GraphDir, InfoGraph},
     theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr},
@@ -16,6 +16,7 @@ use peace_item_model::{
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{resources::ts::SetUp, Resources};
 use peace_rt_model::Flow;
+use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
@@ -23,40 +24,42 @@ use smallvec::SmallVec;
 pub struct OutcomeInfoGraphCalculator;
 
 impl OutcomeInfoGraphCalculator {
-    /// Returns the `InfoGraph` calculated using example state.
-    pub fn calculate_example<E>(
+    /// Returns the calculated `InfoGraph`.
+    pub fn calculate<E>(
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        outcome_info_graph_variant: OutcomeInfoGraphVariant,
     ) -> InfoGraph
     where
         E: 'static,
     {
-        let item_locations_and_interactions =
-            flow.item_locations_and_interactions_example(&params_specs, resources);
+        let item_locations_and_interactions = match &outcome_info_graph_variant {
+            OutcomeInfoGraphVariant::Example => {
+                flow.item_locations_and_interactions_example(&params_specs, resources)
+            }
+            OutcomeInfoGraphVariant::Current { .. } => {
+                flow.item_locations_and_interactions_current(&params_specs, resources)
+            }
+        };
 
-        calculate_info_graph(item_locations_and_interactions)
-    }
-
-    /// Returns the `InfoGraph` calculated using example state.
-    pub fn calculate_current<E>(
-        flow: &Flow<E>,
-        params_specs: &ParamsSpecs,
-        resources: &Resources<SetUp>,
-    ) -> InfoGraph
-    where
-        E: 'static,
-    {
-        let item_locations_and_interactions =
-            flow.item_locations_and_interactions_current(&params_specs, resources);
-
-        calculate_info_graph(item_locations_and_interactions)
+        calculate_info_graph(
+            flow,
+            outcome_info_graph_variant,
+            item_locations_and_interactions,
+        )
     }
 }
 
-fn calculate_info_graph(
+fn calculate_info_graph<E>(
+    flow: &Flow<E>,
+    outcome_info_graph_variant: OutcomeInfoGraphVariant,
     item_locations_and_interactions: ItemLocationsAndInteractions,
-) -> InfoGraph {
+) -> InfoGraph
+where
+    E: 'static,
+{
+    let item_count = flow.graph().node_count();
     let ItemLocationsAndInteractions {
         item_location_trees,
         item_to_item_interactions,
@@ -79,6 +82,30 @@ fn calculate_info_graph(
         },
     );
 
+    let tags = match &outcome_info_graph_variant {
+        OutcomeInfoGraphVariant::Example => {
+            let tags =
+                flow.graph()
+                    .iter()
+                    .fold(TagNames::with_capacity(item_count), |mut tags, item| {
+                        let tag_name = item.interactions_tag_name();
+
+                        // For some reason taking away `.to_string()` causes an error to be
+                        // highlighted on `flow.graph()`, rather than referring to `item.id()` as
+                        // the cause of an extended borrow.
+                        let tag_id = TagId::try_from(item.id().to_string())
+                            .expect("Expected `tag_id` from `item_id` to be valid.");
+
+                        tags.insert(tag_id, tag_name);
+
+                        tags
+                    });
+
+            Some(tags)
+        }
+        OutcomeInfoGraphVariant::Current { .. } => None,
+    };
+
     // 1. Each item interaction knows the `ItemLocation`s
     // 2. We need to be able to translate from an `ItemLocation`, to the `NodeId`s
     //    that we need to link as edges.
@@ -91,19 +118,30 @@ fn calculate_info_graph(
     //    `Map<ItemLocation, NodeId>`.
     // 6. Then we can iterate through `item_to_item_interactions`, and for each
     //    `ItemLocation`, look up the map from 5, and add an edge.
-    let (edges, graphviz_attrs, mut theme) = item_to_item_interactions
+    let item_interactions_styling_ctx = ItemInteractionsStylingCtx {
+        edges: Edges::with_capacity(item_location_count),
+        graphviz_attrs: GraphvizAttrs::new().with_edge_minlen_default(3),
+        theme: Theme::new(),
+    };
+    let ItemInteractionsStylingCtx {
+        edges,
+        graphviz_attrs,
+        mut theme,
+    } = item_to_item_interactions
         .iter()
         // The capacity could be worked out through the sum of all `ItemInteraction`s.
         //
         // For now we just use the `item_location_count` as a close approximation.
         .fold(
-            (
-                Edges::with_capacity(item_location_count),
-                GraphvizAttrs::new().with_edge_minlen_default(3),
-                Theme::new(),
-            ),
+            item_interactions_styling_ctx,
             // TODO: Use `item_id` to compute `tags` and `tag_items`.
-            |(mut edges, mut graphviz_attrs, mut theme), (item_id, item_interactions)| {
+            |item_interactions_styling_ctx, (item_id, item_interactions)| {
+                let ItemInteractionsStylingCtx {
+                    mut edges,
+                    mut graphviz_attrs,
+                    mut theme,
+                } = item_interactions_styling_ctx;
+
                 item_interactions
                     .iter()
                     .for_each(|item_interaction| match item_interaction {
@@ -131,13 +169,17 @@ fn calculate_info_graph(
                         }
                     });
 
-                (edges, graphviz_attrs, theme)
+                ItemInteractionsStylingCtx {
+                    edges,
+                    graphviz_attrs,
+                    theme,
+                }
             },
         );
 
     theme_styles_augment(&item_location_trees, &node_id_to_item_locations, &mut theme);
 
-    InfoGraph::default()
+    let mut info_graph = InfoGraph::default()
         .with_direction(GraphDir::Vertical)
         .with_hierarchy(node_hierarchy)
         .with_node_names(node_names)
@@ -159,7 +201,13 @@ fn calculate_info_graph(
   100% { stroke-dashoffset: -218; }
 }
 "#,
-        ))
+        ));
+
+    if let Some(tags) = tags {
+        info_graph = info_graph.with_tags(tags)
+    }
+
+    info_graph
 }
 
 /// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
@@ -587,4 +635,10 @@ struct NodeIdMappingsAndHierarchy<'item_location> {
     node_id_to_item_locations: IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: HashMap<&'item_location ItemLocation, String>,
     node_hierarchy: NodeHierarchy,
+}
+
+struct ItemInteractionsStylingCtx {
+    edges: Edges,
+    graphviz_attrs: GraphvizAttrs,
+    theme: Theme,
 }

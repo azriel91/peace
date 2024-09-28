@@ -106,6 +106,16 @@ macro_rules! id_newtype {
 
                 first_char_valid && remainder_chars_valid
             }
+
+            /// Returns the inner `Cow<'static, str>`.
+            pub fn into_inner(self) -> Cow<'static, str> {
+                self.0
+            }
+
+            /// Returns the `&str` held by this ID.
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
         }
 
         impl std::ops::Deref for $ty_name {

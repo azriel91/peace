@@ -352,4 +352,13 @@ pub trait ItemRt<E>:
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E>;
+
+    /// Returns a human readable tag name that represents this item.
+    ///
+    /// For example, a `FileDownloadItem<WebApp>` should return a string similar
+    /// to: `"Web App: File Download"`. This allows tags to be grouped by the
+    /// concept / information they are associated with, rather than grouping
+    /// tags by the type of operation.
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_tag_name(&self) -> String;
 }

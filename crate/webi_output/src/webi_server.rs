@@ -2,12 +2,13 @@ use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
+use indexmap::IndexSet;
 use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
 use peace_webi_components::Home;
-use peace_webi_model::{CmdExecRequest, WebiError};
+use peace_webi_model::{CmdExecRequest, OutcomeInfoGraphVariant, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
 
@@ -96,7 +97,14 @@ impl WebiServer {
         let flow_progress_example_info_graph = flow_spec_info.to_progress_info_graph();
         let flow_outcome_example_info_graph = outcome_info_graph_fn(
             &mut webi_output_mock,
-            OutcomeInfoGraphCalculator::calculate_example::<E>,
+            Box::new(|flow, params_specs, resources| {
+                OutcomeInfoGraphCalculator::calculate::<E>(
+                    flow,
+                    params_specs,
+                    resources,
+                    OutcomeInfoGraphVariant::Example,
+                )
+            }),
         )
         .await;
 
@@ -160,26 +168,47 @@ impl WebiServer {
 
                 // Update `InfoGraph`s every time `progress_update` is sent.
                 let web_ui_update_task = async move {
+                    // Keep track of item execution progress.
+                    let mut item_ids_in_progress = IndexSet::new();
+                    let mut item_ids_completed = IndexSet::new();
+
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
+                        // TODO: augment progress information.
+                        let flow_progress_actual_info_graph =
+                            flow_spec_info.to_progress_info_graph();
+
                         if let Ok(mut flow_progress_actual_info_graphs) =
                             flow_progress_actual_info_graphs.lock()
                         {
-                            // TODO: augment progress information.
-                            let flow_progress_actual_info_graph =
-                                flow_spec_info.to_progress_info_graph();
-
                             flow_progress_actual_info_graphs
                                 .insert(cmd_execution_id, flow_progress_actual_info_graph);
                         }
+
+                        let item_ids_in_progress_snapshot = item_ids_in_progress.clone();
+                        let item_ids_completed_snapshot = item_ids_completed.clone();
+
+                        let flow_outcome_actual_info_graph = outcome_info_graph_fn(
+                            &mut webi_output,
+                            Box::new(move |flow, params_specs, resources| {
+                                let item_ids_in_progress = item_ids_in_progress_snapshot.clone();
+                                let item_ids_completed = item_ids_completed_snapshot.clone();
+
+                                OutcomeInfoGraphCalculator::calculate::<E>(
+                                    flow,
+                                    params_specs,
+                                    resources,
+                                    OutcomeInfoGraphVariant::Current {
+                                        item_ids_in_progress,
+                                        item_ids_completed,
+                                    },
+                                )
+                            }),
+                        )
+                        .await;
+
                         if let Ok(mut flow_outcome_actual_info_graphs) =
                             flow_outcome_actual_info_graphs.lock()
                         {
-                            let flow_outcome_actual_info_graph = outcome_info_graph_fn(
-                                &mut webi_output,
-                                OutcomeInfoGraphCalculator::calculate_current::<E>,
-                            )
-                            .await;
-
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }

@@ -24,7 +24,7 @@ pub struct FlowWebiFns<E> {
     pub outcome_info_graph_fn: Box<
         dyn Fn(
             &mut WebiOutput,
-            fn(&Flow<E>, &ParamsSpecs, &Resources<SetUp>) -> InfoGraph,
+            Box<dyn Fn(&Flow<E>, &ParamsSpecs, &Resources<SetUp>) -> InfoGraph>,
         ) -> LocalBoxFuture<InfoGraph>,
     >,
     /// Function to spawn a `CmdExecution`.
@@ -53,7 +53,7 @@ where
                     Box<
                         dyn Fn(
                             &mut WebiOutput,
-                            fn(&Flow<E>, &ParamsSpecs, &Resources<SetUp>) -> InfoGraph,
+                            Box<dyn Fn(&Flow<E>, &ParamsSpecs, &Resources<SetUp>) -> InfoGraph>,
                         ) -> LocalBoxFuture<InfoGraph>,
                     >
                 ),

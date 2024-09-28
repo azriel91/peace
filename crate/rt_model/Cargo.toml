@@ -24,6 +24,7 @@ cfg-if = { workspace = true }
 dyn-clone = { workspace = true }
 erased-serde = { workspace = true }
 futures = { workspace = true }
+heck = { workspace = true, optional = true }
 indexmap = { workspace = true, optional = true }
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
@@ -60,6 +61,7 @@ output_progress = [
     "peace_rt_model_hack/output_progress"
 ]
 item_interactions = [
+    "dep:heck",
     "dep:indexmap",
     "dep:peace_item_model",
     "peace_cfg/item_interactions",
