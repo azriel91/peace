@@ -109,6 +109,7 @@ fn calculate_info_graph(
                     .for_each(|item_interaction| match item_interaction {
                         ItemInteraction::Push(item_interaction_push) => {
                             process_item_interaction_push(
+                                &node_id_to_item_locations,
                                 &mut item_location_to_node_id_segments,
                                 &mut edges,
                                 &mut theme,
@@ -117,6 +118,7 @@ fn calculate_info_graph(
                         }
                         ItemInteraction::Pull(item_interaction_pull) => {
                             process_item_interaction_pull(
+                                &node_id_to_item_locations,
                                 &mut item_location_to_node_id_segments,
                                 &mut edges,
                                 &mut theme,
@@ -232,6 +234,7 @@ fn theme_styles_augment(
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
 fn process_item_interaction_push<'item_location>(
+    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     edges: &mut Edges,
     theme: &mut Theme,
@@ -258,16 +261,22 @@ fn process_item_interaction_push<'item_location>(
             .fuse()
         };
 
-        node_id_from_item_location(
+        let node_id_from = node_id_from_item_location(
             item_location_to_node_id_segments,
             item_location_ancestors_iter,
-        )
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_from)
     };
 
     // Use the innermost node.
-    let node_id_to = node_id_from_item_location(item_location_to_node_id_segments, || {
-        item_interaction_push.location_to().iter()
-    });
+    let node_id_to = {
+        let node_id_to = node_id_from_item_location(item_location_to_node_id_segments, || {
+            item_interaction_push.location_to().iter()
+        });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_to)
+    };
 
     let edge_id = EdgeId::from_str(&format!("{node_id_from}___{node_id_to}"))
         .expect("Expected edge ID from item location ID to be valid for `edge_id`.");
@@ -295,6 +304,7 @@ fn process_item_interaction_push<'item_location>(
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
 fn process_item_interaction_pull<'item_location>(
+    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     edges: &mut Edges,
     theme: &mut Theme,
@@ -320,16 +330,22 @@ fn process_item_interaction_pull<'item_location>(
             .fuse()
         };
 
-        node_id_from_item_location(
+        let node_id_client = node_id_from_item_location(
             item_location_to_node_id_segments,
             item_location_ancestors_iter,
-        )
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
     };
 
     // Use the innermost node.
-    let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
-        item_interaction_pull.location_server().iter()
-    });
+    let node_id_server = {
+        let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
+            item_interaction_pull.location_server().iter()
+        });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_server)
+    };
 
     let edge_id_request =
         EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___request"))
@@ -386,6 +402,22 @@ fn process_item_interaction_pull<'item_location>(
         AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
         css_class_partials_response,
     );
+}
+
+/// Returns the node ID that ends with the calculated node ID, in case another
+/// `Item` has provided an ancestor as context.
+///
+/// Not sure if we need to find the longest node ID (which incurs one more
+/// sort), but the current implementation just returns the first match.
+fn node_id_with_ancestor_find(
+    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
+    node_id_from: NodeId,
+) -> NodeId {
+    node_id_to_item_locations
+        .keys()
+        .find(|node_id| node_id.ends_with(node_id_from.as_str()))
+        .cloned()
+        .unwrap_or(node_id_from)
 }
 
 /// Returns a map of `NodeId` to the `ItemLocation` it is associated with, and
