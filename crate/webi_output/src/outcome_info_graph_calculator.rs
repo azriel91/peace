@@ -67,8 +67,7 @@ fn calculate_info_graph(
         node_id_mappings_and_hierarchy(&item_location_trees, item_location_count);
     let NodeIdMappingsAndHierarchy {
         node_id_to_item_locations,
-        item_location_to_node_ids,
-        item_location_to_node_id_segments: _,
+        mut item_location_to_node_id_segments,
         node_hierarchy,
     } = node_id_mappings_and_hierarchy;
 
@@ -110,7 +109,7 @@ fn calculate_info_graph(
                     .for_each(|item_interaction| match item_interaction {
                         ItemInteraction::Push(item_interaction_push) => {
                             process_item_interaction_push(
-                                &item_location_to_node_ids,
+                                &mut item_location_to_node_id_segments,
                                 &mut edges,
                                 &mut theme,
                                 item_interaction_push,
@@ -118,7 +117,7 @@ fn calculate_info_graph(
                         }
                         ItemInteraction::Pull(item_interaction_pull) => {
                             process_item_interaction_pull(
-                                &item_location_to_node_ids,
+                                &mut item_location_to_node_id_segments,
                                 &mut edges,
                                 &mut theme,
                                 &mut graphviz_attrs,
@@ -232,143 +231,161 @@ fn theme_styles_augment(
 
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
-fn process_item_interaction_push(
-    item_location_to_node_ids: &IndexMap<&ItemLocation, NodeId>,
+fn process_item_interaction_push<'item_location>(
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     edges: &mut Edges,
     theme: &mut Theme,
-    item_interaction_push: &ItemInteractionPush,
+    item_interaction_push: &'item_location ItemInteractionPush,
 ) {
     // Use the outermost `ItemLocationType::Host` node.
-    let node_id_from = item_interaction_push
-        .location_from()
-        .iter()
-        .find(|item_location| item_location.r#type() == ItemLocationType::Host)
-        .or_else(|| item_interaction_push.location_from().iter().next())
-        .and_then(|item_location| item_location_to_node_ids.get(item_location));
+    // The `NodeId` for the item location is the longest node ID that contains all
+    // of the `node_id_segment`s of the selected item location's ancestors.
+    let node_id_from = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_push.location_from().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
 
-    // Use the innermost `ItemLocationType::Path` node.
-    let node_id_to = item_interaction_push
-        .location_to()
-        .iter()
-        .rev()
-        .find(|item_location| item_location.r#type() == ItemLocationType::Path)
-        .or_else(|| item_interaction_push.location_to().iter().next())
-        .and_then(|item_location| item_location_to_node_ids.get(item_location));
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
 
-    if let Some((node_id_from, node_id_to)) = node_id_from.zip(node_id_to) {
-        let edge_id = EdgeId::from_str(&format!("{node_id_from}___{node_id_to}"))
-            .expect("Expected edge ID from item location ID to be valid for `edge_id`.");
-        edges.insert(edge_id.clone(), [node_id_from.clone(), node_id_to.clone()]);
+        node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        )
+    };
 
-        let mut css_class_partials = CssClassPartials::with_capacity(5);
-        css_class_partials.insert(
-            ThemeAttr::Animate,
-            "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-        );
-        css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
-        css_class_partials.insert(
-            ThemeAttr::StrokeStyle,
-            "dasharray:0,40,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
-        );
-        css_class_partials.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
-        css_class_partials.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+    // Use the innermost node.
+    let node_id_to = node_id_from_item_location(item_location_to_node_id_segments, || {
+        item_interaction_push.location_to().iter()
+    });
 
-        theme.styles.insert(
-            AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
-            css_class_partials,
-        );
-    } else {
-        // One of the `ItemLocationAncestors` was empty, which should be rare.
-    }
+    let edge_id = EdgeId::from_str(&format!("{node_id_from}___{node_id_to}"))
+        .expect("Expected edge ID from item location ID to be valid for `edge_id`.");
+    edges.insert(edge_id.clone(), [node_id_from.clone(), node_id_to.clone()]);
+
+    let mut css_class_partials = CssClassPartials::with_capacity(5);
+    css_class_partials.insert(
+        ThemeAttr::Animate,
+        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+    );
+    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+    css_class_partials.insert(
+        ThemeAttr::StrokeStyle,
+        "dasharray:0,40,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
+    );
+    css_class_partials.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+    css_class_partials.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
+        css_class_partials,
+    );
 }
 
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
-fn process_item_interaction_pull(
-    item_location_to_node_ids: &IndexMap<&ItemLocation, NodeId>,
+fn process_item_interaction_pull<'item_location>(
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     edges: &mut Edges,
     theme: &mut Theme,
     graphviz_attrs: &mut GraphvizAttrs,
-    item_interaction_pull: &ItemInteractionPull,
+    item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
     // Use the outermost `ItemLocationType::Host` node.
-    let node_id_client = item_interaction_pull
-        .location_client()
-        .iter()
-        .find(|item_location| item_location.r#type() == ItemLocationType::Host)
-        .or_else(|| item_interaction_pull.location_client().iter().next())
-        .and_then(|item_location| item_location_to_node_ids.get(item_location));
+    let node_id_client = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_pull.location_client().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
 
-    // Use the innermost `ItemLocationType::Path` node.
-    let node_id_server = item_interaction_pull
-        .location_server()
-        .iter()
-        .rev()
-        .find(|item_location| item_location.r#type() == ItemLocationType::Path)
-        .or_else(|| item_interaction_pull.location_server().iter().next())
-        .and_then(|item_location| item_location_to_node_ids.get(item_location));
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
 
-    if let Some((node_id_client, node_id_server)) = node_id_client.zip(node_id_server) {
-        let edge_id_request = EdgeId::from_str(&format!(
-            "{node_id_client}___{node_id_server}___request"
-        ))
-        .expect("Expected edge ID from item location ID to be valid for `edge_id_request`.");
-        edges.insert(
-            edge_id_request.clone(),
-            [node_id_server.clone(), node_id_client.clone()],
-        );
+        node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        )
+    };
 
-        let edge_id_response = EdgeId::from_str(&format!(
-            "{node_id_client}___{node_id_server}___response"
-        ))
-        .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
-        edges.insert(
-            edge_id_response.clone(),
-            [node_id_server.clone(), node_id_client.clone()],
-        );
+    // Use the innermost node.
+    let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
+        item_interaction_pull.location_server().iter()
+    });
 
-        graphviz_attrs
-            .edge_dirs
-            .insert(edge_id_request.clone(), EdgeDir::Back);
+    let edge_id_request =
+        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___request"))
+            .expect("Expected edge ID from item location ID to be valid for `edge_id_request`.");
+    edges.insert(
+        edge_id_request.clone(),
+        [node_id_server.clone(), node_id_client.clone()],
+    );
 
-        let mut css_class_partials_request = CssClassPartials::with_capacity(6);
-        css_class_partials_request.insert(
-            ThemeAttr::Animate,
-            "[stroke-dashoffset-move-request_1.5s_linear_infinite]".to_string(),
-        );
-        css_class_partials_request.insert(ThemeAttr::ShapeColor, "blue".to_string());
-        css_class_partials_request.insert(
-            ThemeAttr::StrokeStyle,
-            "dasharray:0,50,12,2,4,2,2,2,1,2,1,120".to_string(),
-        );
-        css_class_partials_request.insert(ThemeAttr::StrokeWidth, "[1px]".to_string());
-        css_class_partials_request.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
-        css_class_partials_request.insert(ThemeAttr::FillShadeNormal, "500".to_string());
-        theme.styles.insert(
-            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
-            css_class_partials_request,
-        );
+    let edge_id_response =
+        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___response"))
+            .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
+    edges.insert(
+        edge_id_response.clone(),
+        [node_id_server.clone(), node_id_client.clone()],
+    );
 
-        let mut css_class_partials_response = CssClassPartials::with_capacity(6);
-        css_class_partials_response.insert(
-            ThemeAttr::Animate,
-            "[stroke-dashoffset-move-response_1.5s_linear_infinite]".to_string(),
-        );
-        css_class_partials_response.insert(ThemeAttr::ShapeColor, "blue".to_string());
-        css_class_partials_response.insert(
-            ThemeAttr::StrokeStyle,
-            "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
-        );
-        css_class_partials_response.insert(ThemeAttr::StrokeWidth, "[2px]".to_string());
-        css_class_partials_response.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
-        css_class_partials_response.insert(ThemeAttr::FillShadeNormal, "500".to_string());
-        theme.styles.insert(
-            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
-            css_class_partials_response,
-        );
-    } else {
-        // One of the `ItemLocationAncestors` was empty, which should be rare.
-    }
+    graphviz_attrs
+        .edge_dirs
+        .insert(edge_id_request.clone(), EdgeDir::Back);
+
+    let mut css_class_partials_request = CssClassPartials::with_capacity(6);
+    css_class_partials_request.insert(
+        ThemeAttr::Animate,
+        "[stroke-dashoffset-move-request_1.5s_linear_infinite]".to_string(),
+    );
+    css_class_partials_request.insert(ThemeAttr::ShapeColor, "blue".to_string());
+    css_class_partials_request.insert(
+        ThemeAttr::StrokeStyle,
+        "dasharray:0,50,12,2,4,2,2,2,1,2,1,120".to_string(),
+    );
+    css_class_partials_request.insert(ThemeAttr::StrokeWidth, "[1px]".to_string());
+    css_class_partials_request.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+    css_class_partials_request.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
+        css_class_partials_request,
+    );
+
+    let mut css_class_partials_response = CssClassPartials::with_capacity(6);
+    css_class_partials_response.insert(
+        ThemeAttr::Animate,
+        "[stroke-dashoffset-move-response_1.5s_linear_infinite]".to_string(),
+    );
+    css_class_partials_response.insert(ThemeAttr::ShapeColor, "blue".to_string());
+    css_class_partials_response.insert(
+        ThemeAttr::StrokeStyle,
+        "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
+    );
+    css_class_partials_response.insert(ThemeAttr::StrokeWidth, "[2px]".to_string());
+    css_class_partials_response.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+    css_class_partials_response.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
+        css_class_partials_response,
+    );
 }
 
 /// Returns a map of `NodeId` to the `ItemLocation` it is associated with, and
@@ -379,7 +396,6 @@ fn node_id_mappings_and_hierarchy<'item_location>(
 ) -> NodeIdMappingsAndHierarchy<'item_location> {
     let node_id_mappings_and_hierarchy = NodeIdMappingsAndHierarchy {
         node_id_to_item_locations: IndexMap::with_capacity(item_location_count),
-        item_location_to_node_ids: IndexMap::with_capacity(item_location_count),
         item_location_to_node_id_segments: HashMap::with_capacity(item_location_count),
         node_hierarchy: NodeHierarchy::with_capacity(item_location_trees.len()),
     };
@@ -389,7 +405,6 @@ fn node_id_mappings_and_hierarchy<'item_location>(
         |mut node_id_mappings_and_hierarchy, item_location_tree| {
             let NodeIdMappingsAndHierarchy {
                 node_id_to_item_locations,
-                item_location_to_node_ids,
                 item_location_to_node_id_segments,
                 node_hierarchy,
             } = &mut node_id_mappings_and_hierarchy;
@@ -400,18 +415,15 @@ fn node_id_mappings_and_hierarchy<'item_location>(
             let mut item_location_ancestors = SmallVec::<[&ItemLocation; 8]>::new();
             item_location_ancestors.push(item_location);
 
-            let node_id = node_id_from_item_location(
-                item_location_to_node_id_segments,
-                item_location_ancestors.as_slice(),
-            );
+            let node_id = node_id_from_item_location(item_location_to_node_id_segments, || {
+                item_location_ancestors.clone().into_iter()
+            });
 
             node_id_to_item_locations.insert(node_id.clone(), item_location);
-            item_location_to_node_ids.insert(item_location, node_id.clone());
 
             let node_hierarchy_top_level = node_hierarchy_build_and_item_location_insert(
                 item_location_tree,
                 node_id_to_item_locations,
-                item_location_to_node_ids,
                 item_location_to_node_id_segments,
                 item_location_ancestors,
             );
@@ -426,24 +438,26 @@ fn node_id_mappings_and_hierarchy<'item_location>(
 ///
 /// This is computed from all of the node ID segments from all of the node's
 /// ancestors.
-fn node_id_from_item_location<'item_location>(
+fn node_id_from_item_location<'item_location, F, I>(
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
-    item_location_ancestors: &[&'item_location ItemLocation],
-) -> NodeId {
-    let capacity =
-        item_location_ancestors
-            .iter()
-            .fold(0usize, |capacity_acc, item_location_ancestor| {
-                let node_id_segment = item_location_to_node_id_segments
-                    .entry(item_location_ancestor)
-                    .or_insert_with(move || {
-                        node_id_segment_from_item_location(item_location_ancestor)
-                    });
+    item_location_ancestors_iter_fn: F,
+) -> NodeId
+where
+    F: Fn() -> I,
+    I: Iterator<Item = &'item_location ItemLocation>,
+{
+    let item_location_ancestors_iter_for_capacity = item_location_ancestors_iter_fn();
+    let capacity = item_location_ancestors_iter_for_capacity.fold(
+        0usize,
+        |capacity_acc, item_location_ancestor| {
+            let node_id_segment = item_location_to_node_id_segments
+                .entry(item_location_ancestor)
+                .or_insert_with(move || node_id_segment_from_item_location(item_location_ancestor));
 
-                capacity_acc + node_id_segment.len() + 3
-            });
-    let mut node_id = item_location_ancestors
-        .iter()
+            capacity_acc + node_id_segment.len() + 3
+        },
+    );
+    let mut node_id = item_location_ancestors_iter_fn()
         .filter_map(|item_location_ancestor| {
             item_location_to_node_id_segments.get(item_location_ancestor)
         })
@@ -455,6 +469,7 @@ fn node_id_from_item_location<'item_location>(
                 node_id_buffer
             },
         );
+
     node_id.truncate(node_id.len() - "___".len());
 
     let node_id =
@@ -505,7 +520,6 @@ fn node_id_segment_from_item_location(item_location: &ItemLocation) -> String {
 fn node_hierarchy_build_and_item_location_insert<'item_location>(
     item_location_tree: &'item_location ItemLocationTree,
     node_id_to_item_locations: &mut IndexMap<NodeId, &'item_location ItemLocation>,
-    item_location_to_node_ids: &mut IndexMap<&'item_location ItemLocation, NodeId>,
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     item_location_ancestors: SmallVec<[&'item_location ItemLocation; 8]>,
 ) -> NodeHierarchy {
@@ -519,17 +533,15 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
             let mut child_item_location_ancestors = item_location_ancestors.clone();
             child_item_location_ancestors.push(child_item_location);
 
-            let child_node_id = node_id_from_item_location(
-                item_location_to_node_id_segments,
-                child_item_location_ancestors.as_slice(),
-            );
+            let child_node_id =
+                node_id_from_item_location(item_location_to_node_id_segments, || {
+                    child_item_location_ancestors.clone().into_iter()
+                });
             node_id_to_item_locations.insert(child_node_id.clone(), child_item_location);
-            item_location_to_node_ids.insert(child_item_location, child_node_id.clone());
 
             let child_hierarchy = node_hierarchy_build_and_item_location_insert(
                 child_item_location_tree,
                 node_id_to_item_locations,
-                item_location_to_node_ids,
                 item_location_to_node_id_segments,
                 child_item_location_ancestors,
             );
@@ -541,7 +553,6 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
 
 struct NodeIdMappingsAndHierarchy<'item_location> {
     node_id_to_item_locations: IndexMap<NodeId, &'item_location ItemLocation>,
-    item_location_to_node_ids: IndexMap<&'item_location ItemLocation, NodeId>,
     item_location_to_node_id_segments: HashMap<&'item_location ItemLocation, String>,
     node_hierarchy: NodeHierarchy,
 }
