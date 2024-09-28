@@ -3,10 +3,10 @@ use std::{collections::HashMap, str::FromStr};
 use dot_ix_model::{
     common::{
         graphviz_attrs::EdgeDir, AnyId, EdgeId, Edges, GraphvizAttrs, NodeHierarchy, NodeId,
-        NodeNames, TagId, TagNames,
+        NodeNames, TagId, TagItems, TagNames, TagStyles,
     },
     info_graph::{GraphDir, InfoGraph},
-    theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr},
+    theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr, ThemeStyles},
 };
 use indexmap::IndexMap;
 use peace_item_model::{
@@ -118,18 +118,22 @@ where
     //    `Map<ItemLocation, NodeId>`.
     // 6. Then we can iterate through `item_to_item_interactions`, and for each
     //    `ItemLocation`, look up the map from 5, and add an edge.
-    let item_interactions_processed_values = process_item_interactions(
-        &outcome_info_graph_variant,
+    let item_interactions_process_ctx = ItemInteractionsProcessCtx {
+        outcome_info_graph_variant: &outcome_info_graph_variant,
+        item_count,
         item_location_count,
-        &item_to_item_interactions,
-        &node_id_to_item_locations,
-        &mut item_location_to_node_id_segments,
-    );
-    let ItemInteractionsProcessedValues {
+        item_to_item_interactions: &item_to_item_interactions,
+        node_id_to_item_locations: &node_id_to_item_locations,
+        item_location_to_node_id_segments: &mut item_location_to_node_id_segments,
+    };
+    let item_interactions_processed = process_item_interactions(item_interactions_process_ctx);
+    let ItemInteractionsProcessed {
         edges,
         graphviz_attrs,
         mut theme,
-    } = item_interactions_processed_values;
+        tag_items,
+        tag_styles_focus,
+    } = item_interactions_processed;
 
     theme_styles_augment(&item_location_trees, &node_id_to_item_locations, &mut theme);
 
@@ -160,6 +164,12 @@ where
     if let Some(tags) = tags {
         info_graph = info_graph.with_tags(tags)
     }
+    if let Some(tag_items) = tag_items {
+        info_graph = info_graph.with_tag_items(tag_items)
+    }
+    if let Some(tag_styles_focus) = tag_styles_focus {
+        info_graph = info_graph.with_tag_styles_focus(tag_styles_focus)
+    }
 
     info_graph
 }
@@ -173,51 +183,140 @@ where
 /// over the `ItemInteraction`s per attribute that is to be computed, but
 /// perhaps populating the different structures per `ItemInteraction` is more
 /// manageable than remembering to update multiple functions.
-fn process_item_interactions<'item_location>(
-    outcome_info_graph_variant: &OutcomeInfoGraphVariant,
-    item_location_count: usize,
+fn process_item_interactions<'f, 'item_location>(
+    item_interactions_process_ctx: ItemInteractionsProcessCtx<'f, 'item_location>,
+) -> ItemInteractionsProcessed {
+    let ItemInteractionsProcessCtx {
+        outcome_info_graph_variant,
+        item_count,
+        item_location_count,
+        item_to_item_interactions,
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+    } = item_interactions_process_ctx;
+
+    let edges = Edges::with_capacity(item_location_count);
+    let graphviz_attrs = GraphvizAttrs::new().with_edge_minlen_default(3);
+    let mut theme = Theme::new();
+    theme.styles.insert(AnyIdOrDefaults::EdgeDefaults, {
+        let mut css_class_partials = CssClassPartials::with_capacity(1);
+        css_class_partials.insert(ThemeAttr::Visibility, "invisible".to_string());
+        css_class_partials
+    });
+
+    match outcome_info_graph_variant {
+        OutcomeInfoGraphVariant::Example => {
+            let item_interactions_processed_example = ItemInteractionsProcessedExample {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items: TagItems::with_capacity(item_count),
+                tag_styles_focus: TagStyles::new(),
+            };
+
+            let item_interactions_processed_example = process_item_interactions_example(
+                item_to_item_interactions,
+                item_interactions_processed_example,
+                node_id_to_item_locations,
+                item_location_to_node_id_segments,
+            );
+            let ItemInteractionsProcessedExample {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items,
+                tag_styles_focus,
+            } = item_interactions_processed_example;
+
+            ItemInteractionsProcessed {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items: Some(tag_items),
+                tag_styles_focus: Some(tag_styles_focus),
+            }
+        }
+        OutcomeInfoGraphVariant::Current { .. } => {
+            let item_interactions_processed_current = ItemInteractionsProcessedCurrent {
+                edges,
+                graphviz_attrs,
+                theme,
+            };
+
+            // TODO: process stuff
+
+            let ItemInteractionsProcessedCurrent {
+                edges,
+                graphviz_attrs,
+                theme,
+            } = item_interactions_processed_current;
+
+            ItemInteractionsProcessed {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items: None,
+                tag_styles_focus: None,
+            }
+        }
+    }
+}
+
+/// Processes `ItemInteraction`s from all items for an example `InfoGraph`
+/// diagram.
+///
+/// This means:
+///
+/// 1. Each node should be fully visible.
+/// 2. Edges should be visible when a tag is clicked.
+/// 3.
+fn process_item_interactions_example<'item_location>(
     item_to_item_interactions: &'item_location IndexMap<peace_core::ItemId, Vec<ItemInteraction>>,
+    item_interactions_processed_example: ItemInteractionsProcessedExample,
     node_id_to_item_locations: &IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
-) -> ItemInteractionsProcessedValues {
-    let item_interactions_processed_values = ItemInteractionsProcessedValues {
-        edges: Edges::with_capacity(item_location_count),
-        graphviz_attrs: GraphvizAttrs::new().with_edge_minlen_default(3),
-        theme: Theme::new(),
-    };
-    let item_interactions_processed_values = item_to_item_interactions
+) -> ItemInteractionsProcessedExample {
+    let item_interactions_processed_example = item_to_item_interactions
         .iter()
         // The capacity could be worked out through the sum of all `ItemInteraction`s.
         //
         // For now we just use the `item_location_count` as a close approximation.
         .fold(
-            item_interactions_processed_values,
+            item_interactions_processed_example,
             // Use `item_id` to compute `tags` and `tag_items`.
-            |item_interactions_processed_values, (item_id, item_interactions)| {
-                let ItemInteractionsProcessedValues {
+            |item_interactions_processed_example, (item_id, item_interactions)| {
+                let ItemInteractionsProcessedExample {
                     mut edges,
                     mut graphviz_attrs,
                     mut theme,
-                } = item_interactions_processed_values;
+                    mut tag_items,
+                    mut tag_styles_focus,
+                } = item_interactions_processed_example;
+
+                let tag_id = TagId::try_from(item_id.as_str().to_string())
+                    .expect("Expected `tag_id` from `item_id` to be valid.");
+                let tag_id = &tag_id;
 
                 item_interactions.iter().for_each(|item_interaction| {
                     let item_interactions_processing_ctx = ItemInteractionsProcessingCtx {
-                        outcome_info_graph_variant,
                         node_id_to_item_locations,
                         item_location_to_node_id_segments,
                         edges: &mut edges,
                         theme: &mut theme,
+                        tag_items: &mut tag_items,
+                        tag_id,
+                        tag_styles_focus: &mut tag_styles_focus,
                     };
 
                     match item_interaction {
                         ItemInteraction::Push(item_interaction_push) => {
-                            process_item_interaction_push(
+                            process_item_interaction_push_example(
                                 item_interactions_processing_ctx,
                                 item_interaction_push,
                             );
                         }
                         ItemInteraction::Pull(item_interaction_pull) => {
-                            process_item_interaction_pull(
+                            process_item_interaction_pull_example(
                                 item_interactions_processing_ctx,
                                 &mut graphviz_attrs,
                                 item_interaction_pull,
@@ -229,14 +328,16 @@ fn process_item_interactions<'item_location>(
                     }
                 });
 
-                ItemInteractionsProcessedValues {
+                ItemInteractionsProcessedExample {
                     edges,
                     graphviz_attrs,
                     theme,
+                    tag_items,
+                    tag_styles_focus,
                 }
             },
         );
-    item_interactions_processed_values
+    item_interactions_processed_example
 }
 
 /// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
@@ -310,16 +411,18 @@ fn theme_styles_augment(
 
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
-fn process_item_interaction_push<'f, 'item_location>(
+fn process_item_interaction_push_example<'f, 'item_location>(
     item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
     item_interaction_push: &'item_location ItemInteractionPush,
 ) {
     let ItemInteractionsProcessingCtx {
-        outcome_info_graph_variant,
         node_id_to_item_locations,
         item_location_to_node_id_segments,
         edges,
         theme,
+        tag_items,
+        tag_id,
+        tag_styles_focus,
     } = item_interactions_processing_ctx;
     // Use the outermost `ItemLocationType::Host` node.
     // The `NodeId` for the item location is the longest node ID that contains all
@@ -363,38 +466,51 @@ fn process_item_interaction_push<'f, 'item_location>(
         .expect("Expected edge ID from item location ID to be valid for `edge_id`.");
     edges.insert(edge_id.clone(), [node_id_from.clone(), node_id_to.clone()]);
 
-    let mut css_class_partials = CssClassPartials::with_capacity(5);
-    css_class_partials.insert(
-        ThemeAttr::Animate,
-        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-    );
-    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
-    css_class_partials.insert(
-        ThemeAttr::StrokeStyle,
-        "dasharray:0,40,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
-    );
-    css_class_partials.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
-    css_class_partials.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+    if let Some(any_ids) = tag_items.get_mut(tag_id) {
+        any_ids.push(AnyId::from(node_id_from.clone()));
+        any_ids.push(AnyId::from(node_id_to.clone()));
+        any_ids.push(AnyId::from(edge_id.clone()));
+    } else {
+        let any_ids = vec![
+            AnyId::from(node_id_from.clone()),
+            AnyId::from(node_id_to.clone()),
+            AnyId::from(edge_id.clone()),
+        ];
+        tag_items.insert(tag_id.clone(), any_ids);
+    }
 
-    theme.styles.insert(
-        AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
-        css_class_partials,
-    );
+    let css_class_partials = item_interaction_push_css_class_partials();
+
+    if let Some(theme_styles) = tag_styles_focus.get_mut(tag_id) {
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
+            css_class_partials,
+        );
+    } else {
+        let mut theme_styles = ThemeStyles::with_capacity(1);
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
+            css_class_partials,
+        );
+        tag_styles_focus.insert(tag_id.clone(), theme_styles);
+    }
 }
 
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
-fn process_item_interaction_pull<'f, 'item_location>(
+fn process_item_interaction_pull_example<'f, 'item_location>(
     item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
     graphviz_attrs: &mut GraphvizAttrs,
     item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
     let ItemInteractionsProcessingCtx {
-        outcome_info_graph_variant,
         node_id_to_item_locations,
         item_location_to_node_id_segments,
         edges,
         theme,
+        tag_items,
+        tag_id,
+        tag_styles_focus,
     } = item_interactions_processing_ctx;
 
     // Use the outermost `ItemLocationType::Host` node.
@@ -453,7 +569,67 @@ fn process_item_interaction_pull<'f, 'item_location>(
         .edge_dirs
         .insert(edge_id_request.clone(), EdgeDir::Back);
 
-    let mut css_class_partials_request = CssClassPartials::with_capacity(6);
+    let css_class_partials_request = item_interaction_pull_request_css_class_partials();
+    let css_class_partials_response = item_interaction_pull_response_css_class_partials();
+
+    if let Some(any_ids) = tag_items.get_mut(tag_id) {
+        any_ids.push(AnyId::from(node_id_server.clone()));
+        any_ids.push(AnyId::from(node_id_client.clone()));
+        any_ids.push(AnyId::from(edge_id_request.clone()));
+        any_ids.push(AnyId::from(edge_id_response.clone()));
+    } else {
+        let any_ids = vec![
+            AnyId::from(node_id_server.clone()),
+            AnyId::from(node_id_client.clone()),
+            AnyId::from(edge_id_request.clone()),
+            AnyId::from(edge_id_response.clone()),
+        ];
+        tag_items.insert(tag_id.clone(), any_ids);
+    }
+
+    if let Some(theme_styles) = tag_styles_focus.get_mut(tag_id) {
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
+            css_class_partials_request,
+        );
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
+            css_class_partials_response,
+        );
+    } else {
+        let mut theme_styles = ThemeStyles::with_capacity(1);
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
+            css_class_partials_request,
+        );
+        theme_styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
+            css_class_partials_response,
+        );
+        tag_styles_focus.insert(tag_id.clone(), theme_styles);
+    }
+}
+
+fn item_interaction_push_css_class_partials() -> CssClassPartials {
+    let mut css_class_partials = CssClassPartials::with_capacity(6);
+    css_class_partials.insert(ThemeAttr::Visibility, "visible".to_string());
+    css_class_partials.insert(
+        ThemeAttr::Animate,
+        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+    );
+    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+    css_class_partials.insert(
+        ThemeAttr::StrokeStyle,
+        "dasharray:0,40,1,2,1,2,2,2,4,2,8,2,20,50".to_string(),
+    );
+    css_class_partials.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
+    css_class_partials.insert(ThemeAttr::FillShadeNormal, "500".to_string());
+    css_class_partials
+}
+
+fn item_interaction_pull_request_css_class_partials() -> CssClassPartials {
+    let mut css_class_partials_request = CssClassPartials::with_capacity(7);
+    css_class_partials_request.insert(ThemeAttr::Visibility, "visible".to_string());
     css_class_partials_request.insert(
         ThemeAttr::Animate,
         "[stroke-dashoffset-move-request_1.5s_linear_infinite]".to_string(),
@@ -466,12 +642,12 @@ fn process_item_interaction_pull<'f, 'item_location>(
     css_class_partials_request.insert(ThemeAttr::StrokeWidth, "[1px]".to_string());
     css_class_partials_request.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
     css_class_partials_request.insert(ThemeAttr::FillShadeNormal, "500".to_string());
-    theme.styles.insert(
-        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
-        css_class_partials_request,
-    );
+    css_class_partials_request
+}
 
-    let mut css_class_partials_response = CssClassPartials::with_capacity(6);
+fn item_interaction_pull_response_css_class_partials() -> CssClassPartials {
+    let mut css_class_partials_response = CssClassPartials::with_capacity(7);
+    css_class_partials_response.insert(ThemeAttr::Visibility, "visible".to_string());
     css_class_partials_response.insert(
         ThemeAttr::Animate,
         "[stroke-dashoffset-move-response_1.5s_linear_infinite]".to_string(),
@@ -484,10 +660,7 @@ fn process_item_interaction_pull<'f, 'item_location>(
     css_class_partials_response.insert(ThemeAttr::StrokeWidth, "[2px]".to_string());
     css_class_partials_response.insert(ThemeAttr::StrokeShadeNormal, "600".to_string());
     css_class_partials_response.insert(ThemeAttr::FillShadeNormal, "500".to_string());
-    theme.styles.insert(
-        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
-        css_class_partials_response,
-    );
+    css_class_partials_response
 }
 
 /// Returns the node ID that ends with the calculated node ID, in case another
@@ -675,16 +848,43 @@ struct NodeIdMappingsAndHierarchy<'item_location> {
     node_hierarchy: NodeHierarchy,
 }
 
-struct ItemInteractionsProcessingCtx<'f, 'item_location> {
+struct ItemInteractionsProcessCtx<'f, 'item_location> {
     outcome_info_graph_variant: &'f OutcomeInfoGraphVariant,
+    item_count: usize,
+    item_location_count: usize,
+    item_to_item_interactions: &'item_location IndexMap<peace_core::ItemId, Vec<ItemInteraction>>,
+    node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
+}
+
+struct ItemInteractionsProcessingCtx<'f, 'item_location> {
     node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
     edges: &'f mut Edges,
     theme: &'f mut Theme,
+    tag_items: &'f mut TagItems,
+    tag_id: &'f TagId,
+    tag_styles_focus: &'f mut TagStyles,
 }
 
-struct ItemInteractionsProcessedValues {
+struct ItemInteractionsProcessedExample {
     edges: Edges,
     graphviz_attrs: GraphvizAttrs,
     theme: Theme,
+    tag_items: TagItems,
+    tag_styles_focus: TagStyles,
+}
+
+struct ItemInteractionsProcessedCurrent {
+    edges: Edges,
+    graphviz_attrs: GraphvizAttrs,
+    theme: Theme,
+}
+
+struct ItemInteractionsProcessed {
+    edges: Edges,
+    graphviz_attrs: GraphvizAttrs,
+    theme: Theme,
+    tag_items: Option<TagItems>,
+    tag_styles_focus: Option<TagStyles>,
 }
