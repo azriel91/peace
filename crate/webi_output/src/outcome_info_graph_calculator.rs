@@ -118,64 +118,18 @@ where
     //    `Map<ItemLocation, NodeId>`.
     // 6. Then we can iterate through `item_to_item_interactions`, and for each
     //    `ItemLocation`, look up the map from 5, and add an edge.
-    let item_interactions_styling_ctx = ItemInteractionsStylingCtx {
-        edges: Edges::with_capacity(item_location_count),
-        graphviz_attrs: GraphvizAttrs::new().with_edge_minlen_default(3),
-        theme: Theme::new(),
-    };
-    let ItemInteractionsStylingCtx {
+    let item_interactions_processed_values = process_item_interactions(
+        &outcome_info_graph_variant,
+        item_location_count,
+        &item_to_item_interactions,
+        &node_id_to_item_locations,
+        &mut item_location_to_node_id_segments,
+    );
+    let ItemInteractionsProcessedValues {
         edges,
         graphviz_attrs,
         mut theme,
-    } = item_to_item_interactions
-        .iter()
-        // The capacity could be worked out through the sum of all `ItemInteraction`s.
-        //
-        // For now we just use the `item_location_count` as a close approximation.
-        .fold(
-            item_interactions_styling_ctx,
-            // TODO: Use `item_id` to compute `tags` and `tag_items`.
-            |item_interactions_styling_ctx, (item_id, item_interactions)| {
-                let ItemInteractionsStylingCtx {
-                    mut edges,
-                    mut graphviz_attrs,
-                    mut theme,
-                } = item_interactions_styling_ctx;
-
-                item_interactions
-                    .iter()
-                    .for_each(|item_interaction| match item_interaction {
-                        ItemInteraction::Push(item_interaction_push) => {
-                            process_item_interaction_push(
-                                &node_id_to_item_locations,
-                                &mut item_location_to_node_id_segments,
-                                &mut edges,
-                                &mut theme,
-                                item_interaction_push,
-                            );
-                        }
-                        ItemInteraction::Pull(item_interaction_pull) => {
-                            process_item_interaction_pull(
-                                &node_id_to_item_locations,
-                                &mut item_location_to_node_id_segments,
-                                &mut edges,
-                                &mut theme,
-                                &mut graphviz_attrs,
-                                item_interaction_pull,
-                            );
-                        }
-                        ItemInteraction::Within(item_interaction_within) => {
-                            // TODO: compute theme
-                        }
-                    });
-
-                ItemInteractionsStylingCtx {
-                    edges,
-                    graphviz_attrs,
-                    theme,
-                }
-            },
-        );
+    } = item_interactions_processed_values;
 
     theme_styles_augment(&item_location_trees, &node_id_to_item_locations, &mut theme);
 
@@ -208,6 +162,81 @@ where
     }
 
     info_graph
+}
+
+/// Calculates edges and styles from `ItemInteraction`s.
+///
+/// # Code
+///
+/// Currently the code goes through the `ItemInteraction`s, and populates the
+/// `Edges`, `Theme`, and `GraphvizAttrs`. This isn't as "clean" as iterating
+/// over the `ItemInteraction`s per attribute that is to be computed, but
+/// perhaps populating the different structures per `ItemInteraction` is more
+/// manageable than remembering to update multiple functions.
+fn process_item_interactions<'item_location>(
+    outcome_info_graph_variant: &OutcomeInfoGraphVariant,
+    item_location_count: usize,
+    item_to_item_interactions: &'item_location IndexMap<peace_core::ItemId, Vec<ItemInteraction>>,
+    node_id_to_item_locations: &IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
+) -> ItemInteractionsProcessedValues {
+    let item_interactions_processed_values = ItemInteractionsProcessedValues {
+        edges: Edges::with_capacity(item_location_count),
+        graphviz_attrs: GraphvizAttrs::new().with_edge_minlen_default(3),
+        theme: Theme::new(),
+    };
+    let item_interactions_processed_values = item_to_item_interactions
+        .iter()
+        // The capacity could be worked out through the sum of all `ItemInteraction`s.
+        //
+        // For now we just use the `item_location_count` as a close approximation.
+        .fold(
+            item_interactions_processed_values,
+            // Use `item_id` to compute `tags` and `tag_items`.
+            |item_interactions_processed_values, (item_id, item_interactions)| {
+                let ItemInteractionsProcessedValues {
+                    mut edges,
+                    mut graphviz_attrs,
+                    mut theme,
+                } = item_interactions_processed_values;
+
+                item_interactions.iter().for_each(|item_interaction| {
+                    let item_interactions_processing_ctx = ItemInteractionsProcessingCtx {
+                        outcome_info_graph_variant,
+                        node_id_to_item_locations,
+                        item_location_to_node_id_segments,
+                        edges: &mut edges,
+                        theme: &mut theme,
+                    };
+
+                    match item_interaction {
+                        ItemInteraction::Push(item_interaction_push) => {
+                            process_item_interaction_push(
+                                item_interactions_processing_ctx,
+                                item_interaction_push,
+                            );
+                        }
+                        ItemInteraction::Pull(item_interaction_pull) => {
+                            process_item_interaction_pull(
+                                item_interactions_processing_ctx,
+                                &mut graphviz_attrs,
+                                item_interaction_pull,
+                            );
+                        }
+                        ItemInteraction::Within(item_interaction_within) => {
+                            // TODO: compute theme
+                        }
+                    }
+                });
+
+                ItemInteractionsProcessedValues {
+                    edges,
+                    graphviz_attrs,
+                    theme,
+                }
+            },
+        );
+    item_interactions_processed_values
 }
 
 /// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
@@ -281,13 +310,17 @@ fn theme_styles_augment(
 
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
-fn process_item_interaction_push<'item_location>(
-    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
-    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
-    edges: &mut Edges,
-    theme: &mut Theme,
+fn process_item_interaction_push<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
     item_interaction_push: &'item_location ItemInteractionPush,
 ) {
+    let ItemInteractionsProcessingCtx {
+        outcome_info_graph_variant,
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges,
+        theme,
+    } = item_interactions_processing_ctx;
     // Use the outermost `ItemLocationType::Host` node.
     // The `NodeId` for the item location is the longest node ID that contains all
     // of the `node_id_segment`s of the selected item location's ancestors.
@@ -351,14 +384,19 @@ fn process_item_interaction_push<'item_location>(
 
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
-fn process_item_interaction_pull<'item_location>(
-    node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
-    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
-    edges: &mut Edges,
-    theme: &mut Theme,
+fn process_item_interaction_pull<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
     graphviz_attrs: &mut GraphvizAttrs,
     item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
+    let ItemInteractionsProcessingCtx {
+        outcome_info_graph_variant,
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges,
+        theme,
+    } = item_interactions_processing_ctx;
+
     // Use the outermost `ItemLocationType::Host` node.
     let node_id_client = {
         let item_location_ancestors_iter = || {
@@ -637,7 +675,15 @@ struct NodeIdMappingsAndHierarchy<'item_location> {
     node_hierarchy: NodeHierarchy,
 }
 
-struct ItemInteractionsStylingCtx {
+struct ItemInteractionsProcessingCtx<'f, 'item_location> {
+    outcome_info_graph_variant: &'f OutcomeInfoGraphVariant,
+    node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
+    edges: &'f mut Edges,
+    theme: &'f mut Theme,
+}
+
+struct ItemInteractionsProcessedValues {
     edges: Edges,
     graphviz_attrs: GraphvizAttrs,
     theme: Theme,
