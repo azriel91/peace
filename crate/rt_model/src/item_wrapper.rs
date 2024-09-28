@@ -995,6 +995,12 @@ where
             })
             .unwrap_or_else(|| (Cow::Borrowed(&type_name), None));
 
+        // Subtract `Item` suffix
+        let operation = match operation.rsplit_once("Item") {
+            Some((operation_minus_item, _)) => Cow::Borrowed(operation_minus_item),
+            None => operation,
+        };
+
         match prefix {
             Some(prefix) => {
                 let prefix = heck::AsTitleCase(prefix).to_string();
