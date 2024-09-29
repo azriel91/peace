@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, marker::PhantomData, str::FromStr};
 
 use dot_ix_model::{
     common::{
@@ -10,6 +10,7 @@ use dot_ix_model::{
     theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr, ThemeStyles},
 };
 use indexmap::IndexMap;
+use peace_core::ItemId;
 use peace_item_model::{
     ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin, ItemLocation,
     ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
@@ -19,6 +20,9 @@ use peace_resource_rt::{resources::ts::SetUp, Resources};
 use peace_rt_model::Flow;
 use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
+
+#[cfg(feature = "output_progress")]
+use peace_core::progress::ProgressStatus;
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
 #[derive(Debug)]
@@ -175,180 +179,6 @@ where
     info_graph
 }
 
-/// Calculates edges and styles from `ItemInteraction`s.
-///
-/// # Code
-///
-/// Currently the code goes through the `ItemInteraction`s, and populates the
-/// `Edges`, `Theme`, and `GraphvizAttrs`. This isn't as "clean" as iterating
-/// over the `ItemInteraction`s per attribute that is to be computed, but
-/// perhaps populating the different structures per `ItemInteraction` is more
-/// manageable than remembering to update multiple functions.
-fn process_item_interactions<'f, 'item_location>(
-    item_interactions_process_ctx: ItemInteractionsProcessCtx<'f, 'item_location>,
-) -> ItemInteractionsProcessed {
-    let ItemInteractionsProcessCtx {
-        outcome_info_graph_variant,
-        item_count,
-        item_location_count,
-        item_to_item_interactions,
-        node_id_to_item_locations,
-        item_location_to_node_id_segments,
-    } = item_interactions_process_ctx;
-
-    let edges = Edges::with_capacity(item_location_count);
-    let mut graphviz_attrs = GraphvizAttrs::new().with_edge_minlen_default(3);
-    graphviz_attrs.pack_mode = PackMode::Array {
-        flags: vec![PackModeFlag::T],
-        number: None,
-    };
-    let mut theme = Theme::new();
-    theme.styles.insert(AnyIdOrDefaults::EdgeDefaults, {
-        let mut css_class_partials = CssClassPartials::with_capacity(1);
-        css_class_partials.insert(ThemeAttr::Visibility, "invisible".to_string());
-        css_class_partials
-    });
-
-    match outcome_info_graph_variant {
-        OutcomeInfoGraphVariant::Example => {
-            let item_interactions_processed_example = ItemInteractionsProcessedExample {
-                edges,
-                graphviz_attrs,
-                theme,
-                tag_items: TagItems::with_capacity(item_count),
-                tag_styles_focus: TagStyles::new(),
-            };
-
-            let item_interactions_processed_example = process_item_interactions_example(
-                item_to_item_interactions,
-                item_interactions_processed_example,
-                node_id_to_item_locations,
-                item_location_to_node_id_segments,
-            );
-            let ItemInteractionsProcessedExample {
-                edges,
-                graphviz_attrs,
-                theme,
-                tag_items,
-                tag_styles_focus,
-            } = item_interactions_processed_example;
-
-            ItemInteractionsProcessed {
-                edges,
-                graphviz_attrs,
-                theme,
-                tag_items: Some(tag_items),
-                tag_styles_focus: Some(tag_styles_focus),
-            }
-        }
-        OutcomeInfoGraphVariant::Current { .. } => {
-            let item_interactions_processed_current = ItemInteractionsProcessedCurrent {
-                edges,
-                graphviz_attrs,
-                theme,
-            };
-
-            // TODO: process stuff
-
-            let ItemInteractionsProcessedCurrent {
-                edges,
-                graphviz_attrs,
-                theme,
-            } = item_interactions_processed_current;
-
-            ItemInteractionsProcessed {
-                edges,
-                graphviz_attrs,
-                theme,
-                tag_items: None,
-                tag_styles_focus: None,
-            }
-        }
-    }
-}
-
-/// Processes `ItemInteraction`s from all items for an example `InfoGraph`
-/// diagram.
-///
-/// This means:
-///
-/// 1. Each node should be fully visible.
-/// 2. Edges should be visible when a tag is clicked.
-/// 3.
-fn process_item_interactions_example<'item_location>(
-    item_to_item_interactions: &'item_location IndexMap<peace_core::ItemId, Vec<ItemInteraction>>,
-    item_interactions_processed_example: ItemInteractionsProcessedExample,
-    node_id_to_item_locations: &IndexMap<NodeId, &'item_location ItemLocation>,
-    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
-) -> ItemInteractionsProcessedExample {
-    let item_interactions_processed_example = item_to_item_interactions
-        .iter()
-        // The capacity could be worked out through the sum of all `ItemInteraction`s.
-        //
-        // For now we just use the `item_location_count` as a close approximation.
-        .fold(
-            item_interactions_processed_example,
-            // Use `item_id` to compute `tags` and `tag_items`.
-            |item_interactions_processed_example, (item_id, item_interactions)| {
-                let ItemInteractionsProcessedExample {
-                    mut edges,
-                    mut graphviz_attrs,
-                    mut theme,
-                    mut tag_items,
-                    mut tag_styles_focus,
-                } = item_interactions_processed_example;
-
-                let tag_id = TagId::try_from(item_id.as_str().to_string())
-                    .expect("Expected `tag_id` from `item_id` to be valid.");
-                let tag_id = &tag_id;
-
-                item_interactions.iter().for_each(|item_interaction| {
-                    let item_interactions_processing_ctx = ItemInteractionsProcessingCtx {
-                        node_id_to_item_locations,
-                        item_location_to_node_id_segments,
-                        edges: &mut edges,
-                        theme: &mut theme,
-                        tag_items: &mut tag_items,
-                        tag_id,
-                        tag_styles_focus: &mut tag_styles_focus,
-                    };
-
-                    match item_interaction {
-                        ItemInteraction::Push(item_interaction_push) => {
-                            process_item_interaction_push_example(
-                                item_interactions_processing_ctx,
-                                item_interaction_push,
-                            );
-                        }
-                        ItemInteraction::Pull(item_interaction_pull) => {
-                            process_item_interaction_pull_example(
-                                item_interactions_processing_ctx,
-                                &mut graphviz_attrs,
-                                item_interaction_pull,
-                            );
-                        }
-                        ItemInteraction::Within(item_interaction_within) => {
-                            process_item_interaction_within_example(
-                                item_interactions_processing_ctx,
-                                &mut graphviz_attrs,
-                                item_interaction_within,
-                            );
-                        }
-                    }
-                });
-
-                ItemInteractionsProcessedExample {
-                    edges,
-                    graphviz_attrs,
-                    theme,
-                    tag_items,
-                    tag_styles_focus,
-                }
-            },
-        );
-    item_interactions_processed_example
-}
-
 /// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
 fn theme_styles_augment(
     item_location_trees: &[ItemLocationTree],
@@ -418,17 +248,196 @@ fn theme_styles_augment(
         });
 }
 
+/// Calculates edges and styles from `ItemInteraction`s.
+///
+/// # Code
+///
+/// Currently the code goes through the `ItemInteraction`s, and populates the
+/// `Edges`, `Theme`, and `GraphvizAttrs`. This isn't as "clean" as iterating
+/// over the `ItemInteraction`s per attribute that is to be computed, but
+/// perhaps populating the different structures per `ItemInteraction` is more
+/// manageable than remembering to update multiple functions.
+fn process_item_interactions<'f, 'item_location>(
+    item_interactions_process_ctx: ItemInteractionsProcessCtx<'f, 'item_location>,
+) -> ItemInteractionsProcessed {
+    let ItemInteractionsProcessCtx {
+        outcome_info_graph_variant,
+        item_count,
+        item_location_count,
+        item_to_item_interactions,
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+    } = item_interactions_process_ctx;
+
+    let edges = Edges::with_capacity(item_location_count);
+    let mut graphviz_attrs = GraphvizAttrs::new().with_edge_minlen_default(3);
+    graphviz_attrs.pack_mode = PackMode::Array {
+        flags: vec![PackModeFlag::T],
+        number: None,
+    };
+    let mut theme = Theme::new();
+    theme.styles.insert(AnyIdOrDefaults::EdgeDefaults, {
+        let mut css_class_partials = CssClassPartials::with_capacity(1);
+        css_class_partials.insert(ThemeAttr::Visibility, "invisible".to_string());
+        css_class_partials
+    });
+
+    match outcome_info_graph_variant {
+        OutcomeInfoGraphVariant::Example => {
+            let item_interactions_processed_example = ItemInteractionsProcessedExample {
+                edges,
+                graphviz_attrs,
+                tag_items: TagItems::with_capacity(item_count),
+                tag_styles_focus: TagStyles::new(),
+            };
+
+            let item_interactions_processed_example = process_item_interactions_example(
+                item_to_item_interactions,
+                item_interactions_processed_example,
+                node_id_to_item_locations,
+                item_location_to_node_id_segments,
+            );
+            let ItemInteractionsProcessedExample {
+                edges,
+                graphviz_attrs,
+                tag_items,
+                tag_styles_focus,
+            } = item_interactions_processed_example;
+
+            ItemInteractionsProcessed {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items: Some(tag_items),
+                tag_styles_focus: Some(tag_styles_focus),
+            }
+        }
+        OutcomeInfoGraphVariant::Current {
+            #[cfg(feature = "output_progress")]
+            item_progress_statuses,
+        } => {
+            let item_interactions_processed_current = ItemInteractionsProcessedCurrent {
+                edges,
+                graphviz_attrs,
+                theme,
+                #[cfg(feature = "output_progress")]
+                item_progress_statuses,
+                marker: PhantomData,
+            };
+
+            let item_interactions_processed_current = process_item_interactions_current(
+                item_to_item_interactions,
+                item_interactions_processed_current,
+                node_id_to_item_locations,
+                item_location_to_node_id_segments,
+            );
+
+            let ItemInteractionsProcessedCurrent {
+                edges,
+                graphviz_attrs,
+                theme,
+                #[cfg(feature = "output_progress")]
+                    item_progress_statuses: _,
+                marker: PhantomData,
+            } = item_interactions_processed_current;
+
+            ItemInteractionsProcessed {
+                edges,
+                graphviz_attrs,
+                theme,
+                tag_items: None,
+                tag_styles_focus: None,
+            }
+        }
+    }
+}
+
+/// Processes `ItemInteraction`s from all items for an example `InfoGraph`
+/// diagram.
+///
+/// This means:
+///
+/// 1. Each node should be fully visible.
+/// 2. Edges should be visible when a tag is clicked.
+fn process_item_interactions_example<'item_location>(
+    item_to_item_interactions: &'item_location IndexMap<ItemId, Vec<ItemInteraction>>,
+    item_interactions_processed_example: ItemInteractionsProcessedExample,
+    node_id_to_item_locations: &IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
+) -> ItemInteractionsProcessedExample {
+    item_to_item_interactions
+        .iter()
+        // The capacity could be worked out through the sum of all `ItemInteraction`s.
+        //
+        // For now we just use the `item_location_count` as a close approximation.
+        .fold(
+            item_interactions_processed_example,
+            // Use `item_id` to compute `tags` and `tag_items`.
+            |item_interactions_processed_example, (item_id, item_interactions)| {
+                let ItemInteractionsProcessedExample {
+                    mut edges,
+                    mut graphviz_attrs,
+                    mut tag_items,
+                    mut tag_styles_focus,
+                } = item_interactions_processed_example;
+
+                let tag_id = TagId::try_from(item_id.as_str().to_string())
+                    .expect("Expected `tag_id` from `item_id` to be valid.");
+                let tag_id = &tag_id;
+
+                item_interactions.iter().for_each(|item_interaction| {
+                    let item_interactions_processing_ctx = ItemInteractionsProcessingCtxExample {
+                        node_id_to_item_locations,
+                        item_location_to_node_id_segments,
+                        edges: &mut edges,
+                        tag_items: &mut tag_items,
+                        tag_id,
+                        tag_styles_focus: &mut tag_styles_focus,
+                    };
+
+                    match item_interaction {
+                        ItemInteraction::Push(item_interaction_push) => {
+                            process_item_interaction_push_example(
+                                item_interactions_processing_ctx,
+                                item_interaction_push,
+                            );
+                        }
+                        ItemInteraction::Pull(item_interaction_pull) => {
+                            process_item_interaction_pull_example(
+                                item_interactions_processing_ctx,
+                                &mut graphviz_attrs,
+                                item_interaction_pull,
+                            );
+                        }
+                        ItemInteraction::Within(item_interaction_within) => {
+                            process_item_interaction_within_example(
+                                item_interactions_processing_ctx,
+                                item_interaction_within,
+                            );
+                        }
+                    }
+                });
+
+                ItemInteractionsProcessedExample {
+                    edges,
+                    graphviz_attrs,
+                    tag_items,
+                    tag_styles_focus,
+                }
+            },
+        )
+}
+
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
 fn process_item_interaction_push_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
     item_interaction_push: &'item_location ItemInteractionPush,
 ) {
-    let ItemInteractionsProcessingCtx {
+    let ItemInteractionsProcessingCtxExample {
         node_id_to_item_locations,
         item_location_to_node_id_segments,
         edges,
-        theme,
         tag_items,
         tag_id,
         tag_styles_focus,
@@ -488,7 +497,7 @@ fn process_item_interaction_push_example<'f, 'item_location>(
         tag_items.insert(tag_id.clone(), any_ids);
     }
 
-    let css_class_partials = item_interaction_push_css_class_partials();
+    let css_class_partials = item_interaction_push_css_class_partials(true);
 
     if let Some(theme_styles) = tag_styles_focus.get_mut(tag_id) {
         theme_styles.insert(
@@ -508,15 +517,14 @@ fn process_item_interaction_push_example<'f, 'item_location>(
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
 fn process_item_interaction_pull_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
     graphviz_attrs: &mut GraphvizAttrs,
     item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
-    let ItemInteractionsProcessingCtx {
+    let ItemInteractionsProcessingCtxExample {
         node_id_to_item_locations,
         item_location_to_node_id_segments,
         edges,
-        theme: _,
         tag_items,
         tag_id,
         tag_styles_focus,
@@ -578,8 +586,8 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
         .edge_dirs
         .insert(edge_id_request.clone(), EdgeDir::Back);
 
-    let css_class_partials_request = item_interaction_pull_request_css_class_partials();
-    let css_class_partials_response = item_interaction_pull_response_css_class_partials();
+    let css_class_partials_request = item_interaction_pull_request_css_class_partials(true);
+    let css_class_partials_response = item_interaction_pull_response_css_class_partials(true);
 
     if let Some(any_ids) = tag_items.get_mut(tag_id) {
         any_ids.push(AnyId::from(node_id_server.clone()));
@@ -606,7 +614,7 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
             css_class_partials_response,
         );
     } else {
-        let mut theme_styles = ThemeStyles::with_capacity(1);
+        let mut theme_styles = ThemeStyles::with_capacity(2);
         theme_styles.insert(
             AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
             css_class_partials_request,
@@ -621,15 +629,13 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
 
 /// Indicates the nodes that are being waited upon by [`ItemInteractionWithin`].
 fn process_item_interaction_within_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtx<'f, 'item_location>,
-    graphviz_attrs: &mut GraphvizAttrs,
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
     item_interaction_within: &'item_location ItemInteractionWithin,
 ) {
-    let ItemInteractionsProcessingCtx {
+    let ItemInteractionsProcessingCtxExample {
         node_id_to_item_locations,
         item_location_to_node_id_segments,
-        edges,
-        theme: _,
+        edges: _,
         tag_items,
         tag_id,
         tag_styles_focus,
@@ -686,11 +692,318 @@ fn process_item_interaction_within_example<'f, 'item_location>(
     }
 }
 
+/// Inserts an edge between the `from` and `to` nodes of an
+/// [`ItemInteractionPush`].
+fn process_item_interaction_push_current<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+    item_interaction_push: &'item_location ItemInteractionPush,
+) {
+    let ItemInteractionsProcessingCtxCurrent {
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges,
+        theme,
+        #[cfg(feature = "output_progress")]
+        progress_status,
+    } = item_interactions_processing_ctx;
+    // Use the outermost `ItemLocationType::Host` node.
+    // The `NodeId` for the item location is the longest node ID that contains all
+    // of the `node_id_segment`s of the selected item location's ancestors.
+    let node_id_from = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_push.location_from().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
+
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
+
+        let node_id_from = node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_from)
+    };
+
+    // Use the innermost node.
+    let node_id_to = {
+        let node_id_to = node_id_from_item_location(item_location_to_node_id_segments, || {
+            item_interaction_push.location_to().iter()
+        });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_to)
+    };
+
+    let edge_id = EdgeId::from_str(&format!("{node_id_from}___{node_id_to}"))
+        .expect("Expected edge ID from item location ID to be valid for `edge_id`.");
+    edges.insert(edge_id.clone(), [node_id_from.clone(), node_id_to.clone()]);
+
+    #[cfg(feature = "output_progress")]
+    let visible = matches!(
+        progress_status,
+        ProgressStatus::Running | ProgressStatus::RunningStalled | ProgressStatus::UserPending
+    );
+    #[cfg(not(feature = "output_progress"))]
+    let visible = false;
+    let css_class_partials = item_interaction_push_css_class_partials(visible);
+
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
+        css_class_partials,
+    );
+}
+
+/// Inserts an edge between the `client` and `server` nodes of an
+/// [`ItemInteractionPull`].
+fn process_item_interaction_pull_current<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+    graphviz_attrs: &mut GraphvizAttrs,
+    item_interaction_pull: &'item_location ItemInteractionPull,
+) {
+    let ItemInteractionsProcessingCtxCurrent {
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges,
+        theme,
+        #[cfg(feature = "output_progress")]
+        progress_status,
+    } = item_interactions_processing_ctx;
+
+    // Use the outermost `ItemLocationType::Host` node.
+    let node_id_client = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_pull.location_client().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
+
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
+
+        let node_id_client = node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
+    };
+
+    // Use the innermost node.
+    let node_id_server = {
+        let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
+            item_interaction_pull.location_server().iter()
+        });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_server)
+    };
+
+    let edge_id_request =
+        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___request"))
+            .expect("Expected edge ID from item location ID to be valid for `edge_id_request`.");
+    edges.insert(
+        edge_id_request.clone(),
+        [node_id_server.clone(), node_id_client.clone()],
+    );
+
+    let edge_id_response =
+        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___response"))
+            .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
+    edges.insert(
+        edge_id_response.clone(),
+        [node_id_server.clone(), node_id_client.clone()],
+    );
+
+    graphviz_attrs
+        .edge_dirs
+        .insert(edge_id_request.clone(), EdgeDir::Back);
+
+    #[cfg(feature = "output_progress")]
+    let visible = matches!(
+        progress_status,
+        ProgressStatus::Running | ProgressStatus::RunningStalled | ProgressStatus::UserPending
+    );
+    #[cfg(not(feature = "output_progress"))]
+    let visible = false;
+    let css_class_partials_request = item_interaction_pull_request_css_class_partials(visible);
+    let css_class_partials_response = item_interaction_pull_response_css_class_partials(visible);
+
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
+        css_class_partials_request,
+    );
+    theme.styles.insert(
+        AnyIdOrDefaults::AnyId(AnyId::from(edge_id_response)),
+        css_class_partials_response,
+    );
+}
+
+/// Indicates the nodes that are being waited upon by [`ItemInteractionWithin`].
+fn process_item_interaction_within_current<'f, 'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+    item_interaction_within: &'item_location ItemInteractionWithin,
+) {
+    let ItemInteractionsProcessingCtxCurrent {
+        node_id_to_item_locations,
+        item_location_to_node_id_segments,
+        edges: _,
+        theme,
+        #[cfg(feature = "output_progress")]
+        progress_status,
+    } = item_interactions_processing_ctx;
+
+    // Use the outermost `ItemLocationType::Host` node.
+    let node_id = {
+        let item_location_ancestors_iter = || {
+            let mut host_found = false;
+            let mut location_from_iter = item_interaction_within.location().iter();
+            std::iter::from_fn(move || {
+                if host_found {
+                    return None;
+                }
+
+                let item_location = location_from_iter.next();
+                if let Some(item_location) = item_location.as_ref() {
+                    host_found = item_location.r#type() == ItemLocationType::Host;
+                }
+                item_location
+            })
+            .fuse()
+        };
+
+        let node_id_client = node_id_from_item_location(
+            item_location_to_node_id_segments,
+            item_location_ancestors_iter,
+        );
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
+    };
+
+    #[cfg(feature = "output_progress")]
+    let animate_node = matches!(
+        progress_status,
+        ProgressStatus::Running | ProgressStatus::RunningStalled | ProgressStatus::UserPending
+    );
+    #[cfg(not(feature = "output_progress"))]
+    let animate_node = false;
+    if animate_node {
+        let css_class_partials = item_interaction_within_css_class_partials();
+
+        theme.styles.insert(
+            AnyIdOrDefaults::AnyId(AnyId::from(node_id)),
+            css_class_partials,
+        );
+    }
+}
+
+/// Processes `ItemInteraction`s from all items for an example `InfoGraph`
+/// diagram.
+///
+/// This means:
+///
+/// 1. Each node should be fully visible.
+/// 2. Edges should be visible when a tag is clicked.
+fn process_item_interactions_current<'item_state, 'item_location>(
+    item_to_item_interactions: &'item_location IndexMap<ItemId, Vec<ItemInteraction>>,
+    item_interactions_processed_current: ItemInteractionsProcessedCurrent<'item_state>,
+    node_id_to_item_locations: &IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
+) -> ItemInteractionsProcessedCurrent<'item_state> {
+    item_to_item_interactions
+        .iter()
+        // The capacity could be worked out through the sum of all `ItemInteraction`s.
+        //
+        // For now we just use the `item_location_count` as a close approximation.
+        .fold(
+            item_interactions_processed_current,
+            |item_interactions_processed_current, (item_id, item_interactions)| {
+                let ItemInteractionsProcessedCurrent {
+                    mut edges,
+                    mut graphviz_attrs,
+                    mut theme,
+                    #[cfg(feature = "output_progress")]
+                    item_progress_statuses,
+                    marker: PhantomData,
+                } = item_interactions_processed_current;
+
+                #[cfg(feature = "output_progress")]
+                let progress_status = item_progress_statuses
+                    .get(item_id)
+                    .cloned()
+                    .unwrap_or(ProgressStatus::Initialized);
+
+                #[cfg(not(feature = "output_progress"))]
+                let _item_id = item_id;
+
+                item_interactions.iter().for_each(|item_interaction| {
+                    let item_interactions_processing_ctx = ItemInteractionsProcessingCtxCurrent {
+                        node_id_to_item_locations,
+                        item_location_to_node_id_segments,
+                        edges: &mut edges,
+                        theme: &mut theme,
+                        #[cfg(feature = "output_progress")]
+                        progress_status,
+                    };
+
+                    match item_interaction {
+                        ItemInteraction::Push(item_interaction_push) => {
+                            process_item_interaction_push_current(
+                                item_interactions_processing_ctx,
+                                item_interaction_push,
+                            );
+                        }
+                        ItemInteraction::Pull(item_interaction_pull) => {
+                            process_item_interaction_pull_current(
+                                item_interactions_processing_ctx,
+                                &mut graphviz_attrs,
+                                item_interaction_pull,
+                            );
+                        }
+                        ItemInteraction::Within(item_interaction_within) => {
+                            process_item_interaction_within_current(
+                                item_interactions_processing_ctx,
+                                item_interaction_within,
+                            );
+                        }
+                    }
+                });
+
+                ItemInteractionsProcessedCurrent {
+                    edges,
+                    graphviz_attrs,
+                    theme,
+                    #[cfg(feature = "output_progress")]
+                    item_progress_statuses,
+                    marker: PhantomData,
+                }
+            },
+        )
+}
+
 /// Returns [`CssClassPartials`] for the edge between the `from` and `to`
 /// [`ItemLocation`]s of an [`ItemInteractionPush`].
-fn item_interaction_push_css_class_partials() -> CssClassPartials {
+fn item_interaction_push_css_class_partials(visible: bool) -> CssClassPartials {
     let mut css_class_partials = CssClassPartials::with_capacity(6);
-    css_class_partials.insert(ThemeAttr::Visibility, "visible".to_string());
+    if visible {
+        css_class_partials.insert(ThemeAttr::Visibility, "visible".to_string());
+    }
     css_class_partials.insert(
         ThemeAttr::Animate,
         "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
@@ -707,9 +1020,11 @@ fn item_interaction_push_css_class_partials() -> CssClassPartials {
 
 /// Returns [`CssClassPartials`] for the edge for the `client` to `server`
 /// [`ItemLocation`] of an [`ItemInteractionPull`].
-fn item_interaction_pull_request_css_class_partials() -> CssClassPartials {
+fn item_interaction_pull_request_css_class_partials(visible: bool) -> CssClassPartials {
     let mut css_class_partials_request = CssClassPartials::with_capacity(7);
-    css_class_partials_request.insert(ThemeAttr::Visibility, "visible".to_string());
+    if visible {
+        css_class_partials_request.insert(ThemeAttr::Visibility, "visible".to_string());
+    }
     css_class_partials_request.insert(
         ThemeAttr::Animate,
         "[stroke-dashoffset-move-request_1.5s_linear_infinite]".to_string(),
@@ -727,9 +1042,11 @@ fn item_interaction_pull_request_css_class_partials() -> CssClassPartials {
 
 /// Returns [`CssClassPartials`] for the edge for the `server` to `client`
 /// [`ItemLocation`] of an [`ItemInteractionPull`].
-fn item_interaction_pull_response_css_class_partials() -> CssClassPartials {
+fn item_interaction_pull_response_css_class_partials(visible: bool) -> CssClassPartials {
     let mut css_class_partials_response = CssClassPartials::with_capacity(7);
-    css_class_partials_response.insert(ThemeAttr::Visibility, "visible".to_string());
+    if visible {
+        css_class_partials_response.insert(ThemeAttr::Visibility, "visible".to_string());
+    }
     css_class_partials_response.insert(
         ThemeAttr::Animate,
         "[stroke-dashoffset-move-response_1.5s_linear_infinite]".to_string(),
@@ -947,33 +1264,44 @@ struct ItemInteractionsProcessCtx<'f, 'item_location> {
     outcome_info_graph_variant: &'f OutcomeInfoGraphVariant,
     item_count: usize,
     item_location_count: usize,
-    item_to_item_interactions: &'item_location IndexMap<peace_core::ItemId, Vec<ItemInteraction>>,
+    item_to_item_interactions: &'item_location IndexMap<ItemId, Vec<ItemInteraction>>,
     node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
 }
 
-struct ItemInteractionsProcessingCtx<'f, 'item_location> {
+struct ItemInteractionsProcessingCtxExample<'f, 'item_location> {
     node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
     edges: &'f mut Edges,
-    theme: &'f mut Theme,
     tag_items: &'f mut TagItems,
     tag_id: &'f TagId,
     tag_styles_focus: &'f mut TagStyles,
 }
 
+struct ItemInteractionsProcessingCtxCurrent<'f, 'item_location> {
+    node_id_to_item_locations: &'f IndexMap<NodeId, &'item_location ItemLocation>,
+    item_location_to_node_id_segments: &'f mut HashMap<&'item_location ItemLocation, String>,
+    edges: &'f mut Edges,
+    theme: &'f mut Theme,
+    #[cfg(feature = "output_progress")]
+    progress_status: ProgressStatus,
+}
+
 struct ItemInteractionsProcessedExample {
     edges: Edges,
     graphviz_attrs: GraphvizAttrs,
-    theme: Theme,
     tag_items: TagItems,
     tag_styles_focus: TagStyles,
 }
 
-struct ItemInteractionsProcessedCurrent {
+struct ItemInteractionsProcessedCurrent<'item_state> {
     edges: Edges,
     graphviz_attrs: GraphvizAttrs,
     theme: Theme,
+    /// Progress of each item.
+    #[cfg(feature = "output_progress")]
+    item_progress_statuses: &'item_state HashMap<ItemId, ProgressStatus>,
+    marker: PhantomData<&'item_state ()>,
 }
 
 struct ItemInteractionsProcessed {

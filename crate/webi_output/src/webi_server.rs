@@ -2,19 +2,21 @@ use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
-use indexmap::IndexSet;
 use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
 use peace_webi_components::Home;
-use peace_webi_model::{CmdExecRequest, OutcomeInfoGraphVariant, WebiError};
+use peace_webi_model::{CmdExecRequest, OutcomeInfoGraphVariant, WebUiUpdate, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
 
 use crate::{
     CmdExecSpawnCtx, CmdExecToLeptosCtx, FlowWebiFns, OutcomeInfoGraphCalculator, WebiOutput,
 };
+
+#[cfg(feature = "output_progress")]
+use std::collections::HashMap;
 
 /// Maximum number of `CmdExecRequest`s to queue up.
 const CMD_EXEC_REQUEST_CHANNEL_LIMIT: usize = 1024;
@@ -80,6 +82,8 @@ impl WebiServer {
             cmd_exec_spawn_fn,
         } = flow_webi_fns;
         let outcome_info_graph_fn = &outcome_info_graph_fn;
+        #[cfg(feature = "output_progress")]
+        let item_count = flow.graph().node_count();
 
         let CmdExecToLeptosCtx {
             flow_progress_example_info_graphs,
@@ -169,10 +173,25 @@ impl WebiServer {
                 // Update `InfoGraph`s every time `progress_update` is sent.
                 let web_ui_update_task = async move {
                     // Keep track of item execution progress.
-                    let mut item_ids_in_progress = IndexSet::new();
-                    let mut item_ids_completed = IndexSet::new();
+                    #[cfg(feature = "output_progress")]
+                    let mut item_progress_statuses = HashMap::with_capacity(item_count);
 
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
+                        match web_ui_update {
+                            #[cfg(feature = "output_progress")]
+                            WebUiUpdate::ItemProgressStatus {
+                                item_id,
+                                progress_status,
+                                progress_limit: _,
+                                message: _,
+                            } => {
+                                item_progress_statuses.insert(item_id, progress_status);
+                            }
+                            WebUiUpdate::Markdown { markdown_src: _ } => {
+                                // TODO: render markdown on server side?
+                            }
+                        }
+
                         // TODO: augment progress information.
                         let flow_progress_actual_info_graph =
                             flow_spec_info.to_progress_info_graph();
@@ -184,22 +203,23 @@ impl WebiServer {
                                 .insert(cmd_execution_id, flow_progress_actual_info_graph);
                         }
 
-                        let item_ids_in_progress_snapshot = item_ids_in_progress.clone();
-                        let item_ids_completed_snapshot = item_ids_completed.clone();
+                        #[cfg(feature = "output_progress")]
+                        let item_progress_statuses_snapshot = item_progress_statuses.clone();
 
                         let flow_outcome_actual_info_graph = outcome_info_graph_fn(
                             &mut webi_output,
                             Box::new(move |flow, params_specs, resources| {
-                                let item_ids_in_progress = item_ids_in_progress_snapshot.clone();
-                                let item_ids_completed = item_ids_completed_snapshot.clone();
+                                #[cfg(feature = "output_progress")]
+                                let item_progress_statuses =
+                                    item_progress_statuses_snapshot.clone();
 
                                 OutcomeInfoGraphCalculator::calculate::<E>(
                                     flow,
                                     params_specs,
                                     resources,
                                     OutcomeInfoGraphVariant::Current {
-                                        item_ids_in_progress,
-                                        item_ids_completed,
+                                        #[cfg(feature = "output_progress")]
+                                        item_progress_statuses,
                                     },
                                 )
                             }),

@@ -1,6 +1,11 @@
-use indexmap::IndexSet;
-use peace_core::ItemId;
 use serde::{Deserialize, Serialize};
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use std::collections::HashMap;
+        use peace_core::{progress::ProgressStatus, ItemId};
+    }
+}
 
 /// How to style the outcome `InfoGraph`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -9,13 +14,8 @@ pub enum OutcomeInfoGraphVariant {
     Example,
     /// Current `InfoGraph` diagram that shows execution progress.
     Current {
-        /// IDs of items that are currently in progress.
-        ///
-        /// These items should be styled with animated blue strokes.
-        item_ids_in_progress: IndexSet<ItemId>,
-        /// IDs of the items that are already done.
-        ///
-        /// These items should be styled with green strokes.
-        item_ids_completed: IndexSet<ItemId>,
+        /// Execution progress status of each item.
+        #[cfg(feature = "output_progress")]
+        item_progress_statuses: HashMap<ItemId, ProgressStatus>,
     },
 }

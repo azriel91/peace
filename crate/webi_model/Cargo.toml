@@ -20,6 +20,7 @@ doctest = true
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
 dot_ix_model = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
 miette = { workspace = true, optional = true }
@@ -30,4 +31,4 @@ thiserror = { workspace = true }
 
 [features]
 error_reporting = ["dep:miette"]
-output_progress = []
+output_progress = ["peace_core/output_progress"]
