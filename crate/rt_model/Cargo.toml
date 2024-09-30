@@ -57,7 +57,9 @@ error_reporting = [
 ]
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
 output_progress = [
+    "dep:peace_item_model",
     "peace_cfg/output_progress",
+    "peace_item_model/output_progress",
     "peace_rt_model_hack/output_progress"
 ]
 item_interactions = [

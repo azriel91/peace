@@ -31,3 +31,7 @@ item_locations_and_interactions = [
     "dep:indexmap",
     "dep:peace_core",
 ]
+output_progress = [
+    "dep:peace_core",
+    "peace_core/output_progress",
+]

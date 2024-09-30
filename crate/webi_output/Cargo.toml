@@ -50,6 +50,7 @@ tower-http = { workspace = true, features = ["fs"] }
 default = []
 output_progress = [
     "peace_core/output_progress",
+    "peace_item_model/output_progress",
     "peace_rt_model_core/output_progress",
     "peace_rt_model/output_progress",
     "peace_webi_model/output_progress",

@@ -72,6 +72,7 @@ output_progress = [
     "peace_cli?/output_progress",
     "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
+    "peace_item_model/output_progress",
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
     "peace_webi?/output_progress",
