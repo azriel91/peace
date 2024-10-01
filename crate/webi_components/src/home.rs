@@ -2,7 +2,7 @@ use leptos::{component, view, IntoView};
 use leptos_meta::{provide_meta_context, Link, Stylesheet};
 use leptos_router::{Route, Router, Routes};
 
-use crate::FlowGraph;
+use crate::ChildrenFn;
 
 /// Top level component of the `WebiOutput`.
 ///
@@ -10,7 +10,7 @@ use crate::FlowGraph;
 ///
 /// * `flow_component`: The web component to render for the flow.
 #[component]
-pub fn Home() -> impl IntoView {
+pub fn Home(app_home: ChildrenFn) -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
@@ -26,9 +26,7 @@ pub fn Home() -> impl IntoView {
                 <Routes>
                     <Route
                         path=site_prefix
-                        view=move || view! {
-                            <FlowGraph />
-                        }
+                        view=move || app_home.call()
                     />
                 </Routes>
             </main>

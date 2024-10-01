@@ -1,6 +1,6 @@
 use std::{fmt, sync::Arc};
 
-use leptos::{Fragment, ToChildren};
+use leptos::{Fragment, IntoView, ToChildren};
 
 /// Allows a consumer to pass in the view fragment for a
 /// [`leptos_router::Route`].
@@ -19,11 +19,12 @@ pub struct ChildrenFn(Arc<dyn Fn() -> Fragment + Send + Sync>);
 
 impl ChildrenFn {
     /// Returns a new `ChildrenFn`;
-    pub fn new<F>(f: F) -> Self
+    pub fn new<F, IV>(f: F) -> Self
     where
-        F: Fn() -> Fragment + 'static + Send + Sync,
+        F: Fn() -> IV + Send + Sync + 'static,
+        IV: IntoView,
     {
-        Self(Arc::new(f))
+        Self(Arc::new(move || Fragment::from(f().into_view())))
     }
 
     /// Returns the underlying function.

@@ -132,9 +132,13 @@ async fn run_command(
             use peace::{
                 cmd::scopes::SingleProfileSingleFlowView,
                 webi::output::{CmdExecSpawnCtx, FlowWebiFns, WebiServer},
+                webi_components::ChildrenFn,
             };
 
-            use envman::{cmds::EnvCmd, flows::EnvDeployFlow, model::CmdExecRequest};
+            use envman::{
+                cmds::EnvCmd, flows::EnvDeployFlow, model::CmdExecRequest,
+                web_components::EnvDeployHome,
+            };
 
             let flow = EnvDeployFlow::flow()
                 .await
@@ -186,7 +190,12 @@ async fn run_command(
                 }),
             };
 
-            WebiServer::start(Some(SocketAddr::from((address, port))), flow_webi_fns).await?;
+            WebiServer::start(
+                Some(SocketAddr::from((address, port))),
+                ChildrenFn::new(EnvDeployHome),
+                flow_webi_fns,
+            )
+            .await?;
         }
     }
 

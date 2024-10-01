@@ -6,7 +6,7 @@ use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
-use peace_webi_components::Home;
+use peace_webi_components::{ChildrenFn, Home};
 use peace_webi_model::{OutcomeInfoGraphVariant, WebUiUpdate, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
@@ -37,6 +37,7 @@ impl WebiServer {
     /// * `socker_addr`: IP address and port to listen on.
     pub async fn start<E, CmdExecReqT>(
         socket_addr: Option<SocketAddr>,
+        app_home: ChildrenFn,
         flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
     ) -> Result<(), WebiError>
     where
@@ -50,6 +51,7 @@ impl WebiServer {
         let flow_id = flow_webi_fns.flow.flow_id().clone();
         let webi_server_task = Self::leptos_server_start(
             socket_addr,
+            app_home,
             cmd_exec_request_tx,
             cmd_exec_to_leptos_ctx.clone(),
             flow_id,
@@ -262,6 +264,7 @@ impl WebiServer {
     /// * `socket_addr`: IP address and port to listen on.
     async fn leptos_server_start<CmdExecReqT>(
         socket_addr: Option<SocketAddr>,
+        app_home: ChildrenFn,
         cmd_exec_request_tx: mpsc::Sender<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_id: FlowId,
@@ -273,7 +276,13 @@ impl WebiServer {
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;
         let socket_addr = socket_addr.unwrap_or(leptos_options.site_addr);
-        let routes = leptos_axum::generate_route_list(move || view! { <Home /> });
+        let routes = leptos_axum::generate_route_list({
+            let app_home = app_home.clone();
+            move || {
+                let app_home = app_home.clone();
+                view! { <Home app_home /> }
+            }
+        });
 
         stream::iter(crate::assets::ASSETS.iter())
             .map(Result::<_, WebiError>::Ok)
@@ -332,7 +341,10 @@ impl WebiServer {
                     leptos::provide_context(cmd_exec_interrupt_txs.clone());
                     leptos::provide_context(cmd_exec_request_tx.clone());
                 },
-                move || view! { <Home /> },
+                move || {
+                    let app_home = app_home.clone();
+                    view! { <Home app_home /> }
+                },
             )
             .with_state(leptos_options);
 
