@@ -168,6 +168,7 @@ async fn run_command(
                 cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
                     use peace::rt::cmds::StatesDiscoverCmd;
                     let cmd_exec_task = async move {
+                        eprintln!("Received cmd_exec_request: {cmd_exec_request:?}");
                         match cmd_exec_request {
                             CmdExecRequest::Discover => {
                                 let _ =

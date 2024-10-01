@@ -2,7 +2,7 @@ use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
-use leptos::{view, ReadSignal, SignalSet, WriteSignal};
+use leptos::{view, SignalSet, WriteSignal};
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
@@ -47,23 +47,23 @@ impl WebiServer {
         let cmd_exec_to_leptos_ctx = CmdExecToLeptosCtx::default();
         let (cmd_exec_request_tx, cmd_exec_request_rx) =
             mpsc::channel::<CmdExecReqT>(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
+        let (cmd_execution_id_signal_tx, cmd_execution_id_signal_rx) =
+            mpsc::channel::<WriteSignal<Option<CmdExecutionId>>>(4);
 
         let flow_id = flow_webi_fns.flow.flow_id().clone();
-        let (cmd_execution_id, cmd_execution_id_set) =
-            leptos::create_signal::<Option<CmdExecutionId>>(None);
         let webi_server_task = Self::leptos_server_start(
             socket_addr,
             app_home,
             cmd_exec_request_tx,
             cmd_exec_to_leptos_ctx.clone(),
             flow_id,
-            cmd_execution_id,
+            cmd_execution_id_signal_tx,
         );
         let cmd_execution_listener_task = Self::cmd_execution_listener(
             cmd_exec_request_rx,
             cmd_exec_to_leptos_ctx,
             flow_webi_fns,
-            cmd_execution_id_set,
+            cmd_execution_id_signal_rx,
         );
 
         tokio::try_join!(webi_server_task, cmd_execution_listener_task).map(|((), ())| ())
@@ -73,7 +73,7 @@ impl WebiServer {
         mut cmd_exec_request_rx: mpsc::Receiver<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
-        cmd_execution_id_set: WriteSignal<Option<CmdExecutionId>>,
+        mut cmd_execution_id_signal_rx: mpsc::Receiver<WriteSignal<Option<CmdExecutionId>>>,
     ) -> Result<(), WebiError>
     where
         E: 'static,
@@ -137,6 +137,7 @@ impl WebiServer {
         let cmd_execution_starter_task = async move {
             let mut cmd_execution_id_next = CmdExecutionId::new(0u64);
             while let Some(cmd_exec_request) = cmd_exec_request_rx.recv().await {
+                eprintln!("Received `cmd_exec_request` in server.");
                 let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(128);
                 let webi_output = WebiOutput::new(web_ui_update_tx);
 
@@ -148,31 +149,46 @@ impl WebiServer {
                 let cmd_execution_id = cmd_execution_id_next;
                 cmd_execution_id_next = CmdExecutionId::new(*cmd_execution_id + 1);
 
-                let cmd_exec_join_handle = tokio::task::spawn_local(cmd_exec_task);
                 cmd_exec_join_handle_tx
-                    .send((
-                        cmd_execution_id,
-                        webi_output,
-                        cmd_exec_join_handle,
-                        web_ui_update_rx,
-                    ))
+                    .send((cmd_execution_id, webi_output, web_ui_update_rx))
                     .await
                     .expect("Expected `cmd_execution_receiver_task` to be running.");
 
                 if let Some(interrupt_tx) = interrupt_tx {
                     cmd_exec_interrupt_txs.insert(cmd_execution_id, interrupt_tx);
                 }
+
+                let local_set = tokio::task::LocalSet::new();
+                local_set
+                    .run_until(async move {
+                        let cmd_exec_join_handle = tokio::task::spawn_local(cmd_exec_task);
+
+                        match cmd_exec_join_handle.await {
+                            Ok(()) => {}
+                            Err(join_error) => {
+                                eprintln!(
+                                    "Failed to wait for `cmd_execution` to complete. {join_error}"
+                                );
+                                // TODO: insert CmdExecution failed status
+                            }
+                        }
+                    })
+                    .await;
             }
         };
 
         let cmd_execution_receiver_task = async move {
-            while let Some((
-                cmd_execution_id,
-                mut webi_output,
-                cmd_exec_join_handle,
-                mut web_ui_update_rx,
-            )) = cmd_exec_join_handle_rx.recv().await
+            let cmd_execution_id_signal = cmd_execution_id_signal_rx.recv().await.expect(
+                "Expected to receive `cmd_execution_id_signal` setter from `leptos_server_start`.",
+            );
+
+            eprintln!("Got `cmd_execution_id_signal`.");
+
+            while let Some((cmd_execution_id, mut webi_output, mut web_ui_update_rx)) =
+                cmd_exec_join_handle_rx.recv().await
             {
+                eprintln!("Received cmd_execution_id to run: {cmd_execution_id:?}");
+
                 let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();
                 let flow_outcome_actual_info_graphs = flow_outcome_actual_info_graphs.clone();
                 let flow_spec_info = flow_spec_info.clone();
@@ -184,6 +200,8 @@ impl WebiServer {
                     let mut item_progress_statuses = HashMap::with_capacity(item_count);
 
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
+                        eprintln!("Received web_ui_update: {web_ui_update:?}");
+
                         match web_ui_update {
                             #[cfg(feature = "output_progress")]
                             WebUiUpdate::ItemProgressStatus {
@@ -240,23 +258,26 @@ impl WebiServer {
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }
 
-                        cmd_execution_id_set.set(Some(cmd_execution_id));
+                        cmd_execution_id_signal.set(Some(cmd_execution_id));
                     }
                 };
 
-                let cmd_exec_join_task = async move {
-                    match cmd_exec_join_handle.await {
-                        Ok(()) => {}
-                        Err(join_error) => {
-                            eprintln!(
-                                "Failed to wait for `cmd_execution` to complete. {join_error}"
-                            );
-                            // TODO: insert CmdExecution failed status
-                        }
-                    }
-                };
+                // ```rust,ignore
+                // let cmd_exec_join_task = async move {
+                //     match cmd_exec_join_handle.await {
+                //         Ok(()) => {}
+                //         Err(join_error) => {
+                //             eprintln!(
+                //                 "Failed to wait for `cmd_execution` to complete. {join_error}"
+                //             );
+                //             // TODO: insert CmdExecution failed status
+                //         }
+                //     }
+                // };
+                // ```
 
-                tokio::join!(web_ui_update_task, cmd_exec_join_task);
+                // tokio::join!(web_ui_update_task, cmd_exec_join_task);
+                web_ui_update_task.await;
             }
         };
 
@@ -275,7 +296,7 @@ impl WebiServer {
         cmd_exec_request_tx: mpsc::Sender<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_id: FlowId,
-        cmd_execution_id: ReadSignal<Option<CmdExecutionId>>,
+        cmd_execution_id_signal_tx: mpsc::Sender<WriteSignal<Option<CmdExecutionId>>>,
     ) -> Result<(), WebiError>
     where
         CmdExecReqT: Send + 'static,
@@ -339,6 +360,12 @@ impl WebiServer {
                     } = cmd_exec_to_leptos_ctx.clone();
 
                     let (flow_id, flow_id_set) = leptos::create_signal(flow_id.clone());
+                    let (cmd_execution_id, cmd_execution_id_set) =
+                        leptos::create_signal::<Option<CmdExecutionId>>(None);
+
+                    cmd_execution_id_signal_tx
+                        .try_send(cmd_execution_id_set)
+                        .expect("Expected to send `cmd_execution_id_set` WriteSignal");
 
                     leptos::provide_context(flow_id);
                     leptos::provide_context(flow_id_set);
