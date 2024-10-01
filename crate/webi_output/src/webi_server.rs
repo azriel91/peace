@@ -7,7 +7,7 @@ use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
 use peace_webi_components::Home;
-use peace_webi_model::{CmdExecRequest, OutcomeInfoGraphVariant, WebUiUpdate, WebiError};
+use peace_webi_model::{OutcomeInfoGraphVariant, WebUiUpdate, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
 
@@ -18,7 +18,7 @@ use crate::{
 #[cfg(feature = "output_progress")]
 use std::collections::HashMap;
 
-/// Maximum number of `CmdExecRequest`s to queue up.
+/// Maximum number of `CmdExecReqT`s to queue up.
 const CMD_EXEC_REQUEST_CHANNEL_LIMIT: usize = 1024;
 
 /// Web server that runs the following work:
@@ -35,16 +35,17 @@ impl WebiServer {
     /// ## Parameters
     ///
     /// * `socker_addr`: IP address and port to listen on.
-    pub async fn start<E>(
+    pub async fn start<E, CmdExecReqT>(
         socket_addr: Option<SocketAddr>,
-        flow_webi_fns: FlowWebiFns<E>,
+        flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
     ) -> Result<(), WebiError>
     where
         E: 'static,
+        CmdExecReqT: Send + 'static,
     {
         let cmd_exec_to_leptos_ctx = CmdExecToLeptosCtx::default();
         let (cmd_exec_request_tx, cmd_exec_request_rx) =
-            mpsc::channel(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
+            mpsc::channel::<CmdExecReqT>(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
 
         let flow_id = flow_webi_fns.flow.flow_id().clone();
         let webi_server_task = Self::leptos_server_start(
@@ -62,13 +63,14 @@ impl WebiServer {
         tokio::try_join!(webi_server_task, cmd_execution_listener_task).map(|((), ())| ())
     }
 
-    async fn cmd_execution_listener<E>(
-        mut cmd_exec_request_rx: mpsc::Receiver<CmdExecRequest>,
+    async fn cmd_execution_listener<E, CmdExecReqT>(
+        mut cmd_exec_request_rx: mpsc::Receiver<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
-        flow_webi_fns: FlowWebiFns<E>,
+        flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
     ) -> Result<(), WebiError>
     where
         E: 'static,
+        CmdExecReqT: Send + 'static,
     {
         // TODO:
         //
@@ -128,15 +130,13 @@ impl WebiServer {
         let cmd_execution_starter_task = async move {
             let mut cmd_execution_id_next = CmdExecutionId::new(0u64);
             while let Some(cmd_exec_request) = cmd_exec_request_rx.recv().await {
-                // TODO: depending on the request, run the appropriate cmd.
-                let CmdExecRequest {} = cmd_exec_request;
                 let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(128);
                 let webi_output = WebiOutput::new(web_ui_update_tx);
 
                 let CmdExecSpawnCtx {
                     interrupt_tx,
                     cmd_exec_task,
-                } = cmd_exec_spawn_fn(webi_output.clone());
+                } = cmd_exec_spawn_fn(webi_output.clone(), cmd_exec_request);
 
                 let cmd_execution_id = cmd_execution_id_next;
                 cmd_execution_id_next = CmdExecutionId::new(*cmd_execution_id + 1);
@@ -260,12 +260,15 @@ impl WebiServer {
     /// # Parameters
     ///
     /// * `socket_addr`: IP address and port to listen on.
-    async fn leptos_server_start(
+    async fn leptos_server_start<CmdExecReqT>(
         socket_addr: Option<SocketAddr>,
-        cmd_exec_request_tx: mpsc::Sender<CmdExecRequest>,
+        cmd_exec_request_tx: mpsc::Sender<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_id: FlowId,
-    ) -> Result<(), WebiError> {
+    ) -> Result<(), WebiError>
+    where
+        CmdExecReqT: Send + 'static,
+    {
         // Setting this to None means we'll be using cargo-leptos and its env vars
         let conf = leptos::get_configuration(None).await.unwrap();
         let leptos_options = conf.leptos_options;

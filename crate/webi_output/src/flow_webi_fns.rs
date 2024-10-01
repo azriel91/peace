@@ -11,7 +11,7 @@ use crate::{CmdExecSpawnCtx, WebiOutput};
 /// Functions to work with `Flow` from the [`WebiOutput`].
 ///
 /// [`WebiOutput`]: crate::WebiOutput
-pub struct FlowWebiFns<E> {
+pub struct FlowWebiFns<E, CmdExecReqT> {
     /// Flow to work with.
     pub flow: Flow<E>,
     /// Function to create an `InfoGraph`.
@@ -37,14 +37,16 @@ pub struct FlowWebiFns<E> {
     ///
     /// Currently we only take in one function. In the future this should take
     /// in a `Map<CmdExecutionRequest, CmdExecutionSpawnFn>`
-    pub cmd_exec_spawn_fn: Box<dyn Fn(WebiOutput) -> CmdExecSpawnCtx>,
+    pub cmd_exec_spawn_fn: Box<dyn Fn(WebiOutput, CmdExecReqT) -> CmdExecSpawnCtx>,
 }
 
-impl<E> fmt::Debug for FlowWebiFns<E>
+impl<E, CmdExecReqT> fmt::Debug for FlowWebiFns<E, CmdExecReqT>
 where
     E: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let cmd_exec_req_t_type_name = std::any::type_name::<CmdExecReqT>();
+
         f.debug_struct("FlowWebiFns")
             .field("flow", &self.flow)
             .field(
@@ -60,7 +62,7 @@ where
             )
             .field(
                 "cmd_exec_spawn_fn",
-                &stringify!(Box<dyn Fn(WebiOutput) -> CmdExecSpawnCtx>),
+                &format!("Box<dyn Fn(WebiOutput, {cmd_exec_req_t_type_name}) -> CmdExecSpawnCtx>"),
             )
             .finish()
     }
