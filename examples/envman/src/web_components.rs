@@ -1,5 +1,6 @@
 #![allow(non_snake_case)] // Components are all PascalCase.
 
-pub use self::env_deploy_home::EnvDeployHome;
+pub use self::{cmd_exec_request::CmdExecRequest, env_deploy_home::EnvDeployHome};
 
-pub mod env_deploy_home;
+mod cmd_exec_request;
+mod env_deploy_home;

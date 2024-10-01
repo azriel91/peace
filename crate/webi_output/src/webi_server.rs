@@ -2,7 +2,7 @@ use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
-use leptos::view;
+use leptos::{view, ReadSignal, SignalSet, WriteSignal};
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
@@ -49,17 +49,21 @@ impl WebiServer {
             mpsc::channel::<CmdExecReqT>(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
 
         let flow_id = flow_webi_fns.flow.flow_id().clone();
+        let (cmd_execution_id, cmd_execution_id_set) =
+            leptos::create_signal::<Option<CmdExecutionId>>(None);
         let webi_server_task = Self::leptos_server_start(
             socket_addr,
             app_home,
             cmd_exec_request_tx,
             cmd_exec_to_leptos_ctx.clone(),
             flow_id,
+            cmd_execution_id,
         );
         let cmd_execution_listener_task = Self::cmd_execution_listener(
             cmd_exec_request_rx,
             cmd_exec_to_leptos_ctx,
             flow_webi_fns,
+            cmd_execution_id_set,
         );
 
         tokio::try_join!(webi_server_task, cmd_execution_listener_task).map(|((), ())| ())
@@ -69,6 +73,7 @@ impl WebiServer {
         mut cmd_exec_request_rx: mpsc::Receiver<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
+        cmd_execution_id_set: WriteSignal<Option<CmdExecutionId>>,
     ) -> Result<(), WebiError>
     where
         E: 'static,
@@ -234,6 +239,8 @@ impl WebiServer {
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }
+
+                        cmd_execution_id_set.set(Some(cmd_execution_id));
                     }
                 };
 
@@ -268,6 +275,7 @@ impl WebiServer {
         cmd_exec_request_tx: mpsc::Sender<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_id: FlowId,
+        cmd_execution_id: ReadSignal<Option<CmdExecutionId>>,
     ) -> Result<(), WebiError>
     where
         CmdExecReqT: Send + 'static,
@@ -340,6 +348,7 @@ impl WebiServer {
                     leptos::provide_context(flow_outcome_actual_info_graphs.clone());
                     leptos::provide_context(cmd_exec_interrupt_txs.clone());
                     leptos::provide_context(cmd_exec_request_tx.clone());
+                    leptos::provide_context(cmd_execution_id);
                 },
                 move || {
                     let app_home = app_home.clone();

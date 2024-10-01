@@ -1,7 +1,6 @@
 //! Data structures
 
 pub use self::{
-    cmd_exec_request::CmdExecRequest,
     env_diff_selection::EnvDiffSelection,
     env_man_flow::EnvManFlow,
     env_man_flow_parse_error::EnvManFlowParseError,
@@ -18,7 +17,6 @@ pub use self::{
 #[cfg(feature = "cli")]
 pub mod cli_args;
 
-mod cmd_exec_request;
 mod env_diff_selection;
 mod env_man_flow;
 mod env_man_flow_parse_error;
