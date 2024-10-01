@@ -22,6 +22,13 @@ cfg_if::cfg_if! {
     }
 }
 
+#[cfg(all(
+    feature = "item_interactions",
+    feature = "item_state_example",
+    feature = "output_progress",
+))]
+use std::collections::{HashMap, HashSet};
+
 /// A flow to manage items.
 ///
 /// A Flow ID is strictly associated with an [`ItemGraph`], as the graph
@@ -114,7 +121,20 @@ impl<E> Flow<E> {
         //
         // This means a lot of cloning of `ItemLocation`s.
 
-        let (item_location_direct_descendents, item_to_item_interactions) = self
+        let item_interactions_ctx = ItemInteractionsCtx {
+            item_location_direct_descendents: BTreeMap::new(),
+            item_to_item_interactions: IndexMap::with_capacity(self.graph().node_count()),
+            // Rough estimate that each item has about 4 item locations
+            //
+            // * 2 `ItemLocationAncestors`s for from, 2 for to.
+            // * Some may have more, but we also combine `ItemLocation`s.
+            //
+            // After the `ItemLocationTree`s are constructed, we'll have an accurate
+            // number, but they are being constructed at the same time as this map.
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets: HashMap::with_capacity(self.graph().node_count() * 4),
+        };
+        let item_interactions_ctx = self
             .graph()
             .iter()
             // Note: This will silently drop the item locations if `interactions_example` fails to
@@ -122,54 +142,80 @@ impl<E> Flow<E> {
             .filter_map(|item| {
                 item.interactions_example(params_specs, resources)
                     .ok()
-                    .map(|item_interactions_example| (item.id().clone(), item_interactions_example))
+                    .map(|item_interactions_example| (item.id(), item_interactions_example))
             })
             .fold(
-                (
-                    BTreeMap::<ItemLocation, BTreeSet<ItemLocation>>::new(),
-                    IndexMap::<ItemId, Vec<ItemInteraction>>::with_capacity(
-                        self.graph().node_count(),
-                    ),
-                ),
-                |(mut item_location_direct_descendents, mut item_to_item_interactions),
-                 (item_id, item_interactions_example)| {
+                item_interactions_ctx,
+                |item_interactions_ctx, (item_id, item_interactions_example)| {
+                    let ItemInteractionsCtx {
+                        mut item_location_direct_descendents,
+                        mut item_to_item_interactions,
+                        #[cfg(feature = "output_progress")]
+                        mut item_location_to_item_id_sets,
+                    } = item_interactions_ctx;
+
+                    item_location_descendents_populate(
+                        &item_interactions_example,
+                        &mut item_location_direct_descendents,
+                    );
+
+                    #[cfg(feature = "output_progress")]
                     item_interactions_example
                         .iter()
                         .for_each(|item_interaction| match &item_interaction {
-                            ItemInteraction::Push(item_interaction_push) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_push.location_from(),
-                                );
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_push.location_to(),
-                                );
-                            }
-                            ItemInteraction::Pull(item_interaction_pull) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_pull.location_client(),
-                                );
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_pull.location_server(),
-                                );
-                            }
+                            ItemInteraction::Push(item_interaction_push) => item_interaction_push
+                                .location_from()
+                                .iter()
+                                .chain(item_interaction_push.location_to().iter())
+                                .for_each(|item_location| {
+                                    item_location_to_item_id_sets_insert(
+                                        &mut item_location_to_item_id_sets,
+                                        item_location,
+                                        item_id,
+                                    )
+                                }),
+                            ItemInteraction::Pull(item_interaction_pull) => item_interaction_pull
+                                .location_client()
+                                .iter()
+                                .chain(item_interaction_pull.location_server().iter())
+                                .for_each(|item_location| {
+                                    item_location_to_item_id_sets_insert(
+                                        &mut item_location_to_item_id_sets,
+                                        item_location,
+                                        item_id,
+                                    )
+                                }),
                             ItemInteraction::Within(item_interaction_within) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_within.location(),
-                                );
+                                item_interaction_within.location().iter().for_each(
+                                    |item_location| {
+                                        item_location_to_item_id_sets_insert(
+                                            &mut item_location_to_item_id_sets,
+                                            item_location,
+                                            item_id,
+                                        )
+                                    },
+                                )
                             }
                         });
 
                     item_to_item_interactions
-                        .insert(item_id, item_interactions_example.into_inner());
+                        .insert(item_id.clone(), item_interactions_example.into_inner());
 
-                    (item_location_direct_descendents, item_to_item_interactions)
+                    ItemInteractionsCtx {
+                        item_location_direct_descendents,
+                        item_to_item_interactions,
+                        #[cfg(feature = "output_progress")]
+                        item_location_to_item_id_sets,
+                    }
                 },
             );
+
+        let ItemInteractionsCtx {
+            item_location_direct_descendents,
+            item_to_item_interactions,
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets,
+        } = item_interactions_ctx;
 
         let item_locations_top_level = item_location_direct_descendents
             .keys()
@@ -213,6 +259,8 @@ impl<E> Flow<E> {
             item_location_trees,
             item_to_item_interactions,
             item_location_count,
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets,
         )
     }
 
@@ -237,7 +285,20 @@ impl<E> Flow<E> {
         //
         // This means a lot of cloning of `ItemLocation`s.
 
-        let (item_location_direct_descendents, item_to_item_interactions) = self
+        let item_interactions_ctx = ItemInteractionsCtx {
+            item_location_direct_descendents: BTreeMap::new(),
+            item_to_item_interactions: IndexMap::with_capacity(self.graph().node_count()),
+            // Rough estimate that each item has about 4 item locations
+            //
+            // * 2 `ItemLocationAncestors`s for from, 2 for to.
+            // * Some may have more, but we also combine `ItemLocation`s.
+            //
+            // After the `ItemLocationTree`s are constructed, we'll have an accurate
+            // number, but they are being constructed at the same time as this map.
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets: HashMap::with_capacity(self.graph().node_count() * 4),
+        };
+        let item_interactions_ctx = self
             .graph()
             .iter()
             // Note: This will silently drop the item locations if `interactions_try_current` fails
@@ -246,18 +307,19 @@ impl<E> Flow<E> {
                 item.interactions_try_current(params_specs, resources)
                     .ok()
                     .map(|item_interactions_current_or_example| {
-                        (item.id().clone(), item_interactions_current_or_example)
+                        (item.id(), item_interactions_current_or_example)
                     })
             })
             .fold(
-                (
-                    BTreeMap::<ItemLocation, BTreeSet<ItemLocation>>::new(),
-                    IndexMap::<ItemId, Vec<ItemInteraction>>::with_capacity(
-                        self.graph().node_count(),
-                    ),
-                ),
-                |(mut item_location_direct_descendents, mut item_to_item_interactions),
-                 (item_id, item_interactions_current_or_example)| {
+                item_interactions_ctx,
+                |item_interactions_ctx, (item_id, item_interactions_current_or_example)| {
+                    let ItemInteractionsCtx {
+                        mut item_location_direct_descendents,
+                        mut item_to_item_interactions,
+                        #[cfg(feature = "output_progress")]
+                        mut item_location_to_item_id_sets,
+                    } = item_interactions_ctx;
+
                     // TODO: we need to hide the nodes if they came from `Example`.
                     let item_interactions_current_or_example =
                         match item_interactions_current_or_example {
@@ -269,42 +331,68 @@ impl<E> Flow<E> {
                             ) => item_interactions_example.into_inner(),
                         };
 
+                    item_location_descendents_populate(
+                        &item_interactions_current_or_example,
+                        &mut item_location_direct_descendents,
+                    );
+
+                    #[cfg(feature = "output_progress")]
                     item_interactions_current_or_example
                         .iter()
                         .for_each(|item_interaction| match &item_interaction {
-                            ItemInteraction::Push(item_interaction_push) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_push.location_from(),
-                                );
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_push.location_to(),
-                                );
-                            }
-                            ItemInteraction::Pull(item_interaction_pull) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_pull.location_client(),
-                                );
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_pull.location_server(),
-                                );
-                            }
+                            ItemInteraction::Push(item_interaction_push) => item_interaction_push
+                                .location_from()
+                                .iter()
+                                .chain(item_interaction_push.location_to().iter())
+                                .for_each(|item_location| {
+                                    item_location_to_item_id_sets_insert(
+                                        &mut item_location_to_item_id_sets,
+                                        item_location,
+                                        item_id,
+                                    )
+                                }),
+                            ItemInteraction::Pull(item_interaction_pull) => item_interaction_pull
+                                .location_client()
+                                .iter()
+                                .chain(item_interaction_pull.location_server().iter())
+                                .for_each(|item_location| {
+                                    item_location_to_item_id_sets_insert(
+                                        &mut item_location_to_item_id_sets,
+                                        item_location,
+                                        item_id,
+                                    )
+                                }),
                             ItemInteraction::Within(item_interaction_within) => {
-                                item_location_descendents_insert(
-                                    &mut item_location_direct_descendents,
-                                    item_interaction_within.location(),
-                                );
+                                item_interaction_within.location().iter().for_each(
+                                    |item_location| {
+                                        item_location_to_item_id_sets_insert(
+                                            &mut item_location_to_item_id_sets,
+                                            item_location,
+                                            item_id,
+                                        )
+                                    },
+                                )
                             }
                         });
 
-                    item_to_item_interactions.insert(item_id, item_interactions_current_or_example);
+                    item_to_item_interactions
+                        .insert(item_id.clone(), item_interactions_current_or_example);
 
-                    (item_location_direct_descendents, item_to_item_interactions)
+                    ItemInteractionsCtx {
+                        item_location_direct_descendents,
+                        item_to_item_interactions,
+                        #[cfg(feature = "output_progress")]
+                        item_location_to_item_id_sets,
+                    }
                 },
             );
+
+        let ItemInteractionsCtx {
+            item_location_direct_descendents,
+            item_to_item_interactions,
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets,
+        } = item_interactions_ctx;
 
         let item_locations_top_level = item_location_direct_descendents
             .keys()
@@ -348,8 +436,66 @@ impl<E> Flow<E> {
             item_location_trees,
             item_to_item_interactions,
             item_location_count,
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets,
         )
     }
+}
+
+#[cfg(all(
+    feature = "item_interactions",
+    feature = "item_state_example",
+    feature = "output_progress",
+))]
+fn item_location_to_item_id_sets_insert(
+    item_location_to_item_id_sets: &mut HashMap<ItemLocation, HashSet<ItemId>>,
+    item_location: &ItemLocation,
+    item_id: &ItemId,
+) {
+    if let Some(item_id_set) = item_location_to_item_id_sets.get_mut(item_location) {
+        item_id_set.insert(item_id.clone());
+    } else {
+        let mut item_id_set = HashSet::new();
+        item_id_set.insert(item_id.clone());
+        item_location_to_item_id_sets.insert(item_location.clone(), item_id_set);
+    }
+}
+
+#[cfg(all(feature = "item_interactions", feature = "item_state_example",))]
+fn item_location_descendents_populate(
+    item_interactions_current_or_example: &Vec<ItemInteraction>,
+    item_location_direct_descendents: &mut BTreeMap<ItemLocation, BTreeSet<ItemLocation>>,
+) {
+    item_interactions_current_or_example.iter().for_each(
+        |item_interaction| match &item_interaction {
+            ItemInteraction::Push(item_interaction_push) => {
+                item_location_descendents_insert(
+                    item_location_direct_descendents,
+                    item_interaction_push.location_from(),
+                );
+                item_location_descendents_insert(
+                    item_location_direct_descendents,
+                    item_interaction_push.location_to(),
+                );
+            }
+            ItemInteraction::Pull(item_interaction_pull) => {
+                item_location_descendents_insert(
+                    item_location_direct_descendents,
+                    item_interaction_pull.location_client(),
+                );
+                item_location_descendents_insert(
+                    item_location_direct_descendents,
+                    item_interaction_pull.location_server(),
+                );
+            }
+            ItemInteraction::Within(item_interaction_within) => {
+                item_location_descendents_insert(
+                    item_location_direct_descendents,
+                    item_interaction_within.location(),
+                );
+            }
+        },
+    );
 }
 
 /// Recursively constructs an `ItemLocationTree`.
@@ -412,4 +558,17 @@ fn item_location_descendents_insert(
             }
         },
     );
+}
+
+/// Accumulates the links between
+#[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+struct ItemInteractionsCtx {
+    /// Map from each `ItemLocation` to all of its direct descendents collected
+    /// from all items.
+    item_location_direct_descendents: BTreeMap<ItemLocation, BTreeSet<ItemLocation>>,
+    /// Map from each item to each of its `ItemInteractions`.
+    item_to_item_interactions: IndexMap<ItemId, Vec<ItemInteraction>>,
+    /// Tracks the items that referred to this item location.
+    #[cfg(feature = "output_progress")]
+    item_location_to_item_id_sets: HashMap<ItemLocation, HashSet<ItemId>>,
 }

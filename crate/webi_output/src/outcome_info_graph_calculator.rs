@@ -23,6 +23,8 @@ use smallvec::SmallVec;
 
 #[cfg(feature = "output_progress")]
 use peace_core::progress::ProgressStatus;
+#[cfg(feature = "output_progress")]
+use std::collections::HashSet;
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
 #[derive(Debug)]
@@ -69,14 +71,22 @@ where
         item_location_trees,
         item_to_item_interactions,
         item_location_count,
+        #[cfg(feature = "output_progress")]
+        item_location_to_item_id_sets,
     } = item_locations_and_interactions;
 
-    let node_id_mappings_and_hierarchy =
-        node_id_mappings_and_hierarchy(&item_location_trees, item_location_count);
+    let node_id_mappings_and_hierarchy = node_id_mappings_and_hierarchy(
+        &item_location_trees,
+        item_location_count,
+        #[cfg(feature = "output_progress")]
+        &item_location_to_item_id_sets,
+    );
     let NodeIdMappingsAndHierarchy {
         node_id_to_item_locations,
         mut item_location_to_node_id_segments,
         node_hierarchy,
+        #[cfg(feature = "output_progress")]
+        node_id_to_item_id_sets,
     } = node_id_mappings_and_hierarchy;
 
     let node_names = node_id_to_item_locations.iter().fold(
@@ -140,7 +150,15 @@ where
         tag_styles_focus,
     } = item_interactions_processed;
 
-    theme_styles_augment(&item_location_trees, &node_id_to_item_locations, &mut theme);
+    theme_styles_augment(
+        &item_location_trees,
+        &node_id_to_item_locations,
+        &mut theme,
+        #[cfg(feature = "output_progress")]
+        &outcome_info_graph_variant,
+        #[cfg(feature = "output_progress")]
+        &node_id_to_item_id_sets,
+    );
 
     let mut info_graph = InfoGraph::default()
         .with_direction(GraphDir::Vertical)
@@ -179,11 +197,14 @@ where
     info_graph
 }
 
-/// Adds styles for nodes based on what kind of [`ItemLocation`] they represent.
+/// Adds styles for nodes based on what kind of [`ItemLocation`] they represent,
+/// and their progress status.
 fn theme_styles_augment(
     item_location_trees: &[ItemLocationTree],
     node_id_to_item_locations: &IndexMap<NodeId, &ItemLocation>,
     theme: &mut Theme,
+    #[cfg(feature = "output_progress")] outcome_info_graph_variant: &OutcomeInfoGraphVariant,
+    #[cfg(feature = "output_progress")] node_id_to_item_id_sets: &HashMap<NodeId, HashSet<&ItemId>>,
 ) {
     // Use light styling for `ItemLocationType::Group` nodes.
     let mut css_class_partials_light = CssClassPartials::with_capacity(10);
@@ -236,7 +257,58 @@ fn theme_styles_augment(
                     }
                 }
                 ItemLocationType::Group => Some(css_class_partials_light.clone()),
-                _ => None,
+                ItemLocationType::Path => {
+                    #[cfg(not(feature = "output_progress"))]
+                    {
+                        None
+                    }
+
+                    #[cfg(feature = "output_progress")]
+                    {
+                        if let OutcomeInfoGraphVariant::Current {
+                            item_progress_statuses,
+                        } = outcome_info_graph_variant
+                        {
+                            // todo!("if none of `item_progress_statuses` is Running or greater, set
+                            // visibility to invisible.");
+
+                            // 1. For each of the item IDs that referred to this node
+                            let node_should_be_partially_visible = node_id_to_item_id_sets
+                                .get(node_id)
+                                // 2. Look up their statuses
+                                .and_then(|referrer_item_ids| {
+                                    referrer_item_ids.iter().find_map(|referrer_item_id| {
+                                        // 3. If any of them are running or complete, then it should
+                                        //    be visible, so we negate it
+                                        item_progress_statuses.get(referrer_item_id).map(
+                                            |progress_status| {
+                                                !matches!(
+                                                    progress_status,
+                                                    ProgressStatus::Running
+                                                        | ProgressStatus::RunningStalled
+                                                        | ProgressStatus::UserPending
+                                                        | ProgressStatus::Complete(_)
+                                                )
+                                            },
+                                        )
+                                    })
+                                })
+                                .unwrap_or(false);
+
+                            if node_should_be_partially_visible {
+                                let mut css_class_partials_partially_visible =
+                                    CssClassPartials::with_capacity(1);
+                                css_class_partials_partially_visible
+                                    .insert(ThemeAttr::Visibility, "0.5".to_string());
+                                Some(css_class_partials_partially_visible)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                }
             };
 
             if let Some(css_class_partials) = css_class_partials {
@@ -749,13 +821,13 @@ fn process_item_interaction_push_current<'f, 'item_location>(
     edges.insert(edge_id.clone(), [node_id_from.clone(), node_id_to.clone()]);
 
     #[cfg(feature = "output_progress")]
-    let visible = matches!(
+    let edge_visible = matches!(
         progress_status,
         ProgressStatus::Running | ProgressStatus::RunningStalled | ProgressStatus::UserPending
     );
     #[cfg(not(feature = "output_progress"))]
-    let visible = false;
-    let css_class_partials = item_interaction_push_css_class_partials(visible);
+    let edge_visible = false;
+    let css_class_partials = item_interaction_push_css_class_partials(edge_visible);
 
     theme.styles.insert(
         AnyIdOrDefaults::AnyId(AnyId::from(edge_id)),
@@ -836,14 +908,15 @@ fn process_item_interaction_pull_current<'f, 'item_location>(
         .insert(edge_id_request.clone(), EdgeDir::Back);
 
     #[cfg(feature = "output_progress")]
-    let visible = matches!(
+    let edge_visible = matches!(
         progress_status,
         ProgressStatus::Running | ProgressStatus::RunningStalled | ProgressStatus::UserPending
     );
     #[cfg(not(feature = "output_progress"))]
-    let visible = false;
-    let css_class_partials_request = item_interaction_pull_request_css_class_partials(visible);
-    let css_class_partials_response = item_interaction_pull_response_css_class_partials(visible);
+    let edge_visible = false;
+    let css_class_partials_request = item_interaction_pull_request_css_class_partials(edge_visible);
+    let css_class_partials_response =
+        item_interaction_pull_response_css_class_partials(edge_visible);
 
     theme.styles.insert(
         AnyIdOrDefaults::AnyId(AnyId::from(edge_id_request)),
@@ -953,6 +1026,9 @@ fn process_item_interactions_current<'item_state, 'item_location>(
                 let _item_id = item_id;
 
                 item_interactions.iter().for_each(|item_interaction| {
+                    #[cfg(feature = "output_progress")]
+                    let progress_status = progress_status.clone();
+
                     let item_interactions_processing_ctx = ItemInteractionsProcessingCtxCurrent {
                         node_id_to_item_locations,
                         item_location_to_node_id_segments,
@@ -1096,11 +1172,17 @@ fn node_id_with_ancestor_find(
 fn node_id_mappings_and_hierarchy<'item_location>(
     item_location_trees: &'item_location [ItemLocationTree],
     item_location_count: usize,
+    #[cfg(feature = "output_progress")] item_location_to_item_id_sets: &'item_location HashMap<
+        ItemLocation,
+        HashSet<ItemId>,
+    >,
 ) -> NodeIdMappingsAndHierarchy<'item_location> {
     let node_id_mappings_and_hierarchy = NodeIdMappingsAndHierarchy {
         node_id_to_item_locations: IndexMap::with_capacity(item_location_count),
         item_location_to_node_id_segments: HashMap::with_capacity(item_location_count),
         node_hierarchy: NodeHierarchy::with_capacity(item_location_trees.len()),
+        #[cfg(feature = "output_progress")]
+        node_id_to_item_id_sets: HashMap::with_capacity(item_location_count),
     };
 
     item_location_trees.iter().fold(
@@ -1110,6 +1192,8 @@ fn node_id_mappings_and_hierarchy<'item_location>(
                 node_id_to_item_locations,
                 item_location_to_node_id_segments,
                 node_hierarchy,
+                #[cfg(feature = "output_progress")]
+                node_id_to_item_id_sets,
             } = &mut node_id_mappings_and_hierarchy;
 
             let item_location = item_location_tree.item_location();
@@ -1123,6 +1207,24 @@ fn node_id_mappings_and_hierarchy<'item_location>(
             });
 
             node_id_to_item_locations.insert(node_id.clone(), item_location);
+
+            // Track the items that this node is associated with.
+            #[cfg(feature = "output_progress")]
+            {
+                let referrer_item_ids = item_location_to_item_id_sets.get(item_location);
+                if let Some(referrer_item_ids) = referrer_item_ids {
+                    if let Some(node_refererrer_item_ids) =
+                        node_id_to_item_id_sets.get_mut(&node_id)
+                    {
+                        node_refererrer_item_ids.extend(referrer_item_ids);
+                    } else {
+                        let mut node_refererrer_item_ids =
+                            HashSet::with_capacity(referrer_item_ids.len());
+                        node_refererrer_item_ids.extend(referrer_item_ids.iter());
+                        node_id_to_item_id_sets.insert(node_id.clone(), node_refererrer_item_ids);
+                    }
+                }
+            }
 
             let node_hierarchy_top_level = node_hierarchy_build_and_item_location_insert(
                 item_location_tree,
@@ -1258,6 +1360,10 @@ struct NodeIdMappingsAndHierarchy<'item_location> {
     node_id_to_item_locations: IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: HashMap<&'item_location ItemLocation, String>,
     node_hierarchy: NodeHierarchy,
+    /// Mapping to Item IDs that interact with the `ItemLocation` that the
+    /// `NodeId` represents.
+    #[cfg(feature = "output_progress")]
+    node_id_to_item_id_sets: HashMap<NodeId, HashSet<&'item_location ItemId>>,
 }
 
 struct ItemInteractionsProcessCtx<'f, 'item_location> {

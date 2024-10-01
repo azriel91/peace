@@ -4,6 +4,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ItemInteraction, ItemLocationTree};
 
+#[cfg(feature = "output_progress")]
+use std::collections::{HashMap, HashSet};
+
+#[cfg(feature = "output_progress")]
+use crate::ItemLocation;
+
 /// Merged [`ItemLocation`]s and [`ItemInteraction`]s from all items.
 ///
 /// [`ItemLocation`]: crate::ItemLocation
@@ -19,6 +25,9 @@ pub struct ItemLocationsAndInteractions {
     ///
     /// [`ItemLocation`]: crate::ItemLocation
     pub item_location_count: usize,
+    /// Map that tracks the items that referred to each item location.
+    #[cfg(feature = "output_progress")]
+    pub item_location_to_item_id_sets: HashMap<ItemLocation, HashSet<ItemId>>,
 }
 
 impl ItemLocationsAndInteractions {
@@ -27,11 +36,17 @@ impl ItemLocationsAndInteractions {
         item_location_trees: Vec<ItemLocationTree>,
         item_to_item_interactions: IndexMap<ItemId, Vec<ItemInteraction>>,
         item_location_count: usize,
+        #[cfg(feature = "output_progress")] item_location_to_item_id_sets: HashMap<
+            ItemLocation,
+            HashSet<ItemId>,
+        >,
     ) -> Self {
         Self {
             item_location_trees,
             item_to_item_interactions,
             item_location_count,
+            #[cfg(feature = "output_progress")]
+            item_location_to_item_id_sets,
         }
     }
 
@@ -53,5 +68,12 @@ impl ItemLocationsAndInteractions {
     /// [`ItemLocation`]: crate::ItemLocation
     pub fn item_location_count(&self) -> usize {
         self.item_location_count
+    }
+
+    /// Returns the map that tracks the items that referred to each item
+    /// location.
+    #[cfg(feature = "output_progress")]
+    pub fn item_location_to_item_id_sets(&self) -> &HashMap<ItemLocation, HashSet<ItemId>> {
+        &self.item_location_to_item_id_sets
     }
 }
