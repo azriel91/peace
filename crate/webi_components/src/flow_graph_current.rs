@@ -5,7 +5,6 @@ use dot_ix::{
 };
 use leptos::{component, view, IntoView, ReadSignal, Signal, SignalGet, Transition};
 use peace_cmd_model::CmdExecutionId;
-use peace_core::FlowId;
 use peace_webi_model::{FlowOutcomeInfoGraphs, FlowProgressInfoGraphs};
 
 /// Renders the flow graph.
@@ -88,21 +87,22 @@ fn ProgressGraph() -> impl IntoView {
 
 #[component]
 fn OutcomeGraph() -> impl IntoView {
-    let flow_id = leptos::use_context::<ReadSignal<FlowId>>();
+    let cmd_execution_id = leptos::use_context::<ReadSignal<Option<CmdExecutionId>>>();
 
     let outcome_info_graph_resource = leptos::create_resource(
-        move || flow_id.as_ref().map(SignalGet::get),
-        move |flow_id| async move {
-            let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<FlowId>>();
+        move || cmd_execution_id.as_ref().map(SignalGet::get).flatten(),
+        move |cmd_execution_id| async move {
+            let flow_outcome_info_graphs =
+                leptos::use_context::<FlowOutcomeInfoGraphs<CmdExecutionId>>();
 
             if let Some(flow_outcome_info_graphs) = flow_outcome_info_graphs {
                 let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
 
-                flow_id
+                cmd_execution_id
                     .as_ref()
                     .zip(flow_outcome_info_graphs)
-                    .and_then(|(flow_id, flow_outcome_info_graphs)| {
-                        flow_outcome_info_graphs.get(flow_id).cloned()
+                    .and_then(|(cmd_execution_id, flow_outcome_info_graphs)| {
+                        flow_outcome_info_graphs.get(cmd_execution_id).cloned()
                     })
                     .unwrap_or_else(InfoGraph::default)
             } else {
