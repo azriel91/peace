@@ -363,9 +363,10 @@ impl WebiServer {
                     let (cmd_execution_id, cmd_execution_id_set) =
                         leptos::create_signal::<Option<CmdExecutionId>>(None);
 
-                    cmd_execution_id_signal_tx
-                        .try_send(cmd_execution_id_set)
-                        .expect("Expected to send `cmd_execution_id_set` WriteSignal");
+                    match cmd_execution_id_signal_tx.try_send(cmd_execution_id_set) {
+                        Ok(()) => eprintln!("Successfully sent `cmd_execution_id_set` WriteSignal"),
+                        Err(_) => eprintln!("Failed to send `cmd_execution_id_set` WriteSignal"),
+                    }
 
                     leptos::provide_context(flow_id);
                     leptos::provide_context(flow_id_set);
