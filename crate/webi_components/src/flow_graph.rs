@@ -55,7 +55,7 @@ fn ProgressGraph() -> impl IntoView {
         leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
-    leptos::create_resource(
+    leptos::create_local_resource(
         move || (),
         move |()| async move {
             let progress_info_graph = progress_info_graph_fetch().await.unwrap_or_default();
@@ -108,7 +108,7 @@ fn OutcomeGraph() -> impl IntoView {
     let (outcome_info_graph, outcome_info_graph_set) = leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
-    leptos::create_resource(
+    leptos::create_local_resource(
         move || (),
         move |()| async move {
             let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();
