@@ -99,22 +99,22 @@ where
 
     let tags = match &outcome_info_graph_variant {
         OutcomeInfoGraphVariant::Example => {
-            let tags =
-                flow.graph()
-                    .iter()
-                    .fold(TagNames::with_capacity(item_count), |mut tags, item| {
-                        let tag_name = item.interactions_tag_name();
+            let tags = flow.graph().iter_insertion().fold(
+                TagNames::with_capacity(item_count),
+                |mut tags, item| {
+                    let tag_name = item.interactions_tag_name();
 
-                        // For some reason taking away `.to_string()` causes an error to be
-                        // highlighted on `flow.graph()`, rather than referring to `item.id()` as
-                        // the cause of an extended borrow.
-                        let tag_id = TagId::try_from(item.id().to_string())
-                            .expect("Expected `tag_id` from `item_id` to be valid.");
+                    // For some reason taking away `.to_string()` causes an error to be
+                    // highlighted on `flow.graph()`, rather than referring to `item.id()` as
+                    // the cause of an extended borrow.
+                    let tag_id = TagId::try_from(item.id().to_string())
+                        .expect("Expected `tag_id` from `item_id` to be valid.");
 
-                        tags.insert(tag_id, tag_name);
+                    tags.insert(tag_id, tag_name);
 
-                        tags
-                    });
+                    tags
+                },
+            );
 
             Some(tags)
         }
