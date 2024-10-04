@@ -60,9 +60,9 @@ fn ProgressGraph() -> impl IntoView {
     leptos::create_local_resource(
         move || (),
         move |()| async move {
-            loop {
-                use gloo_timers::future::TimeoutFuture;
+            use gloo_timers::future::TimeoutFuture;
 
+            loop {
                 let progress_info_graph = progress_info_graph_fetch().await.unwrap_or_default();
                 let dot_src_and_styles =
                     IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
@@ -100,20 +100,9 @@ async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
         let cmd_execution_id = cmd_execution_id.lock().ok().as_deref().copied().flatten();
         let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
 
-        match cmd_execution_id {
-            Some(cmd_execution_id) => leptos::logging::log!(
-                "fetching outcome_info_graph for cmd_execution_id: {cmd_execution_id:?}"
-            ),
-            None => leptos::logging::log!("No cmd_execution_id in leptos context."),
-        }
-
         cmd_execution_id
             .zip(flow_outcome_info_graphs)
             .and_then(|(cmd_execution_id, flow_outcome_info_graphs)| {
-                leptos::logging::log!(
-                    "rendering outcome graph for cmd_execution_id: {cmd_execution_id:?}"
-                );
-
                 flow_outcome_info_graphs.get(&cmd_execution_id).cloned()
             })
             .unwrap_or_else(InfoGraph::default)
@@ -133,8 +122,6 @@ fn OutcomeGraph() -> impl IntoView {
         move || (),
         move |()| async move {
             use gloo_timers::future::TimeoutFuture;
-
-            leptos::logging::log!("on_load for OutcomeGraph");
 
             loop {
                 let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();

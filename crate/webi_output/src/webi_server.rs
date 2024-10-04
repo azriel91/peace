@@ -133,7 +133,6 @@ impl WebiServer {
         let cmd_execution_starter_task = async move {
             let mut cmd_execution_id_next = CmdExecutionId::new(0u64);
             while let Some(cmd_exec_request) = cmd_exec_request_rx.recv().await {
-                eprintln!("Received `cmd_exec_request` in server.");
                 let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(128);
                 let webi_output = WebiOutput::new(web_ui_update_tx);
 
@@ -182,7 +181,6 @@ impl WebiServer {
             while let Some((cmd_execution_id, mut webi_output, mut web_ui_update_rx)) =
                 cmd_exec_join_handle_rx.recv().await
             {
-                eprintln!("Received cmd_execution_id to run: {cmd_execution_id:?}");
                 if let Ok(mut cmd_execution_id_guard) = cmd_execution_id_arc.lock() {
                     eprintln!("Inserting cmd_execution_id to run: {cmd_execution_id:?}");
                     *cmd_execution_id_guard = Some(cmd_execution_id);
@@ -201,8 +199,6 @@ impl WebiServer {
                     let mut item_progress_statuses = HashMap::with_capacity(item_count);
 
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
-                        eprintln!("Received web_ui_update: {web_ui_update:?}");
-
                         match web_ui_update {
                             #[cfg(feature = "output_progress")]
                             WebUiUpdate::ItemProgressStatus {
@@ -255,7 +251,6 @@ impl WebiServer {
                         if let Ok(mut flow_outcome_actual_info_graphs) =
                             flow_outcome_actual_info_graphs.lock()
                         {
-                            eprintln!("Inserting flow_outcome_actual_info_graph for cmd_execution_id {cmd_execution_id:?}");
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }
