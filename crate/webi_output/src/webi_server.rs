@@ -188,6 +188,7 @@ impl WebiServer {
                 cmd_exec_join_handle_rx.recv().await
             {
                 eprintln!("Received cmd_execution_id to run: {cmd_execution_id:?}");
+                cmd_execution_id_signal.set(Some(cmd_execution_id));
 
                 let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();
                 let flow_outcome_actual_info_graphs = flow_outcome_actual_info_graphs.clone();
@@ -218,7 +219,7 @@ impl WebiServer {
                         }
 
                         // TODO: augment progress information.
-                        let flow_progress_actual_info_graph =
+                        let mut flow_progress_actual_info_graph =
                             flow_spec_info.to_progress_info_graph();
 
                         if let Ok(mut flow_progress_actual_info_graphs) =
@@ -257,8 +258,6 @@ impl WebiServer {
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }
-
-                        cmd_execution_id_signal.set(Some(cmd_execution_id));
                     }
                 };
 

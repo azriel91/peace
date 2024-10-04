@@ -21,6 +21,7 @@ test = false
 
 [dependencies]
 dot_ix = { workspace = true, features = ["rt", "web_components"] }
+futures = { workspace = true }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
@@ -33,7 +34,10 @@ peace_params = { workspace = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true, features = ["item_interactions", "item_state_example"] }
 peace_webi_model = { workspace = true }
+serde_json = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
+
+# Used to print serialized info graph for debugging.
 serde_yaml = { workspace = true }
 
 [features]
