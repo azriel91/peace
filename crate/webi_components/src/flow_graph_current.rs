@@ -3,7 +3,9 @@ use dot_ix::{
     rt::IntoGraphvizDotSrc,
     web_components::DotSvg,
 };
-use leptos::{component, server, view, IntoView, ServerFnError, SignalSet, Transition};
+use leptos::{
+    component, server, view, IntoView, ServerFnError, SignalGetUntracked, SignalSet, Transition,
+};
 
 /// Renders the flow graph.
 ///
@@ -53,7 +55,7 @@ async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
 
 #[component]
 fn ProgressGraph() -> impl IntoView {
-    let (progress_info_graph, progress_info_graph_set) =
+    let (progress_info_graph_get, progress_info_graph_set) =
         leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
@@ -67,10 +69,12 @@ fn ProgressGraph() -> impl IntoView {
                 let dot_src_and_styles =
                     IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
 
-                progress_info_graph_set.set(progress_info_graph);
-                dot_src_and_styles_set.set(Some(dot_src_and_styles));
+                if progress_info_graph != progress_info_graph_get.get_untracked() {
+                    progress_info_graph_set.set(progress_info_graph);
+                    dot_src_and_styles_set.set(Some(dot_src_and_styles));
+                }
 
-                TimeoutFuture::new(500).await;
+                TimeoutFuture::new(250).await;
             }
         },
     );
@@ -78,7 +82,7 @@ fn ProgressGraph() -> impl IntoView {
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <DotSvg
-                info_graph=progress_info_graph.into()
+                info_graph=progress_info_graph_get.into()
                 dot_src_and_styles=dot_src_and_styles.into()
             />
         </Transition>
@@ -115,7 +119,8 @@ async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
 
 #[component]
 fn OutcomeGraph() -> impl IntoView {
-    let (outcome_info_graph, outcome_info_graph_set) = leptos::create_signal(InfoGraph::default());
+    let (outcome_info_graph_get, outcome_info_graph_set) =
+        leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
     leptos::create_local_resource(
@@ -128,10 +133,12 @@ fn OutcomeGraph() -> impl IntoView {
                 let dot_src_and_styles =
                     IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
 
-                outcome_info_graph_set.set(outcome_info_graph);
-                dot_src_and_styles_set.set(Some(dot_src_and_styles));
+                if outcome_info_graph != outcome_info_graph_get.get_untracked() {
+                    outcome_info_graph_set.set(outcome_info_graph);
+                    dot_src_and_styles_set.set(Some(dot_src_and_styles));
+                }
 
-                TimeoutFuture::new(500).await;
+                TimeoutFuture::new(250).await;
             }
         },
     );
@@ -139,7 +146,7 @@ fn OutcomeGraph() -> impl IntoView {
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
             <DotSvg
-                info_graph=outcome_info_graph.into()
+                info_graph=outcome_info_graph_get.into()
                 dot_src_and_styles=dot_src_and_styles.into()
             />
         </Transition>
