@@ -1,7 +1,11 @@
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
 use interruptible::InterruptSignal;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
-use std::collections::HashMap;
 use tokio::sync::mpsc;
 
 use peace_webi_model::{FlowOutcomeInfoGraphs, FlowProgressInfoGraphs};
@@ -28,6 +32,13 @@ pub struct CmdExecToLeptosCtx {
     pub flow_outcome_actual_info_graphs: FlowOutcomeInfoGraphs<CmdExecutionId>,
     /// The interrupt channel sender for each `CmdExecution`.
     pub cmd_exec_interrupt_txs: HashMap<CmdExecutionId, mpsc::Sender<InterruptSignal>>,
+    /// The `cmd_execution_id` of the active `CmdExecution`.
+    ///
+    /// # Design
+    ///
+    /// This should go away, and instead be a value returned to the client and
+    /// stored in the URL.
+    pub cmd_execution_id: Arc<Mutex<Option<CmdExecutionId>>>,
 }
 
 impl CmdExecToLeptosCtx {
@@ -38,6 +49,7 @@ impl CmdExecToLeptosCtx {
         flow_outcome_example_info_graphs: FlowOutcomeInfoGraphs<FlowId>,
         flow_outcome_actual_info_graphs: FlowOutcomeInfoGraphs<CmdExecutionId>,
         cmd_exec_interrupt_txs: HashMap<CmdExecutionId, mpsc::Sender<InterruptSignal>>,
+        cmd_execution_id: Arc<Mutex<Option<CmdExecutionId>>>,
     ) -> Self {
         Self {
             flow_progress_example_info_graphs,
@@ -45,6 +57,7 @@ impl CmdExecToLeptosCtx {
             flow_outcome_example_info_graphs,
             flow_outcome_actual_info_graphs,
             cmd_exec_interrupt_txs,
+            cmd_execution_id,
         }
     }
 }

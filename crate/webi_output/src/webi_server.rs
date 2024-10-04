@@ -2,7 +2,7 @@ use std::{net::SocketAddr, path::Path};
 
 use axum::Router;
 use futures::stream::{self, StreamExt, TryStreamExt};
-use leptos::{view, SignalSet, WriteSignal};
+use leptos::view;
 use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
@@ -47,8 +47,6 @@ impl WebiServer {
         let cmd_exec_to_leptos_ctx = CmdExecToLeptosCtx::default();
         let (cmd_exec_request_tx, cmd_exec_request_rx) =
             mpsc::channel::<CmdExecReqT>(CMD_EXEC_REQUEST_CHANNEL_LIMIT);
-        let (cmd_execution_id_signal_tx, cmd_execution_id_signal_rx) =
-            mpsc::channel::<WriteSignal<Option<CmdExecutionId>>>(4);
 
         let flow_id = flow_webi_fns.flow.flow_id().clone();
         let webi_server_task = Self::leptos_server_start(
@@ -57,13 +55,11 @@ impl WebiServer {
             cmd_exec_request_tx,
             cmd_exec_to_leptos_ctx.clone(),
             flow_id,
-            cmd_execution_id_signal_tx,
         );
         let cmd_execution_listener_task = Self::cmd_execution_listener(
             cmd_exec_request_rx,
             cmd_exec_to_leptos_ctx,
             flow_webi_fns,
-            cmd_execution_id_signal_rx,
         );
 
         tokio::try_join!(webi_server_task, cmd_execution_listener_task).map(|((), ())| ())
@@ -73,7 +69,6 @@ impl WebiServer {
         mut cmd_exec_request_rx: mpsc::Receiver<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_webi_fns: FlowWebiFns<E, CmdExecReqT>,
-        mut cmd_execution_id_signal_rx: mpsc::Receiver<WriteSignal<Option<CmdExecutionId>>>,
     ) -> Result<(), WebiError>
     where
         E: 'static,
@@ -100,6 +95,7 @@ impl WebiServer {
             flow_outcome_example_info_graphs,
             flow_outcome_actual_info_graphs,
             mut cmd_exec_interrupt_txs,
+            cmd_execution_id: cmd_execution_id_arc,
         } = cmd_exec_to_leptos_ctx;
 
         // TODO: remove this mock?
@@ -178,17 +174,13 @@ impl WebiServer {
         };
 
         let cmd_execution_receiver_task = async move {
-            let cmd_execution_id_signal = cmd_execution_id_signal_rx.recv().await.expect(
-                "Expected to receive `cmd_execution_id_signal` setter from `leptos_server_start`.",
-            );
-
-            eprintln!("Got `cmd_execution_id_signal`.");
-
             while let Some((cmd_execution_id, mut webi_output, mut web_ui_update_rx)) =
                 cmd_exec_join_handle_rx.recv().await
             {
                 eprintln!("Received cmd_execution_id to run: {cmd_execution_id:?}");
-                cmd_execution_id_signal.set(Some(cmd_execution_id));
+                if let Ok(mut cmd_execution_id_guard) = cmd_execution_id_arc.lock() {
+                    *cmd_execution_id_guard = Some(cmd_execution_id);
+                }
 
                 let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();
                 let flow_outcome_actual_info_graphs = flow_outcome_actual_info_graphs.clone();
@@ -295,7 +287,6 @@ impl WebiServer {
         cmd_exec_request_tx: mpsc::Sender<CmdExecReqT>,
         cmd_exec_to_leptos_ctx: CmdExecToLeptosCtx,
         flow_id: FlowId,
-        cmd_execution_id_signal_tx: mpsc::Sender<WriteSignal<Option<CmdExecutionId>>>,
     ) -> Result<(), WebiError>
     where
         CmdExecReqT: Send + 'static,
@@ -356,16 +347,10 @@ impl WebiServer {
                         flow_outcome_example_info_graphs,
                         flow_outcome_actual_info_graphs,
                         cmd_exec_interrupt_txs,
+                        cmd_execution_id,
                     } = cmd_exec_to_leptos_ctx.clone();
 
                     let (flow_id, flow_id_set) = leptos::create_signal(flow_id.clone());
-                    let (cmd_execution_id, cmd_execution_id_set) =
-                        leptos::create_signal::<Option<CmdExecutionId>>(None);
-
-                    match cmd_execution_id_signal_tx.try_send(cmd_execution_id_set) {
-                        Ok(()) => eprintln!("Successfully sent `cmd_execution_id_set` WriteSignal"),
-                        Err(_) => eprintln!("Failed to send `cmd_execution_id_set` WriteSignal"),
-                    }
 
                     leptos::provide_context(flow_id);
                     leptos::provide_context(flow_id_set);
@@ -374,8 +359,8 @@ impl WebiServer {
                     leptos::provide_context(flow_outcome_example_info_graphs.clone());
                     leptos::provide_context(flow_outcome_actual_info_graphs.clone());
                     leptos::provide_context(cmd_exec_interrupt_txs.clone());
+                    leptos::provide_context(cmd_execution_id.clone());
                     leptos::provide_context(cmd_exec_request_tx.clone());
-                    leptos::provide_context(cmd_execution_id);
                 },
                 move || {
                     let app_home = app_home.clone();

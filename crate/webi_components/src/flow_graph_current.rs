@@ -25,14 +25,10 @@ pub fn FlowGraphCurrent() -> impl IntoView {
 
 #[server]
 pub async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
-    use leptos::{ReadSignal, SignalGet};
     use peace_cmd_model::CmdExecutionId;
     use peace_webi_model::FlowProgressInfoGraphs;
 
-    let cmd_execution_id = leptos::use_context::<ReadSignal<Option<CmdExecutionId>>>()
-        .as_ref()
-        .map(SignalGet::get)
-        .flatten();
+    let cmd_execution_id = leptos::use_context::<Option<CmdExecutionId>>().flatten();
     let flow_progress_info_graphs = leptos::use_context::<FlowProgressInfoGraphs<CmdExecutionId>>();
     let progress_info_graph = if let Some(flow_progress_info_graphs) = flow_progress_info_graphs {
         let flow_progress_info_graphs = flow_progress_info_graphs.lock().ok();
@@ -85,14 +81,10 @@ fn ProgressGraph() -> impl IntoView {
 
 #[server]
 pub async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
-    use leptos::{ReadSignal, SignalGet};
     use peace_cmd_model::CmdExecutionId;
     use peace_webi_model::FlowOutcomeInfoGraphs;
 
-    let cmd_execution_id = leptos::use_context::<ReadSignal<Option<CmdExecutionId>>>()
-        .as_ref()
-        .map(SignalGet::get)
-        .flatten();
+    let cmd_execution_id = leptos::use_context::<Option<CmdExecutionId>>().flatten();
     let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<CmdExecutionId>>();
     let outcome_info_graph = if let Some(flow_outcome_info_graphs) = flow_outcome_info_graphs {
         let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
