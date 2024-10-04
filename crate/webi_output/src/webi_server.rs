@@ -137,16 +137,17 @@ impl WebiServer {
                 let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(128);
                 let webi_output = WebiOutput::new(web_ui_update_tx);
 
+                let webi_output_clone = webi_output.clone_without_tx();
                 let CmdExecSpawnCtx {
                     interrupt_tx,
                     cmd_exec_task,
-                } = cmd_exec_spawn_fn(webi_output.clone(), cmd_exec_request);
+                } = cmd_exec_spawn_fn(webi_output, cmd_exec_request);
 
                 let cmd_execution_id = cmd_execution_id_next;
                 cmd_execution_id_next = CmdExecutionId::new(*cmd_execution_id + 1);
 
                 cmd_exec_join_handle_tx
-                    .send((cmd_execution_id, webi_output, web_ui_update_rx))
+                    .send((cmd_execution_id, webi_output_clone, web_ui_update_rx))
                     .await
                     .expect("Expected `cmd_execution_receiver_task` to be running.");
 
@@ -160,7 +161,9 @@ impl WebiServer {
                         let cmd_exec_join_handle = tokio::task::spawn_local(cmd_exec_task);
 
                         match cmd_exec_join_handle.await {
-                            Ok(()) => {}
+                            Ok(()) => {
+                                eprintln!("`cmd_execution` completed.")
+                            }
                             Err(join_error) => {
                                 eprintln!(
                                     "Failed to wait for `cmd_execution` to complete. {join_error}"
@@ -171,6 +174,8 @@ impl WebiServer {
                     })
                     .await;
             }
+
+            eprintln!("cmd_execution_starter_task no longer waiting for requests.");
         };
 
         let cmd_execution_receiver_task = async move {
@@ -247,6 +252,7 @@ impl WebiServer {
                         if let Ok(mut flow_outcome_actual_info_graphs) =
                             flow_outcome_actual_info_graphs.lock()
                         {
+                            eprintln!("Inserting flow_outcome_actual_info_graph for cmd_execution_id {cmd_execution_id:?}");
                             flow_outcome_actual_info_graphs
                                 .insert(cmd_execution_id, flow_outcome_actual_info_graph);
                         }
@@ -268,6 +274,9 @@ impl WebiServer {
                 // ```
 
                 // tokio::join!(web_ui_update_task, cmd_exec_join_task);
+
+                // TODO: spawn task and go back to waiting, instead of waiting for this task, or
+                // drop the txes
                 web_ui_update_task.await;
             }
         };

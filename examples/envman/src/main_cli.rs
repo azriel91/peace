@@ -171,6 +171,7 @@ async fn run_command(
                         eprintln!("Received cmd_exec_request: {cmd_exec_request:?}");
                         match cmd_exec_request {
                             CmdExecRequest::Discover => {
+                                eprintln!("Running discover.");
                                 let _ =
                                     EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
                                         async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
@@ -179,6 +180,7 @@ async fn run_command(
                                     .await;
                             }
                             CmdExecRequest::Ensure => {
+                                eprintln!("Would run ensure, but not implemented.");
                                 // TODO: implement
                             }
                         }

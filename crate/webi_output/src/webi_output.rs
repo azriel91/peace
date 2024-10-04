@@ -28,13 +28,21 @@ pub struct WebiOutput {
     /// * Progress `InfoGraph` diagram needs to be restyled.
     /// * Outcome `InfoGraph` diagram needs to be restyled.
     /// * Execution result to show to the user.
-    web_ui_update_tx: mpsc::Sender<WebUiUpdate>,
+    web_ui_update_tx: Option<mpsc::Sender<WebUiUpdate>>,
 }
 
 impl WebiOutput {
     /// Returns a new `WebiOutput`.
     pub fn new(web_ui_update_tx: mpsc::Sender<WebUiUpdate>) -> Self {
-        Self { web_ui_update_tx }
+        Self {
+            web_ui_update_tx: Some(web_ui_update_tx),
+        }
+    }
+
+    pub fn clone_without_tx(&self) -> Self {
+        Self {
+            web_ui_update_tx: None,
+        }
     }
 }
 
@@ -57,15 +65,16 @@ where
         let progress_limit = progress_tracker.progress_limit().clone();
         let message = progress_tracker.message().cloned();
 
-        let _result = self
-            .web_ui_update_tx
-            .send(WebUiUpdate::ItemProgressStatus {
-                item_id,
-                progress_status,
-                progress_limit,
-                message,
-            })
-            .await;
+        if let Some(web_ui_update_tx) = self.web_ui_update_tx.as_ref() {
+            let _result = web_ui_update_tx
+                .send(WebUiUpdate::ItemProgressStatus {
+                    item_id,
+                    progress_status,
+                    progress_limit,
+                    message,
+                })
+                .await;
+        }
     }
 
     #[cfg(feature = "output_progress")]
@@ -78,10 +87,11 @@ where
     {
         // TODO: send rendered / renderable markdown to the channel.
         let markdown_src = String::from("TODO: presentable.present(md_presenter).");
-        let _result = self
-            .web_ui_update_tx
-            .send(WebUiUpdate::Markdown { markdown_src })
-            .await;
+        if let Some(web_ui_update_tx) = self.web_ui_update_tx.as_ref() {
+            let _result = web_ui_update_tx
+                .send(WebUiUpdate::Markdown { markdown_src })
+                .await;
+        }
         Ok(())
     }
 
