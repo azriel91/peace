@@ -166,7 +166,7 @@ async fn run_command(
                     .boxed_local()
                 }),
                 cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
-                    use peace::rt::cmds::StatesDiscoverCmd;
+                    use peace::rt::cmds::{EnsureCmd, StatesDiscoverCmd};
                     let cmd_exec_task = async move {
                         match cmd_exec_request {
                             CmdExecRequest::Discover => {
@@ -179,8 +179,12 @@ async fn run_command(
                                     .await;
                             }
                             CmdExecRequest::Ensure => {
-                                eprintln!("Would run ensure, but not implemented.");
-                                // TODO: implement
+                                eprintln!("Running ensure.");
+                                let _ =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async { EnsureCmd::exec(cmd_ctx).await }.boxed_local()
+                                    })
+                                    .await;
                             }
                         }
                     }
