@@ -24,13 +24,18 @@ pub fn FlowGraphCurrent() -> impl IntoView {
 }
 
 #[server]
-pub async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
+async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
+    use std::sync::{Arc, Mutex};
+
     use peace_cmd_model::CmdExecutionId;
     use peace_webi_model::FlowProgressInfoGraphs;
 
-    let cmd_execution_id = leptos::use_context::<Option<CmdExecutionId>>().flatten();
+    let cmd_execution_id = leptos::use_context::<Arc<Mutex<Option<CmdExecutionId>>>>();
     let flow_progress_info_graphs = leptos::use_context::<FlowProgressInfoGraphs<CmdExecutionId>>();
-    let progress_info_graph = if let Some(flow_progress_info_graphs) = flow_progress_info_graphs {
+    let progress_info_graph = if let Some((cmd_execution_id, flow_progress_info_graphs)) =
+        cmd_execution_id.zip(flow_progress_info_graphs)
+    {
+        let cmd_execution_id = cmd_execution_id.lock().ok().as_deref().copied().flatten();
         let flow_progress_info_graphs = flow_progress_info_graphs.lock().ok();
 
         cmd_execution_id
@@ -52,10 +57,11 @@ fn ProgressGraph() -> impl IntoView {
         leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
-    leptos::create_effect(move |_| {
-        leptos::spawn_local(async move {
+    leptos::create_local_resource(
+        move || (),
+        move |()| async move {
             loop {
-                use std::time::Duration;
+                use gloo_timers::future::TimeoutFuture;
 
                 let progress_info_graph = progress_info_graph_fetch().await.unwrap_or_default();
                 let dot_src_and_styles =
@@ -64,10 +70,10 @@ fn ProgressGraph() -> impl IntoView {
                 progress_info_graph_set.set(progress_info_graph);
                 dot_src_and_styles_set.set(Some(dot_src_and_styles));
 
-                leptos::set_timeout(|| {}, Duration::from_millis(30000));
+                TimeoutFuture::new(500).await;
             }
-        });
-    });
+        },
+    );
 
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
@@ -80,18 +86,34 @@ fn ProgressGraph() -> impl IntoView {
 }
 
 #[server]
-pub async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
+async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
+    use std::sync::{Arc, Mutex};
+
     use peace_cmd_model::CmdExecutionId;
     use peace_webi_model::FlowOutcomeInfoGraphs;
 
-    let cmd_execution_id = leptos::use_context::<Option<CmdExecutionId>>().flatten();
+    let cmd_execution_id = leptos::use_context::<Arc<Mutex<Option<CmdExecutionId>>>>();
     let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<CmdExecutionId>>();
-    let outcome_info_graph = if let Some(flow_outcome_info_graphs) = flow_outcome_info_graphs {
+    let outcome_info_graph = if let Some((cmd_execution_id, flow_outcome_info_graphs)) =
+        cmd_execution_id.zip(flow_outcome_info_graphs)
+    {
+        let cmd_execution_id = cmd_execution_id.lock().ok().as_deref().copied().flatten();
         let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
+
+        match cmd_execution_id {
+            Some(cmd_execution_id) => leptos::logging::log!(
+                "fetching outcome_info_graph for cmd_execution_id: {cmd_execution_id:?}"
+            ),
+            None => leptos::logging::log!("No cmd_execution_id in leptos context."),
+        }
 
         cmd_execution_id
             .zip(flow_outcome_info_graphs)
             .and_then(|(cmd_execution_id, flow_outcome_info_graphs)| {
+                leptos::logging::log!(
+                    "rendering outcome graph for cmd_execution_id: {cmd_execution_id:?}"
+                );
+
                 flow_outcome_info_graphs.get(&cmd_execution_id).cloned()
             })
             .unwrap_or_else(InfoGraph::default)
@@ -107,11 +129,14 @@ fn OutcomeGraph() -> impl IntoView {
     let (outcome_info_graph, outcome_info_graph_set) = leptos::create_signal(InfoGraph::default());
     let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
 
-    leptos::create_effect(move |_| {
-        leptos::spawn_local(async move {
-            loop {
-                use std::time::Duration;
+    leptos::create_local_resource(
+        move || (),
+        move |()| async move {
+            use gloo_timers::future::TimeoutFuture;
 
+            leptos::logging::log!("on_load for OutcomeGraph");
+
+            loop {
                 let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();
                 let dot_src_and_styles =
                     IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
@@ -119,10 +144,10 @@ fn OutcomeGraph() -> impl IntoView {
                 outcome_info_graph_set.set(outcome_info_graph);
                 dot_src_and_styles_set.set(Some(dot_src_and_styles));
 
-                leptos::set_timeout(|| {}, Duration::from_millis(30000));
+                TimeoutFuture::new(500).await;
             }
-        });
-    });
+        },
+    );
 
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>

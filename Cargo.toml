@@ -175,6 +175,7 @@ enser = "0.1.4"
 erased-serde = "0.4.5"
 fn_graph = { version = "0.13.3", features = ["async", "graph_info", "interruptible", "resman"] }
 futures = "0.3.30"
+gloo-timers = "0.3.0"
 heck = "0.5.0"
 indexmap = "2.5.0"
 indicatif = "0.17.8"

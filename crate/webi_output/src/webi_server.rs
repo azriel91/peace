@@ -184,7 +184,10 @@ impl WebiServer {
             {
                 eprintln!("Received cmd_execution_id to run: {cmd_execution_id:?}");
                 if let Ok(mut cmd_execution_id_guard) = cmd_execution_id_arc.lock() {
+                    eprintln!("Inserting cmd_execution_id to run: {cmd_execution_id:?}");
                     *cmd_execution_id_guard = Some(cmd_execution_id);
+                } else {
+                    eprintln!("Unable to insert cmd_execution_id to run: {cmd_execution_id:?}");
                 }
 
                 let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();

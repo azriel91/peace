@@ -22,6 +22,7 @@ test = false
 [dependencies]
 dot_ix = { workspace = true, features = ["rt", "web_components"] }
 futures = { workspace = true }
+gloo-timers = { workspace = true, features = ["futures"] }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
