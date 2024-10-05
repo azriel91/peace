@@ -134,6 +134,12 @@ fn OutcomeGraph() -> impl IntoView {
                     IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
 
                 if outcome_info_graph != outcome_info_graph_get.get_untracked() {
+                    if let Ok(outcome_info_graph_serialized) =
+                        serde_yaml::to_string(&outcome_info_graph)
+                    {
+                        leptos::logging::log!("{outcome_info_graph_serialized}");
+                    }
+
                     outcome_info_graph_set.set(outcome_info_graph);
                     dot_src_and_styles_set.set(Some(dot_src_and_styles));
                 }

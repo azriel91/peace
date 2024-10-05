@@ -269,20 +269,17 @@ fn theme_styles_augment(
                             item_progress_statuses,
                         } = outcome_info_graph_variant
                         {
-                            // todo!("if none of `item_progress_statuses` is Running or greater, set
-                            // visibility to invisible.");
-
                             // 1. For each of the item IDs that referred to this node
-                            let node_should_be_partially_visible = node_id_to_item_id_sets
+                            let node_should_be_visible = node_id_to_item_id_sets
                                 .get(node_id)
                                 // 2. Look up their statuses
                                 .and_then(|referrer_item_ids| {
                                     referrer_item_ids.iter().find_map(|referrer_item_id| {
                                         // 3. If any of them are running or complete, then it should
-                                        //    be visible, so we negate it
+                                        //    be visible.
                                         item_progress_statuses.get(referrer_item_id).map(
                                             |progress_status| {
-                                                !matches!(
+                                                matches!(
                                                     progress_status,
                                                     ProgressStatus::Running
                                                         | ProgressStatus::RunningStalled
@@ -295,14 +292,14 @@ fn theme_styles_augment(
                                 })
                                 .unwrap_or(false);
 
-                            if node_should_be_partially_visible {
+                            if node_should_be_visible {
+                                None
+                            } else {
                                 let mut css_class_partials_partially_visible =
                                     CssClassPartials::with_capacity(1);
                                 css_class_partials_partially_visible
-                                    .insert(ThemeAttr::Visibility, "0.5".to_string());
+                                    .insert(ThemeAttr::Visibility, "invisible".to_string());
                                 Some(css_class_partials_partially_visible)
-                            } else {
-                                None
                             }
                         } else {
                             None
@@ -1213,15 +1210,14 @@ fn node_id_mappings_and_hierarchy<'item_location>(
             {
                 let referrer_item_ids = item_location_to_item_id_sets.get(item_location);
                 if let Some(referrer_item_ids) = referrer_item_ids {
-                    if let Some(node_refererrer_item_ids) =
-                        node_id_to_item_id_sets.get_mut(&node_id)
+                    if let Some(node_referrer_item_ids) = node_id_to_item_id_sets.get_mut(&node_id)
                     {
-                        node_refererrer_item_ids.extend(referrer_item_ids);
+                        node_referrer_item_ids.extend(referrer_item_ids);
                     } else {
-                        let mut node_refererrer_item_ids =
+                        let mut node_referrer_item_ids =
                             HashSet::with_capacity(referrer_item_ids.len());
-                        node_refererrer_item_ids.extend(referrer_item_ids.iter());
-                        node_id_to_item_id_sets.insert(node_id.clone(), node_refererrer_item_ids);
+                        node_referrer_item_ids.extend(referrer_item_ids.iter());
+                        node_id_to_item_id_sets.insert(node_id.clone(), node_referrer_item_ids);
                     }
                 }
             }
@@ -1231,6 +1227,10 @@ fn node_id_mappings_and_hierarchy<'item_location>(
                 node_id_to_item_locations,
                 item_location_to_node_id_segments,
                 item_location_ancestors,
+                #[cfg(feature = "output_progress")]
+                item_location_to_item_id_sets,
+                #[cfg(feature = "output_progress")]
+                node_id_to_item_id_sets,
             );
             node_hierarchy.insert(node_id, node_hierarchy_top_level);
 
@@ -1327,6 +1327,14 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
     node_id_to_item_locations: &mut IndexMap<NodeId, &'item_location ItemLocation>,
     item_location_to_node_id_segments: &mut HashMap<&'item_location ItemLocation, String>,
     item_location_ancestors: SmallVec<[&'item_location ItemLocation; 8]>,
+    #[cfg(feature = "output_progress")] item_location_to_item_id_sets: &'item_location HashMap<
+        ItemLocation,
+        HashSet<ItemId>,
+    >,
+    #[cfg(feature = "output_progress")] node_id_to_item_id_sets: &mut HashMap<
+        NodeId,
+        HashSet<&'item_location ItemId>,
+    >,
 ) -> NodeHierarchy {
     let mut node_hierarchy = NodeHierarchy::with_capacity(item_location_tree.children().len());
 
@@ -1344,11 +1352,34 @@ fn node_hierarchy_build_and_item_location_insert<'item_location>(
                 });
             node_id_to_item_locations.insert(child_node_id.clone(), child_item_location);
 
+            // Track the items that this node is associated with.
+            #[cfg(feature = "output_progress")]
+            {
+                let referrer_item_ids = item_location_to_item_id_sets.get(child_item_location);
+                if let Some(referrer_item_ids) = referrer_item_ids {
+                    if let Some(node_referrer_item_ids) =
+                        node_id_to_item_id_sets.get_mut(&child_node_id)
+                    {
+                        node_referrer_item_ids.extend(referrer_item_ids);
+                    } else {
+                        let mut node_referrer_item_ids =
+                            HashSet::with_capacity(referrer_item_ids.len());
+                        node_referrer_item_ids.extend(referrer_item_ids.iter());
+                        node_id_to_item_id_sets
+                            .insert(child_node_id.clone(), node_referrer_item_ids);
+                    }
+                }
+            }
+
             let child_hierarchy = node_hierarchy_build_and_item_location_insert(
                 child_item_location_tree,
                 node_id_to_item_locations,
                 item_location_to_node_id_segments,
                 child_item_location_ancestors,
+                #[cfg(feature = "output_progress")]
+                item_location_to_item_id_sets,
+                #[cfg(feature = "output_progress")]
+                node_id_to_item_id_sets,
             );
             node_hierarchy.insert(child_node_id, child_hierarchy);
         });
