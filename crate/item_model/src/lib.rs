@@ -13,6 +13,7 @@ pub use crate::{
     item_location::ItemLocation,
     item_location_ancestors::ItemLocationAncestors,
     item_location_state::ItemLocationState,
+    item_location_state_in_progress::ItemLocationStateInProgress,
     item_location_tree::ItemLocationTree,
     item_location_type::ItemLocationType,
     item_locations_combined::ItemLocationsCombined,
@@ -28,6 +29,7 @@ mod item_interactions_example;
 mod item_location;
 mod item_location_ancestors;
 mod item_location_state;
+mod item_location_state_in_progress;
 mod item_location_tree;
 mod item_location_type;
 mod item_locations_combined;
