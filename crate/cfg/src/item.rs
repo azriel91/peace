@@ -77,6 +77,7 @@ pub trait Item: DynClone {
     ///
     /// [state concept]: https://peace.mk/book/technical_concepts/state.html
     /// [`State`]: crate::state::State
+    #[cfg(not(feature = "output_progress"))]
     type State: Clone
         + Debug
         + Display
@@ -86,6 +87,36 @@ pub trait Item: DynClone {
         + Send
         + Sync
         + 'static;
+
+    /// Summary of the managed item's state.
+    ///
+    /// **For an extensive explanation of state, and how to define it, please
+    /// see the [state concept] as well as the [`State`] type.**
+    ///
+    /// This type is used to represent the current state of the item (if it
+    /// exists), the goal state of the item (what is intended to exist), and
+    /// is used in the *diff* calculation -- what is the difference between the
+    /// current and goal states.
+    ///
+    /// # Examples
+    ///
+    /// * A file's state may be its path, and a hash of its contents.
+    /// * A server's state may be its operating system, CPU and memory capacity,
+    ///   IP address, and ID.
+    ///
+    /// [state concept]: https://peace.mk/book/technical_concepts/state.html
+    /// [`State`]: crate::state::State
+    #[cfg(feature = "output_progress")]
+    type State: Clone
+        + Debug
+        + Display
+        + PartialEq
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static
+        + crate::RefInto<peace_item_model::ItemLocationState>;
 
     /// Diff between the current and target [`State`]s.
     ///

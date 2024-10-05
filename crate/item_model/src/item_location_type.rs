@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// The type of resource locaction.
+/// The type of resource location.
 ///
 /// This affects how the [`ItemLocation`] is rendered.
 ///
