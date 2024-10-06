@@ -27,8 +27,12 @@ use crate::{
     ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
 };
 
+#[cfg(feature = "output_progress")]
+use peace_cfg::RefInto;
 #[cfg(feature = "item_state_example")]
 use peace_data::marker::Example;
+#[cfg(feature = "output_progress")]
+use peace_item_model::ItemLocationState;
 
 /// Wraps a type implementing [`Item`].
 ///
@@ -137,6 +141,11 @@ where
             I::state_current(fn_ctx, &params, data).await?
         };
         resources.borrow_mut::<Current<I::State>>().0 = Some(state_current.clone());
+
+        #[cfg(feature = "output_progress")]
+        fn_ctx
+            .progress_sender()
+            .item_location_state_send(RefInto::<ItemLocationState>::into(&state_current));
 
         Ok(state_current)
     }
@@ -319,6 +328,11 @@ where
             .map_err(Into::<E>::into)?;
 
         resources.borrow_mut::<Current<I::State>>().0 = Some(state_ensured.clone());
+
+        #[cfg(feature = "output_progress")]
+        fn_ctx
+            .progress_sender()
+            .item_location_state_send(RefInto::<ItemLocationState>::into(&state_ensured));
 
         Ok(state_ensured)
     }

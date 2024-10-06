@@ -2,7 +2,8 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     progress::{
-        CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId,
+        CmdProgressUpdate, ItemLocationState, ProgressDelta, ProgressMsgUpdate, ProgressUpdate,
+        ProgressUpdateAndId,
     },
     ItemId,
 };
@@ -78,5 +79,23 @@ impl<'exec> ProgressSender<'exec> {
             }
             .into(),
         );
+    }
+
+    /// Sends an `ItemLocationState` update.
+    ///
+    /// # Implementors
+    ///
+    /// This is only intended for use by the Peace framework for rendering.
+    ///
+    /// # Maintainers
+    ///
+    /// This is used in `ItemWrapper`.
+    pub fn item_location_state_send(&self, item_location_state: ItemLocationState) {
+        let _progress_send_unused =
+            self.progress_tx
+                .try_send(CmdProgressUpdate::ItemLocationState {
+                    item_id: self.item_id.clone(),
+                    item_location_state,
+                });
     }
 }
