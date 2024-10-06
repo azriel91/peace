@@ -5,7 +5,10 @@ use std::{
 
 use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::{
+    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
+    item_model::ItemLocationState,
+};
 use peace::{
     cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
     data::{
@@ -155,7 +158,7 @@ impl Item for VecCopyItem {
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        let apply_check = if diff.0.0.is_empty() {
+        let apply_check = if diff.0 .0.is_empty() {
             ApplyCheck::ExecNotRequired
         } else {
             #[cfg(not(feature = "output_progress"))]
@@ -328,6 +331,13 @@ impl fmt::Display for VecCopyState {
     }
 }
 
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state VecCopyState> for ItemLocationState {
+    fn from(_vec_copy_state: &'state VecCopyState) -> ItemLocationState {
+        ItemLocationState::Exists
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct VecCopyDiff(VecDiff<u8>);
 
@@ -355,7 +365,7 @@ impl fmt::Display for VecCopyDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         self.0
-            .0
+             .0
             .iter()
             .try_for_each(|vec_diff_type| match vec_diff_type {
                 VecDiffType::Removed { index, len } => {

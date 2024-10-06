@@ -4,6 +4,9 @@ use chrono::{DateTime, Utc};
 use peace::cfg::state::Timestamped;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// S3 bucket state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum S3BucketState {
@@ -50,6 +53,16 @@ impl fmt::Display for S3BucketState {
                     "exists at https://s3.console.aws.amazon.com/s3/buckets/{name}"
                 ),
             },
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state S3BucketState> for ItemLocationState {
+    fn from(s3_bucket_state: &'state S3BucketState) -> ItemLocationState {
+        match s3_bucket_state {
+            S3BucketState::Some { .. } => ItemLocationState::Exists,
+            S3BucketState::None => ItemLocationState::NotExists,
         }
     }
 }

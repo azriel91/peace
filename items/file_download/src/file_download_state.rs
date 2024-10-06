@@ -2,6 +2,9 @@ use std::{fmt, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// State of the contents of the file to download.
 ///
 /// This is used to represent the state of the source file, as well as the
@@ -68,6 +71,18 @@ impl fmt::Display for FileDownloadState {
                 let path = path.display();
                 write!(f, "`{path}` (contents not tracked)")
             }
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state FileDownloadState> for ItemLocationState {
+    fn from(file_download_state: &'state FileDownloadState) -> ItemLocationState {
+        match file_download_state {
+            FileDownloadState::None { .. } => ItemLocationState::NotExists,
+            FileDownloadState::StringContents { .. }
+            | FileDownloadState::Length { .. }
+            | FileDownloadState::Unknown { .. } => todo!(),
         }
     }
 }

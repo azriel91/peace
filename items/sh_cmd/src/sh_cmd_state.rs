@@ -3,6 +3,9 @@ use std::{fmt, marker::PhantomData};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// State of the shell command execution.
 ///
 /// * If the command has never been executed, this will be `None`.
@@ -31,6 +34,16 @@ impl<Id> fmt::Display for ShCmdState<Id> {
         match self {
             Self::None => write!(f, "<none>"),
             Self::Some { stderr, .. } => stderr.fmt(f),
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state ShCmdState> for ItemLocationState {
+    fn from(sh_cmd_state: &'state ShCmdState) -> ItemLocationState {
+        match sh_cmd_state {
+            Some { .. } => ItemLocationState::Exists,
+            None => ItemLocationState::NotExists,
         }
     }
 }

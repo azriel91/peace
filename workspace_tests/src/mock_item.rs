@@ -6,7 +6,10 @@ use std::{
 };
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::{
+    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
+    item_model::ItemLocationState,
+};
 use peace::{
     cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
     data::{
@@ -503,6 +506,13 @@ impl DerefMut for MockState {
 impl fmt::Display for MockState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state MockState> for ItemLocationState {
+    fn from(_mock_state: &'state MockState) -> ItemLocationState {
+        ItemLocationState::Exists
     }
 }
 
