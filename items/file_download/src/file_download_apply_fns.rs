@@ -17,8 +17,8 @@ use peace::cfg::{state::FetchedOpt, ApplyCheck, FnCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{
-    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStateDiff,
-    FileDownloadStatePhysical,
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
+    FileDownloadStateDiff, FileDownloadStatePhysical,
 };
 
 #[cfg(feature = "output_progress")]
@@ -240,11 +240,11 @@ where
     pub async fn apply_check(
         _params: &FileDownloadParams<Id>,
         _data: FileDownloadData<'_, Id>,
-        State {
+        FileDownloadState(State {
             logical: file_state_current,
             physical: _e_tag,
-        }: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
-        _file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        }): &FileDownloadState,
+        _file_download_state_goal: &FileDownloadState,
         diff: &FileDownloadStateDiff,
     ) -> Result<ApplyCheck, FileDownloadError> {
         let apply_check = match diff {
@@ -333,10 +333,10 @@ where
         _fn_ctx: FnCtx<'_>,
         _params: &FileDownloadParams<Id>,
         _data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
-        file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        _file_download_state_current: &FileDownloadState,
+        file_download_state_goal: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         // TODO: fetch headers but don't write to file.
 
         Ok(file_download_state_goal.clone())
@@ -346,10 +346,10 @@ where
         fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
-        file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        _file_download_state_current: &FileDownloadState,
+        file_download_state_goal: &FileDownloadState,
         diff: &FileDownloadStateDiff,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         match diff {
             FileDownloadStateDiff::Deleted { path } => {
                 #[cfg(feature = "output_progress")]
@@ -371,7 +371,7 @@ where
                 let e_tag = Self::file_download(fn_ctx, params, data).await?;
 
                 let mut file_download_state_ensured = file_download_state_goal.clone();
-                file_download_state_ensured.physical = e_tag;
+                file_download_state_ensured.0.physical = e_tag;
 
                 Ok(file_download_state_ensured)
             }

@@ -3,7 +3,9 @@ use peace::{
     diff::{Changeable, Tracked},
 };
 
-use crate::{ETag, FileDownloadError, FileDownloadStateDiff, FileDownloadStatePhysical};
+use crate::{
+    FileDownloadError, FileDownloadState, FileDownloadStateDiff, FileDownloadStatePhysical,
+};
 
 /// Download status diff function.
 #[derive(Debug)]
@@ -11,17 +13,17 @@ pub struct FileDownloadStateDiffFn;
 
 impl FileDownloadStateDiffFn {
     pub async fn state_diff(
-        state_current: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
-        state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        state_current: &FileDownloadState,
+        state_goal: &FileDownloadState,
     ) -> Result<FileDownloadStateDiff, FileDownloadError> {
-        let State {
+        let FileDownloadState(State {
             logical: file_state_current,
             physical: e_tag_current,
-        } = state_current;
-        let State {
+        }) = state_current;
+        let FileDownloadState(State {
             logical: file_state_goal,
             physical: e_tag_goal,
-        } = state_goal;
+        }) = state_goal;
 
         let file_state_diff = {
             match (file_state_current, file_state_goal) {

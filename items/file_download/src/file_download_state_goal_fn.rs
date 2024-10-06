@@ -1,13 +1,14 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{state::FetchedOpt, FnCtx, State},
+    cfg::{state::FetchedOpt, FnCtx},
     params::Params,
 };
 use reqwest::{header::ETAG, Url};
 
 use crate::{
-    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStatePhysical,
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
+    FileDownloadStatePhysical,
 };
 
 /// Reads the goal state of the file to download.
@@ -22,7 +23,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<Option<State<FileDownloadStatePhysical, FetchedOpt<ETag>>>, FileDownloadError> {
+    ) -> Result<Option<FileDownloadState>, FileDownloadError> {
         if let Some((src, dest)) = params_partial.src().zip(params_partial.dest()) {
             Self::file_state_goal(&data, src, dest).await.map(Some)
         } else {
@@ -34,7 +35,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         let file_state_goal = Self::file_state_goal(&data, params.src(), params.dest()).await?;
 
         Ok(file_state_goal)
@@ -44,7 +45,7 @@ where
         data: &FileDownloadData<'_, Id>,
         src_url: &Url,
         dest: &Path,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         let client = data.client();
         let response = client
             .get(src_url.clone())
@@ -89,7 +90,7 @@ where
                 }
             };
 
-            Ok(State::new(file_download_state, e_tag))
+            Ok(FileDownloadState::new(file_download_state, e_tag))
         } else {
             Err(FileDownloadError::SrcFileUndetermined { status_code })
         }

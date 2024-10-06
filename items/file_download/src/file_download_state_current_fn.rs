@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{state::FetchedOpt, FnCtx, State},
+    cfg::{state::FetchedOpt, FnCtx},
     params::Params,
 };
 #[cfg(not(target_arch = "wasm32"))]
@@ -11,7 +11,8 @@ use tokio::{fs::File, io::AsyncReadExt};
 use peace::rt_model::Storage;
 
 use crate::{
-    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStatePhysical,
+    FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
+    FileDownloadStatePhysical,
 };
 
 /// Reads the current state of the file to download.
@@ -26,7 +27,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<Option<State<FileDownloadStatePhysical, FetchedOpt<ETag>>>, FileDownloadError> {
+    ) -> Result<Option<FileDownloadState>, FileDownloadError> {
         if let Some(dest) = params_partial.dest() {
             Self::state_current_internal(data, dest).await.map(Some)
         } else {
@@ -38,7 +39,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         let dest = params.dest();
 
         Self::state_current_internal(data, dest).await
@@ -47,13 +48,13 @@ where
     async fn state_current_internal(
         data: FileDownloadData<'_, Id>,
         dest: &Path,
-    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();
         #[cfg(target_arch = "wasm32")]
         let file_exists = data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
-            return Ok(State::new(
+            return Ok(FileDownloadState::new(
                 FileDownloadStatePhysical::None {
                     path: Some(dest.to_path_buf()),
                 },
@@ -71,11 +72,11 @@ where
         let e_tag = data
             .state_working()
             .as_ref()
-            .map(|state_working| state_working.physical.clone())
+            .map(|state_working| state_working.0.physical.clone())
             .or_else(|| {
                 data.state_prev()
                     .get()
-                    .map(|state_prev| state_prev.physical.clone())
+                    .map(|state_prev| state_prev.0.physical.clone())
             })
             .unwrap_or(
                 if let FileDownloadStatePhysical::None { .. } = &file_state {
@@ -85,7 +86,7 @@ where
                 },
             );
 
-        Ok(State::new(file_state, e_tag))
+        Ok(FileDownloadState::new(file_state, e_tag))
     }
 
     #[cfg(not(target_arch = "wasm32"))]

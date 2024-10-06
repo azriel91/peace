@@ -1,14 +1,14 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId, State},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
-    FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
+    FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
+    FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
     FileDownloadStateGoalFn, FileDownloadStatePhysical,
 };
 
@@ -56,7 +56,7 @@ where
     type Data<'exec> = FileDownloadData<'exec, Id>;
     type Error = FileDownloadError;
     type Params<'exec> = FileDownloadParams<Id>;
-    type State = State<FileDownloadStatePhysical, FetchedOpt<ETag>>;
+    type State = FileDownloadState;
     type StateDiff = FileDownloadStateDiff;
 
     fn id(&self) -> &ItemId {
@@ -73,7 +73,7 @@ where
     fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
         let dest = params.dest();
 
-        State::new(
+        FileDownloadState::new(
             FileDownloadStatePhysical::StringContents {
                 path: dest.to_path_buf(),
                 contents: "example contents".to_string(),
@@ -128,7 +128,8 @@ where
         _data: Self::Data<'_>,
     ) -> Result<Self::State, FileDownloadError> {
         let path = params_partial.dest().map(Path::to_path_buf);
-        let state = State::new(FileDownloadStatePhysical::None { path }, FetchedOpt::Tbd);
+        let state =
+            FileDownloadState::new(FileDownloadStatePhysical::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
 

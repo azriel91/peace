@@ -9,6 +9,7 @@ pub use crate::{
     file_download_params::{
         FileDownloadParams, FileDownloadParamsFieldWise, FileDownloadParamsPartial,
     },
+    file_download_state::FileDownloadState,
     file_download_state_current_fn::FileDownloadStateCurrentFn,
     file_download_state_diff::FileDownloadStateDiff,
     file_download_state_diff_fn::FileDownloadStateDiffFn,
@@ -25,6 +26,7 @@ mod file_download_data;
 mod file_download_error;
 mod file_download_item;
 mod file_download_params;
+mod file_download_state;
 mod file_download_state_current_fn;
 mod file_download_state_diff;
 mod file_download_state_diff_fn;
