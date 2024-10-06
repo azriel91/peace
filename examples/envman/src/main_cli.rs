@@ -166,7 +166,7 @@ async fn run_command(
                     .boxed_local()
                 }),
                 cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
-                    use peace::rt::cmds::{EnsureCmd, StatesDiscoverCmd};
+                    use peace::rt::cmds::{CleanCmd, EnsureCmd, StatesDiscoverCmd};
                     let cmd_exec_task = async move {
                         match cmd_exec_request {
                             CmdExecRequest::Discover => {
@@ -183,6 +183,14 @@ async fn run_command(
                                 let _ =
                                     EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
                                         async { EnsureCmd::exec(cmd_ctx).await }.boxed_local()
+                                    })
+                                    .await;
+                            }
+                            CmdExecRequest::Clean => {
+                                eprintln!("Running clean.");
+                                let _ =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async { CleanCmd::exec(cmd_ctx).await }.boxed_local()
                                     })
                                     .await;
                             }

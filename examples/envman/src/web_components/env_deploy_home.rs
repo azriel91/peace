@@ -47,6 +47,28 @@ async fn deploy_cmd_exec() -> Result<(), ServerFnError> {
     Ok(())
 }
 
+#[server]
+async fn clean_cmd_exec() -> Result<(), ServerFnError> {
+    use tokio::sync::mpsc;
+
+    use crate::web_components::CmdExecRequest;
+
+    let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
+
+    if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
+        match cmd_exec_request_tx.try_send(CmdExecRequest::Clean) {
+            Ok(()) => {}
+            Err(e) => {
+                leptos::logging::log!("Failed to send Clean cmd: {e}");
+            }
+        }
+    } else {
+        leptos::logging::log!("`cmd_exec_request_tx` is None");
+    }
+
+    Ok(())
+}
+
 /// Top level component of the `WebiOutput`.
 #[component]
 pub fn EnvDeployHome() -> impl IntoView {
@@ -131,6 +153,18 @@ pub fn EnvDeployHome() -> impl IntoView {
                     class=button_tw_classes
                 >
                     "🚀 Deploy"
+                </button>
+                <button
+                    on:click=move |_| {
+                        spawn_local(async {
+                            clean_cmd_exec()
+                                .await
+                                .expect("Expected `clean_cmd_exec` call to succeed.");
+                        });
+                    }
+                    class=button_tw_classes
+                >
+                    "🧹 Clean"
                 </button>
                 <FlowGraphCurrent />
             </div>

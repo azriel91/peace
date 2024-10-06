@@ -7,4 +7,6 @@ pub enum CmdExecRequest {
     Discover,
     /// Run the `EnsureCmd`.
     Ensure,
+    /// Run the `CleanCmd`.
+    Clean,
 }
