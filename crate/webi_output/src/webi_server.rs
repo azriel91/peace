@@ -19,7 +19,7 @@ use crate::{
 use std::collections::HashMap;
 
 #[cfg(feature = "output_progress")]
-use peace_cmd_model::CmdBlockItemInteractionType;
+use peace_core::progress::CmdBlockItemInteractionType;
 
 /// Maximum number of `CmdExecReqT`s to queue up.
 const CMD_EXEC_REQUEST_CHANNEL_LIMIT: usize = 1024;

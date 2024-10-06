@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "output_progress")]
-use peace_cmd_model::CmdBlockItemInteractionType;
-#[cfg(feature = "output_progress")]
 use peace_core::{
-    progress::{ProgressLimit, ProgressStatus},
+    progress::{CmdBlockItemInteractionType, ProgressLimit, ProgressStatus},
     ItemId,
 };
 

@@ -25,6 +25,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                CmdBlockItemInteractionType,
                 CmdProgressUpdate,
                 ProgressComplete,
                 ProgressDelta,
@@ -34,7 +35,6 @@ cfg_if::cfg_if! {
                 ProgressUpdateAndId,
             },
         };
-        use peace_cmd_model::CmdBlockItemInteractionType;
         use tokio::sync::mpsc::Sender;
     }
 }

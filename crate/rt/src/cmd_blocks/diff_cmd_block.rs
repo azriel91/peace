@@ -26,8 +26,7 @@ use crate::cmds::DiffStateSpec;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::CmdProgressUpdate;
-        use peace_cmd_model::CmdBlockItemInteractionType;
+        use peace_cfg::progress::{CmdBlockItemInteractionType, CmdProgressUpdate};
         use tokio::sync::mpsc::Sender;
     }
 }

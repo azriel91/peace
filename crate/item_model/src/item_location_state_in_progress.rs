@@ -1,5 +1,4 @@
-use peace_cmd_model::CmdBlockItemInteractionType;
-use peace_core::progress::{ProgressComplete, ProgressStatus};
+use peace_core::progress::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
 use serde::{Deserialize, Serialize};
 
 use crate::ItemLocationState;
@@ -69,12 +68,12 @@ pub enum ItemLocationStateInProgress {
 }
 
 impl ItemLocationStateInProgress {
+    #[rustfmt::skip]
     pub fn from(
         cmd_block_item_interaction_type: CmdBlockItemInteractionType,
         item_location_state: ItemLocationState,
         progress_status: ProgressStatus,
     ) -> Self {
-        #[rustfmt::skip]
         match (
             cmd_block_item_interaction_type,
             item_location_state,

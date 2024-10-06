@@ -6,8 +6,8 @@ use tokio::sync::mpsc;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cmd_model::CmdBlockItemInteractionType;
         use peace_core::progress::{
+            CmdBlockItemInteractionType,
             // ProgressComplete,
             // ProgressLimit,
             // ProgressStatus,

@@ -33,6 +33,7 @@ cfg_if::cfg_if! {
 
         use peace_cfg::{
             progress::{
+                CmdBlockItemInteractionType,
                 CmdProgressUpdate,
                 ProgressComplete,
                 ProgressMsgUpdate,
@@ -41,7 +42,6 @@ cfg_if::cfg_if! {
                 ProgressSender,
             },
         };
-        use peace_cmd_model::CmdBlockItemInteractionType;
     }
 }
 

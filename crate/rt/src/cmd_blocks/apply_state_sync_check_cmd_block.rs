@@ -15,6 +15,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                CmdBlockItemInteractionType,
                 CmdProgressUpdate,
                 ProgressComplete,
                 ProgressDelta,
@@ -23,7 +24,6 @@ cfg_if::cfg_if! {
                 ProgressUpdateAndId,
             },
         };
-        use peace_cmd_model::CmdBlockItemInteractionType;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -271,6 +271,11 @@ where
     type InputT = (StatesCurrentStored, StatesCurrent);
     type Outcome = Self::InputT;
 
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Read
+    }
+
     fn input_fetch(
         &self,
         resources: &mut Resources<SetUp>,
@@ -429,6 +434,11 @@ where
         StatesGoal,
     );
     type Outcome = Self::InputT;
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Read
+    }
 
     fn input_fetch(
         &self,

@@ -5,8 +5,11 @@ use peace_fmt::Presentable;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cmd_model::CmdBlockItemInteractionType;
-        use peace_core::progress::{ProgressTracker, ProgressUpdateAndId};
+        use peace_core::progress::{
+            CmdBlockItemInteractionType,
+            ProgressTracker,
+            ProgressUpdateAndId,
+        };
 
         use crate::CmdProgressTracker;
     }

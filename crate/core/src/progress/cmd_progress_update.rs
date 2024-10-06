@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::progress::ProgressUpdateAndId;
+use crate::progress::{CmdBlockItemInteractionType, ProgressUpdateAndId};
 
 /// Progress update that affects all `ProgressTracker`s.
 ///

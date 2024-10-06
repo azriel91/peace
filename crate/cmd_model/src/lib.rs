@@ -14,9 +14,6 @@ pub use crate::{
     value_and_stream_outcome::ValueAndStreamOutcome,
 };
 
-#[cfg(feature = "output_progress")]
-pub use crate::cmd_block_item_interaction_type::CmdBlockItemInteractionType;
-
 mod cmd_block_desc;
 mod cmd_block_outcome;
 mod cmd_execution_error;
@@ -25,6 +22,3 @@ mod cmd_outcome;
 mod item_stream_outcome;
 mod stream_outcome_and_errors;
 mod value_and_stream_outcome;
-
-#[cfg(feature = "output_progress")]
-mod cmd_block_item_interaction_type;
