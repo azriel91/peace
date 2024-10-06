@@ -9,11 +9,11 @@ pub use crate::{
     file_download_params::{
         FileDownloadParams, FileDownloadParamsFieldWise, FileDownloadParamsPartial,
     },
-    file_download_state::FileDownloadState,
     file_download_state_current_fn::FileDownloadStateCurrentFn,
     file_download_state_diff::FileDownloadStateDiff,
     file_download_state_diff_fn::FileDownloadStateDiffFn,
     file_download_state_goal_fn::FileDownloadStateGoalFn,
+    file_download_state_physical::FileDownloadStatePhysical,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -25,11 +25,11 @@ mod file_download_data;
 mod file_download_error;
 mod file_download_item;
 mod file_download_params;
-mod file_download_state;
 mod file_download_state_current_fn;
 mod file_download_state_diff;
 mod file_download_state_diff_fn;
 mod file_download_state_goal_fn;
+mod file_download_state_physical;
 
 #[cfg(target_arch = "wasm32")]
 mod storage_form;

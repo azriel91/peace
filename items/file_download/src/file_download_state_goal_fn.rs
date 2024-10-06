@@ -6,7 +6,9 @@ use peace::{
 };
 use reqwest::{header::ETAG, Url};
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
+use crate::{
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStatePhysical,
+};
 
 /// Reads the goal state of the file to download.
 #[derive(Debug)]
@@ -20,7 +22,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
+    ) -> Result<Option<State<FileDownloadStatePhysical, FetchedOpt<ETag>>>, FileDownloadError> {
         if let Some((src, dest)) = params_partial.src().zip(params_partial.dest()) {
             Self::file_state_goal(&data, src, dest).await.map(Some)
         } else {
@@ -32,7 +34,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         let file_state_goal = Self::file_state_goal(&data, params.src(), params.dest()).await?;
 
         Ok(file_state_goal)
@@ -42,7 +44,7 @@ where
         data: &FileDownloadData<'_, Id>,
         src_url: &Url,
         dest: &Path,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         let client = data.client();
         let response = client
             .get(src_url.clone())
@@ -70,19 +72,19 @@ where
                     }
                     .await?;
 
-                    FileDownloadState::StringContents {
+                    FileDownloadStatePhysical::StringContents {
                         path: dest.to_path_buf(),
                         contents: remote_contents,
                     }
                 } else {
                     // Stream it later.
-                    FileDownloadState::Length {
+                    FileDownloadStatePhysical::Length {
                         path: dest.to_path_buf(),
                         byte_count: remote_file_length,
                     }
                 }
             } else {
-                FileDownloadState::Unknown {
+                FileDownloadStatePhysical::Unknown {
                     path: dest.to_path_buf(),
                 }
             };

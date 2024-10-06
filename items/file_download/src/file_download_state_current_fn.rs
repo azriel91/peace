@@ -10,7 +10,9 @@ use tokio::{fs::File, io::AsyncReadExt};
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
+use crate::{
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStatePhysical,
+};
 
 /// Reads the current state of the file to download.
 #[derive(Debug)]
@@ -24,7 +26,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
+    ) -> Result<Option<State<FileDownloadStatePhysical, FetchedOpt<ETag>>>, FileDownloadError> {
         if let Some(dest) = params_partial.dest() {
             Self::state_current_internal(data, dest).await.map(Some)
         } else {
@@ -36,7 +38,7 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         let dest = params.dest();
 
         Self::state_current_internal(data, dest).await
@@ -45,14 +47,14 @@ where
     async fn state_current_internal(
         data: FileDownloadData<'_, Id>,
         dest: &Path,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();
         #[cfg(target_arch = "wasm32")]
         let file_exists = data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             return Ok(State::new(
-                FileDownloadState::None {
+                FileDownloadStatePhysical::None {
                     path: Some(dest.to_path_buf()),
                 },
                 FetchedOpt::Tbd,
@@ -75,11 +77,13 @@ where
                     .get()
                     .map(|state_prev| state_prev.physical.clone())
             })
-            .unwrap_or(if let FileDownloadState::None { .. } = &file_state {
-                FetchedOpt::Tbd
-            } else {
-                FetchedOpt::None
-            });
+            .unwrap_or(
+                if let FileDownloadStatePhysical::None { .. } = &file_state {
+                    FetchedOpt::Tbd
+                } else {
+                    FetchedOpt::None
+                },
+            );
 
         Ok(State::new(file_state, e_tag))
     }
@@ -87,7 +91,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn read_file_contents(
         dest: &std::path::Path,
-    ) -> Result<FileDownloadState, FileDownloadError> {
+    ) -> Result<FileDownloadStatePhysical, FileDownloadError> {
         let mut file = File::open(dest)
             .await
             .map_err(FileDownloadError::DestFileOpen)?;
@@ -96,7 +100,7 @@ where
             .await
             .map_err(FileDownloadError::DestMetadataRead)?;
         let file_state = if metadata.len() > crate::IN_MEMORY_CONTENTS_MAX {
-            FileDownloadState::Unknown {
+            FileDownloadStatePhysical::Unknown {
                 path: dest.to_path_buf(),
             }
         } else {
@@ -105,7 +109,7 @@ where
             file.read_to_string(&mut buffer)
                 .await
                 .map_err(FileDownloadError::DestFileRead)?;
-            FileDownloadState::StringContents {
+            FileDownloadStatePhysical::StringContents {
                 path: dest.to_path_buf(),
                 contents: buffer,
             }
@@ -117,7 +121,7 @@ where
     async fn read_file_contents(
         dest: &std::path::Path,
         storage: &Storage,
-    ) -> Result<FileDownloadState, FileDownloadError> {
+    ) -> Result<FileDownloadStatePhysical, FileDownloadError> {
         let file_state = storage
             .get_item_opt(dest)?
             .map(|contents| {
@@ -127,22 +131,22 @@ where
                     .try_into()
                     .map(|byte_count: u64| {
                         if byte_count > crate::IN_MEMORY_CONTENTS_MAX {
-                            FileDownloadState::Unknown {
+                            FileDownloadStatePhysical::Unknown {
                                 path: dest.to_path_buf(),
                             }
                         } else {
-                            FileDownloadState::StringContents {
+                            FileDownloadStatePhysical::StringContents {
                                 path: dest.to_path_buf(),
                                 contents: contents.clone(),
                             }
                         }
                     })
-                    .unwrap_or_else(|_| FileDownloadState::StringContents {
+                    .unwrap_or_else(|_| FileDownloadStatePhysical::StringContents {
                         path: dest.to_path_buf(),
                         contents: contents.clone(),
                     })
             })
-            .unwrap_or(FileDownloadState::None {
+            .unwrap_or(FileDownloadStatePhysical::None {
                 path: Some(dest.to_path_buf()),
             });
 

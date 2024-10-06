@@ -17,8 +17,8 @@ use peace::cfg::{state::FetchedOpt, ApplyCheck, FnCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{
-    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
-    FileDownloadStateDiff,
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadStateDiff,
+    FileDownloadStatePhysical,
 };
 
 #[cfg(feature = "output_progress")]
@@ -243,8 +243,8 @@ where
         State {
             logical: file_state_current,
             physical: _e_tag,
-        }: &State<FileDownloadState, FetchedOpt<ETag>>,
-        _file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
+        }: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        _file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
     ) -> Result<ApplyCheck, FileDownloadError> {
         let apply_check = match diff {
@@ -273,8 +273,8 @@ where
                 }
             }
             FileDownloadStateDiff::Deleted { .. } => match file_state_current {
-                FileDownloadState::None { .. } => ApplyCheck::ExecNotRequired,
-                FileDownloadState::StringContents {
+                FileDownloadStatePhysical::None { .. } => ApplyCheck::ExecNotRequired,
+                FileDownloadStatePhysical::StringContents {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
                         contents: _,
@@ -294,7 +294,7 @@ where
                         }
                     }
                 }
-                FileDownloadState::Length {
+                FileDownloadStatePhysical::Length {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
                         byte_count: _,
@@ -311,7 +311,7 @@ where
                         progress_limit: ProgressLimit::Bytes(*byte_count),
                     }
                 }
-                FileDownloadState::Unknown { path: _ } => {
+                FileDownloadStatePhysical::Unknown { path: _ } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
                         ApplyCheck::ExecRequired
@@ -333,10 +333,10 @@ where
         _fn_ctx: FnCtx<'_>,
         _params: &FileDownloadParams<Id>,
         _data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
-        file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
+        _file_download_state_current: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         // TODO: fetch headers but don't write to file.
 
         Ok(file_download_state_goal.clone())
@@ -346,10 +346,10 @@ where
         fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
-        file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
+        _file_download_state_current: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
+        file_download_state_goal: &State<FileDownloadStatePhysical, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
-    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+    ) -> Result<State<FileDownloadStatePhysical, FetchedOpt<ETag>>, FileDownloadError> {
         match diff {
             FileDownloadStateDiff::Deleted { path } => {
                 #[cfg(feature = "output_progress")]

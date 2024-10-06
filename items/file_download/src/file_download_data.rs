@@ -8,7 +8,7 @@ use peace::{
     data::{accessors::R, marker::Current, Data},
 };
 
-use crate::{ETag, FileDownloadState};
+use crate::{ETag, FileDownloadStatePhysical};
 
 /// Data used to download a file.
 ///
@@ -25,10 +25,10 @@ where
     client: R<'exec, reqwest::Client>,
 
     /// The previous file download state.
-    state_prev: Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>>,
+    state_prev: Stored<'exec, State<FileDownloadStatePhysical, FetchedOpt<ETag>>>,
 
     /// The file state working copy in memory.
-    state_working: R<'exec, Current<State<FileDownloadState, FetchedOpt<ETag>>>>,
+    state_working: R<'exec, Current<State<FileDownloadStatePhysical, FetchedOpt<ETag>>>>,
 
     /// For wasm, we write to web storage through the `Storage` object.
     ///
@@ -49,11 +49,11 @@ where
         &self.client
     }
 
-    pub fn state_prev(&self) -> &Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>> {
+    pub fn state_prev(&self) -> &Stored<'exec, State<FileDownloadStatePhysical, FetchedOpt<ETag>>> {
         &self.state_prev
     }
 
-    pub fn state_working(&self) -> &Current<State<FileDownloadState, FetchedOpt<ETag>>> {
+    pub fn state_working(&self) -> &Current<State<FileDownloadStatePhysical, FetchedOpt<ETag>>> {
         &self.state_working
     }
 

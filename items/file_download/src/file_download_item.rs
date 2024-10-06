@@ -8,8 +8,8 @@ use peace::{
 
 use crate::{
     ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
-    FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
-    FileDownloadStateGoalFn,
+    FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
+    FileDownloadStateGoalFn, FileDownloadStatePhysical,
 };
 
 /// Item for downloading a file.
@@ -56,7 +56,7 @@ where
     type Data<'exec> = FileDownloadData<'exec, Id>;
     type Error = FileDownloadError;
     type Params<'exec> = FileDownloadParams<Id>;
-    type State = State<FileDownloadState, FetchedOpt<ETag>>;
+    type State = State<FileDownloadStatePhysical, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;
 
     fn id(&self) -> &ItemId {
@@ -74,7 +74,7 @@ where
         let dest = params.dest();
 
         State::new(
-            FileDownloadState::StringContents {
+            FileDownloadStatePhysical::StringContents {
                 path: dest.to_path_buf(),
                 contents: "example contents".to_string(),
             },
@@ -128,7 +128,7 @@ where
         _data: Self::Data<'_>,
     ) -> Result<Self::State, FileDownloadError> {
         let path = params_partial.dest().map(Path::to_path_buf);
-        let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
+        let state = State::new(FileDownloadStatePhysical::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
 
