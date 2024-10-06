@@ -13,10 +13,6 @@ pub enum ItemLocationState {
     /// [`ItemLocation`] does not exist.
     ///
     /// This means it should be rendered invisible / low opacity.
-    Unknown,
-    /// [`ItemLocation`] does not exist.
-    ///
-    /// This means it should be rendered invisible / low opacity.
     NotExists,
     /// [`ItemLocation`] exists.
     ///

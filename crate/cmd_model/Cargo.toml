@@ -32,3 +32,4 @@ tynm = { workspace = true }
 [features]
 default = []
 error_reporting = ["dep:miette"]
+output_progress = []

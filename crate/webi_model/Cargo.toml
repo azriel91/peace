@@ -31,4 +31,7 @@ thiserror = { workspace = true }
 
 [features]
 error_reporting = ["dep:miette"]
-output_progress = ["peace_core/output_progress"]
+output_progress = [
+    "peace_core/output_progress",
+    "peace_cmd_model/output_progress",
+]
