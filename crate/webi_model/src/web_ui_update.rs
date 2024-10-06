@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "output_progress")]
+use peace_cmd_model::CmdBlockItemInteractionType;
+#[cfg(feature = "output_progress")]
 use peace_core::{
     progress::{ProgressLimit, ProgressStatus},
     ItemId,
@@ -12,6 +14,13 @@ use peace_core::{
 /// rendered by `leptos`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum WebUiUpdate {
+    /// A `CmdBlock` has started.
+    #[cfg(feature = "output_progress")]
+    CmdBlockStart {
+        /// The type of interactions the `CmdBlock` has with the
+        /// `ItemLocation`s.
+        cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    },
     /// Item's execution progress status.
     #[cfg(feature = "output_progress")]
     ItemProgressStatus {

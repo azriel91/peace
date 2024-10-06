@@ -7,6 +7,12 @@ use crate::progress::ProgressUpdateAndId;
 /// This is sent at the `CmdExecution` level.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum CmdProgressUpdate {
+    /// A `CmdBlock` has started.
+    CmdBlockStart {
+        /// The type of interactions the `CmdBlock` has with the
+        /// `ItemLocation`s.
+        cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    },
     /// `ProgressUpdateAndId` for a single item.
     ///
     /// # Design Note

@@ -18,6 +18,9 @@ use crate::{
 #[cfg(feature = "output_progress")]
 use std::collections::HashMap;
 
+#[cfg(feature = "output_progress")]
+use peace_cmd_model::CmdBlockItemInteractionType;
+
 /// Maximum number of `CmdExecReqT`s to queue up.
 const CMD_EXEC_REQUEST_CHANNEL_LIMIT: usize = 1024;
 
@@ -196,10 +199,20 @@ impl WebiServer {
                 let web_ui_update_task = async move {
                     // Keep track of item execution progress.
                     #[cfg(feature = "output_progress")]
+                    let mut cmd_block_item_interaction_type_current =
+                        CmdBlockItemInteractionType::Local;
+                    #[cfg(feature = "output_progress")]
                     let mut item_progress_statuses = HashMap::with_capacity(item_count);
 
                     while let Some(web_ui_update) = web_ui_update_rx.recv().await {
                         match web_ui_update {
+                            #[cfg(feature = "output_progress")]
+                            WebUiUpdate::CmdBlockStart {
+                                cmd_block_item_interaction_type,
+                            } => {
+                                cmd_block_item_interaction_type_current =
+                                    cmd_block_item_interaction_type;
+                            }
                             #[cfg(feature = "output_progress")]
                             WebUiUpdate::ItemProgressStatus {
                                 item_id,

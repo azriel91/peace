@@ -41,6 +41,7 @@ cfg_if::cfg_if! {
                 ProgressSender,
             },
         };
+        use peace_cmd_model::CmdBlockItemInteractionType;
     }
 }
 
@@ -429,6 +430,11 @@ where
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
     type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Write
+    }
 
     fn input_fetch(
         &self,

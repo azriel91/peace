@@ -6,6 +6,7 @@ use tokio::sync::mpsc;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use peace_cmd_model::CmdBlockItemInteractionType;
         use peace_core::progress::{
             // ProgressComplete,
             // ProgressLimit,
@@ -53,6 +54,20 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    ) {
+        if let Some(web_ui_update_tx) = self.web_ui_update_tx.as_ref() {
+            let _result = web_ui_update_tx
+                .send(WebUiUpdate::CmdBlockStart {
+                    cmd_block_item_interaction_type,
+                })
+                .await;
+        }
+    }
 
     #[cfg(feature = "output_progress")]
     async fn progress_update(

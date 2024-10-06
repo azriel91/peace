@@ -34,6 +34,7 @@ cfg_if::cfg_if! {
                 ProgressUpdateAndId,
             },
         };
+        use peace_cmd_model::CmdBlockItemInteractionType;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -266,6 +267,11 @@ where
     type InputT = ();
     type Outcome = States<Current>;
 
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Read
+    }
+
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
     }
@@ -409,6 +415,11 @@ where
     type InputT = ();
     type Outcome = States<Goal>;
 
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Read
+    }
+
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())
     }
@@ -551,6 +562,11 @@ where
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = (States<Current>, States<Goal>);
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Read
+    }
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())

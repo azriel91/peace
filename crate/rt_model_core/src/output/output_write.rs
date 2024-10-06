@@ -5,6 +5,7 @@ use peace_fmt::Presentable;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use peace_cmd_model::CmdBlockItemInteractionType;
         use peace_core::progress::{ProgressTracker, ProgressUpdateAndId};
 
         use crate::CmdProgressTracker;
@@ -38,6 +39,17 @@ pub trait OutputWrite<E>: Debug + Unpin {
     /// At the end of command execution, `OutputWrite::progress_end` is called.
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker);
+
+    /// Indicates a particular `CmdBlock` has begun.
+    ///
+    /// # Implementors
+    ///
+    /// This is called whenever a different `CmdBlock` is started.
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    );
 
     /// Renders progress information, and returns when no more progress
     /// information is available to write.

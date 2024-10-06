@@ -12,6 +12,7 @@ use crate::output::{CliColorize, CliMdPresenter, CliOutputBuilder};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use peace_cmd_model::CmdBlockItemInteractionType;
         use peace_core::progress::{
             ProgressComplete,
             ProgressLimit,
@@ -605,6 +606,13 @@ where
             }
             CliProgressFormat::None => {}
         }
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        _cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    ) {
     }
 
     #[cfg(feature = "output_progress")]
