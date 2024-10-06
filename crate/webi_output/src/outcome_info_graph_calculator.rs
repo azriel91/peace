@@ -22,9 +22,12 @@ use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
 
 #[cfg(feature = "output_progress")]
-use peace_core::progress::ProgressStatus;
-#[cfg(feature = "output_progress")]
 use std::collections::HashSet;
+
+#[cfg(feature = "output_progress")]
+use peace_core::progress::{CmdBlockItemInteractionType, ProgressStatus};
+#[cfg(feature = "output_progress")]
+use peace_item_model::{ItemLocationState, ItemLocationStateInProgress};
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
 #[derive(Debug)]
@@ -271,38 +274,21 @@ fn theme_styles_augment(
                             item_progress_statuses,
                         } = outcome_info_graph_variant
                         {
+                            let cmd_block_item_interaction_type = *cmd_block_item_interaction_type;
                             // 1. For each of the item IDs that referred to this node
-                            let node_should_be_visible = node_id_to_item_id_sets
+                            node_id_to_item_id_sets
                                 .get(node_id)
                                 // 2. Look up their statuses
                                 .and_then(|referrer_item_ids| {
                                     referrer_item_ids.iter().find_map(|referrer_item_id| {
-                                        // 3. If any of them are running or complete, then it should
-                                        //    be visible.
-                                        item_progress_statuses.get(referrer_item_id).map(
-                                            |progress_status| {
-                                                matches!(
-                                                    progress_status,
-                                                    ProgressStatus::Running
-                                                        | ProgressStatus::RunningStalled
-                                                        | ProgressStatus::UserPending
-                                                        | ProgressStatus::Complete(_)
-                                                )
-                                            },
+                                        node_css_class_partials(
+                                            cmd_block_item_interaction_type,
+                                            item_location_states,
+                                            referrer_item_id,
+                                            item_progress_statuses,
                                         )
                                     })
                                 })
-                                .unwrap_or(false);
-
-                            if node_should_be_visible {
-                                None
-                            } else {
-                                let mut css_class_partials_partially_visible =
-                                    CssClassPartials::with_capacity(1);
-                                css_class_partials_partially_visible
-                                    .insert(ThemeAttr::Visibility, "invisible".to_string());
-                                Some(css_class_partials_partially_visible)
-                            }
                         } else {
                             None
                         }
@@ -317,6 +303,88 @@ fn theme_styles_augment(
                 );
             }
         });
+}
+
+#[cfg(feature = "output_progress")]
+fn node_css_class_partials(
+    cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    item_location_states: &HashMap<ItemId, ItemLocationState>,
+    referrer_item_id: &&ItemId,
+    item_progress_statuses: &HashMap<ItemId, ProgressStatus>,
+) -> Option<CssClassPartials> {
+    let item_location_state = item_location_states.get(referrer_item_id).copied();
+    let progress_status = item_progress_statuses.get(referrer_item_id);
+
+    // 3. If any of them are running or complete, then it should be visible.
+    item_location_state
+        .zip(progress_status)
+        .and_then(|(item_location_state, progress_status)| {
+            let item_location_state_in_progress = ItemLocationStateInProgress::from(
+                cmd_block_item_interaction_type,
+                item_location_state,
+                progress_status.clone(),
+            );
+
+            match item_location_state_in_progress {
+                ItemLocationStateInProgress::NotExists => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(1);
+                    css_class_partials.insert(ThemeAttr::Visibility, "invisible".to_string());
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::NotExistsError => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(2);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
+                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::DiscoverInProgress => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(3);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "yellow".to_string());
+                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+                    css_class_partials.insert(
+                        ThemeAttr::Animate,
+                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                    );
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::DiscoverError => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(3);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "amber".to_string());
+                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+                    css_class_partials.insert(
+                        ThemeAttr::Animate,
+                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                    );
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::CreateInProgress => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(3);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+                    css_class_partials.insert(
+                        ThemeAttr::Animate,
+                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                    );
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::ModificationInProgress => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(3);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+                    css_class_partials.insert(
+                        ThemeAttr::Animate,
+                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                    );
+                    Some(css_class_partials)
+                }
+                ItemLocationStateInProgress::ExistsOk => None,
+                ItemLocationStateInProgress::ExistsError => {
+                    let mut css_class_partials = CssClassPartials::with_capacity(1);
+                    css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
+                    Some(css_class_partials)
+                }
+            }
+        })
 }
 
 /// Calculates edges and styles from `ItemInteraction`s.
@@ -385,9 +453,9 @@ fn process_item_interactions<'f, 'item_location>(
         }
         OutcomeInfoGraphVariant::Current {
             #[cfg(feature = "output_progress")]
-            cmd_block_item_interaction_type,
+                cmd_block_item_interaction_type: _,
             #[cfg(feature = "output_progress")]
-            item_location_states,
+                item_location_states: _,
             #[cfg(feature = "output_progress")]
             item_progress_statuses,
         } => {
