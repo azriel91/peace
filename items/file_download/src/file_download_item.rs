@@ -190,7 +190,7 @@ where
 
         let location_client: ItemLocationAncestors = vec![
             ItemLocation::localhost(),
-            ItemLocation::path(params.dest().display().to_string()),
+            ItemLocation::path(format!("📄 {}", params.dest().display())),
         ]
         .into();
 

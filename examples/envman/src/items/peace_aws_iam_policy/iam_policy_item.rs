@@ -193,7 +193,7 @@ where
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
 
-        let iam_policy_name = params.name().to_string();
+        let iam_policy_name = format!("📝 {}", params.name());
 
         let item_interaction = ItemInteractionPush::new(
             ItemLocationAncestors::new(vec![ItemLocation::localhost()]),

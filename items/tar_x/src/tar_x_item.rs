@@ -183,7 +183,7 @@ where
 
         let location: ItemLocationAncestors = vec![
             ItemLocation::localhost(),
-            ItemLocation::path(params.dest().display().to_string()),
+            ItemLocation::path(format!("📁 {}", params.dest().display())),
         ]
         .into();
         let item_interaction = ItemInteractionWithin::new(location).into();

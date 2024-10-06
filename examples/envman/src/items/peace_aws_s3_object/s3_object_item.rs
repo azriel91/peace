@@ -201,9 +201,9 @@ where
     ) -> Vec<peace::item_model::ItemInteraction> {
         use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
 
-        let file_path = params.bucket_name().to_string();
-        let bucket_name = params.bucket_name().to_string();
-        let object_name = params.object_key().to_string();
+        let file_path = format!("📄 {}", params.file_path().display());
+        let bucket_name = format!("🪣 {}", params.bucket_name());
+        let object_name = format!("📄 {}", params.object_key());
 
         let item_interaction = ItemInteractionPush::new(
             ItemLocationAncestors::new(vec![

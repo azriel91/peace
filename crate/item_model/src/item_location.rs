@@ -99,7 +99,7 @@ impl ItemLocation {
     /// The string used for an unknown host.
     pub const HOST_UNKNOWN: &'static str = "unknown";
     /// The string used for localhost.
-    pub const LOCALHOST: &'static str = "localhost";
+    pub const LOCALHOST: &'static str = "💻 localhost";
 
     /// Returns a new `ItemLocation`.
     ///
@@ -149,7 +149,7 @@ impl ItemLocation {
         url.host_str()
             .map(|host_str| Self {
                 r#type: ItemLocationType::Host,
-                name: host_str.to_string(),
+                name: format!("🌐 {host_str}"),
             })
             .unwrap_or_else(Self::localhost)
     }
