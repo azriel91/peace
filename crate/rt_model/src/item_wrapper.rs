@@ -124,6 +124,11 @@ where
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<I::State>>().0 = Some(state_current.clone());
+
+            #[cfg(feature = "output_progress")]
+            fn_ctx
+                .progress_sender()
+                .item_location_state_send(RefInto::<ItemLocationState>::into(state_current));
         }
 
         Ok(state_current)

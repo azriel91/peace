@@ -172,6 +172,10 @@ where
         .with_theme(theme)
         .with_css(String::from(
             r#"
+@keyframes node-stroke-dashoffset-move {
+  0%   { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 30; }
+}
 @keyframes stroke-dashoffset-move {
   0%   { stroke-dashoffset: 136; }
   100% { stroke-dashoffset: 0; }
@@ -328,7 +332,7 @@ fn node_css_class_partials(
             match item_location_state_in_progress {
                 ItemLocationStateInProgress::NotExists => {
                     let mut css_class_partials = CssClassPartials::with_capacity(1);
-                    css_class_partials.insert(ThemeAttr::Visibility, "invisible".to_string());
+                    css_class_partials.insert(ThemeAttr::Extra, "opacity-[0.3]".to_string());
                     Some(css_class_partials)
                 }
                 ItemLocationStateInProgress::NotExistsError => {
@@ -343,7 +347,7 @@ fn node_css_class_partials(
                     css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
                     css_class_partials.insert(
                         ThemeAttr::Animate,
-                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
                     );
                     Some(css_class_partials)
                 }
@@ -353,7 +357,7 @@ fn node_css_class_partials(
                     css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
                     css_class_partials.insert(
                         ThemeAttr::Animate,
-                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
                     );
                     Some(css_class_partials)
                 }
@@ -363,7 +367,7 @@ fn node_css_class_partials(
                     css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
                     css_class_partials.insert(
                         ThemeAttr::Animate,
-                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
                     );
                     Some(css_class_partials)
                 }
@@ -373,7 +377,7 @@ fn node_css_class_partials(
                     css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
                     css_class_partials.insert(
                         ThemeAttr::Animate,
-                        "[stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
                     );
                     Some(css_class_partials)
                 }

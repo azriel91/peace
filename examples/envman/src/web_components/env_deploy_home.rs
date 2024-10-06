@@ -11,12 +11,9 @@ async fn discover_cmd_exec() -> Result<(), ServerFnError> {
 
     let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
 
-    leptos::logging::log!("Discover clicked.");
     if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
         match cmd_exec_request_tx.try_send(CmdExecRequest::Discover) {
-            Ok(()) => {
-                leptos::logging::log!("Sent Discover cmd.");
-            }
+            Ok(()) => {}
             Err(e) => {
                 leptos::logging::log!("Failed to send Discover cmd: {e}");
             }
@@ -36,12 +33,9 @@ async fn deploy_cmd_exec() -> Result<(), ServerFnError> {
 
     let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
 
-    leptos::logging::log!("Deploy clicked.");
     if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
         match cmd_exec_request_tx.try_send(CmdExecRequest::Ensure) {
-            Ok(()) => {
-                leptos::logging::log!("Sent Ensure cmd.");
-            }
+            Ok(()) => {}
             Err(e) => {
                 leptos::logging::log!("Failed to send Ensure cmd: {e}");
             }

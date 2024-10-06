@@ -176,8 +176,6 @@ impl WebiServer {
                     })
                     .await;
             }
-
-            eprintln!("cmd_execution_starter_task no longer waiting for requests.");
         };
 
         let cmd_execution_receiver_task = async move {
@@ -185,7 +183,6 @@ impl WebiServer {
                 cmd_exec_join_handle_rx.recv().await
             {
                 if let Ok(mut cmd_execution_id_guard) = cmd_execution_id_arc.lock() {
-                    eprintln!("Inserting cmd_execution_id to run: {cmd_execution_id:?}");
                     *cmd_execution_id_guard = Some(cmd_execution_id);
                 } else {
                     eprintln!("Unable to insert cmd_execution_id to run: {cmd_execution_id:?}");
