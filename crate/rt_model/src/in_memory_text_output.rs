@@ -5,7 +5,7 @@ use crate::Error;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::{ProgressTracker, ProgressUpdateAndId};
+        use peace_cfg::progress::{CmdBlockItemInteractionType, ProgressTracker, ProgressUpdateAndId};
 
         use crate::CmdProgressTracker;
     }
@@ -48,6 +48,13 @@ where
         &mut self,
         _progress_tracker: &ProgressTracker,
         _progress_update_and_id: &ProgressUpdateAndId,
+    ) {
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        _cmd_block_item_interaction_type: CmdBlockItemInteractionType,
     ) {
     }
 
