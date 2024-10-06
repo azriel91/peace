@@ -5,6 +5,8 @@ use peace_core::{
     progress::{CmdBlockItemInteractionType, ProgressLimit, ProgressStatus},
     ItemId,
 };
+#[cfg(feature = "output_progress")]
+use peace_item_model::ItemLocationState;
 
 /// A message that carries what needs to be updated in the web UI.
 ///
@@ -18,6 +20,19 @@ pub enum WebUiUpdate {
         /// The type of interactions the `CmdBlock` has with the
         /// `ItemLocation`s.
         cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    },
+    /// `ItemLocationState` for a single item.
+    ///
+    /// # Design Note
+    ///
+    /// `ItemLocationState` should live in `peace_item_model`, but this creates
+    /// a circular dependency.
+    #[cfg(feature = "output_progress")]
+    ItemLocationState {
+        /// ID of the `Item`.
+        item_id: ItemId,
+        /// The representation of the state of an `ItemLocation`.
+        item_location_state: ItemLocationState,
     },
     /// Item's execution progress status.
     #[cfg(feature = "output_progress")]

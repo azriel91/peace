@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::progress::{CmdBlockItemInteractionType, ProgressUpdateAndId};
+use crate::{
+    progress::{CmdBlockItemInteractionType, ItemLocationState, ProgressUpdateAndId},
+    ItemId,
+};
 
 /// Progress update that affects all `ProgressTracker`s.
 ///
@@ -19,9 +22,21 @@ pub enum CmdProgressUpdate {
     ///
     /// This isn't a tuple newtype as `serde_yaml` `0.9` is unable to serialize
     /// newtype enum variants.
-    Item {
+    ItemProgress {
         /// The update.
         progress_update_and_id: ProgressUpdateAndId,
+    },
+    /// `ItemLocationState` for a single item.
+    ///
+    /// # Design Note
+    ///
+    /// `ItemLocationState` should live in `peace_item_model`, but this creates
+    /// a circular dependency.
+    ItemLocationState {
+        /// ID of the `Item`.
+        item_id: ItemId,
+        /// The representation of the state of an `ItemLocation`.
+        item_location_state: ItemLocationState,
     },
     /// `CmdExecution` has been interrupted, we should indicate this on all
     /// unstarted progress bars.
@@ -32,7 +47,7 @@ pub enum CmdProgressUpdate {
 
 impl From<ProgressUpdateAndId> for CmdProgressUpdate {
     fn from(progress_update_and_id: ProgressUpdateAndId) -> Self {
-        Self::Item {
+        Self::ItemProgress {
             progress_update_and_id,
         }
     }

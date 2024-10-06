@@ -12,15 +12,19 @@ use crate::output::{CliColorize, CliMdPresenter, CliOutputBuilder};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::{
-            CmdBlockItemInteractionType,
-            ProgressComplete,
-            ProgressLimit,
-            ProgressStatus,
-            ProgressTracker,
-            ProgressUpdate,
-            ProgressUpdateAndId,
+        use peace_core::{
+            progress::{
+                CmdBlockItemInteractionType,
+                ProgressComplete,
+                ProgressLimit,
+                ProgressStatus,
+                ProgressTracker,
+                ProgressUpdate,
+                ProgressUpdateAndId,
+            },
+            ItemId,
         };
+        use peace_item_model::ItemLocationState;
         use peace_rt_model_core::{
             indicatif::{ProgressDrawTarget, ProgressStyle},
             CmdProgressTracker,
@@ -612,6 +616,14 @@ where
     async fn cmd_block_start(
         &mut self,
         _cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    ) {
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn item_location_state(
+        &mut self,
+        _item_id: ItemId,
+        _item_location_state: ItemLocationState,
     ) {
     }
 

@@ -3,8 +3,8 @@ use std::ops::ControlFlow;
 use futures::stream::{self, StreamExt};
 use peace_cfg::{
     progress::{
-        CmdBlockItemInteractionType, CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate,
-        ProgressStatus, ProgressTracker, ProgressUpdate, ProgressUpdateAndId,
+        CmdBlockItemInteractionType, CmdProgressUpdate, ItemLocationState, ProgressDelta,
+        ProgressMsgUpdate, ProgressStatus, ProgressTracker, ProgressUpdate, ProgressUpdateAndId,
     },
     ItemId,
 };
@@ -46,7 +46,7 @@ impl Progress {
 
                 ControlFlow::Continue(())
             }
-            CmdProgressUpdate::Item {
+            CmdProgressUpdate::ItemProgress {
                 progress_update_and_id,
             } => {
                 Self::handle_progress_update_and_id(
@@ -55,6 +55,14 @@ impl Progress {
                     progress_update_and_id,
                 )
                 .await;
+
+                ControlFlow::Continue(())
+            }
+            CmdProgressUpdate::ItemLocationState {
+                item_id,
+                item_location_state,
+            } => {
+                Self::handle_item_location_state(output, item_id, item_location_state).await;
 
                 ControlFlow::Continue(())
             }
@@ -115,6 +123,18 @@ impl Progress {
     {
         output
             .cmd_block_start(cmd_block_item_interaction_type)
+            .await;
+    }
+
+    async fn handle_item_location_state<E, O>(
+        output: &mut O,
+        item_id: ItemId,
+        item_location_state: ItemLocationState,
+    ) where
+        O: OutputWrite<E>,
+    {
+        output
+            .item_location_state(item_id, item_location_state)
             .await;
     }
 

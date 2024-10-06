@@ -6,15 +6,19 @@ use tokio::sync::mpsc;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::{
-            CmdBlockItemInteractionType,
-            // ProgressComplete,
-            // ProgressLimit,
-            // ProgressStatus,
-            ProgressTracker,
-            // ProgressUpdate,
-            ProgressUpdateAndId,
+        use peace_core::{
+            progress::{
+                CmdBlockItemInteractionType,
+                // ProgressComplete,
+                // ProgressLimit,
+                // ProgressStatus,
+                ProgressTracker,
+                // ProgressUpdate,
+                ProgressUpdateAndId,
+            },
+            ItemId,
         };
+        use peace_item_model::ItemLocationState;
         use peace_rt_model_core::CmdProgressTracker;
     }
 }
@@ -64,6 +68,22 @@ where
             let _result = web_ui_update_tx
                 .send(WebUiUpdate::CmdBlockStart {
                     cmd_block_item_interaction_type,
+                })
+                .await;
+        }
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn item_location_state(
+        &mut self,
+        item_id: ItemId,
+        item_location_state: ItemLocationState,
+    ) {
+        if let Some(web_ui_update_tx) = self.web_ui_update_tx.as_ref() {
+            let _result = web_ui_update_tx
+                .send(WebUiUpdate::ItemLocationState {
+                    item_id,
+                    item_location_state,
                 })
                 .await;
         }

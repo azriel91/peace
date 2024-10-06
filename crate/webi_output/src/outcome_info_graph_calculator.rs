@@ -266,6 +266,8 @@ fn theme_styles_augment(
                     #[cfg(feature = "output_progress")]
                     {
                         if let OutcomeInfoGraphVariant::Current {
+                            cmd_block_item_interaction_type,
+                            item_location_states,
                             item_progress_statuses,
                         } = outcome_info_graph_variant
                         {
@@ -382,6 +384,10 @@ fn process_item_interactions<'f, 'item_location>(
             }
         }
         OutcomeInfoGraphVariant::Current {
+            #[cfg(feature = "output_progress")]
+            cmd_block_item_interaction_type,
+            #[cfg(feature = "output_progress")]
+            item_location_states,
             #[cfg(feature = "output_progress")]
             item_progress_statuses,
         } => {

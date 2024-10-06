@@ -199,8 +199,9 @@ impl WebiServer {
                 let web_ui_update_task = async move {
                     // Keep track of item execution progress.
                     #[cfg(feature = "output_progress")]
-                    let mut cmd_block_item_interaction_type_current =
-                        CmdBlockItemInteractionType::Local;
+                    let mut cmd_block_item_interaction_type = CmdBlockItemInteractionType::Local;
+                    #[cfg(feature = "output_progress")]
+                    let mut item_location_states = HashMap::with_capacity(item_count);
                     #[cfg(feature = "output_progress")]
                     let mut item_progress_statuses = HashMap::with_capacity(item_count);
 
@@ -208,10 +209,18 @@ impl WebiServer {
                         match web_ui_update {
                             #[cfg(feature = "output_progress")]
                             WebUiUpdate::CmdBlockStart {
-                                cmd_block_item_interaction_type,
+                                cmd_block_item_interaction_type:
+                                    cmd_block_item_interaction_type_next,
                             } => {
-                                cmd_block_item_interaction_type_current =
-                                    cmd_block_item_interaction_type;
+                                cmd_block_item_interaction_type =
+                                    cmd_block_item_interaction_type_next;
+                            }
+                            #[cfg(feature = "output_progress")]
+                            WebUiUpdate::ItemLocationState {
+                                item_id,
+                                item_location_state,
+                            } => {
+                                item_location_states.insert(item_id, item_location_state);
                             }
                             #[cfg(feature = "output_progress")]
                             WebUiUpdate::ItemProgressStatus {
@@ -239,11 +248,15 @@ impl WebiServer {
                         }
 
                         #[cfg(feature = "output_progress")]
+                        let item_location_states_snapshot = item_location_states.clone();
+                        #[cfg(feature = "output_progress")]
                         let item_progress_statuses_snapshot = item_progress_statuses.clone();
 
                         let flow_outcome_actual_info_graph = outcome_info_graph_fn(
                             &mut webi_output,
                             Box::new(move |flow, params_specs, resources| {
+                                #[cfg(feature = "output_progress")]
+                                let item_location_states = item_location_states_snapshot.clone();
                                 #[cfg(feature = "output_progress")]
                                 let item_progress_statuses =
                                     item_progress_statuses_snapshot.clone();
@@ -253,6 +266,10 @@ impl WebiServer {
                                     params_specs,
                                     resources,
                                     OutcomeInfoGraphVariant::Current {
+                                        #[cfg(feature = "output_progress")]
+                                        cmd_block_item_interaction_type,
+                                        #[cfg(feature = "output_progress")]
+                                        item_location_states,
                                         #[cfg(feature = "output_progress")]
                                         item_progress_statuses,
                                     },

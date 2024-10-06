@@ -3,6 +3,10 @@
 // Re-exports
 pub use url::{self, Host, Url};
 
+// TODO: Remove this when we have refactored where progress types live.
+#[cfg(feature = "output_progress")]
+pub use peace_core::progress::ItemLocationState;
+
 pub use crate::{
     item_interaction::{
         ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin,
@@ -22,7 +26,8 @@ pub use crate::item_locations_and_interactions::ItemLocationsAndInteractions;
 
 #[cfg(feature = "output_progress")]
 pub use crate::{
-    item_location_state::ItemLocationState,
+    // TODO: uncomment when we have refactored where progress types live.
+    // item_location_state::ItemLocationState,
     item_location_state_in_progress::ItemLocationStateInProgress,
 };
 
@@ -36,8 +41,9 @@ mod item_location_tree;
 mod item_location_type;
 mod item_locations_combined;
 
-#[cfg(feature = "output_progress")]
-mod item_location_state;
+// TODO: uncomment when we have refactored where progress types live.
+// #[cfg(feature = "output_progress")]
+// mod item_location_state;
 #[cfg(feature = "output_progress")]
 mod item_location_state_in_progress;
 

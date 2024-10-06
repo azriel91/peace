@@ -28,6 +28,7 @@ miette = { workspace = true, optional = true }
 peace_core = { workspace = true }
 peace_cmd_model = { workspace = true }
 peace_fmt = { workspace = true }
+peace_item_model = { workspace = true, optional = true }
 peace_params = { workspace = true }
 peace_resource_rt = { workspace = true }
 serde = { workspace = true }
@@ -43,4 +44,8 @@ base64 = { workspace = true }
 default = []
 error_reporting = ["dep:miette", "peace_cmd_model/error_reporting"]
 output_in_memory = ["indicatif/in_memory"]
-output_progress = ["peace_core/output_progress"]
+output_progress = [
+    "dep:peace_item_model",
+    "peace_core/output_progress",
+    "peace_item_model/output_progress",
+]
