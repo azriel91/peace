@@ -21,6 +21,9 @@ use std::collections::HashMap;
 #[cfg(feature = "output_progress")]
 use peace_core::progress::CmdBlockItemInteractionType;
 
+#[cfg(feature = "output_progress")]
+use crate::ProgressInfoGraphCalculator;
+
 /// Maximum number of `CmdExecReqT`s to queue up.
 const CMD_EXEC_REQUEST_CHANNEL_LIMIT: usize = 1024;
 
@@ -190,7 +193,11 @@ impl WebiServer {
 
                 let flow_progress_actual_info_graphs = flow_progress_actual_info_graphs.clone();
                 let flow_outcome_actual_info_graphs = flow_outcome_actual_info_graphs.clone();
+
+                #[cfg(not(feature = "output_progress"))]
                 let flow_spec_info = flow_spec_info.clone();
+                #[cfg(feature = "output_progress")]
+                let flow_ref = &flow;
 
                 // Update `InfoGraph`s every time `progress_update` is sent.
                 let web_ui_update_task = async move {
@@ -233,9 +240,16 @@ impl WebiServer {
                             }
                         }
 
-                        // TODO: augment progress information.
-                        let mut flow_progress_actual_info_graph =
+                        #[cfg(not(feature = "output_progress"))]
+                        let flow_progress_actual_info_graph =
                             flow_spec_info.to_progress_info_graph();
+
+                        #[cfg(feature = "output_progress")]
+                        let flow_progress_actual_info_graph =
+                            ProgressInfoGraphCalculator::calculate(
+                                flow_ref,
+                                &item_progress_statuses,
+                            );
 
                         if let Ok(mut flow_progress_actual_info_graphs) =
                             flow_progress_actual_info_graphs.lock()

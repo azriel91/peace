@@ -51,6 +51,7 @@ default = []
 output_progress = [
     "peace_cmd_model/output_progress",
     "peace_core/output_progress",
+    "peace_flow_model/output_progress",
     "peace_item_model/output_progress",
     "peace_rt_model_core/output_progress",
     "peace_rt_model/output_progress",
