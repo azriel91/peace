@@ -346,12 +346,10 @@ fn is_usable_returns_false_for_stored() {
 
 #[test]
 fn is_usable_returns_true_for_value_and_in_memory() {
-    assert!(
-        ParamsSpec::<VecA>::Value {
-            value: VecA::default()
-        }
-        .is_usable()
-    );
+    assert!(ParamsSpec::<VecA>::Value {
+        value: VecA::default()
+    }
+    .is_usable());
     assert!(ParamsSpec::<VecA>::InMemory.is_usable());
 }
 

@@ -12,8 +12,8 @@ use crate::{
 };
 
 #[tokio::test]
-async fn reads_states_current_stored_from_disk_when_present()
--> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_current_stored_from_disk_when_present(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),

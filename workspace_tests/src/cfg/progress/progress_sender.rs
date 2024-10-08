@@ -61,8 +61,8 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn inc_is_received_if_sent_before_progress_channel_is_closed()
--> Result<(), Box<dyn std::error::Error>> {
+fn inc_is_received_if_sent_before_progress_channel_is_closed(
+) -> Result<(), Box<dyn std::error::Error>> {
     let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_id, &progress_tx);
@@ -127,8 +127,8 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn tick_is_received_if_sent_before_progress_channel_is_closed()
--> Result<(), Box<dyn std::error::Error>> {
+fn tick_is_received_if_sent_before_progress_channel_is_closed(
+) -> Result<(), Box<dyn std::error::Error>> {
     let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_id, &progress_tx);
@@ -173,9 +173,6 @@ fn debug() {
     let (progress_tx, _progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
-    assert!(
-        format!("{progress_sender:?}").starts_with(
-            r#"ProgressSender { item_id: ItemId("test_item_id"), progress_tx: Sender"#
-        )
-    );
+    assert!(format!("{progress_sender:?}")
+        .starts_with(r#"ProgressSender { item_id: ItemId("test_item_id"), progress_tx: Sender"#));
 }
