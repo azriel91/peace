@@ -332,7 +332,7 @@ fn node_css_class_partials(
             match item_location_state_in_progress {
                 ItemLocationStateInProgress::NotExists => {
                     let mut css_class_partials = CssClassPartials::with_capacity(1);
-                    css_class_partials.insert(ThemeAttr::Extra, "opacity-[0.3]".to_string());
+                    css_class_partials.insert(ThemeAttr::Extra, "opacity-[0.15]".to_string());
                     Some(css_class_partials)
                 }
                 ItemLocationStateInProgress::NotExistsError => {
