@@ -5,7 +5,7 @@ use peace::{
     data::Data,
 };
 
-use crate::{ShCmdExecutionRecord, ShCmdState};
+use crate::{ShCmdExecutionRecord, ShCmdStatePhysical};
 
 /// Data used to run a shell command.
 ///
@@ -19,7 +19,7 @@ where
     Id: Send + Sync + 'static,
 {
     /// Stored states of this item's previous execution.
-    state_current_stored: Stored<'exec, State<ShCmdState<Id>, ShCmdExecutionRecord>>,
+    state_current_stored: Stored<'exec, State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>>,
 
     /// Marker.
     marker: PhantomData<Id>,
@@ -30,7 +30,9 @@ where
     Id: Send + Sync + 'static,
 {
     /// Returns the previous states.
-    pub fn state_current_stored(&self) -> Option<&State<ShCmdState<Id>, ShCmdExecutionRecord>> {
+    pub fn state_current_stored(
+        &self,
+    ) -> Option<&State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>> {
         self.state_current_stored.get()
     }
 }

@@ -8,7 +8,7 @@ use peace::{
 
 use crate::{
     ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
-    ShCmdState, ShCmdStateDiff, ShCmdStateDiffFn,
+    ShCmdStateDiff, ShCmdStateDiffFn, ShCmdStatePhysical,
 };
 
 /// Item for executing a shell command.
@@ -59,7 +59,7 @@ where
     type Data<'exec> = ShCmdData<'exec, Id>;
     type Error = ShCmdError;
     type Params<'exec> = ShCmdParams<Id>;
-    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
+    type State = State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
 
     fn id(&self) -> &ItemId {

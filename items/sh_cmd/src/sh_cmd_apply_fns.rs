@@ -5,8 +5,8 @@ use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
-    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams, ShCmdState,
-    ShCmdStateDiff,
+    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams, ShCmdStateDiff,
+    ShCmdStatePhysical,
 };
 
 /// ApplyFns for the command to execute.
@@ -20,17 +20,17 @@ where
     pub async fn apply_check(
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_current: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ApplyCheck, ShCmdError> {
         let state_current_arg = match &state_current.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let state_goal_arg = match &state_goal.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let apply_check_sh_cmd = params
             .apply_check_sh_cmd()
@@ -42,26 +42,28 @@ where
         ShCmdExecutor::<Id>::exec(&apply_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
-                ShCmdState::Some { stdout, .. } => match stdout.trim().lines().next_back() {
-                    Some("true") => {
-                        #[cfg(not(feature = "output_progress"))]
-                        {
-                            Ok(ApplyCheck::ExecRequired)
-                        }
+                ShCmdStatePhysical::Some { stdout, .. } => {
+                    match stdout.trim().lines().next_back() {
+                        Some("true") => {
+                            #[cfg(not(feature = "output_progress"))]
+                            {
+                                Ok(ApplyCheck::ExecRequired)
+                            }
 
-                        #[cfg(feature = "output_progress")]
-                        Ok(ApplyCheck::ExecRequired {
-                            progress_limit: ProgressLimit::Unknown,
-                        })
+                            #[cfg(feature = "output_progress")]
+                            Ok(ApplyCheck::ExecRequired {
+                                progress_limit: ProgressLimit::Unknown,
+                            })
+                        }
+                        Some("false") => Ok(ApplyCheck::ExecNotRequired),
+                        _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
+                            sh_cmd: apply_check_sh_cmd.clone(),
+                            #[cfg(feature = "error_reporting")]
+                            sh_cmd_string: format!("{apply_check_sh_cmd}"),
+                            stdout: Some(stdout),
+                        }),
                     }
-                    Some("false") => Ok(ApplyCheck::ExecNotRequired),
-                    _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
-                        sh_cmd: apply_check_sh_cmd.clone(),
-                        #[cfg(feature = "error_reporting")]
-                        sh_cmd_string: format!("{apply_check_sh_cmd}"),
-                        stdout: Some(stdout),
-                    }),
-                },
+                }
                 _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
                     sh_cmd: apply_check_sh_cmd.clone(),
                     #[cfg(feature = "error_reporting")]
@@ -75,18 +77,18 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_current: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>, ShCmdError> {
         // TODO: implement properly
         let state_current_arg = match &state_current.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let state_goal_arg = match &state_goal.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()
@@ -102,17 +104,17 @@ where
         _fn_ctx: FnCtx<'_>,
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_current: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let state_current_arg = match &state_current.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let state_goal_arg = match &state_goal.logical {
-            ShCmdState::None => "",
-            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
+            ShCmdStatePhysical::None => "",
+            ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()

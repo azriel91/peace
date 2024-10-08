@@ -4,7 +4,7 @@ use chrono::Utc;
 use peace::cfg::State;
 use tokio::process::Command;
 
-use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdState};
+use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdStatePhysical};
 
 /// Common code to run `ShCmd`s.
 #[derive(Debug)]
@@ -14,7 +14,7 @@ impl<Id> ShCmdExecutor<Id> {
     /// Executes the provided `ShCmd` and returns execution information.
     pub async fn exec(
         sh_cmd: &ShCmd,
-    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let start_datetime = Utc::now();
         let mut command: Command = sh_cmd.into();
         let output = command
@@ -77,7 +77,7 @@ impl<Id> ShCmdExecutor<Id> {
             .to_string();
 
         Ok(State::new(
-            ShCmdState::Some {
+            ShCmdStatePhysical::Some {
                 stdout,
                 stderr,
                 marker: PhantomData,
@@ -94,7 +94,7 @@ impl<Id> ShCmdExecutor<Id> {
     #[cfg(feature = "item_state_example")]
     pub fn exec_blocking(
         sh_cmd: &ShCmd,
-    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let start_datetime = Utc::now();
         let mut command: std::process::Command = sh_cmd.into();
         let output = command.stdin(Stdio::null()).output().map_err(|error| {
@@ -152,7 +152,7 @@ impl<Id> ShCmdExecutor<Id> {
             .to_string();
 
         Ok(State::new(
-            ShCmdState::Some {
+            ShCmdStatePhysical::Some {
                 stdout,
                 stderr,
                 marker: PhantomData,

@@ -7,14 +7,15 @@ use peace::{
     rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
-    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff,
+    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdStateDiff,
+    ShCmdStatePhysical,
 };
 
 /// Creates a file.
 #[derive(Clone, Copy, Debug)]
 pub struct TestFileCreationShCmdItem;
 
-pub type TestFileCreationShCmdStateLogical = ShCmdState<TestFileCreationShCmdItem>;
+pub type TestFileCreationShCmdStateLogical = ShCmdStatePhysical<TestFileCreationShCmdItem>;
 pub type TestFileCreationShCmdState =
     State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>;
 
@@ -172,7 +173,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
             "Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`."
         );
     };
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,
@@ -221,7 +222,7 @@ async fn state_current_returns_shell_command_current_state(
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,
@@ -273,7 +274,7 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
             &TestFileCreationShCmdItem::ID,
         )
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,
@@ -371,7 +372,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command(
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,
@@ -443,7 +444,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command(
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,
@@ -506,7 +507,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStatePhysical::Some {
         stdout,
         stderr,
         marker: _,

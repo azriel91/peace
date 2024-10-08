@@ -22,9 +22,9 @@ pub use crate::{
     sh_cmd_execution_record::ShCmdExecutionRecord,
     sh_cmd_item::ShCmdItem,
     sh_cmd_params::{ShCmdParams, ShCmdParamsFieldWise, ShCmdParamsPartial},
-    sh_cmd_state::ShCmdState,
     sh_cmd_state_diff::ShCmdStateDiff,
     sh_cmd_state_diff_fn::ShCmdStateDiffFn,
+    sh_cmd_state_physical::ShCmdStatePhysical,
 };
 
 pub(crate) use sh_cmd_executor::ShCmdExecutor;
@@ -38,6 +38,6 @@ mod sh_cmd_execution_record;
 mod sh_cmd_executor;
 mod sh_cmd_item;
 mod sh_cmd_params;
-mod sh_cmd_state;
 mod sh_cmd_state_diff;
 mod sh_cmd_state_diff_fn;
+mod sh_cmd_state_physical;

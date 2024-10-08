@@ -12,7 +12,7 @@ use peace::item_model::ItemLocationState;
 /// * If it has been executed, this is `Some(String)` captured from stdout.
 #[derive(Derivative, Serialize, Deserialize, Eq)]
 #[derivative(Clone, Debug, PartialEq)]
-pub enum ShCmdState<Id> {
+pub enum ShCmdStatePhysical<Id> {
     /// The command is not executed.
     ///
     /// Represents when the command has either never been executed, or has been
@@ -29,7 +29,7 @@ pub enum ShCmdState<Id> {
     },
 }
 
-impl<Id> fmt::Display for ShCmdState<Id> {
+impl<Id> fmt::Display for ShCmdStatePhysical<Id> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::None => write!(f, "<none>"),
@@ -39,11 +39,11 @@ impl<Id> fmt::Display for ShCmdState<Id> {
 }
 
 #[cfg(feature = "output_progress")]
-impl<'state, Id> From<&'state ShCmdState<Id>> for ItemLocationState {
-    fn from(sh_cmd_state: &'state ShCmdState<Id>) -> ItemLocationState {
+impl<'state, Id> From<&'state ShCmdStatePhysical<Id>> for ItemLocationState {
+    fn from(sh_cmd_state: &'state ShCmdStatePhysical<Id>) -> ItemLocationState {
         match sh_cmd_state {
-            ShCmdState::Some { .. } => ItemLocationState::Exists,
-            ShCmdState::None => ItemLocationState::NotExists,
+            ShCmdStatePhysical::Some { .. } => ItemLocationState::Exists,
+            ShCmdStatePhysical::None => ItemLocationState::NotExists,
         }
     }
 }
