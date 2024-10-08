@@ -139,7 +139,9 @@ impl WebiServer {
         let cmd_execution_starter_task = async move {
             let mut cmd_execution_id_next = CmdExecutionId::new(0u64);
             while let Some(cmd_exec_request) = cmd_exec_request_rx.recv().await {
-                let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(128);
+                // Note: If we don't have a large enough buffer, we might drop updates,
+                // which may mean a node appears to still be in progress when it has completed.
+                let (web_ui_update_tx, web_ui_update_rx) = mpsc::channel(1024);
                 let webi_output = WebiOutput::new(web_ui_update_tx);
 
                 let webi_output_clone = webi_output.clone_without_tx();
