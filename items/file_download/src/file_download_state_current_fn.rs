@@ -12,7 +12,7 @@ use peace::rt_model::Storage;
 
 use crate::{
     FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
-    FileDownloadStatePhysical,
+    FileDownloadStateLogical,
 };
 
 /// Reads the current state of the file to download.
@@ -55,7 +55,7 @@ where
         let file_exists = data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             return Ok(FileDownloadState::new(
-                FileDownloadStatePhysical::None {
+                FileDownloadStateLogical::None {
                     path: Some(dest.to_path_buf()),
                 },
                 FetchedOpt::Tbd,
@@ -78,13 +78,11 @@ where
                     .get()
                     .map(|state_prev| state_prev.0.physical.clone())
             })
-            .unwrap_or(
-                if let FileDownloadStatePhysical::None { .. } = &file_state {
-                    FetchedOpt::Tbd
-                } else {
-                    FetchedOpt::None
-                },
-            );
+            .unwrap_or(if let FileDownloadStateLogical::None { .. } = &file_state {
+                FetchedOpt::Tbd
+            } else {
+                FetchedOpt::None
+            });
 
         Ok(FileDownloadState::new(file_state, e_tag))
     }
@@ -92,7 +90,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn read_file_contents(
         dest: &std::path::Path,
-    ) -> Result<FileDownloadStatePhysical, FileDownloadError> {
+    ) -> Result<FileDownloadStateLogical, FileDownloadError> {
         let mut file = File::open(dest)
             .await
             .map_err(FileDownloadError::DestFileOpen)?;
@@ -101,7 +99,7 @@ where
             .await
             .map_err(FileDownloadError::DestMetadataRead)?;
         let file_state = if metadata.len() > crate::IN_MEMORY_CONTENTS_MAX {
-            FileDownloadStatePhysical::Unknown {
+            FileDownloadStateLogical::Unknown {
                 path: dest.to_path_buf(),
             }
         } else {
@@ -110,7 +108,7 @@ where
             file.read_to_string(&mut buffer)
                 .await
                 .map_err(FileDownloadError::DestFileRead)?;
-            FileDownloadStatePhysical::StringContents {
+            FileDownloadStateLogical::StringContents {
                 path: dest.to_path_buf(),
                 contents: buffer,
             }
@@ -122,7 +120,7 @@ where
     async fn read_file_contents(
         dest: &std::path::Path,
         storage: &Storage,
-    ) -> Result<FileDownloadStatePhysical, FileDownloadError> {
+    ) -> Result<FileDownloadStateLogical, FileDownloadError> {
         let file_state = storage
             .get_item_opt(dest)?
             .map(|contents| {
@@ -132,22 +130,22 @@ where
                     .try_into()
                     .map(|byte_count: u64| {
                         if byte_count > crate::IN_MEMORY_CONTENTS_MAX {
-                            FileDownloadStatePhysical::Unknown {
+                            FileDownloadStateLogical::Unknown {
                                 path: dest.to_path_buf(),
                             }
                         } else {
-                            FileDownloadStatePhysical::StringContents {
+                            FileDownloadStateLogical::StringContents {
                                 path: dest.to_path_buf(),
                                 contents: contents.clone(),
                             }
                         }
                     })
-                    .unwrap_or_else(|_| FileDownloadStatePhysical::StringContents {
+                    .unwrap_or_else(|_| FileDownloadStateLogical::StringContents {
                         path: dest.to_path_buf(),
                         contents: contents.clone(),
                     })
             })
-            .unwrap_or(FileDownloadStatePhysical::None {
+            .unwrap_or(FileDownloadStateLogical::None {
                 path: Some(dest.to_path_buf()),
             });
 

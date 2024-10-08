@@ -10,7 +10,7 @@ use peace::item_model::ItemLocationState;
 /// This is used to represent the state of the source file, as well as the
 /// destination file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum FileDownloadStatePhysical {
+pub enum FileDownloadStateLogical {
     /// File does not exist.
     None {
         /// Path to the tracked file, if any.
@@ -48,7 +48,7 @@ pub enum FileDownloadStatePhysical {
     },
 }
 
-impl fmt::Display for FileDownloadStatePhysical {
+impl fmt::Display for FileDownloadStateLogical {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::None { path } => {
@@ -76,99 +76,99 @@ impl fmt::Display for FileDownloadStatePhysical {
 }
 
 #[cfg(feature = "output_progress")]
-impl<'state> From<&'state FileDownloadStatePhysical> for ItemLocationState {
-    fn from(file_download_state: &'state FileDownloadStatePhysical) -> ItemLocationState {
+impl<'state> From<&'state FileDownloadStateLogical> for ItemLocationState {
+    fn from(file_download_state: &'state FileDownloadStateLogical) -> ItemLocationState {
         match file_download_state {
-            FileDownloadStatePhysical::None { .. } => ItemLocationState::NotExists,
-            FileDownloadStatePhysical::StringContents { .. }
-            | FileDownloadStatePhysical::Length { .. }
-            | FileDownloadStatePhysical::Unknown { .. } => todo!(),
+            FileDownloadStateLogical::None { .. } => ItemLocationState::NotExists,
+            FileDownloadStateLogical::StringContents { .. }
+            | FileDownloadStateLogical::Length { .. }
+            | FileDownloadStateLogical::Unknown { .. } => todo!(),
         }
     }
 }
 
-impl PartialEq for FileDownloadStatePhysical {
+impl PartialEq for FileDownloadStateLogical {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                FileDownloadStatePhysical::None { path: path_self },
-                FileDownloadStatePhysical::None { path: path_other },
+                FileDownloadStateLogical::None { path: path_self },
+                FileDownloadStateLogical::None { path: path_other },
             ) => path_self == path_other,
             (
-                FileDownloadStatePhysical::Unknown {
+                FileDownloadStateLogical::Unknown {
                     path: path_self, ..
                 },
-                FileDownloadStatePhysical::StringContents {
+                FileDownloadStateLogical::StringContents {
                     path: path_other, ..
                 },
             )
             | (
-                FileDownloadStatePhysical::Unknown {
+                FileDownloadStateLogical::Unknown {
                     path: path_self, ..
                 },
-                FileDownloadStatePhysical::Length {
+                FileDownloadStateLogical::Length {
                     path: path_other, ..
                 },
             )
             | (
-                FileDownloadStatePhysical::StringContents {
+                FileDownloadStateLogical::StringContents {
                     path: path_self, ..
                 },
-                FileDownloadStatePhysical::Unknown {
+                FileDownloadStateLogical::Unknown {
                     path: path_other, ..
                 },
             )
             | (
-                FileDownloadStatePhysical::Length {
+                FileDownloadStateLogical::Length {
                     path: path_self, ..
                 },
-                FileDownloadStatePhysical::Unknown {
+                FileDownloadStateLogical::Unknown {
                     path: path_other, ..
                 },
             )
             | (
-                FileDownloadStatePhysical::Unknown { path: path_self },
-                FileDownloadStatePhysical::Unknown { path: path_other },
+                FileDownloadStateLogical::Unknown { path: path_self },
+                FileDownloadStateLogical::Unknown { path: path_other },
             ) => path_self == path_other,
 
-            (FileDownloadStatePhysical::Unknown { .. }, FileDownloadStatePhysical::None { .. })
-            | (FileDownloadStatePhysical::None { .. }, FileDownloadStatePhysical::Unknown { .. })
+            (FileDownloadStateLogical::Unknown { .. }, FileDownloadStateLogical::None { .. })
+            | (FileDownloadStateLogical::None { .. }, FileDownloadStateLogical::Unknown { .. })
             | (
-                FileDownloadStatePhysical::None { .. },
-                FileDownloadStatePhysical::StringContents { .. },
+                FileDownloadStateLogical::None { .. },
+                FileDownloadStateLogical::StringContents { .. },
             )
             | (
-                FileDownloadStatePhysical::StringContents { .. },
-                FileDownloadStatePhysical::None { .. },
+                FileDownloadStateLogical::StringContents { .. },
+                FileDownloadStateLogical::None { .. },
             )
             | (
-                FileDownloadStatePhysical::StringContents { .. },
-                FileDownloadStatePhysical::Length { .. },
+                FileDownloadStateLogical::StringContents { .. },
+                FileDownloadStateLogical::Length { .. },
             )
-            | (FileDownloadStatePhysical::Length { .. }, FileDownloadStatePhysical::None { .. })
+            | (FileDownloadStateLogical::Length { .. }, FileDownloadStateLogical::None { .. })
             | (
-                FileDownloadStatePhysical::Length { .. },
-                FileDownloadStatePhysical::StringContents { .. },
+                FileDownloadStateLogical::Length { .. },
+                FileDownloadStateLogical::StringContents { .. },
             )
-            | (FileDownloadStatePhysical::None { .. }, FileDownloadStatePhysical::Length { .. }) => {
+            | (FileDownloadStateLogical::None { .. }, FileDownloadStateLogical::Length { .. }) => {
                 false
             }
             (
-                FileDownloadStatePhysical::StringContents {
+                FileDownloadStateLogical::StringContents {
                     path: path_self,
                     contents: contents_self,
                 },
-                FileDownloadStatePhysical::StringContents {
+                FileDownloadStateLogical::StringContents {
                     path: path_other,
                     contents: contents_other,
                 },
             ) => path_self == path_other && contents_self == contents_other,
             (
-                FileDownloadStatePhysical::Length {
+                FileDownloadStateLogical::Length {
                     path: path_self,
                     byte_count: byte_count_self,
                 },
-                FileDownloadStatePhysical::Length {
+                FileDownloadStateLogical::Length {
                     path: path_other,
                     byte_count: byte_count_other,
                 },

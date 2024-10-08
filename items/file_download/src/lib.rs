@@ -14,7 +14,7 @@ pub use crate::{
     file_download_state_diff::FileDownloadStateDiff,
     file_download_state_diff_fn::FileDownloadStateDiffFn,
     file_download_state_goal_fn::FileDownloadStateGoalFn,
-    file_download_state_physical::FileDownloadStatePhysical,
+    file_download_state_logical::FileDownloadStateLogical,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -31,7 +31,7 @@ mod file_download_state_current_fn;
 mod file_download_state_diff;
 mod file_download_state_diff_fn;
 mod file_download_state_goal_fn;
-mod file_download_state_physical;
+mod file_download_state_logical;
 
 #[cfg(target_arch = "wasm32")]
 mod storage_form;

@@ -9,7 +9,7 @@ use peace::{
 use crate::{
     FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
     FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
-    FileDownloadStateGoalFn, FileDownloadStatePhysical,
+    FileDownloadStateGoalFn, FileDownloadStateLogical,
 };
 
 /// Item for downloading a file.
@@ -74,7 +74,7 @@ where
         let dest = params.dest();
 
         FileDownloadState::new(
-            FileDownloadStatePhysical::StringContents {
+            FileDownloadStateLogical::StringContents {
                 path: dest.to_path_buf(),
                 contents: "example contents".to_string(),
             },
@@ -129,7 +129,7 @@ where
     ) -> Result<Self::State, FileDownloadError> {
         let path = params_partial.dest().map(Path::to_path_buf);
         let state =
-            FileDownloadState::new(FileDownloadStatePhysical::None { path }, FetchedOpt::Tbd);
+            FileDownloadState::new(FileDownloadStateLogical::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
 

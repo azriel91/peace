@@ -4,7 +4,7 @@ use peace::{
 };
 
 use crate::{
-    FileDownloadError, FileDownloadState, FileDownloadStateDiff, FileDownloadStatePhysical,
+    FileDownloadError, FileDownloadState, FileDownloadStateDiff, FileDownloadStateLogical,
 };
 
 /// Download status diff function.
@@ -28,27 +28,27 @@ impl FileDownloadStateDiffFn {
         let file_state_diff = {
             match (file_state_current, file_state_goal) {
                 (
-                    FileDownloadStatePhysical::StringContents { path, .. }
-                    | FileDownloadStatePhysical::Length { path, .. }
-                    | FileDownloadStatePhysical::Unknown { path, .. },
-                    FileDownloadStatePhysical::None { .. },
+                    FileDownloadStateLogical::StringContents { path, .. }
+                    | FileDownloadStateLogical::Length { path, .. }
+                    | FileDownloadStateLogical::Unknown { path, .. },
+                    FileDownloadStateLogical::None { .. },
                 ) => FileDownloadStateDiff::Deleted {
                     path: path.to_path_buf(),
                 },
 
                 (
-                    file_state_current @ (FileDownloadStatePhysical::StringContents { .. }
-                    | FileDownloadStatePhysical::Length { .. }
-                    | FileDownloadStatePhysical::Unknown { .. }),
-                    file_state_goal @ (FileDownloadStatePhysical::StringContents { path, .. }
-                    | FileDownloadStatePhysical::Length { path, .. }
-                    | FileDownloadStatePhysical::Unknown { path, .. }),
+                    file_state_current @ (FileDownloadStateLogical::StringContents { .. }
+                    | FileDownloadStateLogical::Length { .. }
+                    | FileDownloadStateLogical::Unknown { .. }),
+                    file_state_goal @ (FileDownloadStateLogical::StringContents { path, .. }
+                    | FileDownloadStateLogical::Length { path, .. }
+                    | FileDownloadStateLogical::Unknown { path, .. }),
                 )
                 | (
-                    file_state_current @ FileDownloadStatePhysical::None { .. },
-                    file_state_goal @ (FileDownloadStatePhysical::StringContents { path, .. }
-                    | FileDownloadStatePhysical::Length { path, .. }
-                    | FileDownloadStatePhysical::Unknown { path, .. }),
+                    file_state_current @ FileDownloadStateLogical::None { .. },
+                    file_state_goal @ (FileDownloadStateLogical::StringContents { path, .. }
+                    | FileDownloadStateLogical::Length { path, .. }
+                    | FileDownloadStateLogical::Unknown { path, .. }),
                 ) => {
                     let path = path.to_path_buf();
                     let (from_bytes, from_content) = to_file_state_diff(file_state_current);
@@ -79,8 +79,8 @@ impl FileDownloadStateDiffFn {
                     }
                 }
                 (
-                    FileDownloadStatePhysical::None { .. },
-                    FileDownloadStatePhysical::None { path },
+                    FileDownloadStateLogical::None { .. },
+                    FileDownloadStateLogical::None { path },
                 ) => FileDownloadStateDiff::NoChangeNotExists { path: path.clone() },
             }
         };
@@ -89,14 +89,14 @@ impl FileDownloadStateDiffFn {
     }
 }
 
-fn to_file_state_diff(file_state: &FileDownloadStatePhysical) -> (Tracked<usize>, Tracked<String>) {
+fn to_file_state_diff(file_state: &FileDownloadStateLogical) -> (Tracked<usize>, Tracked<String>) {
     match file_state {
-        FileDownloadStatePhysical::None { .. } => (Tracked::None, Tracked::None),
-        FileDownloadStatePhysical::StringContents { path: _, contents } => (
+        FileDownloadStateLogical::None { .. } => (Tracked::None, Tracked::None),
+        FileDownloadStateLogical::StringContents { path: _, contents } => (
             Tracked::Known(contents.bytes().len()),
             Tracked::Known(contents.to_owned()),
         ),
-        FileDownloadStatePhysical::Length {
+        FileDownloadStateLogical::Length {
             path: _,
             byte_count,
         } => (
@@ -106,6 +106,6 @@ fn to_file_state_diff(file_state: &FileDownloadStatePhysical) -> (Tracked<usize>
                 .unwrap_or(Tracked::Unknown),
             Tracked::Unknown,
         ),
-        FileDownloadStatePhysical::Unknown { .. } => (Tracked::Unknown, Tracked::Unknown),
+        FileDownloadStateLogical::Unknown { .. } => (Tracked::Unknown, Tracked::Unknown),
     }
 }

@@ -3,27 +3,27 @@ use std::fmt;
 use peace::cfg::{state::FetchedOpt, State};
 use serde::{Deserialize, Serialize};
 
-use crate::{ETag, FileDownloadStatePhysical};
+use crate::{ETag, FileDownloadStateLogical};
 
 #[cfg(feature = "output_progress")]
 use peace::item_model::ItemLocationState;
 
 /// Newtype wrapper for `State<FileDownloadStatePhysical, FetchedOpt<ETag>>`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct FileDownloadState(pub State<FileDownloadStatePhysical, FetchedOpt<ETag>>);
+pub struct FileDownloadState(pub State<FileDownloadStateLogical, FetchedOpt<ETag>>);
 
 impl FileDownloadState {
     /// Returns a new `FileDownloadState`.
     pub fn new(
-        file_download_state_physical: FileDownloadStatePhysical,
+        file_download_state_physical: FileDownloadStateLogical,
         etag: FetchedOpt<ETag>,
     ) -> Self {
         Self(State::new(file_download_state_physical, etag))
     }
 }
 
-impl From<State<FileDownloadStatePhysical, FetchedOpt<ETag>>> for FileDownloadState {
-    fn from(state: State<FileDownloadStatePhysical, FetchedOpt<ETag>>) -> Self {
+impl From<State<FileDownloadStateLogical, FetchedOpt<ETag>>> for FileDownloadState {
+    fn from(state: State<FileDownloadStateLogical, FetchedOpt<ETag>>) -> Self {
         Self(state)
     }
 }
@@ -38,10 +38,10 @@ impl fmt::Display for FileDownloadState {
 impl<'state> From<&'state FileDownloadState> for ItemLocationState {
     fn from(state: &'state FileDownloadState) -> ItemLocationState {
         match &state.0.logical {
-            FileDownloadStatePhysical::None { .. } => ItemLocationState::NotExists,
-            FileDownloadStatePhysical::StringContents { .. }
-            | FileDownloadStatePhysical::Length { .. }
-            | FileDownloadStatePhysical::Unknown { .. } => ItemLocationState::Exists,
+            FileDownloadStateLogical::None { .. } => ItemLocationState::NotExists,
+            FileDownloadStateLogical::StringContents { .. }
+            | FileDownloadStateLogical::Length { .. }
+            | FileDownloadStateLogical::Unknown { .. } => ItemLocationState::Exists,
         }
     }
 }

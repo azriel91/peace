@@ -18,7 +18,7 @@ use reqwest::header::ETAG;
 
 use crate::{
     ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
-    FileDownloadStateDiff, FileDownloadStatePhysical,
+    FileDownloadStateDiff, FileDownloadStateLogical,
 };
 
 #[cfg(feature = "output_progress")]
@@ -273,8 +273,8 @@ where
                 }
             }
             FileDownloadStateDiff::Deleted { .. } => match file_state_current {
-                FileDownloadStatePhysical::None { .. } => ApplyCheck::ExecNotRequired,
-                FileDownloadStatePhysical::StringContents {
+                FileDownloadStateLogical::None { .. } => ApplyCheck::ExecNotRequired,
+                FileDownloadStateLogical::StringContents {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
                         contents: _,
@@ -294,7 +294,7 @@ where
                         }
                     }
                 }
-                FileDownloadStatePhysical::Length {
+                FileDownloadStateLogical::Length {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
                         byte_count: _,
@@ -311,7 +311,7 @@ where
                         progress_limit: ProgressLimit::Bytes(*byte_count),
                     }
                 }
-                FileDownloadStatePhysical::Unknown { path: _ } => {
+                FileDownloadStateLogical::Unknown { path: _ } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
                         ApplyCheck::ExecRequired

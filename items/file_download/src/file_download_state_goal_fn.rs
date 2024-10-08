@@ -8,7 +8,7 @@ use reqwest::{header::ETAG, Url};
 
 use crate::{
     ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
-    FileDownloadStatePhysical,
+    FileDownloadStateLogical,
 };
 
 /// Reads the goal state of the file to download.
@@ -73,19 +73,19 @@ where
                     }
                     .await?;
 
-                    FileDownloadStatePhysical::StringContents {
+                    FileDownloadStateLogical::StringContents {
                         path: dest.to_path_buf(),
                         contents: remote_contents,
                     }
                 } else {
                     // Stream it later.
-                    FileDownloadStatePhysical::Length {
+                    FileDownloadStateLogical::Length {
                         path: dest.to_path_buf(),
                         byte_count: remote_file_length,
                     }
                 }
             } else {
-                FileDownloadStatePhysical::Unknown {
+                FileDownloadStateLogical::Unknown {
                     path: dest.to_path_buf(),
                 }
             };
