@@ -21,6 +21,7 @@ pub struct FlowWebiFns<E, CmdExecReqT> {
     /// This circumvents the need to pass around the specific `CmdCtx` type by
     /// getting the tool developer to instantiate the `CmdCtx`, then pass the
     /// relevant parameters to the function that we pass in.
+    #[allow(clippy::type_complexity)]
     pub outcome_info_graph_fn: Box<
         dyn Fn(
             &mut WebiOutput,

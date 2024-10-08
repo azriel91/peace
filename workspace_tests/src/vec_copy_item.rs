@@ -279,7 +279,7 @@ pub struct VecCopyData<'exec> {
     dest: W<'exec, VecB>,
 }
 
-impl<'exec> VecCopyData<'exec> {
+impl VecCopyData<'_> {
     pub fn dest(&self) -> &VecB {
         &self.dest
     }
@@ -328,6 +328,12 @@ impl DerefMut for VecCopyState {
 impl fmt::Display for VecCopyState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.0)
+    }
+}
+
+impl Default for VecCopyState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -25,7 +25,7 @@ where
     marker: PhantomData<Id>,
 }
 
-impl<'exec, Id> ShCmdData<'exec, Id>
+impl<Id> ShCmdData<'_, Id>
 where
     Id: Send + Sync + 'static,
 {

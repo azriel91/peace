@@ -251,10 +251,9 @@ fn theme_styles_augment(
                             if item_location_trees
                                 .iter()
                                 .map(ItemLocationTree::item_location)
-                                .find(|item_location_top_level| {
-                                    item_location_top_level == item_location
+                                .any(|item_location_top_level| {
+                                    item_location_top_level == *item_location
                                 })
-                                .is_some()
                             {
                                 Some(css_class_partials_light.clone())
                             } else {
@@ -1355,7 +1354,6 @@ where
 
     node_id.truncate(node_id.len() - "___".len());
 
-    
     NodeId::try_from(node_id).expect("Expected node ID from item location ID to be valid.")
 }
 
