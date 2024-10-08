@@ -4,7 +4,7 @@ use derivative::Derivative;
 use peace::cfg::State;
 use serde::{Deserialize, Serialize};
 
-use crate::{ShCmdExecutionRecord, ShCmdStatePhysical};
+use crate::{ShCmdExecutionRecord, ShCmdStateLogical};
 
 #[cfg(feature = "output_progress")]
 use peace::item_model::ItemLocationState;
@@ -13,20 +13,20 @@ use peace::item_model::ItemLocationState;
 #[derive(Derivative, Serialize, Deserialize)]
 #[derivative(Clone(bound = ""), Debug(bound = ""), PartialEq(bound = ""))]
 #[serde(bound(serialize = "", deserialize = ""))]
-pub struct ShCmdState<Id>(pub State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>);
+pub struct ShCmdState<Id>(pub State<ShCmdStateLogical<Id>, ShCmdExecutionRecord>);
 
 impl<Id> ShCmdState<Id> {
     /// Returns a new `ShCmdState<Id>`.
     pub fn new(
-        sh_cmd_state_physical: ShCmdStatePhysical<Id>,
+        sh_cmd_state_physical: ShCmdStateLogical<Id>,
         execution_record: ShCmdExecutionRecord,
     ) -> Self {
         Self(State::new(sh_cmd_state_physical, execution_record))
     }
 }
 
-impl<Id> From<State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>> for ShCmdState<Id> {
-    fn from(state: State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>) -> Self {
+impl<Id> From<State<ShCmdStateLogical<Id>, ShCmdExecutionRecord>> for ShCmdState<Id> {
+    fn from(state: State<ShCmdStateLogical<Id>, ShCmdExecutionRecord>) -> Self {
         Self(state)
     }
 }
@@ -41,8 +41,8 @@ impl<Id> fmt::Display for ShCmdState<Id> {
 impl<'state, Id> From<&'state ShCmdState<Id>> for ItemLocationState {
     fn from(state: &'state ShCmdState<Id>) -> ItemLocationState {
         match &state.0.logical {
-            ShCmdStatePhysical::Some { .. } => ItemLocationState::Exists,
-            ShCmdStatePhysical::None => ItemLocationState::NotExists,
+            ShCmdStateLogical::Some { .. } => ItemLocationState::Exists,
+            ShCmdStateLogical::None => ItemLocationState::NotExists,
         }
     }
 }

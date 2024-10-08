@@ -3,7 +3,7 @@ use std::{marker::PhantomData, process::Stdio};
 use chrono::Utc;
 use tokio::process::Command;
 
-use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdState, ShCmdStatePhysical};
+use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdState, ShCmdStateLogical};
 
 /// Common code to run `ShCmd`s.
 #[derive(Debug)]
@@ -74,7 +74,7 @@ impl<Id> ShCmdExecutor<Id> {
             .to_string();
 
         Ok(ShCmdState::new(
-            ShCmdStatePhysical::Some {
+            ShCmdStateLogical::Some {
                 stdout,
                 stderr,
                 marker: PhantomData,
@@ -147,7 +147,7 @@ impl<Id> ShCmdExecutor<Id> {
             .to_string();
 
         Ok(ShCmdState::new(
-            ShCmdStatePhysical::Some {
+            ShCmdStateLogical::Some {
                 stdout,
                 stderr,
                 marker: PhantomData,
