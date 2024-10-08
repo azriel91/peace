@@ -22,7 +22,7 @@ fn clone() {
     let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        CmdProgressUpdate::Item {
+        CmdProgressUpdate::ItemProgress {
             progress_update_and_id: ProgressUpdateAndId {
                 item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
@@ -46,7 +46,7 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        CmdProgressUpdate::Item {
+        CmdProgressUpdate::ItemProgress {
             progress_update_and_id: ProgressUpdateAndId {
                 item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
@@ -73,7 +73,7 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed(
     let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        CmdProgressUpdate::Item {
+        CmdProgressUpdate::ItemProgress {
             progress_update_and_id: ProgressUpdateAndId {
                 item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
@@ -112,7 +112,7 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        CmdProgressUpdate::Item {
+        CmdProgressUpdate::ItemProgress {
             progress_update_and_id: ProgressUpdateAndId {
                 item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
@@ -139,7 +139,7 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed(
     let cmd_progress_update = progress_rx.try_recv().unwrap();
 
     assert_eq!(
-        CmdProgressUpdate::Item {
+        CmdProgressUpdate::ItemProgress {
             progress_update_and_id: ProgressUpdateAndId {
                 item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
