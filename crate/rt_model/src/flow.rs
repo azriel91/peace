@@ -463,7 +463,7 @@ fn item_location_to_item_id_sets_insert(
 
 #[cfg(all(feature = "item_interactions", feature = "item_state_example",))]
 fn item_location_descendents_populate(
-    item_interactions_current_or_example: &Vec<ItemInteraction>,
+    item_interactions_current_or_example: &[ItemInteraction],
     item_location_direct_descendents: &mut BTreeMap<ItemLocation, BTreeSet<ItemLocation>>,
 ) {
     item_interactions_current_or_example.iter().for_each(

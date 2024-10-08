@@ -38,7 +38,7 @@ where
     }
 }
 
-impl<'borrow, T> std::ops::DerefMut for WMaybe<'borrow, T>
+impl<T> std::ops::DerefMut for WMaybe<'_, T>
 where
     T: Debug + Send + Sync + 'static,
 {
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccess for WMaybe<'borrow, T>
+impl<T> DataAccess for WMaybe<'_, T>
 where
     T: Debug + Send + Sync + 'static,
 {
@@ -86,7 +86,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccessDyn for WMaybe<'borrow, T>
+impl<T> DataAccessDyn for WMaybe<'_, T>
 where
     T: Debug + Send + Sync + 'static,
 {

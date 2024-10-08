@@ -39,11 +39,11 @@ impl<Id> fmt::Display for ShCmdState<Id> {
 }
 
 #[cfg(feature = "output_progress")]
-impl<'state> From<&'state ShCmdState> for ItemLocationState {
-    fn from(sh_cmd_state: &'state ShCmdState) -> ItemLocationState {
+impl<'state, Id> From<&'state ShCmdState<Id>> for ItemLocationState {
+    fn from(sh_cmd_state: &'state ShCmdState<Id>) -> ItemLocationState {
         match sh_cmd_state {
-            Some { .. } => ItemLocationState::Exists,
-            None => ItemLocationState::NotExists,
+            ShCmdState::Some { .. } => ItemLocationState::Exists,
+            ShCmdState::None => ItemLocationState::NotExists,
         }
     }
 }

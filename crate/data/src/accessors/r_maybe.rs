@@ -56,7 +56,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccess for RMaybe<'borrow, T>
+impl<T> DataAccess for RMaybe<'_, T>
 where
     T: Debug + Send + Sync + 'static,
 {
@@ -77,7 +77,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccessDyn for RMaybe<'borrow, T>
+impl<T> DataAccessDyn for RMaybe<'_, T>
 where
     T: Debug + Send + Sync + 'static,
 {

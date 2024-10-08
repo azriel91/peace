@@ -1006,7 +1006,7 @@ where
         let (operation, prefix) = type_name
             .split_once("<")
             .map(|(operation, prefix_plus_extra)| {
-                let prefix_end = prefix_plus_extra.find(|c| c == '<' || c == '>');
+                let prefix_end = prefix_plus_extra.find(['<', '>']);
                 let prefix = prefix_end
                     .map(|prefix_end| &prefix_plus_extra[..prefix_end])
                     .unwrap_or(prefix_plus_extra);

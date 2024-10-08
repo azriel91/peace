@@ -60,7 +60,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccess for Stored<'borrow, T> {
+impl<T> DataAccess for Stored<'_, T> {
     fn borrows() -> TypeIds
     where
         Self: Sized,
@@ -78,7 +78,7 @@ impl<'borrow, T> DataAccess for Stored<'borrow, T> {
     }
 }
 
-impl<'borrow, T> DataAccessDyn for Stored<'borrow, T> {
+impl<T> DataAccessDyn for Stored<'_, T> {
     fn borrows(&self) -> TypeIds
     where
         Self: Sized,

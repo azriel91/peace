@@ -295,7 +295,7 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT> SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -461,7 +461,7 @@ where
 
     /// Returns a reference to the flow.
     pub fn flow(&self) -> &Flow<CmdCtxTypesT::AppError> {
-        &*self.flow
+        &self.flow
     }
 
     /// Returns a reference to the flow directory.
@@ -517,8 +517,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -538,8 +538,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -559,8 +559,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<

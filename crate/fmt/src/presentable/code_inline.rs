@@ -16,7 +16,7 @@ impl<'s> CodeInline<'s> {
 }
 
 #[async_trait::async_trait(?Send)]
-impl<'s> Presentable for CodeInline<'s> {
+impl Presentable for CodeInline<'_> {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,

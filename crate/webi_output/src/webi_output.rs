@@ -97,7 +97,7 @@ where
     ) {
         let item_id = progress_update_and_id.item_id.clone();
         let progress_status = progress_tracker.progress_status().clone();
-        let progress_limit = progress_tracker.progress_limit().clone();
+        let progress_limit = progress_tracker.progress_limit();
         let message = progress_tracker.message().cloned();
 
         if let Some(web_ui_update_tx) = self.web_ui_update_tx.as_ref() {

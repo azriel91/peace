@@ -21,7 +21,7 @@ pub struct ProfileFromWorkspaceParam<'key, WorkspaceParamsK>(
 /// Filter function for `MultiProfile` scopes.
 pub struct ProfileFilterFn<'f>(pub(crate) Box<dyn Fn(&Profile) -> bool + 'f>);
 
-impl<'f> fmt::Debug for ProfileFilterFn<'f> {
+impl fmt::Debug for ProfileFilterFn<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("ProfileFilterFn")
             .field(&"Box<dyn Fn(&Profile) -> bool")

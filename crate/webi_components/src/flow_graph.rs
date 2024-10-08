@@ -41,7 +41,7 @@ async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
             .and_then(|(flow_id, flow_progress_info_graphs)| {
                 flow_progress_info_graphs.get(&flow_id).cloned()
             })
-            .unwrap_or_else(InfoGraph::default)
+            .unwrap_or_default()
     } else {
         InfoGraph::default()
     };
@@ -95,7 +95,7 @@ async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
             .and_then(|(flow_id, flow_outcome_info_graphs)| {
                 flow_outcome_info_graphs.get(&flow_id).cloned()
             })
-            .unwrap_or_else(InfoGraph::default)
+            .unwrap_or_default()
     } else {
         InfoGraph::default()
     };

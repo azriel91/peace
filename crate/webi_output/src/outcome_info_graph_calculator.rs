@@ -46,10 +46,10 @@ impl OutcomeInfoGraphCalculator {
     {
         let item_locations_and_interactions = match &outcome_info_graph_variant {
             OutcomeInfoGraphVariant::Example => {
-                flow.item_locations_and_interactions_example(&params_specs, resources)
+                flow.item_locations_and_interactions_example(params_specs, resources)
             }
             OutcomeInfoGraphVariant::Current { .. } => {
-                flow.item_locations_and_interactions_current(&params_specs, resources)
+                flow.item_locations_and_interactions_current(params_specs, resources)
             }
         };
 
@@ -400,8 +400,8 @@ fn node_css_class_partials(
 /// over the `ItemInteraction`s per attribute that is to be computed, but
 /// perhaps populating the different structures per `ItemInteraction` is more
 /// manageable than remembering to update multiple functions.
-fn process_item_interactions<'f, 'item_location>(
-    item_interactions_process_ctx: ItemInteractionsProcessCtx<'f, 'item_location>,
+fn process_item_interactions(
+    item_interactions_process_ctx: ItemInteractionsProcessCtx<'_, '_>,
 ) -> ItemInteractionsProcessed {
     let ItemInteractionsProcessCtx {
         outcome_info_graph_variant,
@@ -577,8 +577,8 @@ fn process_item_interactions_example<'item_location>(
 
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
-fn process_item_interaction_push_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
+fn process_item_interaction_push_example<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'_, 'item_location>,
     item_interaction_push: &'item_location ItemInteractionPush,
 ) {
     let ItemInteractionsProcessingCtxExample {
@@ -663,8 +663,8 @@ fn process_item_interaction_push_example<'f, 'item_location>(
 
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
-fn process_item_interaction_pull_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
+fn process_item_interaction_pull_example<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'_, 'item_location>,
     graphviz_attrs: &mut GraphvizAttrs,
     item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
@@ -775,8 +775,8 @@ fn process_item_interaction_pull_example<'f, 'item_location>(
 }
 
 /// Indicates the nodes that are being waited upon by [`ItemInteractionWithin`].
-fn process_item_interaction_within_example<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'f, 'item_location>,
+fn process_item_interaction_within_example<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxExample<'_, 'item_location>,
     item_interaction_within: &'item_location ItemInteractionWithin,
 ) {
     let ItemInteractionsProcessingCtxExample {
@@ -841,8 +841,8 @@ fn process_item_interaction_within_example<'f, 'item_location>(
 
 /// Inserts an edge between the `from` and `to` nodes of an
 /// [`ItemInteractionPush`].
-fn process_item_interaction_push_current<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+fn process_item_interaction_push_current<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'_, 'item_location>,
     item_interaction_push: &'item_location ItemInteractionPush,
 ) {
     let ItemInteractionsProcessingCtxCurrent {
@@ -912,8 +912,8 @@ fn process_item_interaction_push_current<'f, 'item_location>(
 
 /// Inserts an edge between the `client` and `server` nodes of an
 /// [`ItemInteractionPull`].
-fn process_item_interaction_pull_current<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+fn process_item_interaction_pull_current<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'_, 'item_location>,
     graphviz_attrs: &mut GraphvizAttrs,
     item_interaction_pull: &'item_location ItemInteractionPull,
 ) {
@@ -1004,8 +1004,8 @@ fn process_item_interaction_pull_current<'f, 'item_location>(
 }
 
 /// Indicates the nodes that are being waited upon by [`ItemInteractionWithin`].
-fn process_item_interaction_within_current<'f, 'item_location>(
-    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'f, 'item_location>,
+fn process_item_interaction_within_current<'item_location>(
+    item_interactions_processing_ctx: ItemInteractionsProcessingCtxCurrent<'_, 'item_location>,
     item_interaction_within: &'item_location ItemInteractionWithin,
 ) {
     let ItemInteractionsProcessingCtxCurrent {
@@ -1347,7 +1347,7 @@ where
         .fold(
             String::with_capacity(capacity),
             |mut node_id_buffer, node_id_segment| {
-                node_id_buffer.push_str(&node_id_segment);
+                node_id_buffer.push_str(node_id_segment);
                 node_id_buffer.push_str("___");
                 node_id_buffer
             },
@@ -1355,9 +1355,8 @@ where
 
     node_id.truncate(node_id.len() - "___".len());
 
-    let node_id =
-        NodeId::try_from(node_id).expect("Expected node ID from item location ID to be valid.");
-    node_id
+    
+    NodeId::try_from(node_id).expect("Expected node ID from item location ID to be valid.")
 }
 
 /// Returns a `&str` segment that can be used as part of the `NodeId` for the

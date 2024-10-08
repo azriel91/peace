@@ -56,7 +56,7 @@ impl<T> Clone for Box<dyn MappingFn<Output = T>> {
     }
 }
 
-impl<'a, T> Serialize for dyn MappingFn<Output = T> + 'a {
+impl<T> Serialize for dyn MappingFn<Output = T> + '_ {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
