@@ -1,10 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::State;
-
-use crate::{
-    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdStateDiff, ShCmdStatePhysical,
-};
+use crate::{ShCmd, ShCmdError, ShCmdExecutor, ShCmdState, ShCmdStateDiff, ShCmdStatePhysical};
 
 /// Runs a shell command to obtain the `ShCmd` diff.
 #[derive(Debug)]
@@ -16,21 +12,21 @@ where
 {
     pub async fn state_diff(
         state_diff_sh_cmd: ShCmd,
-        state_current: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
-        state_goal: &State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>,
+        state_current: &ShCmdState<Id>,
+        state_goal: &ShCmdState<Id>,
     ) -> Result<ShCmdStateDiff, ShCmdError> {
-        let state_current_arg = match &state_current.logical {
+        let state_current_arg = match &state_current.0.logical {
             ShCmdStatePhysical::None => "",
             ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_goal_arg = match &state_goal.logical {
+        let state_goal_arg = match &state_goal.0.logical {
             ShCmdStatePhysical::None => "",
             ShCmdStatePhysical::Some { stdout, .. } => stdout.as_ref(),
         };
         let state_diff_sh_cmd = state_diff_sh_cmd.arg(state_current_arg).arg(state_goal_arg);
         ShCmdExecutor::<Id>::exec(&state_diff_sh_cmd)
             .await
-            .map(|state| match state.logical {
+            .map(|state| match state.0.logical {
                 ShCmdStatePhysical::None => ShCmdStateDiff::new(String::from(""), String::from("")),
                 ShCmdStatePhysical::Some {
                     stdout,

@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId, State},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
-    ShCmdStateDiff, ShCmdStateDiffFn, ShCmdStatePhysical,
+    ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutor, ShCmdParams, ShCmdState, ShCmdStateDiff,
+    ShCmdStateDiffFn,
 };
 
 /// Item for executing a shell command.
@@ -59,7 +59,7 @@ where
     type Data<'exec> = ShCmdData<'exec, Id>;
     type Error = ShCmdError;
     type Params<'exec> = ShCmdParams<Id>;
-    type State = State<ShCmdStatePhysical<Id>, ShCmdExecutionRecord>;
+    type State = ShCmdState<Id>;
     type StateDiff = ShCmdStateDiff;
 
     fn id(&self) -> &ItemId {
