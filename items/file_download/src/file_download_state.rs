@@ -15,10 +15,10 @@ pub struct FileDownloadState(pub State<FileDownloadStateLogical, FetchedOpt<ETag
 impl FileDownloadState {
     /// Returns a new `FileDownloadState`.
     pub fn new(
-        file_download_state_physical: FileDownloadStateLogical,
+        file_download_state_logical: FileDownloadStateLogical,
         etag: FetchedOpt<ETag>,
     ) -> Self {
-        Self(State::new(file_download_state_physical, etag))
+        Self(State::new(file_download_state_logical, etag))
     }
 }
 
