@@ -137,6 +137,7 @@ async fn run_command(
             use futures::FutureExt;
             use peace::{
                 cmd::scopes::SingleProfileSingleFlowView,
+                cmd_model::CmdOutcome,
                 webi::output::{CmdExecSpawnCtx, FlowWebiFns, WebiServer},
                 webi_components::ChildrenFn,
             };
@@ -179,44 +180,87 @@ async fn run_command(
                         let mut cli_output = CliOutput::builder().build();
                         let cli_output = &mut cli_output;
 
-                        let error = match cmd_exec_request {
+                        let (cmd_error, item_errors) = match cmd_exec_request {
                             CmdExecRequest::Discover => {
                                 eprintln!("Running discover.");
-                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                    async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
-                                        .boxed_local()
-                                })
-                                .await
-                                .err()
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
+                                            .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
+                                    }
+                                    Err(error) => (Some(error), None),
+                                }
                             }
                             CmdExecRequest::Ensure => {
                                 eprintln!("Running ensure.");
-                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                    async {
-                                        EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current)
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async {
+                                            EnsureCmd::exec_with(
+                                                cmd_ctx,
+                                                ApplyStoredStateSync::Current,
+                                            )
                                             .await
+                                        }
+                                        .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
                                     }
-                                    .boxed_local()
-                                })
-                                .await
-                                .err()
+                                    Err(error) => (Some(error), None),
+                                }
                             }
                             CmdExecRequest::Clean => {
                                 eprintln!("Running clean.");
-                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                    async {
-                                        CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current)
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async {
+                                            CleanCmd::exec_with(
+                                                cmd_ctx,
+                                                ApplyStoredStateSync::Current,
+                                            )
                                             .await
+                                        }
+                                        .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
                                     }
-                                    .boxed_local()
-                                })
-                                .await
-                                .err()
+                                    Err(error) => (Some(error), None),
+                                }
                             }
                         };
 
-                        if let Some(error) = error {
-                            let _ = envman::output::errors_present(cli_output, &[error]).await;
+                        if let Some(cmd_error) = cmd_error {
+                            let _ = envman::output::errors_present(cli_output, &[cmd_error]).await;
+                        }
+                        if let Some(item_errors) = item_errors.as_ref() {
+                            let _ =
+                                envman::output::item_errors_present(cli_output, item_errors).await;
                         }
                     }
                     .boxed_local();
