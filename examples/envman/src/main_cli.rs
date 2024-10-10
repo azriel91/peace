@@ -40,6 +40,12 @@ pub fn run() -> Result<(), EnvManError> {
             let mut builder = CliOutput::builder().with_colorize(color);
             if let Some(format) = format {
                 builder = builder.with_outcome_format(format);
+
+                #[cfg(feature = "output_progress")]
+                {
+                    use peace::cli::output::CliProgressFormatOpt;
+                    builder = builder.with_progress_format(CliProgressFormatOpt::Outcome);
+                }
             }
 
             builder.build()
