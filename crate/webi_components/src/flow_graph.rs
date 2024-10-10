@@ -62,6 +62,11 @@ fn ProgressGraph() -> impl IntoView {
             let dot_src_and_styles =
                 IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
 
+            if let Ok(progress_info_graph_serialized) = serde_yaml::to_string(&progress_info_graph)
+            {
+                leptos::logging::log!("{progress_info_graph_serialized}");
+            }
+
             progress_info_graph_set.set(progress_info_graph);
             dot_src_and_styles_set.set(Some(dot_src_and_styles));
         },
@@ -114,6 +119,10 @@ fn OutcomeGraph() -> impl IntoView {
             let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();
             let dot_src_and_styles =
                 IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
+
+            if let Ok(outcome_info_graph_serialized) = serde_yaml::to_string(&outcome_info_graph) {
+                leptos::logging::log!("{outcome_info_graph_serialized}");
+            }
 
             outcome_info_graph_set.set(outcome_info_graph);
             dot_src_and_styles_set.set(Some(dot_src_and_styles));
