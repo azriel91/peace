@@ -172,7 +172,9 @@ async fn run_command(
                     .boxed_local()
                 }),
                 cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
-                    use peace::rt::cmds::{CleanCmd, EnsureCmd, StatesDiscoverCmd};
+                    use peace::rt::cmds::{
+                        ApplyStoredStateSync, CleanCmd, EnsureCmd, StatesDiscoverCmd,
+                    };
                     let cmd_exec_task = async move {
                         let mut cli_output = CliOutput::builder().build();
                         let cli_output = &mut cli_output;
@@ -190,7 +192,11 @@ async fn run_command(
                             CmdExecRequest::Ensure => {
                                 eprintln!("Running ensure.");
                                 EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                    async { EnsureCmd::exec(cmd_ctx).await }.boxed_local()
+                                    async {
+                                        EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current)
+                                            .await
+                                    }
+                                    .boxed_local()
                                 })
                                 .await
                                 .err()
@@ -198,7 +204,11 @@ async fn run_command(
                             CmdExecRequest::Clean => {
                                 eprintln!("Running clean.");
                                 EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                    async { CleanCmd::exec(cmd_ctx).await }.boxed_local()
+                                    async {
+                                        CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current)
+                                            .await
+                                    }
+                                    .boxed_local()
                                 })
                                 .await
                                 .err()
