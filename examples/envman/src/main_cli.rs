@@ -174,32 +174,39 @@ async fn run_command(
                 cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
                     use peace::rt::cmds::{CleanCmd, EnsureCmd, StatesDiscoverCmd};
                     let cmd_exec_task = async move {
-                        match cmd_exec_request {
+                        let mut cli_output = CliOutput::builder().build();
+                        let cli_output = &mut cli_output;
+
+                        let error = match cmd_exec_request {
                             CmdExecRequest::Discover => {
                                 eprintln!("Running discover.");
-                                let _ =
-                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                        async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
-                                            .boxed_local()
-                                    })
-                                    .await;
+                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                    async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
+                                        .boxed_local()
+                                })
+                                .await
+                                .err()
                             }
                             CmdExecRequest::Ensure => {
                                 eprintln!("Running ensure.");
-                                let _ =
-                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                        async { EnsureCmd::exec(cmd_ctx).await }.boxed_local()
-                                    })
-                                    .await;
+                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                    async { EnsureCmd::exec(cmd_ctx).await }.boxed_local()
+                                })
+                                .await
+                                .err()
                             }
                             CmdExecRequest::Clean => {
                                 eprintln!("Running clean.");
-                                let _ =
-                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
-                                        async { CleanCmd::exec(cmd_ctx).await }.boxed_local()
-                                    })
-                                    .await;
+                                EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                    async { CleanCmd::exec(cmd_ctx).await }.boxed_local()
+                                })
+                                .await
+                                .err()
                             }
+                        };
+
+                        if let Some(error) = error {
+                            let _ = envman::output::errors_present(cli_output, &[error]).await;
                         }
                     }
                     .boxed_local();
