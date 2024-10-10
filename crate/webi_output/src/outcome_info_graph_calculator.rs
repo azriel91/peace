@@ -22,10 +22,10 @@ use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
 
 #[cfg(feature = "output_progress")]
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::ControlFlow};
 
 #[cfg(feature = "output_progress")]
-use peace_core::progress::{CmdBlockItemInteractionType, ProgressStatus};
+use peace_core::progress::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
 #[cfg(feature = "output_progress")]
 use peace_item_model::{ItemLocationState, ItemLocationStateInProgress};
 
@@ -283,14 +283,90 @@ fn theme_styles_augment(
                                 .get(node_id)
                                 // 2. Look up their statuses
                                 .and_then(|referrer_item_ids| {
-                                    referrer_item_ids.iter().find_map(|referrer_item_id| {
-                                        node_css_class_partials(
-                                            cmd_block_item_interaction_type,
-                                            item_location_states,
-                                            referrer_item_id,
-                                            item_progress_statuses,
-                                        )
-                                    })
+                                    // When we have multiple referrers referring to the same item
+                                    // location, we need to prioritize `ItemLocationState::Exists`
+                                    // over `ItemLocationState::NotExists`.
+                                    //
+                                    // This is because:
+                                    //
+                                    // * For ensure, a predecessor would have created the item
+                                    //   beforehand, so we don't want a successor's `NotExists`
+                                    //   state to hide the node. e.g. a file download before
+                                    //   uploading it somewhere else.
+                                    //
+                                    // * For clean, the succesor's destination would be removed, but
+                                    //   not its source. e.g. the upload would remove the
+                                    //   destination file, and not the source, which would later be
+                                    //   removed by the predecessor.
+                                    //
+                                    // Which means we need to prioritize the styles from the most
+                                    // recent completed / in-progress `referrer_item_id`.
+                                    let (ControlFlow::Continue(item_location_state)
+                                    | ControlFlow::Break(item_location_state)) = referrer_item_ids
+                                        .iter()
+                                        .filter_map(|referrer_item_id| {
+                                            item_location_states.get(referrer_item_id).copied()
+                                        })
+                                        .try_fold(
+                                            ItemLocationState::NotExists,
+                                            |_item_location_state_acc, item_location_state| {
+                                                match item_location_state {
+                                                    ItemLocationState::Exists => {
+                                                        ControlFlow::Break(
+                                                            ItemLocationState::Exists,
+                                                        )
+                                                    }
+                                                    ItemLocationState::NotExists => {
+                                                        ControlFlow::Continue(
+                                                            ItemLocationState::NotExists,
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                        );
+
+                                    let (ControlFlow::Continue(progress_status)
+                                    | ControlFlow::Break(progress_status)) = referrer_item_ids
+                                        .iter()
+                                        .filter_map(|referrer_item_id| {
+                                            item_progress_statuses.get(referrer_item_id).cloned()
+                                        })
+                                        .try_fold(
+                                            ProgressStatus::Initialized,
+                                            |_progress_status_acc, progress_status| {
+                                                match progress_status {
+                                                    ProgressStatus::Initialized => {
+                                                        ControlFlow::Continue(progress_status)
+                                                    }
+                                                    ProgressStatus::Interrupted => {
+                                                        ControlFlow::Continue(progress_status)
+                                                    }
+                                                    ProgressStatus::ExecPending => {
+                                                        ControlFlow::Continue(progress_status)
+                                                    }
+                                                    ProgressStatus::Queued => {
+                                                        ControlFlow::Continue(progress_status)
+                                                    }
+                                                    ProgressStatus::Running
+                                                    | ProgressStatus::RunningStalled
+                                                    | ProgressStatus::UserPending => {
+                                                        ControlFlow::Break(progress_status)
+                                                    }
+                                                    ProgressStatus::Complete(
+                                                        ProgressComplete::Success,
+                                                    ) => ControlFlow::Continue(progress_status),
+                                                    ProgressStatus::Complete(
+                                                        ProgressComplete::Fail,
+                                                    ) => ControlFlow::Break(progress_status),
+                                                }
+                                            },
+                                        );
+
+                                    node_css_class_partials(
+                                        cmd_block_item_interaction_type,
+                                        item_location_state,
+                                        progress_status,
+                                    )
                                 })
                         } else {
                             None
@@ -311,83 +387,75 @@ fn theme_styles_augment(
 #[cfg(feature = "output_progress")]
 fn node_css_class_partials(
     cmd_block_item_interaction_type: CmdBlockItemInteractionType,
-    item_location_states: &HashMap<ItemId, ItemLocationState>,
-    referrer_item_id: &&ItemId,
-    item_progress_statuses: &HashMap<ItemId, ProgressStatus>,
+    item_location_state: ItemLocationState,
+    progress_status: ProgressStatus,
 ) -> Option<CssClassPartials> {
-    let item_location_state = item_location_states.get(referrer_item_id).copied();
-    let progress_status = item_progress_statuses.get(referrer_item_id);
-
     // 3. If any of them are running or complete, then it should be visible.
-    item_location_state
-        .zip(progress_status)
-        .and_then(|(item_location_state, progress_status)| {
-            let item_location_state_in_progress = ItemLocationStateInProgress::from(
-                cmd_block_item_interaction_type,
-                item_location_state,
-                progress_status.clone(),
-            );
+    let item_location_state_in_progress = ItemLocationStateInProgress::from(
+        cmd_block_item_interaction_type,
+        item_location_state,
+        progress_status,
+    );
 
-            match item_location_state_in_progress {
-                ItemLocationStateInProgress::NotExists => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(1);
-                    css_class_partials.insert(ThemeAttr::Extra, "opacity-[0.15]".to_string());
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::NotExistsError => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(2);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
-                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::DiscoverInProgress => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(3);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "yellow".to_string());
-                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
-                    css_class_partials.insert(
-                        ThemeAttr::Animate,
-                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-                    );
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::DiscoverError => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(3);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "amber".to_string());
-                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
-                    css_class_partials.insert(
-                        ThemeAttr::Animate,
-                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-                    );
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::CreateInProgress => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(3);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
-                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
-                    css_class_partials.insert(
-                        ThemeAttr::Animate,
-                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-                    );
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::ModificationInProgress => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(3);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
-                    css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
-                    css_class_partials.insert(
-                        ThemeAttr::Animate,
-                        "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
-                    );
-                    Some(css_class_partials)
-                }
-                ItemLocationStateInProgress::ExistsOk => None,
-                ItemLocationStateInProgress::ExistsError => {
-                    let mut css_class_partials = CssClassPartials::with_capacity(1);
-                    css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
-                    Some(css_class_partials)
-                }
-            }
-        })
+    match item_location_state_in_progress {
+        ItemLocationStateInProgress::NotExists => {
+            let mut css_class_partials = CssClassPartials::with_capacity(1);
+            css_class_partials.insert(ThemeAttr::Extra, "opacity-[0.15]".to_string());
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::NotExistsError => {
+            let mut css_class_partials = CssClassPartials::with_capacity(2);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
+            css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::DiscoverInProgress => {
+            let mut css_class_partials = CssClassPartials::with_capacity(3);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "yellow".to_string());
+            css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+            css_class_partials.insert(
+                ThemeAttr::Animate,
+                "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+            );
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::DiscoverError => {
+            let mut css_class_partials = CssClassPartials::with_capacity(3);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "amber".to_string());
+            css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+            css_class_partials.insert(
+                ThemeAttr::Animate,
+                "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+            );
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::CreateInProgress => {
+            let mut css_class_partials = CssClassPartials::with_capacity(3);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+            css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+            css_class_partials.insert(
+                ThemeAttr::Animate,
+                "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+            );
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::ModificationInProgress => {
+            let mut css_class_partials = CssClassPartials::with_capacity(3);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "blue".to_string());
+            css_class_partials.insert(ThemeAttr::StrokeStyle, "dashed".to_string());
+            css_class_partials.insert(
+                ThemeAttr::Animate,
+                "[node-stroke-dashoffset-move_1s_linear_infinite]".to_string(),
+            );
+            Some(css_class_partials)
+        }
+        ItemLocationStateInProgress::ExistsOk => None,
+        ItemLocationStateInProgress::ExistsError => {
+            let mut css_class_partials = CssClassPartials::with_capacity(1);
+            css_class_partials.insert(ThemeAttr::ShapeColor, "red".to_string());
+            Some(css_class_partials)
+        }
+    }
 }
 
 /// Calculates edges and styles from `ItemInteraction`s.
