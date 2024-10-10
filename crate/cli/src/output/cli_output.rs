@@ -708,6 +708,7 @@ where
                                 progress_bar.println(t_serialized);
                             });
                     }
+                    OutputFormat::None => {}
                 }
             }
             CliProgressFormat::None => {}
@@ -756,6 +757,7 @@ where
                 self.output_json(&presentable, Error::StatesSerializeJson)
                     .await
             }
+            OutputFormat::None => Ok(()),
         }
     }
 
@@ -788,6 +790,7 @@ where
                     .map_err(NativeError::StdoutWrite)
                     .map_err(Error::Native)?;
             }
+            OutputFormat::None => {}
         }
 
         Ok(())

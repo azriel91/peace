@@ -210,32 +210,39 @@ where
         };
 
         #[cfg(feature = "output_progress")]
-        let progress_format = match progress_format {
-            CliProgressFormatOpt::Auto => {
-                // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
-                // implemented on `std::io::stdout` / `stderr`.
-                match &progress_target {
-                    CliOutputTarget::Stdout => {
-                        if std::io::stdout().is_terminal() {
-                            CliProgressFormat::ProgressBar
-                        } else {
-                            CliProgressFormat::Outcome
+        let progress_format = {
+            let progress_format = match progress_format {
+                CliProgressFormatOpt::Auto => {
+                    // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
+                    // implemented on `std::io::stdout` / `stderr`.
+                    match &progress_target {
+                        CliOutputTarget::Stdout => {
+                            if std::io::stdout().is_terminal() {
+                                CliProgressFormat::ProgressBar
+                            } else {
+                                CliProgressFormat::Outcome
+                            }
                         }
-                    }
-                    CliOutputTarget::Stderr => {
-                        if std::io::stderr().is_terminal() {
-                            CliProgressFormat::ProgressBar
-                        } else {
-                            CliProgressFormat::Outcome
+                        CliOutputTarget::Stderr => {
+                            if std::io::stderr().is_terminal() {
+                                CliProgressFormat::ProgressBar
+                            } else {
+                                CliProgressFormat::Outcome
+                            }
                         }
+                        #[cfg(feature = "output_in_memory")]
+                        CliOutputTarget::InMemory(_) => CliProgressFormat::ProgressBar,
                     }
-                    #[cfg(feature = "output_in_memory")]
-                    CliOutputTarget::InMemory(_) => CliProgressFormat::ProgressBar,
                 }
+                CliProgressFormatOpt::Outcome => CliProgressFormat::Outcome,
+                CliProgressFormatOpt::ProgressBar => CliProgressFormat::ProgressBar,
+                CliProgressFormatOpt::None => CliProgressFormat::None,
+            };
+
+            match (progress_format, outcome_format) {
+                (CliProgressFormat::Outcome, OutputFormat::None) => CliProgressFormat::None,
+                _ => progress_format,
             }
-            CliProgressFormatOpt::Outcome => CliProgressFormat::Outcome,
-            CliProgressFormatOpt::ProgressBar => CliProgressFormat::ProgressBar,
-            CliProgressFormatOpt::None => CliProgressFormat::None,
         };
 
         // We need to suppress the `^C\n` characters that come through the terminal.
