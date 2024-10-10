@@ -166,7 +166,15 @@ impl<E> Flow<E> {
                             ItemInteraction::Push(item_interaction_push) => item_interaction_push
                                 .location_from()
                                 .iter()
-                                .chain(item_interaction_push.location_to().iter())
+                                .last()
+                                .into_iter()
+                                .chain(
+                                    item_interaction_push
+                                        .location_to()
+                                        .iter()
+                                        .last()
+                                        .into_iter(),
+                                )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -177,7 +185,15 @@ impl<E> Flow<E> {
                             ItemInteraction::Pull(item_interaction_pull) => item_interaction_pull
                                 .location_client()
                                 .iter()
-                                .chain(item_interaction_pull.location_server().iter())
+                                .last()
+                                .into_iter()
+                                .chain(
+                                    item_interaction_pull
+                                        .location_server()
+                                        .iter()
+                                        .last()
+                                        .into_iter(),
+                                )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -186,15 +202,18 @@ impl<E> Flow<E> {
                                     )
                                 }),
                             ItemInteraction::Within(item_interaction_within) => {
-                                item_interaction_within.location().iter().for_each(
-                                    |item_location| {
+                                item_interaction_within
+                                    .location()
+                                    .iter()
+                                    .last()
+                                    .into_iter()
+                                    .for_each(|item_location| {
                                         item_location_to_item_id_sets_insert(
                                             &mut item_location_to_item_id_sets,
                                             item_location,
                                             item_id,
                                         )
-                                    },
-                                )
+                                    })
                             }
                         });
 
@@ -343,7 +362,15 @@ impl<E> Flow<E> {
                             ItemInteraction::Push(item_interaction_push) => item_interaction_push
                                 .location_from()
                                 .iter()
-                                .chain(item_interaction_push.location_to().iter())
+                                .last()
+                                .into_iter()
+                                .chain(
+                                    item_interaction_push
+                                        .location_to()
+                                        .iter()
+                                        .last()
+                                        .into_iter(),
+                                )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -354,7 +381,15 @@ impl<E> Flow<E> {
                             ItemInteraction::Pull(item_interaction_pull) => item_interaction_pull
                                 .location_client()
                                 .iter()
-                                .chain(item_interaction_pull.location_server().iter())
+                                .last()
+                                .into_iter()
+                                .chain(
+                                    item_interaction_pull
+                                        .location_server()
+                                        .iter()
+                                        .last()
+                                        .into_iter(),
+                                )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -363,15 +398,18 @@ impl<E> Flow<E> {
                                     )
                                 }),
                             ItemInteraction::Within(item_interaction_within) => {
-                                item_interaction_within.location().iter().for_each(
-                                    |item_location| {
+                                item_interaction_within
+                                    .location()
+                                    .iter()
+                                    .last()
+                                    .into_iter()
+                                    .for_each(|item_location| {
                                         item_location_to_item_id_sets_insert(
                                             &mut item_location_to_item_id_sets,
                                             item_location,
                                             item_id,
                                         )
-                                    },
-                                )
+                                    })
                             }
                         });
 
