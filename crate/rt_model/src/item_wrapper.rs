@@ -163,6 +163,13 @@ where
     ) -> Result<Option<I::State>, E> {
         let params_partial =
             self.params_partial(params_specs, resources, ValueResolutionMode::Goal)?;
+
+        // If a predecessor's goal state is the same as current, then a successor's
+        // `state_goal_try_exec` should kind of use `ValueResolutionMode::Current`.
+        //
+        // But really we should insert the predecessor's current state as the
+        // `Goal<Predecessor::State>`.
+
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_goal = I::try_state_goal(fn_ctx, &params_partial, data).await?;
         if let Some(state_goal) = state_goal.as_ref() {
