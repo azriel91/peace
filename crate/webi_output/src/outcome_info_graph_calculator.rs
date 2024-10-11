@@ -107,10 +107,11 @@ where
                 |mut tags, item| {
                     let tag_name = item.interactions_tag_name();
 
-                    // For some reason taking away `.to_string()` causes an error to be
-                    // highlighted on `flow.graph()`, rather than referring to `item.id()` as
-                    // the cause of an extended borrow.
-                    let tag_id = TagId::try_from(item.id().to_string())
+                    // For some reason using `TagId::new(item.id().as_str())` causes an error to be
+                    // highlighted on `flow.graph()`, rather than referring to `item.id()` as the
+                    // cause of an extended borrow.
+                    let item_id = item.id();
+                    let tag_id = TagId::try_from(format!("tag_{item_id}"))
                         .expect("Expected `tag_id` from `item_id` to be valid.");
 
                     tags.insert(tag_id, tag_name);
@@ -595,7 +596,7 @@ fn process_item_interactions_example<'item_location>(
                     mut tag_styles_focus,
                 } = item_interactions_processed_example;
 
-                let tag_id = TagId::try_from(item_id.as_str().to_string())
+                let tag_id = TagId::try_from(format!("tag_{item_id}"))
                     .expect("Expected `tag_id` from `item_id` to be valid.");
                 let tag_id = &tag_id;
 
