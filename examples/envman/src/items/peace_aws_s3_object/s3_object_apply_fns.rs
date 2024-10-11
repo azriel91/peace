@@ -163,6 +163,22 @@ where
                                 })?;
                             base64::engine::general_purpose::STANDARD.encode(bytes)
                         };
+                        #[cfg(not(target_arch = "wasm32"))]
+                        {
+                            let handle = tokio::runtime::Handle::current();
+                            if let Ok(dump) = tokio::time::timeout(
+                                tokio::time::Duration::from_secs(2),
+                                handle.dump(),
+                            )
+                            .await
+                            {
+                                for (i, task) in dump.tasks().iter().enumerate() {
+                                    let trace = task.trace();
+                                    eprintln!("==== Task {i}: ===");
+                                    eprintln!("{trace}\n");
+                                }
+                            }
+                        }
                         let put_object_output = client
                             .put_object()
                             .bucket(bucket_name)
