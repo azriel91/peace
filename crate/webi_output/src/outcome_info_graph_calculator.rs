@@ -798,13 +798,13 @@ fn process_item_interaction_pull_example<'item_location>(
 
     if let Some(any_ids) = tag_items.get_mut(tag_id) {
         any_ids.push(AnyId::from(node_id_server.clone()));
-        any_ids.push(AnyId::from(node_id_client.clone()));
+        any_ids.push(AnyId::from(node_id_client_file.clone()));
         any_ids.push(AnyId::from(edge_id_request.clone()));
         any_ids.push(AnyId::from(edge_id_response.clone()));
     } else {
         let any_ids = vec![
             AnyId::from(node_id_server.clone()),
-            AnyId::from(node_id_client.clone()),
+            AnyId::from(node_id_client_file.clone()),
             AnyId::from(edge_id_request.clone()),
             AnyId::from(edge_id_response.clone()),
         ];
