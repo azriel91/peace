@@ -753,6 +753,16 @@ fn process_item_interaction_pull_example<'item_location>(
         node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
     };
 
+    // Use the innermost node, as that's where the file is written to.
+    let node_id_client_file = {
+        let node_id_client_file =
+            node_id_from_item_location(item_location_to_node_id_segments, || {
+                item_interaction_pull.location_client().iter()
+            });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client_file)
+    };
+
     // Use the innermost node.
     let node_id_server = {
         let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
@@ -770,12 +780,13 @@ fn process_item_interaction_pull_example<'item_location>(
         [node_id_server.clone(), node_id_client.clone()],
     );
 
-    let edge_id_response =
-        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___response"))
-            .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
+    let edge_id_response = EdgeId::from_str(&format!(
+        "{node_id_client_file}___{node_id_server}___response"
+    ))
+    .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
     edges.insert(
         edge_id_response.clone(),
-        [node_id_server.clone(), node_id_client.clone()],
+        [node_id_server.clone(), node_id_client_file.clone()],
     );
 
     graphviz_attrs
