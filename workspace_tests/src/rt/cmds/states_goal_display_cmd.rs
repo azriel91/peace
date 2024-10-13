@@ -33,7 +33,7 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -54,7 +54,7 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
             (&workspace).into(),
         )
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -107,7 +107,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             (&workspace).into(),
         )
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

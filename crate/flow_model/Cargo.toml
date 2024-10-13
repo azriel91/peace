@@ -21,3 +21,9 @@ fn_graph = { workspace = true, features = ["graph_info"] }
 peace_core = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tynm = { workspace = true, features = ["info", "serde"] }
+
+[features]
+default = []
+output_progress = [
+    "peace_core/output_progress",
+]

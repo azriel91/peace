@@ -79,6 +79,17 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use chrono::Utc;
+        use peace::cfg::state::Timestamped;
+
+        S3BucketState::Some {
+            name: params.name().to_string(),
+            creation_date: Timestamped::Value(Utc::now()),
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -158,5 +169,26 @@ where
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
         S3BucketApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let s3_bucket_name = format!("🪣 {}", params.name());
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![ItemLocation::localhost()]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::group(String::from("S3")),
+                ItemLocation::path(s3_bucket_name),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
     }
 }

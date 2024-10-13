@@ -46,7 +46,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -97,8 +97,8 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_yet_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_yet_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -119,7 +119,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -135,7 +135,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
     let CmdOutcome::Complete {
         value: states_ensured,
@@ -152,7 +152,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
     let CmdOutcome::Complete {
         value: states_current_stored,
@@ -201,8 +201,8 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
 }
 
 #[tokio::test]
-async fn resources_ensured_contains_state_ensured_for_each_item_when_state_already_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_ensured_contains_state_ensured_for_each_item_when_state_already_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -223,7 +223,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -248,7 +248,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -272,7 +272,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -334,8 +334,8 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
 }
 
 #[tokio::test]
-async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -356,7 +356,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -380,7 +380,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -445,8 +445,8 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -467,7 +467,7 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -491,7 +491,7 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -568,8 +568,8 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -590,7 +590,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -614,7 +614,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -678,8 +678,8 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_returns_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_returns_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -700,7 +700,7 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -724,7 +724,7 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -801,8 +801,8 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_item_error_when_item_discover_current_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -823,7 +823,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -861,7 +861,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -915,8 +915,8 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
 }
 
 #[tokio::test]
-async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -937,7 +937,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -975,7 +975,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1029,8 +1029,8 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
 }
 
 #[tokio::test]
-async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_item_error_when_item_apply_check_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1051,7 +1051,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -1089,7 +1089,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1143,8 +1143,8 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
 }
 
 #[tokio::test]
-async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1165,7 +1165,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -1203,7 +1203,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1257,8 +1257,8 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
 }
 
 #[tokio::test]
-async fn exec_returns_item_error_when_item_apply_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_returns_item_error_when_item_apply_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1279,7 +1279,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -1317,7 +1317,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1371,8 +1371,8 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_current_read_cmd_block_interrupt()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_current_read_cmd_block_interrupt(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1398,7 +1398,7 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
         InterruptStrategy::FinishCurrent,
     ))
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1460,8 +1460,8 @@ async fn states_current_not_serialized_on_states_current_read_cmd_block_interrup
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1487,7 +1487,7 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
         InterruptStrategy::PollNextN(2),
     ))
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1551,8 +1551,8 @@ async fn states_current_not_serialized_on_states_goal_read_cmd_block_interrupt()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1572,7 +1572,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1613,7 +1613,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
 
     let CmdOutcome::ItemError {
@@ -1680,8 +1680,8 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_interrupt()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_interrupt(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1707,7 +1707,7 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
         InterruptStrategy::PollNextN(7),
     ))
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1783,8 +1783,8 @@ async fn states_current_not_serialized_on_apply_state_sync_check_cmd_block_inter
 }
 
 #[tokio::test]
-async fn states_current_is_serialized_on_apply_exec_cmd_block_interrupt()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_is_serialized_on_apply_exec_cmd_block_interrupt(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1811,7 +1811,7 @@ async fn states_current_is_serialized_on_apply_exec_cmd_block_interrupt()
         InterruptStrategy::PollNextN(9),
     ))
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

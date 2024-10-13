@@ -25,6 +25,7 @@ pub use crate::{
     sh_cmd_state::ShCmdState,
     sh_cmd_state_diff::ShCmdStateDiff,
     sh_cmd_state_diff_fn::ShCmdStateDiffFn,
+    sh_cmd_state_logical::ShCmdStateLogical,
 };
 
 pub(crate) use sh_cmd_executor::ShCmdExecutor;
@@ -41,3 +42,4 @@ mod sh_cmd_params;
 mod sh_cmd_state;
 mod sh_cmd_state_diff;
 mod sh_cmd_state_diff_fn;
+mod sh_cmd_state_logical;

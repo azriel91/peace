@@ -78,6 +78,32 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use peace::cfg::state::Generated;
+
+        use crate::items::peace_aws_iam_policy::model::PolicyIdArnVersion;
+
+        let name = params.name().to_string();
+        let path = params.path().to_string();
+        let policy_document = params.policy_document().to_string();
+        let policy_id_arn_version = {
+            let aws_account_id = "123456789012"; // Can this be looked up without calling AWS?
+            let id = String::from("iam_role_example_id");
+            let arn = format!("arn:aws:iam::{aws_account_id}:policy/{name}");
+            let version = String::from("v1");
+
+            Generated::Value(PolicyIdArnVersion::new(id, arn, version))
+        };
+
+        IamPolicyState::Some {
+            name,
+            path,
+            policy_document,
+            policy_id_arn_version,
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -158,5 +184,27 @@ where
     ) -> Result<Self::State, Self::Error> {
         IamPolicyApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
             .await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let iam_policy_name = format!("📝 {}", params.name());
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![ItemLocation::localhost()]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::group(String::from("IAM")),
+                ItemLocation::group(String::from("Policies")),
+                ItemLocation::path(iam_policy_name),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
     }
 }

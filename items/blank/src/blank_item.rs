@@ -63,6 +63,11 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        BlankState(params.dest.0)
+    }
+
     async fn try_state_current(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -156,5 +161,18 @@ where
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
         BlankApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        _params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionWithin, ItemLocation};
+
+        let item_interaction =
+            ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into();
+
+        vec![item_interaction]
     }
 }

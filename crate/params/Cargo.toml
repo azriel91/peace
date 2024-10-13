@@ -35,3 +35,4 @@ tynm = { workspace = true }
 [features]
 default = []
 error_reporting = ["dep:miette"]
+item_state_example = ["peace_data/item_state_example"]

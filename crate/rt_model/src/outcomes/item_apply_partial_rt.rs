@@ -57,7 +57,7 @@ impl ItemApplyPartialRt for Box<dyn ItemApplyPartialRt> {
     }
 }
 
-impl<'a> serde::Serialize for dyn ItemApplyPartialRt + 'a {
+impl serde::Serialize for dyn ItemApplyPartialRt + '_ {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

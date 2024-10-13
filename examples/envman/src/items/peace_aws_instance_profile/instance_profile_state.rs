@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::items::peace_aws_instance_profile::model::InstanceProfileIdAndArn;
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// Instance profile state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum InstanceProfileState {
@@ -64,6 +67,16 @@ impl fmt::Display for InstanceProfileState {
 
                 Ok(())
             }
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state InstanceProfileState> for ItemLocationState {
+    fn from(instance_profile_state: &'state InstanceProfileState) -> ItemLocationState {
+        match instance_profile_state {
+            InstanceProfileState::Some { .. } => ItemLocationState::Exists,
+            InstanceProfileState::None => ItemLocationState::NotExists,
         }
     }
 }

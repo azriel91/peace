@@ -80,7 +80,7 @@ where
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
     /// The chosen process flow.
-    flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+    flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -255,7 +255,7 @@ where
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        flow: &'ctx Flow<CmdCtxTypesT::AppError>,
+        flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
         flow_dir: FlowDir,
         params_type_regs: ParamsTypeRegs<CmdCtxTypesT::ParamsKeys>,
         workspace_params: WorkspaceParams<
@@ -295,7 +295,7 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT> SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT> SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -461,7 +461,7 @@ where
 
     /// Returns a reference to the flow.
     pub fn flow(&self) -> &Flow<CmdCtxTypesT::AppError> {
-        self.flow
+        &self.flow
     }
 
     /// Returns a reference to the flow directory.
@@ -517,8 +517,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -538,8 +538,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -559,8 +559,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
-    SingleProfileSingleFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<

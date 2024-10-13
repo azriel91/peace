@@ -1,15 +1,15 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId, State},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
+    FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
     FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
-    FileDownloadStateGoalFn,
+    FileDownloadStateGoalFn, FileDownloadStateLogical,
 };
 
 /// Item for downloading a file.
@@ -56,7 +56,7 @@ where
     type Data<'exec> = FileDownloadData<'exec, Id>;
     type Error = FileDownloadError;
     type Params<'exec> = FileDownloadParams<Id>;
-    type State = State<FileDownloadState, FetchedOpt<ETag>>;
+    type State = FileDownloadState;
     type StateDiff = FileDownloadStateDiff;
 
     fn id(&self) -> &ItemId {
@@ -67,6 +67,19 @@ where
         resources.insert::<reqwest::Client>(reqwest::Client::new());
 
         Ok(())
+    }
+
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        let dest = params.dest();
+
+        FileDownloadState::new(
+            FileDownloadStateLogical::StringContents {
+                path: dest.to_path_buf(),
+                contents: "example contents".to_string(),
+            },
+            FetchedOpt::None,
+        )
     }
 
     async fn try_state_current(
@@ -115,7 +128,8 @@ where
         _data: Self::Data<'_>,
     ) -> Result<Self::State, FileDownloadError> {
         let path = params_partial.dest().map(Path::to_path_buf);
-        let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
+        let state =
+            FileDownloadState::new(FileDownloadStateLogical::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
 
@@ -159,5 +173,33 @@ where
     ) -> Result<Self::State, Self::Error> {
         FileDownloadApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
             .await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPull, ItemLocation, ItemLocationAncestors};
+
+        let location_server: ItemLocationAncestors = vec![
+            ItemLocation::host_from_url(params.src()),
+            ItemLocation::path(params.src().to_string()),
+        ]
+        .into();
+
+        let location_client: ItemLocationAncestors = vec![
+            ItemLocation::localhost(),
+            ItemLocation::path(format!("📄 {}", params.dest().display())),
+        ]
+        .into();
+
+        let item_interaction = ItemInteractionPull {
+            location_client,
+            location_server,
+        }
+        .into();
+
+        vec![item_interaction]
     }
 }

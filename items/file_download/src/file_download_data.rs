@@ -4,11 +4,11 @@ use std::marker::PhantomData;
 use peace::rt_model::Storage;
 
 use peace::{
-    cfg::{accessors::Stored, state::FetchedOpt, State},
+    cfg::accessors::Stored,
     data::{accessors::R, marker::Current, Data},
 };
 
-use crate::{ETag, FileDownloadState};
+use crate::FileDownloadState;
 
 /// Data used to download a file.
 ///
@@ -25,10 +25,10 @@ where
     client: R<'exec, reqwest::Client>,
 
     /// The previous file download state.
-    state_prev: Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>>,
+    state_prev: Stored<'exec, FileDownloadState>,
 
     /// The file state working copy in memory.
-    state_working: R<'exec, Current<State<FileDownloadState, FetchedOpt<ETag>>>>,
+    state_working: R<'exec, Current<FileDownloadState>>,
 
     /// For wasm, we write to web storage through the `Storage` object.
     ///
@@ -49,11 +49,11 @@ where
         &self.client
     }
 
-    pub fn state_prev(&self) -> &Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>> {
+    pub fn state_prev(&self) -> &Stored<'exec, FileDownloadState> {
         &self.state_prev
     }
 
-    pub fn state_working(&self) -> &Current<State<FileDownloadState, FetchedOpt<ETag>>> {
+    pub fn state_working(&self) -> &Current<FileDownloadState> {
         &self.state_working
     }
 

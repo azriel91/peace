@@ -305,8 +305,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    MultiProfileNoFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    MultiProfileNoFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<
@@ -326,8 +326,8 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    MultiProfileNoFlow<'ctx, CmdCtxTypesT>
+impl<CmdCtxTypesT, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    MultiProfileNoFlow<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes<
         ParamsKeys = ParamsKeysImpl<

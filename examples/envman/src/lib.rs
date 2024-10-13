@@ -63,20 +63,26 @@ cfg_if::cfg_if! {
         use wasm_bindgen::prelude::wasm_bindgen;
         use leptos::*;
 
-        use peace::webi_components::Home;
+        use peace::webi_components::{ChildrenFn, Home};
 
         #[wasm_bindgen]
         pub async fn hydrate() {
+            use crate::web_components::EnvDeployHome;
 
             // initializes logging using the `log` crate
             let _log = console_log::init_with_level(log::Level::Debug);
             console_error_panic_hook::set_once();
 
+            let app_home = ChildrenFn::new(EnvDeployHome);
+
             leptos::mount_to_body(move || {
                 view! {
-                    <Home />
+                    <Home app_home />
                 }
             });
         }
     }
 }
+
+#[cfg(any(feature = "web_server", feature = "hydrate"))]
+pub mod web_components;

@@ -7,14 +7,15 @@ use peace::{
     rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
-    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff,
+    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdStateDiff,
+    ShCmdStateLogical,
 };
 
 /// Creates a file.
 #[derive(Clone, Copy, Debug)]
 pub struct TestFileCreationShCmdItem;
 
-pub type TestFileCreationShCmdStateLogical = ShCmdState<TestFileCreationShCmdItem>;
+pub type TestFileCreationShCmdStateLogical = ShCmdStateLogical<TestFileCreationShCmdItem>;
 pub type TestFileCreationShCmdState =
     State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>;
 
@@ -30,6 +31,10 @@ impl TestFileCreationShCmdItem {
     fn params() -> ShCmdParams<TestFileCreationShCmdItem> {
         #[cfg(unix)]
         let sh_cmd_params = {
+            #[cfg(feature = "item_state_example")]
+            let state_example_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item/unix/test_file_creation_state_example.sh"
+            ));
             let state_clean_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item/unix/test_file_creation_state_clean.sh"
             ));
@@ -49,6 +54,8 @@ impl TestFileCreationShCmdItem {
                 "sh_cmd_item/unix/test_file_creation_apply_exec.sh"
             ));
             ShCmdParams::<TestFileCreationShCmdItem>::new(
+                #[cfg(feature = "item_state_example")]
+                state_example_sh_cmd,
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_goal_sh_cmd,
@@ -60,6 +67,13 @@ impl TestFileCreationShCmdItem {
 
         #[cfg(windows)]
         let sh_cmd_params = {
+            #[cfg(feature = "item_state_example")]
+            let state_example_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item/windows/test_file_creation_state_example.ps1"
+                    ));
             let state_clean_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
@@ -93,6 +107,8 @@ impl TestFileCreationShCmdItem {
                 " }"
             ));
             ShCmdParams::<TestFileCreationShCmdItem>::new(
+                #[cfg(feature = "item_state_example")]
+                state_example_sh_cmd,
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_goal_sh_cmd,
@@ -140,7 +156,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -157,7 +173,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
             "Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`."
         );
     };
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
@@ -173,8 +189,8 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
 }
 
 #[tokio::test]
-async fn state_current_returns_shell_command_current_state()
--> Result<(), Box<dyn std::error::Error>> {
+async fn state_current_returns_shell_command_current_state(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -189,7 +205,7 @@ async fn state_current_returns_shell_command_current_state()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -206,7 +222,7 @@ async fn state_current_returns_shell_command_current_state()
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
@@ -239,7 +255,7 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -258,7 +274,7 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
             &TestFileCreationShCmdItem::ID,
         )
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
@@ -289,7 +305,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -318,8 +334,8 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
 }
 
 #[tokio::test]
-async fn ensure_when_creation_required_executes_apply_exec_shell_command()
--> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_when_creation_required_executes_apply_exec_shell_command(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -334,7 +350,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -356,7 +372,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
@@ -372,8 +388,8 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
 }
 
 #[tokio::test]
-async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
--> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -388,7 +404,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -428,7 +444,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
@@ -459,7 +475,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let output = InMemoryTextOutput::new();
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<ShCmdItem<TestFileCreationShCmdItem>>(
             TestFileCreationShCmdItem::ID,
             TestFileCreationShCmdItem::params().into(),
@@ -491,7 +507,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
-    if let ShCmdState::Some {
+    if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,

@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::FileMetadata;
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// Metadata of files to extract.
 ///
 /// The `FileMetadata`s are sorted by their path.
@@ -47,5 +50,15 @@ impl From<Vec<FileMetadata>> for FileMetadatas {
         });
 
         Self(file_metadatas)
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state FileMetadatas> for ItemLocationState {
+    fn from(file_metadatas: &'state FileMetadatas) -> ItemLocationState {
+        match file_metadatas.0.is_empty() {
+            true => ItemLocationState::NotExists,
+            false => ItemLocationState::Exists,
+        }
     }
 }

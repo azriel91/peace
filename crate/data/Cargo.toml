@@ -24,3 +24,7 @@ fn_graph = { workspace = true }
 peace_core = { workspace = true }
 peace_data_derive = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+
+[features]
+default = []
+item_state_example = []
