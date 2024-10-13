@@ -914,31 +914,13 @@ fn process_item_interaction_push_current<'item_location>(
         #[cfg(feature = "output_progress")]
         progress_status,
     } = item_interactions_processing_ctx;
-    // Use the outermost `ItemLocationType::Host` node.
+    // Use the innermost node from the interaction.
     // The `NodeId` for the item location is the longest node ID that contains all
     // of the `node_id_segment`s of the selected item location's ancestors.
     let node_id_from = {
-        let item_location_ancestors_iter = || {
-            let mut host_found = false;
-            let mut location_from_iter = item_interaction_push.location_from().iter();
-            std::iter::from_fn(move || {
-                if host_found {
-                    return None;
-                }
-
-                let item_location = location_from_iter.next();
-                if let Some(item_location) = item_location.as_ref() {
-                    host_found = item_location.r#type() == ItemLocationType::Host;
-                }
-                item_location
-            })
-            .fuse()
-        };
-
-        let node_id_from = node_id_from_item_location(
-            item_location_to_node_id_segments,
-            item_location_ancestors_iter,
-        );
+        let node_id_from = node_id_from_item_location(item_location_to_node_id_segments, || {
+            item_interaction_push.location_from().iter()
+        });
 
         node_id_with_ancestor_find(node_id_to_item_locations, node_id_from)
     };
@@ -1014,6 +996,16 @@ fn process_item_interaction_pull_current<'item_location>(
         node_id_with_ancestor_find(node_id_to_item_locations, node_id_client)
     };
 
+    // Use the innermost node, as that's where the file is written to.
+    let node_id_client_file = {
+        let node_id_client_file =
+            node_id_from_item_location(item_location_to_node_id_segments, || {
+                item_interaction_pull.location_client().iter()
+            });
+
+        node_id_with_ancestor_find(node_id_to_item_locations, node_id_client_file)
+    };
+
     // Use the innermost node.
     let node_id_server = {
         let node_id_server = node_id_from_item_location(item_location_to_node_id_segments, || {
@@ -1031,12 +1023,13 @@ fn process_item_interaction_pull_current<'item_location>(
         [node_id_server.clone(), node_id_client.clone()],
     );
 
-    let edge_id_response =
-        EdgeId::from_str(&format!("{node_id_client}___{node_id_server}___response"))
-            .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
+    let edge_id_response = EdgeId::from_str(&format!(
+        "{node_id_client_file}___{node_id_server}___response"
+    ))
+    .expect("Expected edge ID from item location ID to be valid for `edge_id_response`.");
     edges.insert(
         edge_id_response.clone(),
-        [node_id_server.clone(), node_id_client.clone()],
+        [node_id_server.clone(), node_id_client_file.clone()],
     );
 
     graphviz_attrs
