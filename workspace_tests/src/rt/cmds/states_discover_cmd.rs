@@ -22,8 +22,8 @@ use crate::{
 use peace::cfg::progress::{ProgressComplete, ProgressStatus};
 
 #[tokio::test]
-async fn current_and_goal_discovers_both_states_current_and_goal()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_and_goal_discovers_both_states_current_and_goal(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -42,7 +42,7 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -141,7 +141,7 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -174,8 +174,8 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
 }
 
 #[tokio::test]
-async fn current_inserts_states_current_stored_from_states_current_file()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_inserts_states_current_stored_from_states_current_file(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -193,7 +193,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -212,7 +212,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -228,7 +228,7 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -254,8 +254,8 @@ async fn current_inserts_states_current_stored_from_states_current_file()
 }
 
 #[tokio::test]
-async fn current_returns_error_when_try_state_current_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_returns_error_when_try_state_current_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -280,7 +280,7 @@ async fn current_returns_error_when_try_state_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -333,8 +333,8 @@ async fn current_returns_error_when_try_state_current_returns_error()
 }
 
 #[tokio::test]
-async fn goal_returns_error_when_try_state_goal_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn goal_returns_error_when_try_state_goal_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -359,7 +359,7 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -415,8 +415,8 @@ async fn goal_returns_error_when_try_state_goal_returns_error()
 }
 
 #[tokio::test]
-async fn current_and_goal_returns_error_when_try_state_current_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_and_goal_returns_error_when_try_state_current_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -441,7 +441,7 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -522,8 +522,8 @@ async fn current_and_goal_returns_error_when_try_state_current_returns_error()
 }
 
 #[tokio::test]
-async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_and_goal_returns_error_when_try_state_goal_returns_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -548,7 +548,7 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -628,8 +628,8 @@ async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
 }
 
 #[tokio::test]
-async fn current_and_goal_returns_current_error_when_both_try_state_current_and_try_state_goal_return_error()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_and_goal_returns_current_error_when_both_try_state_current_and_try_state_goal_return_error(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -657,7 +657,7 @@ async fn current_and_goal_returns_current_error_when_both_try_state_current_and_
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -748,7 +748,7 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -788,8 +788,8 @@ async fn goal_runs_state_goal_for_each_item() -> Result<(), Box<dyn std::error::
 }
 
 #[tokio::test]
-async fn current_with_does_not_serialize_states_when_told_not_to()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_with_does_not_serialize_states_when_told_not_to(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -807,7 +807,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -830,7 +830,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
     // Overwrite states current.
     cmd_ctx
@@ -870,8 +870,8 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
 }
 
 #[tokio::test]
-async fn goal_with_does_not_serialize_states_when_told_not_to()
--> Result<(), Box<dyn std::error::Error>> {
+async fn goal_with_does_not_serialize_states_when_told_not_to(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -889,7 +889,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -908,7 +908,7 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -949,8 +949,8 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn current_with_sets_progress_complete_for_successful_items()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_with_sets_progress_complete_for_successful_items(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -968,7 +968,7 @@ async fn current_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1009,8 +1009,8 @@ async fn current_with_sets_progress_complete_for_successful_items()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn goal_with_sets_progress_complete_for_successful_items()
--> Result<(), Box<dyn std::error::Error>> {
+async fn goal_with_sets_progress_complete_for_successful_items(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1028,7 +1028,7 @@ async fn goal_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -1069,8 +1069,8 @@ async fn goal_with_sets_progress_complete_for_successful_items()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn current_and_goal_with_sets_progress_complete_for_successful_items()
--> Result<(), Box<dyn std::error::Error>> {
+async fn current_and_goal_with_sets_progress_complete_for_successful_items(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -1088,7 +1088,7 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

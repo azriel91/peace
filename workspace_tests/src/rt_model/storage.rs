@@ -54,8 +54,8 @@ async fn serialized_read_returns_t_when_path_exists() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn serialized_read_returns_error_when_path_not_exists()
--> Result<(), Box<dyn std::error::Error>> {
+async fn serialized_read_returns_error_when_path_not_exists(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let file_path = tempdir.path().join("t.yaml");
 
@@ -96,8 +96,8 @@ async fn serialized_read_opt_returns_t_when_path_exists() -> Result<(), Box<dyn 
 }
 
 #[tokio::test]
-async fn serialized_read_opt_returns_none_when_path_not_exists()
--> Result<(), Box<dyn std::error::Error>> {
+async fn serialized_read_opt_returns_none_when_path_not_exists(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let file_path = tempdir.path().join("t.yaml");
 
@@ -116,8 +116,8 @@ async fn serialized_read_opt_returns_none_when_path_not_exists()
 }
 
 #[tokio::test]
-async fn serialized_typemap_read_opt_returns_typemap_when_path_exists()
--> Result<(), Box<dyn std::error::Error>> {
+async fn serialized_typemap_read_opt_returns_typemap_when_path_exists(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let file_path = tempdir.path().join("t.yaml");
     tokio::fs::write(&file_path, br#"0: { a: 1 }"#).await?;
@@ -143,8 +143,8 @@ async fn serialized_typemap_read_opt_returns_typemap_when_path_exists()
 }
 
 #[tokio::test]
-async fn serialized_typemap_read_opt_returns_none_when_path_not_exists()
--> Result<(), Box<dyn std::error::Error>> {
+async fn serialized_typemap_read_opt_returns_none_when_path_not_exists(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let file_path = tempdir.path().join("t.yaml");
     let mut type_reg = TypeReg::new();

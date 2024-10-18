@@ -1,0 +1,40 @@
+[package]
+name = "peace_item_model"
+description = "Data types for resource interactions for the Peace framework."
+documentation = "https://docs.rs/peace_item_model/"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+indexmap = { workspace = true, optional = true, features = ["serde"] }
+peace_core = { workspace = true, optional = true }
+peace_cmd_model = { workspace = true, optional = true }
+serde = { workspace = true, features = ["derive"] }
+url = { workspace = true, features = ["serde"] }
+
+[features]
+default = []
+item_locations_and_interactions = [
+    "dep:indexmap",
+    "dep:peace_core",
+]
+output_progress = [
+    "dep:peace_core",
+    "dep:peace_cmd_model",
+    "peace_core/output_progress",
+    "peace_cmd_model/output_progress",
+]

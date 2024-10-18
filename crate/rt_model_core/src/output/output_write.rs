@@ -5,7 +5,11 @@ use peace_fmt::Presentable;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::{ProgressTracker, ProgressUpdateAndId};
+        use peace_core::progress::{
+            CmdBlockItemInteractionType,
+            ProgressTracker,
+            ProgressUpdateAndId,
+        };
 
         use crate::CmdProgressTracker;
     }
@@ -38,6 +42,34 @@ pub trait OutputWrite<E>: Debug + Unpin {
     /// At the end of command execution, `OutputWrite::progress_end` is called.
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker);
+
+    /// Indicates a particular `CmdBlock` has begun.
+    ///
+    /// # Implementors
+    ///
+    /// This is called whenever a different `CmdBlock` is started.
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    );
+
+    /// Signals an update of an `Item`'s `ItemLocationState`.
+    ///
+    /// # Implementors
+    ///
+    /// This is called when an `Item`'s current `State` is updated.
+    ///
+    /// # Maintainers
+    ///
+    /// The `ItemLocationState` is first constructed in `ItemWrapper`, and this
+    /// method is invoked in `Progress`.
+    #[cfg(feature = "output_progress")]
+    async fn item_location_state(
+        &mut self,
+        item_id: peace_core::ItemId,
+        item_location_state: peace_item_model::ItemLocationState,
+    );
 
     /// Renders progress information, and returns when no more progress
     /// information is available to write.

@@ -107,15 +107,15 @@ pub type CmdCtxTypesCollectorEmpty<AppError, Output> = CmdCtxBuilderTypesCollect
 >;
 
 impl<
-    AppError,
-    Output,
-    ParamsKeysT,
-    WorkspaceParamsSelection,
-    ProfileParamsSelection,
-    FlowParamsSelection,
-    ProfileSelection,
-    FlowSelection,
-> CmdCtxBuilderTypes
+        AppError,
+        Output,
+        ParamsKeysT,
+        WorkspaceParamsSelection,
+        ProfileParamsSelection,
+        FlowParamsSelection,
+        ProfileSelection,
+        FlowSelection,
+    > CmdCtxBuilderTypes
     for CmdCtxBuilderTypesCollector<
         AppError,
         Output,

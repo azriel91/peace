@@ -166,6 +166,7 @@ fn impl_build_for(
     let scope_fields = scope_fields(scope);
     let states_and_params_read_and_pg_init = states_and_params_read_and_pg_init(scope);
     let resources_insert = resources_insert(scope);
+    let states_example_insert = states_example_insert(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -324,7 +325,7 @@ fn impl_build_for(
                 //     .scope_builder
                 //     .workspace_params_selection
                 //     .0
-                //     .get(self.scope_builder.profile_selection.0)
+                //     .get(&*self.scope_builder.profile_selection.0)
                 //     .cloned()
                 //     .ok_or(Error::WorkspaceParamsProfileNone)?;
                 #profile_from_workspace
@@ -570,7 +571,7 @@ fn impl_build_for(
                 //
                 // === MultiProfileSingleFlow === //
                 // {
-                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                 //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
                 //
                 //     resources.insert(app_name);
@@ -582,7 +583,7 @@ fn impl_build_for(
                 // }
                 // === SingleProfileSingleFlow === //
                 // {
-                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                 //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
                 //
                 //     resources.insert(app_name);
@@ -599,8 +600,9 @@ fn impl_build_for(
                 #resources_insert
 
                 // === MultiProfileSingleFlow === //
-                // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let flow_ref = &flow;
+                // let flow_id = flow_ref.flow_id();
+                // let item_graph = flow_ref.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -632,7 +634,7 @@ fn impl_build_for(
                 //             // so that multi-profile diffs can be done.
                 //             let params_specs = params_specs_stored.map(|params_specs_stored| {
                 //                 crate::ctx::cmd_ctx_builder::params_specs_merge(
-                //                     &flow,
+                //                     flow_ref,
                 //                     params_specs_provided,
                 //                     Some(params_specs_stored),
                 //                 )
@@ -691,8 +693,9 @@ fn impl_build_for(
                 //
                 // === SingleProfileSingleFlow === //
                 // // Set up resources for the flow's item graph
-                // let flow_id = flow.flow_id();
-                // let item_graph = flow.graph();
+                // let flow_ref = &flow;
+                // let flow_id = flow_ref.flow_id();
+                // let item_graph = flow_ref.graph();
                 //
                 // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -712,7 +715,7 @@ fn impl_build_for(
                 // .await?;
                 //
                 // let params_specs = crate::ctx::cmd_ctx_builder::params_specs_merge(
-                //     &flow,
+                //     flow_ref,
                 //     params_specs_provided,
                 //     params_specs_stored,
                 // )?;
@@ -769,6 +772,17 @@ fn impl_build_for(
                 #states_and_params_read_and_pg_init
 
                 let params_type_regs = params_type_regs_builder.build();
+
+                // === SingleProfileSingleFlow === //
+                // // Fetching state example inserts it into resources.
+                // #[cfg(feature = "item_state_example")]
+                // {
+                //     let () = flow.graph().iter().try_for_each(|item| {
+                //         let _state_example = item.state_example(&params_specs, &resources)?;
+                //         Ok::<_, AppError>(())
+                //     })?;
+                // }
+                #states_example_insert
 
                 let scope = #scope_type_path::new(
                     // output,
@@ -1305,7 +1319,7 @@ fn profile_from_workspace(profile_selection: ProfileSelection) -> proc_macro2::T
                 .scope_builder
                 .workspace_params_selection
                 .0
-                .get(self.scope_builder.profile_selection.0)
+                .get(&*self.scope_builder.profile_selection.0)
                 .cloned()
                 .ok_or(peace_rt_model::Error::WorkspaceParamsProfileNone)?;
         }
@@ -1606,8 +1620,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             //
             // These are then held in the scope for easy access for consumers.
             quote! {
-                let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let flow_ref = &flow;
+                let flow_id = flow_ref.flow_id();
+                let item_graph = flow_ref.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -1639,7 +1654,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                             // so that multi-profile diffs can be done.
                             let params_specs = params_specs_stored.map(|params_specs_stored| {
                                 crate::ctx::cmd_ctx_builder::params_specs_merge(
-                                    &flow,
+                                    flow_ref,
                                     params_specs_provided,
                                     Some(params_specs_stored),
                                 )
@@ -1716,8 +1731,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             // It also requires multiple item graph setups to work without conflicting
             // with each other.
             quote! {
-                let flow_id = flow.flow_id();
-                let item_graph = flow.graph();
+                let flow_ref = &flow;
+                let flow_id = flow_ref.flow_id();
+                let item_graph = flow_ref.graph();
 
                 let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
@@ -1737,7 +1753,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 .await?;
 
                 let params_specs = crate::ctx::cmd_ctx_builder::params_specs_merge(
-                    &flow,
+                    flow_ref,
                     params_specs_provided,
                     params_specs_stored,
                 )?;
@@ -1801,7 +1817,7 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::MultiProfileSingleFlow => {
             quote! {
                 {
-                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
 
                     resources.insert(app_name);
@@ -1816,7 +1832,7 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::SingleProfileSingleFlow => {
             quote! {
                 {
-                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
                     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
 
                     resources.insert(app_name);
@@ -1835,5 +1851,26 @@ fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
             proc_macro2::TokenStream::new()
         }
+    }
+}
+
+fn states_example_insert(scope: Scope) -> proc_macro2::TokenStream {
+    match scope {
+        Scope::SingleProfileSingleFlow => {
+            quote! {
+                // Fetching state example inserts it into resources.
+                #[cfg(feature = "item_state_example")]
+                {
+                    let () = flow.graph().iter().try_for_each(|item| {
+                        let _state_example = item.state_example(&params_specs, &resources)?;
+                        Ok::<_, AppError>(())
+                    })?;
+                }
+            }
+        }
+        Scope::MultiProfileSingleFlow
+        | Scope::MultiProfileNoFlow
+        | Scope::NoProfileNoFlow
+        | Scope::SingleProfileNoFlow => proc_macro2::TokenStream::new(),
     }
 }

@@ -1,5 +1,5 @@
 use fn_graph::StreamOutcomeState;
-use peace_cfg::ItemId;
+use peace_core::ItemId;
 
 /// How a `Flow` stream operation ended and IDs that were processed.
 ///

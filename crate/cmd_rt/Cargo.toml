@@ -41,5 +41,6 @@ default = []
 error_reporting = ["dep:miette"]
 output_progress = [
     "peace_cfg/output_progress",
+    "peace_cmd_model/output_progress",
     "peace_rt_model/output_progress",
 ]

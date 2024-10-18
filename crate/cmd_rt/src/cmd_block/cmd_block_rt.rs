@@ -9,7 +9,7 @@ use crate::CmdBlockError;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::CmdProgressUpdate;
+        use peace_cfg::progress::{CmdBlockItemInteractionType, CmdProgressUpdate};
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -36,6 +36,11 @@ pub trait CmdBlockRt: Debug + Unpin {
             <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
         >,
     >;
+
+    /// Returns the type of interactions the `CmdBlock` has with
+    /// `ItemLocation`s.
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType;
 
     /// Returns the `String` representation of the `CmdBlock` in a
     /// `CmdExecution`.

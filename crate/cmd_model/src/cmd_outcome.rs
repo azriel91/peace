@@ -1,6 +1,6 @@
 use futures::Future;
 use indexmap::IndexMap;
-use peace_cfg::ItemId;
+use peace_core::ItemId;
 
 use crate::{CmdBlockDesc, ItemStreamOutcome};
 

@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId, State},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
-    ShCmdState, ShCmdStateDiff, ShCmdStateDiffFn,
+    ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutor, ShCmdParams, ShCmdState, ShCmdStateDiff,
+    ShCmdStateDiffFn,
 };
 
 /// Item for executing a shell command.
@@ -59,7 +59,7 @@ where
     type Data<'exec> = ShCmdData<'exec, Id>;
     type Error = ShCmdError;
     type Params<'exec> = ShCmdParams<Id>;
-    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
+    type State = ShCmdState<Id>;
     type StateDiff = ShCmdStateDiff;
 
     fn id(&self) -> &ItemId {
@@ -68,6 +68,13 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
         Ok(())
+    }
+
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        let state_example_sh_cmd = params.state_example_sh_cmd();
+        ShCmdExecutor::exec_blocking(state_example_sh_cmd)
+            .expect("ShCmd failed to return example state.")
     }
 
     async fn try_state_current(
@@ -175,5 +182,18 @@ where
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
         ShCmdApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        _params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionWithin, ItemLocation};
+
+        let item_interaction =
+            ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into();
+
+        vec![item_interaction]
     }
 }

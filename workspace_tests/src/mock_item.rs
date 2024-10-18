@@ -6,7 +6,10 @@ use std::{
 };
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::{
+    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
+    item_model::ItemLocationState,
+};
 use peace::{
     cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
     data::{
@@ -199,6 +202,11 @@ where
         &self.id
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        MockState(params.0)
+    }
+
     async fn state_clean(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
@@ -364,6 +372,16 @@ where
         resources.insert(mock_dest);
         Ok(())
     }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        _params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionWithin, ItemLocation};
+
+        vec![ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into()]
+    }
 }
 
 #[cfg(feature = "error_reporting")]
@@ -488,6 +506,13 @@ impl DerefMut for MockState {
 impl fmt::Display for MockState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state MockState> for ItemLocationState {
+    fn from(_mock_state: &'state MockState) -> ItemLocationState {
+        ItemLocationState::Exists
     }
 }
 

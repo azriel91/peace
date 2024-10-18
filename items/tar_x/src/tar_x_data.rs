@@ -23,7 +23,7 @@ where
     marker: PhantomData<Id>,
 }
 
-impl<'exec, Id> TarXData<'exec, Id>
+impl<Id> TarXData<'_, Id>
 where
     Id: Send + Sync + 'static,
 {

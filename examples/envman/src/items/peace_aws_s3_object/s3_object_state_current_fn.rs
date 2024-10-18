@@ -34,7 +34,7 @@ where
                 .await
                 .map(Some)
         } else {
-            Ok(None)
+            Ok(Some(S3ObjectState::None))
         }
     }
 

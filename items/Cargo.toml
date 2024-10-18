@@ -49,6 +49,20 @@ output_progress = [
     "peace_item_sh_cmd?/output_progress",
     "peace_item_tar_x?/output_progress",
 ]
+item_interactions = [
+    "peace/item_interactions",
+    "peace_item_blank?/item_interactions",
+    "peace_item_file_download?/item_interactions",
+    "peace_item_sh_cmd?/item_interactions",
+    "peace_item_tar_x?/item_interactions",
+]
+item_state_example = [
+    "peace/item_state_example",
+    "peace_item_blank?/item_state_example",
+    "peace_item_file_download?/item_state_example",
+    "peace_item_sh_cmd?/item_state_example",
+    "peace_item_tar_x?/item_state_example",
+]
 
 # Subcrates
 blank = ["dep:peace_item_blank"]

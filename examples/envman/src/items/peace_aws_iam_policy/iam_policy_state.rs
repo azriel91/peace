@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::items::peace_aws_iam_policy::model::PolicyIdArnVersion;
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// Instance profile state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum IamPolicyState {
@@ -73,6 +76,16 @@ impl fmt::Display for IamPolicyState {
                     }
                 }
             }
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state IamPolicyState> for ItemLocationState {
+    fn from(iam_policy_state: &'state IamPolicyState) -> ItemLocationState {
+        match iam_policy_state {
+            IamPolicyState::Some { .. } => ItemLocationState::Exists,
+            IamPolicyState::None => ItemLocationState::NotExists,
         }
     }
 }

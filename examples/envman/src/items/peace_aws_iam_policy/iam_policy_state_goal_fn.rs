@@ -56,6 +56,8 @@ where
         path: String,
         policy_document: String,
     ) -> Result<IamPolicyState, IamPolicyError> {
+        // TODO: `Generated::Tbd` is should be saved as `Generated::Value` at the point
+        // of applying a change.
         let policy_id_arn_version = Generated::Tbd;
 
         Ok(IamPolicyState::Some {

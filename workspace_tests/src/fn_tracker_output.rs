@@ -9,7 +9,11 @@ use crate::FnInvocation;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace::{
-            cfg::progress::{ProgressTracker, ProgressUpdateAndId},
+            cfg::{
+                progress::{CmdBlockItemInteractionType, ProgressTracker, ProgressUpdateAndId},
+                ItemId,
+            },
+            item_model::ItemLocationState,
             rt_model::CmdProgressTracker,
         };
     }
@@ -41,6 +45,21 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    #[cfg(feature = "output_progress")]
+    async fn cmd_block_start(
+        &mut self,
+        _cmd_block_item_interaction_type: CmdBlockItemInteractionType,
+    ) {
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn item_location_state(
+        &mut self,
+        _item_id: ItemId,
+        _item_location_state: ItemLocationState,
+    ) {
+    }
 
     #[cfg(feature = "output_progress")]
     async fn progress_update(

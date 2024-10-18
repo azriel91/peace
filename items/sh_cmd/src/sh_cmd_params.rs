@@ -19,6 +19,14 @@ use crate::ShCmd;
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct ShCmdParams<Id> {
+    /// Shell command to run to discover the example state.
+    ///
+    /// The command's stdout is used as the example state.
+    ///
+    /// The command's stderr is used as the human readable description of the
+    /// state. This must be output as a single line.
+    #[cfg(feature = "item_state_example")]
+    state_example_sh_cmd: ShCmd,
     /// Shell command to run to discover the clean state.
     ///
     /// The command's stdout is used as the clean state.
@@ -82,6 +90,7 @@ impl<Id> ShCmdParams<Id> {
     /// Returns new `ShCmdParams`.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
+        #[cfg(feature = "item_state_example")] state_example_sh_cmd: ShCmd,
         state_clean_sh_cmd: ShCmd,
         state_current_sh_cmd: ShCmd,
         state_goal_sh_cmd: ShCmd,
@@ -90,6 +99,8 @@ impl<Id> ShCmdParams<Id> {
         apply_exec_sh_cmd: ShCmd,
     ) -> Self {
         Self {
+            #[cfg(feature = "item_state_example")]
+            state_example_sh_cmd,
             state_clean_sh_cmd,
             state_current_sh_cmd,
             state_goal_sh_cmd,
@@ -98,6 +109,17 @@ impl<Id> ShCmdParams<Id> {
             apply_exec_sh_cmd,
             marker: PhantomData,
         }
+    }
+
+    /// Returns the shell command to run to discover the example state.
+    ///
+    /// The command's stdout is used as the example state.
+    ///
+    /// The command's stderr is used as the human readable description of the
+    /// state. This must be output as a single line.
+    #[cfg(feature = "item_state_example")]
+    pub fn state_example_sh_cmd(&self) -> &ShCmd {
+        &self.state_example_sh_cmd
     }
 
     /// Returns the shell command to run to discover the clean state.

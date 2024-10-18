@@ -12,8 +12,14 @@ pub use peace_core::*;
 
 pub use crate::{fn_ctx::FnCtx, item::Item, state::State};
 
+#[cfg(feature = "output_progress")]
+pub use crate::ref_into::RefInto;
+
 pub mod accessors;
 pub mod state;
 
 mod fn_ctx;
 mod item;
+
+#[cfg(feature = "output_progress")]
+mod ref_into;

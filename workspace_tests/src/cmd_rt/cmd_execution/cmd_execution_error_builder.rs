@@ -44,7 +44,7 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
     let output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -133,7 +133,7 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
     let output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

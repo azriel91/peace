@@ -9,7 +9,13 @@
 // Remember to update there when updating here.
 pub use self::{apply_dry::ApplyDry, clean::Clean, current::Current, goal::Goal};
 
+#[cfg(feature = "item_state_example")]
+pub use self::example::Example;
+
 mod apply_dry;
 mod clean;
 mod current;
 mod goal;
+
+#[cfg(feature = "item_state_example")]
+mod example;

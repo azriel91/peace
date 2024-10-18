@@ -47,8 +47,8 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
 }
 
 #[test]
-fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
--> Result<(), Box<dyn std::error::Error>> {
+fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist(
+) -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs_result = WorkspaceDirsBuilder::build(
         &app_name!(),
         WorkspaceSpec::FirstDirWithFile("non_existent_file".into()),

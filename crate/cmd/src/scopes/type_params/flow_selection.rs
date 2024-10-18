@@ -1,3 +1,4 @@
+use own::OwnedOrRef;
 use peace_rt_model::Flow;
 
 /// A `Flow` is not yet selected.
@@ -6,4 +7,4 @@ pub struct FlowNotSelected;
 
 /// A `Flow` is selected.
 #[derive(Debug)]
-pub struct FlowSelected<'ctx, E>(pub(crate) &'ctx Flow<E>);
+pub struct FlowSelected<'ctx, E>(pub(crate) OwnedOrRef<'ctx, Flow<E>>);
