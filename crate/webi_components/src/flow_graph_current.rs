@@ -32,31 +32,34 @@ pub fn FlowGraphCurrent() -> impl IntoView {
             use gloo_timers::future::TimeoutFuture;
 
             loop {
-                let (progress_info_graph, outcome_info_graph) =
-                    info_graphs_fetch().await.unwrap_or_default();
+                if let Ok(Some((progress_info_graph, outcome_info_graph))) =
+                    info_graphs_fetch().await
+                {
+                    // Progress
+                    let progress_dot_src_and_styles = IntoGraphvizDotSrc::into(
+                        &progress_info_graph,
+                        &GraphvizDotTheme::default(),
+                    );
 
-                // Progress
-                let progress_dot_src_and_styles =
-                    IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
-
-                if progress_info_graph != progress_info_graph_get.get_untracked() {
-                    progress_info_graph_set.set(progress_info_graph);
-                    progress_dot_src_and_styles_set.set(Some(progress_dot_src_and_styles));
-                }
-
-                // Outcome
-                let outcome_dot_src_and_styles =
-                    IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
-
-                if outcome_info_graph != outcome_info_graph_get.get_untracked() {
-                    if let Ok(outcome_info_graph_serialized) =
-                        serde_yaml::to_string(&outcome_info_graph)
-                    {
-                        leptos::logging::log!("{outcome_info_graph_serialized}");
+                    if progress_info_graph != progress_info_graph_get.get_untracked() {
+                        progress_info_graph_set.set(progress_info_graph);
+                        progress_dot_src_and_styles_set.set(Some(progress_dot_src_and_styles));
                     }
 
-                    outcome_info_graph_set.set(outcome_info_graph);
-                    outcome_dot_src_and_styles_set.set(Some(outcome_dot_src_and_styles));
+                    // Outcome
+                    let outcome_dot_src_and_styles =
+                        IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
+
+                    if outcome_info_graph != outcome_info_graph_get.get_untracked() {
+                        if let Ok(outcome_info_graph_serialized) =
+                            serde_yaml::to_string(&outcome_info_graph)
+                        {
+                            leptos::logging::log!("{outcome_info_graph_serialized}");
+                        }
+
+                        outcome_info_graph_set.set(outcome_info_graph);
+                        outcome_dot_src_and_styles_set.set(Some(outcome_dot_src_and_styles));
+                    }
                 }
 
                 TimeoutFuture::new(250).await;
@@ -81,7 +84,7 @@ pub fn FlowGraphCurrent() -> impl IntoView {
 }
 
 #[server]
-async fn info_graphs_fetch() -> Result<(InfoGraph, InfoGraph), ServerFnError> {
+async fn info_graphs_fetch() -> Result<Option<(InfoGraph, InfoGraph)>, ServerFnError> {
     use std::sync::{Arc, Mutex};
 
     use peace_cmd_model::CmdExecutionId;
@@ -99,23 +102,21 @@ async fn info_graphs_fetch() -> Result<(InfoGraph, InfoGraph), ServerFnError> {
         let cmd_execution_id = cmd_execution_id.lock().ok().as_deref().copied().flatten();
         let flow_progress_info_graphs = flow_progress_info_graphs.lock().ok();
 
-        let progress_info_graph = cmd_execution_id
-            .zip(flow_progress_info_graphs)
-            .and_then(|(cmd_execution_id, flow_progress_info_graphs)| {
+        let progress_info_graph = cmd_execution_id.zip(flow_progress_info_graphs).and_then(
+            |(cmd_execution_id, flow_progress_info_graphs)| {
                 flow_progress_info_graphs.get(&cmd_execution_id).cloned()
-            })
-            .unwrap_or_else(InfoGraph::default);
+            },
+        );
 
         let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
-        let outcome_info_graph = cmd_execution_id
-            .zip(flow_outcome_info_graphs)
-            .and_then(|(cmd_execution_id, flow_outcome_info_graphs)| {
+        let outcome_info_graph = cmd_execution_id.zip(flow_outcome_info_graphs).and_then(
+            |(cmd_execution_id, flow_outcome_info_graphs)| {
                 flow_outcome_info_graphs.get(&cmd_execution_id).cloned()
-            })
-            .unwrap_or_else(InfoGraph::default);
+            },
+        );
 
-        Ok((progress_info_graph, outcome_info_graph))
+        Ok(progress_info_graph.zip(outcome_info_graph))
     } else {
-        Ok((InfoGraph::default(), InfoGraph::default()))
+        Ok(None)
     }
 }
