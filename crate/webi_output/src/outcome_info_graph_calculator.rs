@@ -295,8 +295,8 @@ fn theme_styles_augment(
                                     //   state to hide the node. e.g. a file download before
                                     //   uploading it somewhere else.
                                     //
-                                    // * For clean, the successor's destination would be removed, but
-                                    //   not its source. e.g. the upload would remove the
+                                    // * For clean, the successor's destination would be removed,
+                                    //   but not its source. e.g. the upload would remove the
                                     //   destination file, and not the source, which would later be
                                     //   removed by the predecessor.
                                     //

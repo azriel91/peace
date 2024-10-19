@@ -168,12 +168,7 @@ impl<E> Flow<E> {
                                 .iter()
                                 .last()
                                 .into_iter()
-                                .chain(
-                                    item_interaction_push
-                                        .location_to()
-                                        .iter()
-                                        .last(),
-                                )
+                                .chain(item_interaction_push.location_to().iter().last())
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -186,12 +181,7 @@ impl<E> Flow<E> {
                                 .iter()
                                 .last()
                                 .into_iter()
-                                .chain(
-                                    item_interaction_pull
-                                        .location_server()
-                                        .iter()
-                                        .last(),
-                                )
+                                .chain(item_interaction_pull.location_server().iter().last())
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -362,12 +352,7 @@ impl<E> Flow<E> {
                                 .iter()
                                 .last()
                                 .into_iter()
-                                .chain(
-                                    item_interaction_push
-                                        .location_to()
-                                        .iter()
-                                        .last(),
-                                )
+                                .chain(item_interaction_push.location_to().iter().last())
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
@@ -380,12 +365,7 @@ impl<E> Flow<E> {
                                 .iter()
                                 .last()
                                 .into_iter()
-                                .chain(
-                                    item_interaction_pull
-                                        .location_server()
-                                        .iter()
-                                        .last(),
-                                )
+                                .chain(item_interaction_pull.location_server().iter().last())
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
                                         &mut item_location_to_item_id_sets,
