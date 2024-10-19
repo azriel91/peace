@@ -503,7 +503,7 @@ fn impl_build_for(
                 //     output,
                 //     interruptibility,
                 //     workspace,
-                //     mut resources,
+                //     resources: resources_override,
                 //     scope_builder:
                 //         #scope_builder_name {
                 //             profile_selection: ProfileSelected(profile)
@@ -551,6 +551,8 @@ fn impl_build_for(
                 // .await?;
                 #flow_params_serialize
 
+                // Track items in memory.
+                let mut resources = peace_resource_rt::Resources::new();
                 // === WorkspaceParamsSelected === //
                 // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
                 // resources.insert(workspace_params_file);
@@ -684,7 +686,7 @@ fn impl_build_for(
                 //     .await?;
                 //
                 // // Call each `Item`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                // let mut resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
                 //     item_graph,
                 //     resources
                 // )
@@ -744,7 +746,7 @@ fn impl_build_for(
                 // }
                 //
                 // // Call each `Item`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                // let mut resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
                 //     item_graph,
                 //     resources
                 // )
@@ -771,6 +773,10 @@ fn impl_build_for(
                 #states_and_params_read_and_pg_init
 
                 let params_type_regs = params_type_regs_builder.build();
+
+                // Needs to come before `state_example`, because params resolution may need
+                // some resources to be inserted for `state_example` to work.
+                resources.merge(resources_override.into_inner());
 
                 // === SingleProfileSingleFlow === //
                 // // Fetching state example inserts it into resources.
@@ -937,7 +943,7 @@ fn scope_builder_deconstruct(
             output,
             interruptibility,
             workspace,
-            mut resources,
+            resources: resources_override,
             scope_builder: #scope_builder_name {
                 // profile_selection: ProfileSelected(profile),
                 // flow_selection: FlowSelected(flow),
@@ -1705,7 +1711,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     .await?;
 
                 // Call each `Item`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                let mut resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
                     item_graph,
                     resources
                 )
@@ -1783,7 +1789,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 }
 
                 // Call each `Item`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                let mut resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
                     item_graph,
                     resources
                 )
