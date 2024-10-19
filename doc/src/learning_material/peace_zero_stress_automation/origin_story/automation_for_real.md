@@ -1,0 +1,11 @@
+# Automation (For Real)
+
+<div style="display: flex; justify-content: center;"><div>
+<object
+    type="image/svg+xml"
+    data="automation_for_real/automation_for_real.svg"
+    width="300"
+    /></object>
+<br/>
+<small><a href="https://azriel.im/dot_ix/#src=LQhQBMEsCcFMGMAukD2A7AXAAgG62svAIYA2oAFpPkdPOQJ4ahZYAONRAtgM4D64sAGaQ0sbAG8AvsyywAHggCuiMTJXdEE6SwElYKraFBoUA3mi6xuTFu2hc+A4aOwAiLABEhI2FgAKHJz6+NyuMvJKBljuAEqKaFgAgsoonETI6GEs6prRWADC5AgA1liQgmWIWADuKNDFsOBZWLrBbp6weiphxqaw-Fbw1jJ2DgPOYtEAFACsWAB+WABsAAxYnCLKVgCUzRHwW25TAMxrG2hb3LtqVrmuUwCMZ5vq1zqdbdNz55fXvWawTgoABWkGGtkCjm8LiwgF4NwC7O+EFAcooBMskA8H83DTYWGAbp2ZK0orDAIu7mNAjQA5lYbGxIeMfLxePtDlgANqjHj00QAGlkyK2AF0kZF+rwcthWcyVLyckLsrdGYTJqycrylXKWh8VIyOVCJhKlbzdVzYELQBT7KxyDhIAAvXjpRDQcFYExmaqQcCIcjjIiKEi5B4AOgAHDI3f0PV7yC6IfZOU4fNgAExBlYyFhSyap9MsCO8IqQCnkRC+-25FZBmbhvoF2BFkux2nxvVJrDB3MsPkilNpmT2NDFbiwVjYSsPassbisEg+axYOrelDhcBU3jwdAaewiRBNpU6umJmGCUjDozewGqKeIeh6JvsPS8ABGJEUkwAZA-+i+3xmu8ISBIXhuHIIgzBMaA0hIbAAHIZhWGC-xYACgJAsD+nIFA8GgWD4MQrt-0gQDgNAsxBBQA55xgp4EKQrAUJI9CHSQSA8Fgmj8IIrAtxQBpGPAuooNggAWFZaK47inV4-o0LMTDsNg05xK4ni+Nk-oiBYtisDgsTOIItDWH6DcSDqbAf1gIwCPzJw-QDecACov2fV9LL-LMJG40CjPXFBTJw7iSHSXxtC7JVPMM4y-LMwLgqwaQgA">source</a></small>
+</div></div>

@@ -1,0 +1,59 @@
+# 🏗️ envman (example tool)
+
+<div class="presentation_card_container">
+<div class="presentation_card card_content">
+    <img src="dove.svg"
+        style="
+            display: inline-block;
+            width: 7.5em;
+            height: 7.5em;
+            margin: 0.0em 0.0em -1.0em 0.0em;"
+        alt="Peace logo"
+    /><br/>
+    <p class="presentation_card_label">Peace</p>
+    <p class="presentation_card_description">Constraints and<br/>common functionality</p>
+</div>
+<div class="presentation_card">
+    <span class="presentation_card_symbol">+</span>
+</div>
+<div class="presentation_card card_content">
+    <span class="emoji_image">💻</span><br/>
+    <p class="presentation_card_label">Code</p>
+    <p class="presentation_card_description">Logic and data types</p>
+</div>
+<div class="presentation_card">
+    <span class="presentation_card_symbol">=</span>
+</div>
+<div class="presentation_card card_content">
+    <span class="emoji_image">⚙️</span><br/>
+    <p class="presentation_card_label">envman</p>
+    <p class="presentation_card_description">Automation software</p>
+</div>
+</div>
+
+<style type="text/css">
+p { margin: 0.25em 0.0em 0.0em 0.0em; }
+</style>
+
+
+## What It Does
+
+<div style="font-size: 1.5em;">
+
+1. 📥 Downloads a file
+
+2. ☁️ Creates AWS resources
+
+3. 📤 Uploads the file to AWS
+
+</div>
+
+<details><summary></summary>
+<object
+    type="image/svg+xml"
+    data="envman_example_tool/envman_what_it_does.svg"
+    width="800"
+    /></object>
+<br/>
+<small><a href="https://azriel.im/dot_ix/#src=OYJwhgDgFg+gzgFwJ4BsCmAuABAIwPYAeAUACYCWIaAxgmXgHbYBuaItVYKRZAtmMGjjYA3gF8iUMqzAgqUJBiJYsoPAFcIMLWTA9Fy5ao1aYOniaObt9RGHpU0WiCDwAzMuiFKDhl8e26Fn5WpjYIdg5OLu6eJhBgCLAmJiRoPHhaAIwi4j6WJmZB6iEQeChkVFJePr7FBYFa+U5lFVVxCUnJMKnpWTnetf6mDTBNMC6e+jVjhY3BJhOC7YldWj0ZMNlYYt5jcADMU4MhB8udyWAAXiBSKEkQaGCRMGj0THz0a2kb2QMGe-szqsYFcbmg7k5Hs9Xu87F9epsgasAO5oHBaSBWcIgfrKKB4RDA4BkRJqdEwKh4PR-fGE1bE0nkynmJwdExQBAICBwekkqBkrTMjHXW4ATkyWlR5MxWko6DAcCW3TwyPoKDwYBIWgADFk9TApRiIFiZLisLSEMD1Rw7gSEEdzXarXgbRakV1QWKJQa0UarLrEYHDSDjVpsf16HhUjB6LpBFMZrpsABJACCAFldvMAizRtnQrZ7I4YM43B541hk2EImgsAAFaLluBZuo5opDMjVotRMuxVkrVbrPpYQC8G4BdnawQ8yLY7IzGpXKlQrdZaS+bx3qufnq7a-fOKW+w-Hk8P043bbmrfGZQrACUb+uVPnZnmr4seXvgUPNthAHwbgCPdk9ejPJ8rwObAAGV9hnE5AU-VZPXBe4oWLGEPnhH4-0AYr2sEQu4AFoHieNB8LQux8PWfCQIBd0LhFJDIWIrQyM+bpD0DEs2RRX0QxNHFR0AEZ2sENTEADpsW8N1eUZQUqWwQAeDcABH2VD5MlROZSSnWk-kmSpd0OS5D9kgZHTZJZPDxUlHiZXGcFHkVD8SBVNUNS1GAA29b1gxs8NzU5bkMAAekCky1OZQKLMyQKRONQK5XswRAqc1V1U1QLtVEzJMui30xIkvEtK6a1OAtbAR0Abp2sGK21EE0ukipdErCviAcPXolBLJ9aVQ3c-UvOsnrfJHITIoAHRiiBRoyrLMnG3LjXEmQiEjaNUjgKghG2cQVscb4ACsyE2nYdtMPgBCO8Q0BIc6pikhrXUKmj4LasEIRLFDmLedC2IRX5lHwx16uSaqLW8AGns41q6Ne5CmJeL64R+n46stVYQce5853zBdWiVSH9wwvowcB1H7qa2r-tA2ct2xnc8ZagmkayFHnQe+rExpt8H1og9fqmAG7uBxqaoQYmOfbEJ3x5wnNhZtHhbu8XLw7LtnlLGJ6a4rpvz+rABcKoW2dFymldfFXCzVxs+3xr92JAgB+EnWfJ0nBYsVTdNzBn2X8oz3Zkik9JBdrOu8nr4oVJVkpczUdT6qzur4hY0AARzUQRjawbB9aB-3TMDr2tYM7ltIFAvhVe0OBqsCOHLWZzUrcjz9TDvi-hz0nDZd7xHbdrR0fq72EJD-rE7jwNR79MMZHZA287LoVnuLv3Gg9syK69BOp9s+U6+VFLXPHzyt946eQGTuBShsNBvGzp3S89-TfYf9fg8ryfT53hLHIbw-eonk+Pklo+A7s7EW0s36by6tvZuQZq5nx7vfMm4DnrQyga3I+Ld4EwGxBLEwpxUEmDwrDaECNWI6wgRgnBwCs56yQV3FBNth7v0AT1WBH8gEgHblTWCEDiGMVIbCchdtKHYIkldAQbF1oXSIOEYA1QsByNPtHRu2AADkAARX+mosAAHU0RYFTMaNR3glGnBwGoKgABrNA9osBqIAMKUASLWVMuiIJYFvIIdQshBAmOUGYwEeAcB7WoHYtRABVCAjdDHGkUXgLAUETFKJJGkBRSiZQqNcvzeh89H5L2fl0UK+TIqsJrnZSOP8D6x3-sfaBn98p0L7jAAepMh4vXQdg9hZSEGU2aa02eudV4B0XkwmAy8X7l0geCKuY8v6VPrtUpu8d6mcOTmnDOxN+kK2alrNBMyOFsJWVQ3BWhmnFNfmMiZRS15TNKas8OFS95ZJqd0h5SdZSCCvoqUx-B4CAgsdY2xOTtlGzFvmAhYz9lvSIoI76Ostlz37js9mEK4JQqIe1EhqEyEyxAqA+WYKTaY05kMHGa4IEIr6UilpKLSam23IuXcGK8WIqGbSoldCGX5iloQ1l1L2UDOViEF8YxeUsqZrLAVncTCtPBVeUVz5VbFnVk2Slds2UyuRUbPBF4zYiuVT2DWRl2nJCpYov5pxgmhJoCCmlQqJX3KoW8k5NDwZor4VigROKhF4tEXMxpBLkF3VNZilh7zMFwIDTPYV+D0Who3gxd6cMWJ+r5RG6hXCzHIFiK4F0ah0l-MydokgDpe72rpYMrVoxbmjPadc4ytag5OuwbXKOJbI2HI+bZDZFMDDMEOmQHAHgSQKCwEwQdOB0B-GUHYXgLj1EAG1EAuBsRRBU+JXCuEVAgfC6QWD4UoL2y0WUACsPJyj0EeOfTs7h6CpIALr+JqHAKAkBHCUnVPxKd6cZ1YBXXgGx8Ac2YEnBumQ4AFDagADSnpg5kAATNBpDAAWZD6GkOZHQ1hxD2o-0AaA8iMgJBEhLsyBAAgT78MIFXY4V9mpHCRhAHwFA6iABs2ptTPp8DEFA8A33RiYyx9RcGuN-HLYKyt6aW1zJdWImN4yaUXKmVcwpjaRnNpHj0+ZzyO21KwdG8+nzL4MB+T4AdcAh0juQBZod06ai4XvXwBAoG1HLpo4BkiJAN1uG3bYvdeAD2UBM9fTYolz0tM7Ne0Id7H3cYMPRh4gcv3YB-TfBzBG6MgewN5+jIBIMYHgwh+D2GMPobQ0hgAHBhmDcHqO0YNMR0j9jF0IYo1RjLHmgP0cE3gZjnB2Ocfi8oXj-GGMxj68J+xonn2BJgICmx9oaQVp1bGrQkKE3TJhR9eGvrJW6x8BOyzw7yg2fHZO+zNQ53Odc+52j67X2+Z3QFlgmwL1RZnrezscX8NvqS5+vrqWUC-s6w1xAqBQO5bfflsAUHoMoZK5hsrqH0PVaQ8V2DeHQeebG71-rrH7EcbEw50bPXGOTYG9Noby3JOrf1ZuXVJY6Ymr2bzTCf6jtWdO2OznU70tXacwulrmWHubr87u-djhMjvavZ9+gsWXMdZfX9j9ZRAe4GB-znwmXgMQ5y+BmHcOEfQaw0j9H5XUc1cx-VnHZOJv48G8TmopOBPk4d1Tp3BVacu0Z4qrm1tNs6wdMoXn1mecXa1wYa7Qu3Mi6h09-zku3uRdlze+X33FfDf-Sr5L6u0s2+69lsDeWCsweN6bk3yP4eW-R7VrHL6ut0dd-bqbaiidZ5d+NoTlO1EzZp9Wh13KFWGpLFbTWUM2dEwc6H7ntm+d-ujy5pdcefNbue0n6XKfotffvZn3777c-fs1wXrLevi-Q9L-DxHlfzco6q1bur2PuvN+7wTtv1OSceD43b1-ImP8WuAH+RgGtTCTLVyW1R92ky0wzTk0M0Zw21Z0TW2xTVxX239W3kaWUDnzDzn0ux8EX1uxX0ezX0T0Cylxl233T13zQCV21xzwByPxBwbzByLyhwg1h0Kyvxv24PNwq2gzR2QzrxP1xzd1b3bz-U7zx1bz71AEgCgAnUuBBE5BAAUR2kVAgGwAygQ1PW8HAHoCsXUM0NEm0O8EvkvQrDUGvkzgkVVzCHAE7EtFSFcDADUBQDsRoyYJsMDjsLAAcJkWUC8PIHPicJcLcOwDzRAGRBkBIG8ECIoAUWUAkwHyk0U3ZWUzrSLjUzyVfhk23jbSqRjmWQAQzVOR7XTj7SwNwCeCsViOukcB4E7HQE+BCNcLsWggCLqJgAaLVFeH8KwHiGsS6KjFA3YKQBwVkSgDSEwG8B4FYEkSIxWBwEjmwA8P53B0mD+ECLQGcNaISIMBn1HWwE7F5zwJ4U3GD3-Ub113QByzwE5CumEJ-wpzf32H-21yuLt3xBYH4jUVeM9wSw+ObzzSoALXUQR3+OUB1ztyeFoBYD-whKwEkNEJ7zgw7y-xEMU2+L-zRJQG-yBPzU2jUUyDeIMCRJBBoDIDhPsWK3+KH3NnCG7FH17HjEeNYLuJcxiKfyby72ePUT+KzyhOby+NYD5JJMhMBPG2BNBPsXBIFIlOjBhMpNcz70-1xIxN-ypxxLxPG2FJ+NRIkPRLtylMJOJIRLJMVKpLURpPizpJKGZwuKhLZPuM5OYNtxf15PsX5MeKFLIJ+K9K5IxONLBLFMuLB2bwtOVJDLJI1N7zNMNJ9KxM1INLVKNIJPUVNK1IxIjPUWtL+FtIWAfAdI+KdI5O9J5Pd1+JDMFJ1N9NFIROrOjCDJlKrPlMcGzI90zKeIrP1NVO1OjF1OxOTL7McCbKJKjPjPG3bKtJJIBCLJYLPycmdLLKkJ739NdOfxrMTMrPrNbJgFHNlOXLbIpMtJVOdwnJXLfx7LPJTITJFKTN7MDLTPsQzKHKzOPNc1zJ8HOSbWpADPWMh3ZIeL-PdIrLXPeLDM3LvO3LlIgsbKfLUQPOAsnPfPhM7JAukLjJvMgr1MwuHL3PgpfIfOhJQupJJNBRdjnNtxLKAvXO5IvLrJgrdOwoYsPPwpBMJMQtorfNhMjNwvVI9NjLQuYvvOvLwtHMItEu4qVJzKrPoLV0YJvg2k2gAB8EMiBvAAABGxJAVwcAWYuALAHafCIgsXdfMg7YP4bUAAUgMGEFDM81FwTzsW1AAG4sBcgDBTSbK7KTKnLsBXi3KPKPKtK0AdK9LBB7K1148SCJdzLhBLKbLlAfLG9HKYrsBMh9g2NAq-gvLthIqvNV9xdNDsrlBgrtLdK4wDLfKYqXsSIj1yiEALKfBrLbL8rUqiqsBXL3KcrONvK2roqOrMhRRKsSrurlAQqwrKr+rCqzKgsvlTNax4rmrEq8rqqOquqPLlBcrkr7sBqd1s4ENMgRqxruq4AmBAC0ACAaMwB1E1EgA">source</a></small>
+</details>

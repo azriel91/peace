@@ -1,0 +1,24 @@
+# Components
+
+<div style="display: flex; justify-content: center;"><div>
+<object
+    type="image/svg+xml"
+    data="components/components.svg"
+    /></object>
+<br/>
+<small><a href="https://azriel.im/dot_ix/#src=LQhQBMEsCcFMGMAukD2A7AXAAgG62svAIYA2oAFpPkdPOQJ4ahZYAOsR8sTLL7nsAPqREsALaDwsAGY9efDl2GiJU6cvHYA3gF9mvfkvgoxY9IOkBXNPDnzDQ46fNWbg+GPDa98hQPcmZmgW1vCClpDe+vaKjoEuoYIoiOT4USwimtFYmRIkKADmkGFEaOCSRIhE6ViIKCgkdrX1JIIkkABGNSx1DYIdkJhYuqCgaChSgmhEYrAAznIO2ABEAAqxy-oOGqoyKwCSKlgAIjKDIqhom35KuZIyOysAMoXFAPTHlURYACrQRCI5tc2LEAs5gq5bFhlgBheJoLAAMVCyHQpBE9GB2ycQRCbg8XmhcNMpXAWAAogAPBCWVFXLagnEJNwRbAAVTm+Cw+zQomg0gEDP8TIhiWSqWgKwAdDLgbkDkcYf9RHKVG1XiUyhUqs8NR8vqrxNrqtDPlVgb1GtCfi0LS02p1np1-tBMfpLf1BisAEKDGhusYTIRSObwBZCrgrRH-WYAdxQ0AA1sCAMQg-x3NSPLAAH2A+hTBd4sClBSlRZYwG5KgrWCrqxoMzmRex8LxYQJ2DzBdrJbLtarPL50EsrGQA3aiHoA6wADVSJZYFgG3M5oMCj2WGnW+D2+FIrn81ve6Xy1veFXiWJSVgnoNYDOAOqwDpYNn7Ivyw+brBplh9s9fwvJFIBIJdjhQWM0HyIhwBnABlfA8GgW8iFCchRh6e12i6aEAApHwAQXggBZABKO0+gGIZljwmEnn2CjRlgcACnmRZQUzB5swAbW2LjpAAGhyFQAF19DuQRLWwHjcmEy1xJuOJd0hQQpJaGSd1xSF5JacSixIIh6BQWkI2U7TEl4rTmXgYTckUoDrNFFlIDUpy907LA+MZNtVIJYT3NUiJ9IKf5WHIHBIAAL0ESpEGgcN-1Y4MYHuAVLBIRBsA6ThE30Fi2MEMRBjAtBEt4STpKwABmbJAsSCI3J8lTEk8gBGUYUnEbh9DmKcwPKlhKHAKQhgAMmG0bshYSK1wnDFsEGWbOjAurSG4LAxtYdbpqwaRQNaOZyFgoRxmga8rQAcgAVgABku3b9pIQ7jsmcgUGQ7Abvux6DsEI6TosFB4EsBYsEutrbp+3w9r+gHJk4ZA8C+yHod8ProBQRMhHh06Ewur6ABYoYemGMaxnHXqEd7PvB6qSd28nsf+qnYqQSBkfBu60fkJmcf6jbwGSUQ4LJ472ACfJJSwDoSEXTDeHaApyCyzalZV37npZwGzoJ8HUdJ3wnpewGabSLmed4Y3tcmaRgdBlGGZh63cbZpGNohp30fiimbbx87SCJr3eZ95nXbN6XLvpy2WD5v23Y5j3ucNkPMbDgXsCFxARcZ8W4il7K5YfbJZigSwxGwMbS8gcvNZNyZdcD8GACZg6tuHWYjx2Y9hrXXbtkGwcu1ue5d1nEcTr6R5T3g49dxuruJnu587j7zajtvY9DynAYnznvuXvPJYTQv5bq2JsAAKm21aYgzNU1Cv9XEHP++jSzL9L+r2u76MXzQifpAZWL9f7mRsu4TwV9v5iFfn-FqLkoEsRrjA0BYILJuHFObL+SDa7ZHlLtAAPAQq+N8HxiyIBLYwBdcCoDAiAiqap8hFE1OUcAXwmgsCIYgsuKD0ZHyoSfGhDRYAv2yNJQhxCsDXx2uQyhDRBGhVgLANAYjsKOgkdw5BucKH5wUXAZRqiqJeg0VI6B2i5HUMUQY2BYDnJhEaoIeq+JIFSMmgY1BIo9zZkvm4lRQA">source</a></small>
+</div></div>
+
+<div class="hidden" style="font-size: 1.5em;">
+
+1. Peace provides:
+
+    1. Logic and data traits for each item.
+
+    2. Code to execute each item's logic, pass data between them, and present the information.
+
+2. Item implementors define the data, and state retrieval and modification logic for each item.
+
+3. Tool developers group together different items, and pass them to Peace to run a particular command.
+
+</div>
