@@ -717,13 +717,11 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     >(output.into(), (&workspace).into())
     .with_profile(profile!("test_profile"))
     .with_flow((&flow).into())
+    // overwrite initial state
+    .with_resource(VecA(vec![0, 1, 2, 4, 5, 6, 8, 9]))
+    .with_resource(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]))
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), ParamsSpec::InMemory)
     .await?;
-    // overwrite initial state
-    let resources = cmd_ctx.resources_mut();
-    #[rustfmt::skip]
-    resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
-    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
         cmd_blocks_processed: _,
