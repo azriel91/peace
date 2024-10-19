@@ -172,8 +172,7 @@ impl<E> Flow<E> {
                                     item_interaction_push
                                         .location_to()
                                         .iter()
-                                        .last()
-                                        .into_iter(),
+                                        .last(),
                                 )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
@@ -191,8 +190,7 @@ impl<E> Flow<E> {
                                     item_interaction_pull
                                         .location_server()
                                         .iter()
-                                        .last()
-                                        .into_iter(),
+                                        .last(),
                                 )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
@@ -368,8 +366,7 @@ impl<E> Flow<E> {
                                     item_interaction_push
                                         .location_to()
                                         .iter()
-                                        .last()
-                                        .into_iter(),
+                                        .last(),
                                 )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
@@ -387,8 +384,7 @@ impl<E> Flow<E> {
                                     item_interaction_pull
                                         .location_server()
                                         .iter()
-                                        .last()
-                                        .into_iter(),
+                                        .last(),
                                 )
                                 .for_each(|item_location| {
                                     item_location_to_item_id_sets_insert(
