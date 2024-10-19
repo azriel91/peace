@@ -213,7 +213,7 @@ tower-http = "0.5.2"
 tynm = "0.1.10"
 type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.2"
-wasm-bindgen = "0.2.93"
+wasm-bindgen = "0.2.95"
 web-sys = "0.3.70"
 
 [workspace.lints.rust]
