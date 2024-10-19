@@ -503,6 +503,7 @@ fn impl_build_for(
                 //     output,
                 //     interruptibility,
                 //     workspace,
+                //     mut resources,
                 //     scope_builder:
                 //         #scope_builder_name {
                 //             profile_selection: ProfileSelected(profile)
@@ -550,8 +551,6 @@ fn impl_build_for(
                 // .await?;
                 #flow_params_serialize
 
-                // Track items in memory.
-                let mut resources = peace_resource_rt::Resources::new();
                 // === WorkspaceParamsSelected === //
                 // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
                 // resources.insert(workspace_params_file);
@@ -938,6 +937,7 @@ fn scope_builder_deconstruct(
             output,
             interruptibility,
             workspace,
+            mut resources,
             scope_builder: #scope_builder_name {
                 // profile_selection: ProfileSelected(profile),
                 // flow_selection: FlowSelected(flow),

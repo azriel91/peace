@@ -20,6 +20,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 output,
                 interruptibility: _,
                 workspace,
+                resources,
                 scope_builder,
             } = self;
 
@@ -27,8 +28,20 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 output,
                 interruptibility,
                 workspace,
+                resources,
                 scope_builder,
             }
+        }
+
+        /// Sets the interrupt receiver and strategy so `CmdExecution`s can be interrupted.
+        pub fn with_resource<R>(
+            mut self,
+            resource: R,
+        ) -> Self
+        where R: peace_resource_rt::Resource
+        {
+            self.resources.insert(resource);
+            self
         }
     };
 

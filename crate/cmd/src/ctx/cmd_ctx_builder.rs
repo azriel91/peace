@@ -54,6 +54,8 @@ where
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: OwnedOrRef<'ctx, Workspace>,
+    /// Runtime borrow-checked typemap of data available to the command context.
+    resources: Resources<Empty>,
     /// Data held while building `CmdCtx`.
     scope_builder: ScopeBuilder,
 }

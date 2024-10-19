@@ -803,6 +803,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
     )
     .with_profile(profile.clone())
     .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -889,6 +890,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
     )
     .with_profile(profile.clone())
     .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -966,6 +968,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
     )
     .with_profile(profile.clone())
     .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()

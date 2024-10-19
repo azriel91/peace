@@ -101,6 +101,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     output,
                     interruptibility: interruptible::Interruptibility::NonInterruptible,
                     workspace,
+                    resources: peace_resource_rt::Resources::new(),
                     scope_builder,
                 }
             }

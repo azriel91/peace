@@ -83,6 +83,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection: ProfileNotSelected,
@@ -111,6 +112,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder,
                 }
             }

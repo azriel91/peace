@@ -48,7 +48,7 @@ fn host_from_url_https() -> Result<(), ParseError> {
     assert_eq!(
         ItemLocation::new(
             peace::item_model::ItemLocationType::Host,
-            "example.com".to_string(),
+            "🌐 example.com".to_string(),
         ),
         item_location
     );

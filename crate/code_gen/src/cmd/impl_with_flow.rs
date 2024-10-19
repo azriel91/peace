@@ -82,6 +82,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
@@ -110,6 +111,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder,
                 }
             }
