@@ -81,6 +81,8 @@ output_progress = [
 item_interactions = [
     "dep:peace_item_model",
     "peace_cfg/item_interactions",
+    "peace_webi?/item_interactions",
+    "peace_webi_components?/item_interactions",
 ]
 item_state_example = [
     "peace_cfg/item_state_example",
@@ -88,6 +90,8 @@ item_state_example = [
     "peace_data/item_state_example",
     "peace_params/item_state_example",
     "peace_rt_model/item_state_example",
+    "peace_webi?/item_state_example",
+    "peace_webi_components?/item_state_example",
 ]
 ssr = [
     "peace_webi?/ssr",

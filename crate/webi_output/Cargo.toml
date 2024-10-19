@@ -48,6 +48,14 @@ tower-http = { workspace = true, features = ["fs"] }
 
 [features]
 default = []
+item_interactions = [
+    "peace_rt_model/item_interactions",
+    "peace_webi_components/item_interactions",
+]
+item_state_example = [
+    "peace_rt_model/item_state_example",
+    "peace_webi_components/item_state_example",
+]
 output_progress = [
     "peace_cmd_model/output_progress",
     "peace_core/output_progress",

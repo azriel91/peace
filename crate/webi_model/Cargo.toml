@@ -31,6 +31,7 @@ serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
 
 [features]
+default = []
 error_reporting = ["dep:miette"]
 output_progress = [
     "dep:peace_item_model",

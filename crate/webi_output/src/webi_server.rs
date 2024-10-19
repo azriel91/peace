@@ -7,13 +7,16 @@ use leptos_axum::LeptosRoutes;
 use peace_cmd_model::CmdExecutionId;
 use peace_core::FlowId;
 use peace_webi_components::{ChildrenFn, Home};
-use peace_webi_model::{OutcomeInfoGraphVariant, WebUiUpdate, WebiError};
+use peace_webi_model::{WebUiUpdate, WebiError};
 use tokio::{io::AsyncWriteExt, sync::mpsc};
 use tower_http::services::ServeDir;
 
-use crate::{
-    CmdExecSpawnCtx, CmdExecToLeptosCtx, FlowWebiFns, OutcomeInfoGraphCalculator, WebiOutput,
-};
+use crate::{CmdExecSpawnCtx, CmdExecToLeptosCtx, FlowWebiFns, WebiOutput};
+
+#[cfg(feature = "item_interactions")]
+use crate::OutcomeInfoGraphCalculator;
+#[cfg(feature = "item_interactions")]
+use peace_webi_model::OutcomeInfoGraphVariant;
 
 #[cfg(feature = "output_progress")]
 use std::collections::HashMap;
@@ -113,12 +116,26 @@ impl WebiServer {
         let flow_outcome_example_info_graph = outcome_info_graph_fn(
             &mut webi_output_mock,
             Box::new(|flow, params_specs, resources| {
-                OutcomeInfoGraphCalculator::calculate::<E>(
-                    flow,
-                    params_specs,
-                    resources,
-                    OutcomeInfoGraphVariant::Example,
-                )
+                #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+                {
+                    OutcomeInfoGraphCalculator::calculate::<E>(
+                        flow,
+                        params_specs,
+                        resources,
+                        OutcomeInfoGraphVariant::Example,
+                    )
+                }
+
+                #[cfg(not(all(feature = "item_interactions", feature = "item_state_example")))]
+                {
+                    use dot_ix_model::info_graph::InfoGraph;
+
+                    let _flow = flow;
+                    let _params_specs = params_specs;
+                    let _resources = resources;
+
+                    InfoGraph::default()
+                }
             }),
         )
         .await;
@@ -274,19 +291,33 @@ impl WebiServer {
                                 let item_progress_statuses =
                                     item_progress_statuses_snapshot.clone();
 
-                                OutcomeInfoGraphCalculator::calculate::<E>(
-                                    flow,
-                                    params_specs,
-                                    resources,
-                                    OutcomeInfoGraphVariant::Current {
-                                        #[cfg(feature = "output_progress")]
-                                        cmd_block_item_interaction_type,
-                                        #[cfg(feature = "output_progress")]
-                                        item_location_states,
-                                        #[cfg(feature = "output_progress")]
-                                        item_progress_statuses,
-                                    },
-                                )
+                                #[cfg(feature = "item_interactions")]
+                                {
+                                    OutcomeInfoGraphCalculator::calculate::<E>(
+                                        flow,
+                                        params_specs,
+                                        resources,
+                                        OutcomeInfoGraphVariant::Current {
+                                            #[cfg(feature = "output_progress")]
+                                            cmd_block_item_interaction_type,
+                                            #[cfg(feature = "output_progress")]
+                                            item_location_states,
+                                            #[cfg(feature = "output_progress")]
+                                            item_progress_statuses,
+                                        },
+                                    )
+                                }
+
+                                #[cfg(not(feature = "item_interactions"))]
+                                {
+                                    use dot_ix_model::info_graph::InfoGraph;
+
+                                    let _flow = flow;
+                                    let _params_specs = params_specs;
+                                    let _resources = resources;
+
+                                    InfoGraph::default()
+                                }
                             }),
                         )
                         .await;

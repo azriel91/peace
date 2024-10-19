@@ -26,6 +26,14 @@ peace_webi_output = { workspace = true, optional = true }
 
 [features]
 default = []
+item_interactions = [
+    "peace_webi_components/item_interactions",
+    "peace_webi_output?/item_interactions",
+]
+item_state_example = [
+    "peace_webi_components/item_state_example",
+    "peace_webi_output?/item_state_example",
+]
 output_progress = [
     "peace_webi_model/output_progress",
     "peace_webi_output?/output_progress",
