@@ -145,7 +145,7 @@ pub enum Error {
             help("{}", params_specs_mismatch_display(
                 item_ids_with_no_params_specs,
                 params_specs_provided_mismatches,
-                params_specs_stored_mismatches.as_ref(),
+                params_specs_stored_mismatches.as_ref().as_ref(),
                 params_specs_not_usable,
             ))
         )
@@ -156,7 +156,10 @@ pub enum Error {
         /// Provided params specs with no matching item ID in the flow.
         params_specs_provided_mismatches: ParamsSpecs,
         /// Stored params specs with no matching item ID in the flow.
-        params_specs_stored_mismatches: Option<ParamsSpecs>,
+        //
+        // Boxed so that this enum variant is not so large compared to other variants
+        // to address `clippy::large_enum_variant`.
+        params_specs_stored_mismatches: Box<Option<ParamsSpecs>>,
         /// Item IDs which had a mapping function previously provided in
         /// its params spec, but on a subsequent invocation nothing was
         /// provided.

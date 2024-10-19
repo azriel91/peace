@@ -688,7 +688,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
                         if value == &vec![2u8]
                     )
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -768,7 +768,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
                         if value == &vec![2u8]
                     )
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -933,7 +933,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
                     if item_ids_with_no_params_specs.is_empty()
                     && params_specs_provided_mismatches.is_empty()
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -1015,7 +1015,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
                     if item_ids_with_no_params_specs.is_empty()
                     && params_specs_provided_mismatches.is_empty()
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -1081,7 +1081,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
                         peace::rt_model::Error::ParamsSpecsMismatch {
                             item_ids_with_no_params_specs,
                             params_specs_provided_mismatches,
-                            params_specs_stored_mismatches: Some(params_specs_stored_mismatches),
+                            params_specs_stored_mismatches,
                             params_specs_not_usable,
                         }
                     ))
@@ -1098,7 +1098,11 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
                             )
                         })
                         .unwrap_or(false)
-                    && params_specs_stored_mismatches.is_empty()
+                    && matches!(
+                        params_specs_stored_mismatches.as_ref(),
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
                     && params_specs_not_usable.is_empty()
                 ),
                 "was {cmd_ctx_result:#?}"

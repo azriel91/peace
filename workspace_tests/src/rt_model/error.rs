@@ -34,7 +34,7 @@ fn params_specs_mismatch_display_with_all_error_cases() -> fmt::Result {
             item_id!("params_spec_stored_with_no_item_1"),
             ParamsSpec::<MockSrc>::Stored,
         );
-        Some(params_specs_stored_mismatches)
+        Box::new(Some(params_specs_stored_mismatches))
     };
     let params_specs_not_usable = vec![
         item_id!("stored_mapping_fn_0"),

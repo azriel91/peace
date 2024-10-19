@@ -373,6 +373,7 @@ where
     if params_no_issues {
         Ok(params_specs)
     } else {
+        let params_specs_stored_mismatches = Box::new(params_specs_stored_mismatches);
         Err(peace_rt_model::Error::ParamsSpecsMismatch {
             item_ids_with_no_params_specs,
             params_specs_provided_mismatches,
