@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, item_id, profile, FlowId, ItemId, State},
+    cfg::{app_name, item_id, profile, FlowId, ItemId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     data::marker::Clean,
@@ -7,17 +7,14 @@ use peace::{
     rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
-    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItem, ShCmdParams, ShCmdStateDiff,
-    ShCmdStateLogical,
+    ShCmd, ShCmdError, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff, ShCmdStateLogical,
 };
 
 /// Creates a file.
 #[derive(Clone, Copy, Debug)]
 pub struct TestFileCreationShCmdItem;
 
-pub type TestFileCreationShCmdStateLogical = ShCmdStateLogical<TestFileCreationShCmdItem>;
-pub type TestFileCreationShCmdState =
-    State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>;
+pub type TestFileCreationShCmdState = ShCmdState<TestFileCreationShCmdItem>;
 
 impl TestFileCreationShCmdItem {
     /// ID
@@ -177,7 +174,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         stdout,
         stderr,
         marker: _,
-    } = &state_clean.logical
+    } = &state_clean.0.logical
     {
         assert_eq!("not_exists", stdout);
         assert_eq!("`test_file` does not exist", stderr);
@@ -226,7 +223,7 @@ async fn state_current_returns_shell_command_current_state(
         stdout,
         stderr,
         marker: _,
-    } = &state_current.logical
+    } = &state_current.0.logical
     {
         assert_eq!("not_exists", stdout);
         assert_eq!("`test_file` does not exist", stderr);
@@ -270,15 +267,13 @@ async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std
         panic!("Expected `StatesDiscoverCmd::goal` to complete successfully.");
     };
     let state_goal = states_goal
-        .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
-            &TestFileCreationShCmdItem::ID,
-        )
+        .get::<ShCmdState<TestFileCreationShCmdItem>, _>(&TestFileCreationShCmdItem::ID)
         .unwrap();
     if let ShCmdStateLogical::Some {
         stdout,
         stderr,
         marker: _,
-    } = &state_goal.logical
+    } = &state_goal.0.logical
     {
         assert_eq!("exists", stdout);
         assert_eq!("`test_file` exists", stderr);
@@ -376,7 +371,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command(
         stdout,
         stderr,
         marker: _,
-    } = &state_ensured.logical
+    } = &state_ensured.0.logical
     {
         assert_eq!("exists", stdout);
         assert_eq!("`test_file` exists", stderr);
@@ -448,7 +443,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command(
         stdout,
         stderr,
         marker: _,
-    } = &state_ensured.logical
+    } = &state_ensured.0.logical
     {
         assert_eq!("exists", stdout);
         assert_eq!("`test_file` exists", stderr);
@@ -511,7 +506,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         stdout,
         stderr,
         marker: _,
-    } = &state_cleaned.logical
+    } = &state_cleaned.0.logical
     {
         assert_eq!("not_exists", stdout);
         assert_eq!("`test_file` does not exist", stderr);
