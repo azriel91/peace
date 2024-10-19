@@ -15,7 +15,7 @@ use crate::ItemLocation;
 /// [`ItemLocation`]: crate::ItemLocation
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ItemLocationsAndInteractions {
-    /// Hierachical storage of [`ItemLocation`]s.
+    /// Hierarchical storage of [`ItemLocation`]s.
     ///
     /// [`ItemLocation`]: crate::ItemLocation
     pub item_location_trees: Vec<ItemLocationTree>,
@@ -50,7 +50,7 @@ impl ItemLocationsAndInteractions {
         }
     }
 
-    /// Returns the hierachical storage of [`ItemLocation`]s.
+    /// Returns the hierarchical storage of [`ItemLocation`]s.
     ///
     /// [`ItemLocation`]: crate::ItemLocation
     pub fn item_location_trees(&self) -> &[ItemLocationTree] {

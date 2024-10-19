@@ -498,7 +498,7 @@ Conceptually, `Item`s can be thought of either an edge or a node:
 4. Wait for servers to start up -- multiple within (do we need the `ItemLocationTree` for the cloud provider / subnet context? or leverage previous resource tracking to work it out?).
 5. Wait for endpoints to become available -- one source, multiple dest (query each endpoint).
 6. Do we want `ItemInteraction`s to be queried multiple times while `Apply` is happening? -- i.e. some servers may have started up, and so we need the `Item` to report that to us.
-7. Notably, we want these `ItemInteraction`s to be queriable without the items actually existing -- so we can generate diagrams to demonstrate what *would* happen upon execution.
+7. Notably, we want these `ItemInteraction`s to be queryable without the items actually existing -- so we can generate diagrams to demonstrate what *would* happen upon execution.
 
 
 ### Naive

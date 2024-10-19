@@ -1,6 +1,6 @@
 # Aesthetics and Clarity
 
-Aesthetics helps reduce the "ick" in a diagram, reducing the impedence that a user experiences when viewing a diagram. Examples of icks are:
+Aesthetics helps reduce the "ick" in a diagram, reducing the impedance that a user experiences when viewing a diagram. Examples of icks are:
 
 1. Visual clutter.
 2. A node's dimensions being significantly different compared to other nodes.

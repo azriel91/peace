@@ -45,7 +45,7 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     | ProfileSelection::FilterFunction
                 ) |
 
-                // It doesn't make sense to have `profile_from_workpace_param`
+                // It doesn't make sense to have `profile_from_workspace_param`
                 // when profile is none or multi.
                 (
                     ProfileCount::Multiple,
