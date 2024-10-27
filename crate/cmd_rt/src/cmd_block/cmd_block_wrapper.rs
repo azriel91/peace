@@ -12,7 +12,7 @@ use crate::{CmdBlock, CmdBlockError, CmdBlockRt};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::CmdProgressUpdate;
+        use peace_cfg::progress::{CmdBlockItemInteractionType, CmdProgressUpdate};
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -159,6 +159,11 @@ where
                 }
             }
         }
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        self.cmd_block.cmd_block_item_interaction_type()
     }
 
     fn cmd_block_desc(&self) -> CmdBlockDesc {

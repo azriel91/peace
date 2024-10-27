@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use clap::Parser;
 use envman::{
     cmds::{
-        EnvCleanCmd, EnvDeployCmd, EnvDiffCmd, EnvDiscoverCmd, EnvGoalCmd, EnvStatusCmd,
+        CmdOpts, EnvCleanCmd, EnvDeployCmd, EnvDiffCmd, EnvDiscoverCmd, EnvGoalCmd, EnvStatusCmd,
         ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
@@ -40,6 +40,12 @@ pub fn run() -> Result<(), EnvManError> {
             let mut builder = CliOutput::builder().with_colorize(color);
             if let Some(format) = format {
                 builder = builder.with_outcome_format(format);
+
+                #[cfg(feature = "output_progress")]
+                {
+                    use peace::cli::output::CliProgressFormatOpt;
+                    builder = builder.with_progress_format(CliProgressFormatOpt::Outcome);
+                }
             }
 
             builder.build()
@@ -128,14 +134,150 @@ async fn run_command(
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output, debug).await?,
         #[cfg(feature = "web_server")]
         EnvManCommand::Web { address, port } => {
-            use envman::flows::EnvDeployFlow;
-            use peace::webi::output::WebiOutput;
+            use futures::FutureExt;
+            use peace::{
+                cmd::scopes::SingleProfileSingleFlowView,
+                cmd_model::CmdOutcome,
+                webi::output::{CmdExecSpawnCtx, FlowWebiFns, WebiServer},
+                webi_components::ChildrenFn,
+            };
 
-            let flow = EnvDeployFlow::flow().await?;
-            let flow_spec_info = flow.flow_spec_info();
-            let webi_output =
-                WebiOutput::new(Some(SocketAddr::from((address, port))), flow_spec_info);
-            webi_output.start().await?;
+            use envman::{
+                cmds::EnvCmd,
+                flows::EnvDeployFlow,
+                web_components::{CmdExecRequest, EnvDeployHome},
+            };
+
+            let flow = EnvDeployFlow::flow()
+                .await
+                .expect("Failed to instantiate EnvDeployFlow.");
+
+            let flow_webi_fns = FlowWebiFns {
+                flow: flow.clone(),
+                outcome_info_graph_fn: Box::new(|webi_output, outcome_info_graph_gen| {
+                    async move {
+                        let mut cmd_ctx = EnvCmd::cmd_ctx(webi_output)
+                            .await
+                            .expect("Expected CmdCtx to be successfully constructed.");
+
+                        // TODO: consolidate the `flow` above with this?
+                        let SingleProfileSingleFlowView {
+                            flow,
+                            params_specs,
+                            resources,
+                            ..
+                        } = cmd_ctx.view();
+
+                        outcome_info_graph_gen(flow, params_specs, resources)
+                    }
+                    .boxed_local()
+                }),
+                cmd_exec_spawn_fn: Box::new(|mut webi_output, cmd_exec_request| {
+                    use peace::rt::cmds::{
+                        ApplyStoredStateSync, CleanCmd, EnsureCmd, StatesDiscoverCmd,
+                    };
+                    let cmd_exec_task = async move {
+                        let mut cli_output = CliOutput::builder().build();
+                        let cli_output = &mut cli_output;
+
+                        let (cmd_error, item_errors) = match cmd_exec_request {
+                            CmdExecRequest::Discover => {
+                                eprintln!("Running discover.");
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async { StatesDiscoverCmd::current_and_goal(cmd_ctx).await }
+                                            .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
+                                    }
+                                    Err(error) => (Some(error), None),
+                                }
+                            }
+                            CmdExecRequest::Ensure => {
+                                eprintln!("Running ensure.");
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async {
+                                            EnsureCmd::exec_with(
+                                                cmd_ctx,
+                                                ApplyStoredStateSync::Current,
+                                            )
+                                            .await
+                                        }
+                                        .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
+                                    }
+                                    Err(error) => (Some(error), None),
+                                }
+                            }
+                            CmdExecRequest::Clean => {
+                                eprintln!("Running clean.");
+                                let result =
+                                    EnvCmd::run(&mut webi_output, CmdOpts::default(), |cmd_ctx| {
+                                        async {
+                                            CleanCmd::exec_with(
+                                                cmd_ctx,
+                                                ApplyStoredStateSync::Current,
+                                            )
+                                            .await
+                                        }
+                                        .boxed_local()
+                                    })
+                                    .await;
+
+                                match result {
+                                    Ok(cmd_outcome) => {
+                                        if let CmdOutcome::ItemError { errors, .. } = cmd_outcome {
+                                            (None, Some(errors))
+                                        } else {
+                                            (None, None)
+                                        }
+                                    }
+                                    Err(error) => (Some(error), None),
+                                }
+                            }
+                        };
+
+                        if let Some(cmd_error) = cmd_error {
+                            let _ = envman::output::errors_present(cli_output, &[cmd_error]).await;
+                        }
+                        if let Some(item_errors) = item_errors.as_ref() {
+                            let _ =
+                                envman::output::item_errors_present(cli_output, item_errors).await;
+                        }
+                    }
+                    .boxed_local();
+
+                    CmdExecSpawnCtx {
+                        interrupt_tx: None,
+                        cmd_exec_task,
+                    }
+                }),
+            };
+
+            WebiServer::start(
+                Some(SocketAddr::from((address, port))),
+                ChildrenFn::new(EnvDeployHome),
+                flow_webi_fns,
+            )
+            .await?;
         }
     }
 

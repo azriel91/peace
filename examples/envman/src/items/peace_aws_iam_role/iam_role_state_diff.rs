@@ -1,5 +1,6 @@
 use std::fmt;
 
+use peace::cfg::state::Generated;
 use serde::{Deserialize, Serialize};
 
 use crate::items::peace_aws_iam_role::model::ManagedPolicyAttachment;
@@ -47,8 +48,19 @@ impl fmt::Display for IamRoleStateDiff {
                 managed_policy_attachment_current,
                 managed_policy_attachment_goal,
             } => {
-                if managed_policy_attachment_current.arn() != managed_policy_attachment_goal.arn() {
-                    write!(f, "Managed policy attachment will be replaced.")
+                let current_arn = managed_policy_attachment_current.arn();
+                let goal_arn = managed_policy_attachment_goal.arn();
+                if current_arn != goal_arn {
+                    match (current_arn, goal_arn) {
+                        (Generated::Value(_), Generated::Value(_)) |
+                        (Generated::Tbd, Generated::Value(_)) |
+                        (Generated::Tbd, Generated::Tbd) => {
+                            write!(f, "Managed policy attachment will be replaced.")
+                        }
+                        // TODO: not always true.
+                        (Generated::Value(_), Generated::Tbd)
+                         => write!(f, "exists and is up to date."),
+                    }
                 } else {
                     match (
                         managed_policy_attachment_current.attached(),

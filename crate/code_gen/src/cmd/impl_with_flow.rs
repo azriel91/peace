@@ -55,7 +55,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         {
             pub fn with_flow(
                 self,
-                flow: &'ctx peace_rt_model::Flow<AppError>,
+                flow: own::OwnedOrRef<'ctx, peace_rt_model::Flow<AppError>>,
             ) ->
                 // ```rust,ignore
                 // crate::ctx::CmdCtxBuilder<
@@ -82,6 +82,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
@@ -110,6 +111,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder,
                 }
             }

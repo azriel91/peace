@@ -3,6 +3,9 @@ use std::fmt;
 use peace::cfg::state::Generated;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// S3 object state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum S3ObjectState {
@@ -49,6 +52,16 @@ impl fmt::Display for S3ObjectState {
                     write!(f, " (MD5 unknown)")
                 }
             }
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state S3ObjectState> for ItemLocationState {
+    fn from(s3_object_state: &'state S3ObjectState) -> ItemLocationState {
+        match s3_object_state {
+            S3ObjectState::Some { .. } => ItemLocationState::Exists,
+            S3ObjectState::None => ItemLocationState::NotExists,
         }
     }
 }

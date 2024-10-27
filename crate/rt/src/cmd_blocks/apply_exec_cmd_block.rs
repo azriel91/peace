@@ -33,6 +33,7 @@ cfg_if::cfg_if! {
 
         use peace_cfg::{
             progress::{
+                CmdBlockItemInteractionType,
                 CmdProgressUpdate,
                 ProgressComplete,
                 ProgressMsgUpdate,
@@ -404,7 +405,7 @@ where
                     states_applied_mut.insert_raw(item_id.clone(), state_applied);
                 }
 
-                // Save `state_target` (which is state_target) if we are not cleaning
+                // Save `state_target` (which is `state_goal`) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
@@ -429,6 +430,11 @@ where
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
     type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Write
+    }
 
     fn input_fetch(
         &self,

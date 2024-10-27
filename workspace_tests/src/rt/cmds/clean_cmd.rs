@@ -21,8 +21,8 @@ use crate::{
 };
 
 #[tokio::test]
-async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -43,7 +43,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -88,8 +88,8 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
 }
 
 #[tokio::test]
-async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -110,7 +110,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -191,8 +191,8 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 }
 
 #[tokio::test]
-async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -213,7 +213,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -253,8 +253,8 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
 }
 
 #[tokio::test]
-async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensured()
--> Result<(), Box<dyn std::error::Error>> {
+async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensured(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -275,7 +275,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -328,8 +328,8 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
 }
 
 #[tokio::test]
-async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -350,7 +350,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -374,7 +374,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -441,8 +441,8 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 /// This should not return an error, because the target state for cleaning is
 /// not `state_goal`, but `state_clean`.
 #[tokio::test]
-async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -463,7 +463,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -487,7 +487,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -556,8 +556,8 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn exec_returns_sync_error_when_current_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_returns_sync_error_when_current_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -578,7 +578,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -602,7 +602,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -668,8 +668,8 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
 /// This should not return an error, because the target state for cleaning is
 /// not `state_goal`, but `state_clean`.
 #[tokio::test]
-async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
--> Result<(), Box<dyn std::error::Error>> {
+async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -690,7 +690,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3]).into(),
@@ -714,7 +714,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -783,8 +783,8 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -810,7 +810,7 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -894,8 +894,8 @@ async fn states_current_not_serialized_on_states_clean_insert_cmd_block_fail()
 }
 
 #[tokio::test]
-async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
--> Result<(), Box<dyn std::error::Error>> {
+async fn states_current_not_serialized_on_states_discover_cmd_block_fail(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -915,7 +915,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -963,7 +963,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .await?;
 
     let CmdOutcome::ItemError {

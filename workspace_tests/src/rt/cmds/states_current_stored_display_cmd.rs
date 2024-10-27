@@ -12,8 +12,8 @@ use crate::{
 };
 
 #[tokio::test]
-async fn reads_states_current_stored_from_disk_when_present()
--> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_current_stored_from_disk_when_present(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -34,7 +34,7 @@ async fn reads_states_current_stored_from_disk_when_present()
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -55,7 +55,7 @@ async fn reads_states_current_stored_from_disk_when_present()
             (&workspace).into(),
         )
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -110,7 +110,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             (&workspace).into(),
         )
         .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),

@@ -77,6 +77,7 @@ pub trait Item: DynClone {
     ///
     /// [state concept]: https://peace.mk/book/technical_concepts/state.html
     /// [`State`]: crate::state::State
+    #[cfg(not(feature = "output_progress"))]
     type State: Clone
         + Debug
         + Display
@@ -86,6 +87,36 @@ pub trait Item: DynClone {
         + Send
         + Sync
         + 'static;
+
+    /// Summary of the managed item's state.
+    ///
+    /// **For an extensive explanation of state, and how to define it, please
+    /// see the [state concept] as well as the [`State`] type.**
+    ///
+    /// This type is used to represent the current state of the item (if it
+    /// exists), the goal state of the item (what is intended to exist), and
+    /// is used in the *diff* calculation -- what is the difference between the
+    /// current and goal states.
+    ///
+    /// # Examples
+    ///
+    /// * A file's state may be its path, and a hash of its contents.
+    /// * A server's state may be its operating system, CPU and memory capacity,
+    ///   IP address, and ID.
+    ///
+    /// [state concept]: https://peace.mk/book/technical_concepts/state.html
+    /// [`State`]: crate::state::State
+    #[cfg(feature = "output_progress")]
+    type State: Clone
+        + Debug
+        + Display
+        + PartialEq
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static
+        + crate::RefInto<peace_item_model::ItemLocationState>;
 
     /// Diff between the current and target [`State`]s.
     ///
@@ -174,9 +205,59 @@ pub trait Item: DynClone {
     /// must be inserted into the map so that item functions can borrow the
     /// instance of that type.
     ///
+    /// ## External Parameters
+    ///
+    /// If the item works with an external source for parameters, such as:
+    ///
+    /// * a version controlled package file that specifies dependency versions
+    /// * (discouraged) a web service with project configuration
+    ///
+    /// then this is the function to include the logic to read those files.
+    ///
+    /// ## Fallibility
+    ///
+    /// The function signature allows for fallibility, to allow issues to be
+    /// reported early, such as:
+    ///
+    /// * Credentials to SDK clients not present on the user's system.
+    /// * Incompatible / invalid values specified in project configuration
+    ///   files, or expected project configuration files don't exist.
+    ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Self::Error>;
+
+    /// Returns an example fully deployed state of the managed item.
+    ///
+    /// # Implementors
+    ///
+    /// This is *expected* to always return a value, as it is used to:
+    ///
+    /// * Display a diagram that shows the user what the item looks like when it
+    ///   is fully deployed, without actually interacting with any external
+    ///   state.
+    ///
+    /// As much as possible, use the values in the provided params and data.
+    ///
+    /// This function should **NOT** interact with any external services, or
+    /// read from files that are part of the automation process, e.g.
+    /// querying data from a web endpoint, or reading files that may be
+    /// downloaded by a predecessor.
+    ///
+    /// ## Infallibility
+    ///
+    /// The signature is deliberately infallible to signal to implementors that
+    /// calling an external service / read from a file is incorrect
+    /// implementation for this method -- values in params / data may be example
+    /// values from other items that may not resolve.
+    ///
+    /// ## Non-async
+    ///
+    /// Similar to infallibility, this signals to implementors that this
+    /// function should be a cheap example state computation that is relatively
+    /// realistic rather than determining an accurate value.
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, data: Self::Data<'_>) -> Self::State;
 
     /// Returns the current state of the managed item, if possible.
     ///
@@ -315,16 +396,19 @@ pub trait Item: DynClone {
     /// This should mirror the logic in [`apply`], with the following
     /// differences:
     ///
-    /// * When state will actually be altered, this would skip the logic.
+    /// 1. When state will actually be altered, this would skip the logic.
     ///
-    /// * Where there would be IDs received from an external system, a
+    /// 2. Where there would be IDs received from an external system, a
     ///   placeholder ID should still be inserted into the runtime data. This
     ///   should allow subsequent `Item`s that rely on this one to use those
     ///   placeholders in their logic.
     ///
     /// # Implementors
     ///
-    /// This function call is intended to be read-only and cheap.
+    /// This function call is intended to be read-only and relatively cheap.
+    /// Values in `params` and `data` cannot be guaranteed to truly exist.
+    /// [#196] tracks the work to resolve what this function's contract should
+    /// be.
     ///
     /// # Parameters
     ///
@@ -345,6 +429,7 @@ pub trait Item: DynClone {
     /// [`state_goal`]: crate::Item::state_goal
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::Item::state_diff
+    /// [#196]: https://github.com/azriel91/peace/issues/196
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
@@ -385,4 +470,45 @@ pub trait Item: DynClone {
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error>;
+
+    /// Returns the physical resources that this item interacts with.
+    ///
+    /// # Examples
+    ///
+    /// ## File Download Item
+    ///
+    /// This may be from:
+    ///
+    /// * host server
+    /// * URL
+    ///
+    /// to:
+    ///
+    /// * localhost
+    /// * file system path
+    ///
+    ///
+    /// ### Server Launch Item
+    ///
+    /// This may be from:
+    ///
+    /// * localhost
+    ///
+    /// to:
+    ///
+    /// * cloud provider
+    /// * region
+    /// * subnet
+    /// * host
+    ///
+    ///
+    /// # Implementors
+    ///
+    /// The returned list should be in order of least specific to most specific
+    /// location.
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        data: Self::Data<'_>,
+    ) -> Vec<peace_item_model::ItemInteraction>;
 }

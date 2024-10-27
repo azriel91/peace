@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::items::peace_aws_iam_role::model::{ManagedPolicyAttachment, RoleIdAndArn};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// IAM role state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum IamRoleState {
@@ -64,6 +67,16 @@ impl fmt::Display for IamRoleState {
 
                 Ok(())
             }
+        }
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state IamRoleState> for ItemLocationState {
+    fn from(iam_role_state: &'state IamRoleState) -> ItemLocationState {
+        match iam_role_state {
+            IamRoleState::Some { .. } => ItemLocationState::Exists,
+            IamRoleState::None => ItemLocationState::NotExists,
         }
     }
 }

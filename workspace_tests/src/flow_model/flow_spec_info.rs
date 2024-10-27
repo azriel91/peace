@@ -7,7 +7,7 @@ use peace::{
             model::{
                 common::{Edges, NodeHierarchy, NodeNames},
                 edge_id,
-                info_graph::{GraphDir, InfoGraph},
+                info_graph::{GraphDir, GraphStyle, InfoGraph},
                 node_id,
             },
         },
@@ -50,59 +50,12 @@ fn to_progress_info_graph() -> Result<(), Box<dyn std::error::Error>> {
         node_names.insert(node_id!("e"), String::from("e"));
         node_names.insert(node_id!("f"), String::from("f"));
 
-        InfoGraph::builder()
+        InfoGraph::default()
+            .with_graph_style(GraphStyle::Circle)
             .with_direction(GraphDir::Vertical)
             .with_hierarchy(node_hierarchy)
             .with_node_names(node_names)
             .with_edges(edges)
-            .build()
-    };
-
-    assert_eq!(info_graph_expected, info_graph);
-    Ok(())
-}
-
-#[test]
-fn to_outcome_info_graph() -> Result<(), Box<dyn std::error::Error>> {
-    let flow_spec_info = flow_spec_info()?;
-
-    let info_graph = flow_spec_info.to_outcome_info_graph();
-
-    let info_graph_expected = {
-        let mut node_hierarchy = NodeHierarchy::new();
-        node_hierarchy.insert(node_id!("a"), {
-            let mut node_hierarchy_a = NodeHierarchy::new();
-            node_hierarchy_a.insert(node_id!("b"), NodeHierarchy::new());
-            node_hierarchy_a
-        });
-        node_hierarchy.insert(node_id!("c"), {
-            let mut node_hierarchy_c = NodeHierarchy::new();
-            node_hierarchy_c.insert(node_id!("d"), NodeHierarchy::new());
-            node_hierarchy_c
-        });
-        node_hierarchy.insert(node_id!("e"), NodeHierarchy::new());
-        node_hierarchy.insert(node_id!("f"), NodeHierarchy::new());
-
-        let mut edges = Edges::new();
-        edges.insert(edge_id!("a__c"), [node_id!("a"), node_id!("c")]);
-        edges.insert(edge_id!("b__e"), [node_id!("b"), node_id!("e")]);
-        edges.insert(edge_id!("d__e"), [node_id!("d"), node_id!("e")]);
-        edges.insert(edge_id!("f__e"), [node_id!("f"), node_id!("e")]);
-
-        let mut node_names = NodeNames::new();
-        node_names.insert(node_id!("a"), String::from("a"));
-        node_names.insert(node_id!("b"), String::from("b"));
-        node_names.insert(node_id!("c"), String::from("c"));
-        node_names.insert(node_id!("d"), String::from("d"));
-        node_names.insert(node_id!("e"), String::from("e"));
-        node_names.insert(node_id!("f"), String::from("f"));
-
-        InfoGraph::builder()
-            .with_direction(GraphDir::Vertical)
-            .with_hierarchy(node_hierarchy)
-            .with_node_names(node_names)
-            .with_edges(edges)
-            .build()
     };
 
     assert_eq!(info_graph_expected, info_graph);

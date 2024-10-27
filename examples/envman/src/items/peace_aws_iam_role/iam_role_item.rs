@@ -78,6 +78,33 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use peace::cfg::state::Generated;
+
+        use crate::items::peace_aws_iam_role::model::{ManagedPolicyAttachment, RoleIdAndArn};
+
+        let name = params.name().to_string();
+        let path = params.path().to_string();
+        let aws_account_id = "123456789012"; // Can this be looked up without calling AWS?
+        let role_id_and_arn = {
+            let id = String::from("iam_role_example_id");
+            let arn = format!("arn:aws:iam::{aws_account_id}:role/{name}");
+            Generated::Value(RoleIdAndArn::new(id, arn))
+        };
+        let managed_policy_attachment = {
+            let arn = params.managed_policy_arn().to_string();
+            ManagedPolicyAttachment::new(Generated::Value(arn), true)
+        };
+
+        IamRoleState::Some {
+            name,
+            path,
+            role_id_and_arn,
+            managed_policy_attachment,
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -157,5 +184,27 @@ where
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
         IamRoleApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let iam_role_name = format!("🧢 {}", params.name());
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![ItemLocation::localhost()]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::group(String::from("IAM")),
+                ItemLocation::group(String::from("Roles")),
+                ItemLocation::path(iam_role_name),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
     }
 }

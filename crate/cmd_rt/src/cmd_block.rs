@@ -7,7 +7,7 @@ use peace_resource_rt::{resources::ts::SetUp, Resource, ResourceFetchError, Reso
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::CmdProgressUpdate;
+        use peace_cfg::progress::{CmdBlockItemInteractionType, CmdProgressUpdate};
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -52,6 +52,11 @@ pub trait CmdBlock: Debug {
     type Outcome: Debug + Send + Sync + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
+
+    /// Returns the type of interactions the `CmdBlock` has with
+    /// `ItemLocation`s.
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType;
 
     /// Fetch function for `InputT`.
     ///

@@ -15,6 +15,8 @@ pub enum OutputFormat {
     ///
     /// [JSON]: https://www.json.org/
     Json,
+    /// Don't output anything.
+    None,
 }
 
 impl FromStr for OutputFormat {
@@ -25,6 +27,7 @@ impl FromStr for OutputFormat {
             "text" => Ok(Self::Text),
             "yaml" => Ok(Self::Yaml),
             "json" => Ok(Self::Json),
+            "none" => Ok(Self::None),
             _ => Err(OutputFormatParseError(s.to_string())),
         }
     }

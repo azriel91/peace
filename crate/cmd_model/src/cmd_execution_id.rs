@@ -1,10 +1,12 @@
 use std::ops::Deref;
 
+use serde::{Deserialize, Serialize};
+
 /// ID of a command execution.
 ///
 /// Uniqueness is not yet defined -- these may overlap with IDs from different
 /// machines.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CmdExecutionId(u64);
 
 impl CmdExecutionId {

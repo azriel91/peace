@@ -5,7 +5,10 @@ use std::{
 
 use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::{
+    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
+    item_model::ItemLocationState,
+};
 use peace::{
     cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
     data::{
@@ -91,6 +94,11 @@ impl Item for VecCopyItem {
         &self.id
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        VecCopyState(params.0.clone())
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         _params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -150,7 +158,7 @@ impl Item for VecCopyItem {
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        let apply_check = if diff.0.0.is_empty() {
+        let apply_check = if diff.0 .0.is_empty() {
             ApplyCheck::ExecNotRequired
         } else {
             #[cfg(not(feature = "output_progress"))]
@@ -222,6 +230,30 @@ impl Item for VecCopyItem {
         resources.insert(vec_b);
         Ok(())
     }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        _params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation};
+
+        let item_interaction = ItemInteractionPush::new(
+            vec![
+                ItemLocation::localhost(),
+                ItemLocation::path("Vec A".to_string()),
+            ]
+            .into(),
+            vec![
+                ItemLocation::localhost(),
+                ItemLocation::path("Vec B".to_string()),
+            ]
+            .into(),
+        )
+        .into();
+
+        vec![item_interaction]
+    }
 }
 
 #[cfg(feature = "error_reporting")]
@@ -247,7 +279,7 @@ pub struct VecCopyData<'exec> {
     dest: W<'exec, VecB>,
 }
 
-impl<'exec> VecCopyData<'exec> {
+impl VecCopyData<'_> {
     pub fn dest(&self) -> &VecB {
         &self.dest
     }
@@ -299,6 +331,19 @@ impl fmt::Display for VecCopyState {
     }
 }
 
+impl Default for VecCopyState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state VecCopyState> for ItemLocationState {
+    fn from(_vec_copy_state: &'state VecCopyState) -> ItemLocationState {
+        ItemLocationState::Exists
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct VecCopyDiff(VecDiff<u8>);
 
@@ -326,7 +371,7 @@ impl fmt::Display for VecCopyDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         self.0
-            .0
+             .0
             .iter()
             .try_for_each(|vec_diff_type| match vec_diff_type {
                 VecDiffType::Removed { index, len } => {

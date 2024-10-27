@@ -121,8 +121,8 @@ where
     }
 }
 
-impl<'types, ExecutionOutcome, CmdCtxTypesT> Default
-    for CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypesT>
+impl<ExecutionOutcome, CmdCtxTypesT> Default
+    for CmdExecutionBuilder<'_, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug + Resource + 'static,
     CmdCtxTypesT: CmdCtxTypesConstrained,

@@ -84,7 +84,7 @@ where
                 let instance_profile_id_and_arn =
                     InstanceProfileIdAndArn::new(instance_profile_id, instance_profile_arn);
 
-                let role_associated = instance_profile.roles().first().is_some();
+                let role_associated = !instance_profile.roles().is_empty();
 
                 Some((
                     instance_profile_name,

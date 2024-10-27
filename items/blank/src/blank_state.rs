@@ -2,6 +2,9 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "output_progress")]
+use peace::item_model::ItemLocationState;
+
 /// Logical blank state.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BlankState(pub Option<u32>);
@@ -26,5 +29,15 @@ impl std::ops::Deref for BlankState {
 impl std::ops::DerefMut for BlankState {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+#[cfg(feature = "output_progress")]
+impl<'state> From<&'state BlankState> for ItemLocationState {
+    fn from(blank_state: &'state BlankState) -> ItemLocationState {
+        match blank_state.is_some() {
+            true => ItemLocationState::Exists,
+            false => ItemLocationState::NotExists,
+        }
     }
 }

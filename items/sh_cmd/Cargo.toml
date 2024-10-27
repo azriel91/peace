@@ -26,6 +26,7 @@ miette = { workspace = true, optional = true }
 peace = { workspace = true, default-features = false }
 serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
+tynm = { workspace = true, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["process"] }
@@ -37,3 +38,5 @@ tokio = { workspace = true }
 default = []
 error_reporting = ["peace/error_reporting"]
 output_progress = ["peace/output_progress"]
+item_interactions = ["peace/item_interactions"]
+item_state_example = ["dep:tynm", "peace/item_state_example"]

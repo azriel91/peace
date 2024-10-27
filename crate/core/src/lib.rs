@@ -79,7 +79,7 @@ macro_rules! id_newtype {
             /// compile time checks and returns a `const` value.
             ///
             #[doc = concat!("[`", stringify!($macro_name), "!`]: peace_static_check_macros::profile")]
-            pub fn new(s: &'static str) -> Result<Self, $ty_err_name> {
+            pub fn new(s: &'static str) -> Result<Self, $ty_err_name<'static>> {
                 Self::try_from(s)
             }
 
@@ -105,6 +105,16 @@ macro_rules! id_newtype {
                     chars.all(|c| c.is_ascii_alphabetic() || c == '_' || c.is_ascii_digit());
 
                 first_char_valid && remainder_chars_valid
+            }
+
+            /// Returns the inner `Cow<'static, str>`.
+            pub fn into_inner(self) -> Cow<'static, str> {
+                self.0
+            }
+
+            /// Returns the `&str` held by this ID.
+            pub fn as_str(&self) -> &str {
+                &self.0
             }
         }
 

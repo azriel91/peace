@@ -5,8 +5,8 @@ use peace::{
 };
 
 #[test]
-fn item_apply_rt_state_current_stored_returns_state_current_stored()
--> Result<(), Box<dyn std::error::Error>> {
+fn item_apply_rt_state_current_stored_returns_state_current_stored(
+) -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_current_stored: Some(456u32),
         state_current: Some(123u32),

@@ -19,25 +19,27 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 peace_items = { path = "../../items", features = ["file_download"] }
-thiserror = "1.0.57"
-url = { version = "2.5.0", features = ["serde"] }
+thiserror = "1.0.63"
+url = { version = "2.5.2", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace = { workspace = true, default-features = false, features = ["cli"] }
-clap = { version = "4.5.2", features = ["derive"] }
-tokio = { version = "1.36.0", features = ["net", "time", "rt"] }
+clap = { version = "4.5.16", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 peace = { workspace = true, default-features = false }
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.6.5"
-tokio = "1.36.0"
-wasm-bindgen = "0.2.92"
-wasm-bindgen-futures = "0.4.42"
-js-sys = "0.3.69"
-web-sys = "0.3.69"
+tokio = "1.40.0"
+wasm-bindgen = "0.2.95"
+wasm-bindgen-futures = "0.4.43"
+js-sys = "0.3.70"
+web-sys = "0.3.70"
 
 [features]
 default = []
 error_reporting = ["peace/error_reporting", "peace_items/error_reporting"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]
+item_interactions = ["peace/item_interactions", "peace_items/item_interactions"]
+item_state_example = ["peace/item_state_example", "peace_items/item_state_example"]

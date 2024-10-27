@@ -60,13 +60,13 @@ impl AppUploadCmd {
         let mut cmd_ctx = {
             let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
                 output.into(),
-                (&workspace).into(),
+                workspace.into(),
             );
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
-                .with_profile_from_workspace_param(&profile_key)
-                .with_flow(&flow)
+                .with_profile_from_workspace_param(profile_key.into())
+                .with_flow((&flow).into())
                 .with_item_params::<S3ObjectItem<WebApp>>(
                     item_id!("s3_object"),
                     s3_object_params_spec,
@@ -125,7 +125,7 @@ impl AppUploadCmd {
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
-                .with_flow(&flow)
+                .with_flow((&flow).into())
                 .with_item_params::<S3ObjectItem<WebApp>>(
                     item_id!("s3_object"),
                     s3_object_params_spec,

@@ -30,7 +30,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -64,7 +64,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
     .with_workspace_param_value(
         String::from("ws_param_1"),
@@ -116,7 +116,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
     .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -153,7 +153,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_flow_param_value(String::from("flow_param_0"), Some(true))
     .with_flow_param_value(String::from("flow_param_1"), Some(456u16))
     .build()
@@ -196,7 +196,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
     .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
     .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
@@ -239,8 +239,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_flow_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_flow_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -253,7 +253,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
     .with_flow_param_value(String::from("flow_param_0"), Some(true))
     .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -302,8 +302,8 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_from_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_from_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -320,8 +320,8 @@ async fn build_with_workspace_params_with_profile_from_params()
         String::from("ws_param_1"),
         Some("ws_param_1_value".to_string()),
     )
-    .with_profile_from_workspace_param(&String::from("profile"))
-    .with_flow(&flow)
+    .with_profile_from_workspace_param(String::from("profile").into())
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -353,8 +353,8 @@ async fn build_with_workspace_params_with_profile_from_params()
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_params_with_profile_from_params()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -374,9 +374,9 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
         Some("ws_param_1_value".to_string()),
     )
     .with_flow_param_value(String::from("flow_param_0"), Some(true))
-    .with_profile_from_workspace_param(&String::from("profile"))
+    .with_profile_from_workspace_param(String::from("profile").into())
     .with_flow_param_value(String::from("flow_param_1"), Some(456u16))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -416,8 +416,8 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_params_provided()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_params_provided(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -435,7 +435,7 @@ async fn build_with_item_params_returns_ok_when_params_provided()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -465,8 +465,8 @@ async fn build_with_item_params_returns_ok_when_params_provided()
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -484,7 +484,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await;
 
@@ -516,8 +516,8 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -535,7 +535,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -545,7 +545,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
         NoOpOutput,
     >((&mut output).into(), (&workspace).into())
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -574,8 +574,8 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -593,7 +593,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -603,7 +603,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
         NoOpOutput,
     >((&mut output).into(), (&workspace).into())
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![2u8]).into())
     .build()
     .await?;
@@ -633,8 +633,8 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_provided_mismatch()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_provided_mismatch(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -652,7 +652,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -662,7 +662,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(item_id!("mismatch_id"), VecA(vec![2u8]).into())
     .build()
     .await;
@@ -688,7 +688,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
                         if value == &vec![2u8]
                     )
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -703,8 +703,8 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_params_stored_mismatch()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_params_stored_mismatch(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -722,7 +722,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(item_id!("original_id"), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -742,7 +742,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(item_id!("mismatch_id"), VecA(vec![2u8]).into())
     .build()
     .await;
@@ -768,7 +768,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
                         if value == &vec![2u8]
                     )
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -783,8 +783,8 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -802,7 +802,8 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -823,7 +824,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -869,8 +870,8 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -888,7 +889,8 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -909,7 +911,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     // Note: no item_params for `VecCopyItem`
     .build()
     .await;
@@ -931,7 +933,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
                     if item_ids_with_no_params_specs.is_empty()
                     && params_specs_provided_mismatches.is_empty()
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -946,8 +948,8 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -965,7 +967,8 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
+    .with_resource(0u8)
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA::field_wise_spec()
@@ -986,7 +989,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     // Note: item_params provided, but not enough to replace mapping function.
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
@@ -1012,7 +1015,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
                     if item_ids_with_no_params_specs.is_empty()
                     && params_specs_provided_mismatches.is_empty()
                     && matches!(
-                        params_specs_stored_mismatches,
+                        params_specs_stored_mismatches.as_ref(),
                         Some(params_specs_stored_mismatches)
                         if params_specs_stored_mismatches.is_empty()
                     )
@@ -1027,8 +1030,8 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -1046,7 +1049,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(item_id!("original_id"), VecA(vec![1u8]).into())
     .build()
     .await?;
@@ -1063,7 +1066,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(item_id!("mismatch_id"), VecA(vec![2u8]).into())
     .build()
     .await;
@@ -1078,7 +1081,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
                         peace::rt_model::Error::ParamsSpecsMismatch {
                             item_ids_with_no_params_specs,
                             params_specs_provided_mismatches,
-                            params_specs_stored_mismatches: Some(params_specs_stored_mismatches),
+                            params_specs_stored_mismatches,
                             params_specs_not_usable,
                         }
                     ))
@@ -1095,7 +1098,11 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
                             )
                         })
                         .unwrap_or(false)
-                    && params_specs_stored_mismatches.is_empty()
+                    && matches!(
+                        params_specs_stored_mismatches.as_ref(),
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
                     && params_specs_not_usable.is_empty()
                 ),
                 "was {cmd_ctx_result:#?}"
@@ -1107,8 +1114,8 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -1124,7 +1131,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .build()
     .await?;
 
@@ -1140,7 +1147,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
         (&workspace).into(),
     )
     .with_profile(profile.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
     .build()
     .await?;

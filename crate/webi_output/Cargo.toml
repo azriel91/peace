@@ -22,27 +22,48 @@ test = false
 [dependencies]
 axum = { workspace = true }
 cfg-if = { workspace = true }
+dot_ix_model = { workspace = true }
 futures = { workspace = true }
+indexmap = { workspace = true }
+interruptible = { workspace = true }
 leptos = { workspace = true }
 leptos_axum = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
-peace_core = { workspace = true, optional = true }
+peace_cmd_model = { workspace = true }
+peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
+peace_item_model = { workspace = true }
+peace_params = { workspace = true }
+peace_resource_rt = { workspace = true }
+peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_value_traits = { workspace = true }
 peace_webi_components = { workspace = true }
 peace_webi_model = { workspace = true }
-tokio = { workspace = true, features = ["net"] }
+smallvec = { workspace = true }
+tokio = { workspace = true, features = ["net", "sync"] }
 tower-http = { workspace = true, features = ["fs"] }
 
 [features]
 default = []
+item_interactions = [
+    "peace_rt_model/item_interactions",
+    "peace_webi_components/item_interactions",
+]
+item_state_example = [
+    "peace_rt_model/item_state_example",
+    "peace_webi_components/item_state_example",
+]
 output_progress = [
-    "dep:peace_core",
+    "peace_cmd_model/output_progress",
     "peace_core/output_progress",
+    "peace_flow_model/output_progress",
+    "peace_item_model/output_progress",
     "peace_rt_model_core/output_progress",
+    "peace_rt_model/output_progress",
+    "peace_webi_model/output_progress",
 ]
 ssr = [
     "leptos/ssr",

@@ -90,8 +90,8 @@ async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn presents_bold_with_double_asterisk_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_bold_with_double_asterisk_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -120,8 +120,8 @@ async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dy
 }
 
 #[tokio::test]
-async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -135,8 +135,8 @@ async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled(
 }
 
 #[tokio::test]
-async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -177,8 +177,8 @@ async fn presents_id_as_blue_text_color_enabled() -> Result<(), Box<dyn std::err
 }
 
 #[tokio::test]
-async fn presents_name_with_double_asterisk_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_name_with_double_asterisk_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -191,8 +191,8 @@ async fn presents_name_with_double_asterisk_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_name_with_double_asterisk_bold_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_name_with_double_asterisk_bold_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -232,8 +232,8 @@ async fn presents_text_as_plain_text_color_enabled() -> Result<(), Box<dyn std::
 }
 
 #[tokio::test]
-async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -246,8 +246,8 @@ async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -261,8 +261,8 @@ async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled()
 }
 
 #[tokio::test]
-async fn presents_code_inline_with_backticks_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_code_inline_with_backticks_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -275,8 +275,8 @@ async fn presents_code_inline_with_backticks_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_code_inline_with_backticks_blue_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_code_inline_with_backticks_blue_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -448,8 +448,8 @@ async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_white_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_with_white_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -483,8 +483,8 @@ async fn presents_list_numbered_with_white_text_color_enabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_padding_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_with_padding_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -513,8 +513,8 @@ async fn presents_list_numbered_with_padding_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_with_padding_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_with_padding_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -594,8 +594,8 @@ async fn presents_list_numbered_aligned_color_disabled() -> Result<(), Box<dyn s
 }
 
 #[tokio::test]
-async fn presents_list_numbered_aligned_white_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_aligned_white_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -638,8 +638,8 @@ async fn presents_list_numbered_aligned_white_text_color_enabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_aligned_padding_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_aligned_padding_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -680,8 +680,8 @@ async fn presents_list_numbered_aligned_padding_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_list_numbered_aligned_padding_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_numbered_aligned_padding_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -814,8 +814,8 @@ async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn presents_list_bulleted_with_white_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_bulleted_with_white_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -885,8 +885,8 @@ async fn presents_list_bulleted_aligned_color_disabled() -> Result<(), Box<dyn s
 }
 
 #[tokio::test]
-async fn presents_list_bulleted_aligned_white_text_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_bulleted_aligned_white_text_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -929,8 +929,8 @@ async fn presents_list_bulleted_aligned_white_text_color_enabled()
 }
 
 #[tokio::test]
-async fn presents_list_bulleted_aligned_padding_color_disabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_bulleted_aligned_padding_color_disabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
@@ -971,8 +971,8 @@ async fn presents_list_bulleted_aligned_padding_color_disabled()
 }
 
 #[tokio::test]
-async fn presents_list_bulleted_aligned_padding_color_enabled()
--> Result<(), Box<dyn std::error::Error>> {
+async fn presents_list_bulleted_aligned_padding_color_enabled(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);

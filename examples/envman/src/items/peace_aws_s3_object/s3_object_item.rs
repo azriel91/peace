@@ -79,6 +79,40 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use std::fmt::Write;
+
+        use peace::cfg::state::Generated;
+
+        let example_content = b"s3_object_example";
+
+        let content_md5_hexstr = {
+            let content_md5_bytes = {
+                let mut md5_ctx = md5_rs::Context::new();
+                md5_ctx.read(example_content);
+                md5_ctx.finish()
+            };
+            content_md5_bytes
+                .iter()
+                .try_fold(
+                    String::with_capacity(content_md5_bytes.len() * 2),
+                    |mut hexstr, x| {
+                        write!(&mut hexstr, "{:02x}", x)?;
+                        Result::<_, std::fmt::Error>::Ok(hexstr)
+                    },
+                )
+                .expect("Failed to construct hexstring from S3 object MD5.")
+        };
+
+        S3ObjectState::Some {
+            bucket_name: params.bucket_name().to_string(),
+            object_key: params.object_key().to_string(),
+            content_md5_hexstr: Some(content_md5_hexstr.clone()),
+            e_tag: Generated::Value(content_md5_hexstr),
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -158,5 +192,31 @@ where
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
         S3ObjectApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let file_path = format!("📄 {}", params.file_path().display());
+        let bucket_name = format!("🪣 {}", params.bucket_name());
+        let object_name = format!("📄 {}", params.object_key());
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![
+                ItemLocation::localhost(),
+                ItemLocation::path(file_path),
+            ]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::path(bucket_name),
+                ItemLocation::path(object_name),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
     }
 }

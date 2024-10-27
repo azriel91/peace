@@ -7,7 +7,8 @@ use crate::resources::ts::{Empty, SetUp};
 
 pub mod ts;
 
-/// Map of all types at runtime. [`resman::Resources`] newtype.
+/// Runtime borrow-checked typemap of data available to the command context.
+/// [`resman::Resources`] newtype.
 ///
 /// This augments the any-map functionality of [`resman::Resources`] with type
 /// state, so that it is impossible for developers to pass `Resources` to

@@ -76,6 +76,50 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
+    /// Returns an example fully deployed state of the managed item.
+    ///
+    /// # Design
+    ///
+    /// This is *expected* to always return a value, as it is used to:
+    ///
+    /// * Display a diagram that shows the user what the item looks like when it
+    ///   is fully deployed, without actually interacting with any external
+    ///   state.
+    ///
+    /// As much as possible, use the values in the provided params and data.
+    ///
+    /// This function should **NOT** interact with any external services, or
+    /// read from files that are part of the automation process, e.g.
+    /// querying data from a web endpoint, or reading files that may be
+    /// downloaded by a predecessor.
+    ///
+    /// ## Fallibility
+    ///
+    /// [`Item::state_example`] is deliberately infallible to signal to
+    /// implementors that calling an external service / read from a file is
+    /// incorrect implementation for this method -- values in params / data
+    /// may be example values from other items that may not resolve.
+    ///
+    /// [`ItemRt::state_example`] *is* fallible as value resolution for
+    /// parameters may fail, e.g. if there is a bug in Peace, or an item's
+    /// parameters requests a type that doesn't exist in [`Resources`].
+    ///
+    /// ## Non-async
+    ///
+    /// This signals to implementors that this function should be a cheap
+    /// example state computation that is relatively realistic rather than
+    /// determining an accurate value.
+    ///
+    /// [`Item::state_example`]: peace_cfg::Item::Item::state_example
+    #[cfg(feature = "item_state_example")]
+    fn state_example(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Runs [`Item::state_clean`].
     ///
     /// [`Item::state_clean`]: peace_cfg::Item::state_clean
@@ -251,4 +295,70 @@ pub trait ItemRt<E>:
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
+
+    /// Returns the physical resources that this item interacts with, purely
+    /// using example state.
+    ///
+    /// # Design
+    ///
+    /// This method returns interactions from [`Item::interactions`], passing in
+    /// parameters computed from example state.
+    ///
+    /// ## Fallibility
+    ///
+    /// [`Item::interactions`] is infallible as computing `ItemInteractions`
+    /// should purely be instantiating objects.
+    ///
+    /// [`ItemRt::interactions_example`] *is* fallible as value resolution for
+    /// parameters may fail, e.g. if there is a bug in Peace, or an item's
+    /// parameters requests a type that doesn't exist in [`Resources`].
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_example(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<peace_item_model::ItemInteractionsExample, E>;
+
+    /// Returns the physical resources that this item interacts with, merging
+    /// any available current state over example state.
+    ///
+    /// # Design
+    ///
+    /// This method returns interactions from [`Item::interactions`], passing in
+    /// parameters computed from current state, or if not available, example
+    /// state.
+    ///
+    /// For tracking which item interactions are known, for the purpose of
+    /// styling unknown state differently, we could return the
+    /// `ItemInteractions` alongside with how they were constructed:
+    ///
+    /// 1. One for `ItemInteraction`s where params are fully computed using
+    ///    fully known state.
+    /// 2. One for `ItemInteraction`s where params are computed using some or
+    ///    all example state.
+    ///
+    /// ## Fallibility
+    ///
+    /// [`Item::interactions`] is infallible as computing `ItemInteractions`
+    /// should purely be instantiating objects.
+    ///
+    /// [`ItemRt::interactions_current`] *is* fallible as value resolution
+    /// for parameters may fail, e.g. if there is a bug in Peace, or an
+    /// item's parameters requests a type that doesn't exist in
+    /// [`Resources`].
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_try_current(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E>;
+
+    /// Returns a human readable tag name that represents this item.
+    ///
+    /// For example, a `FileDownloadItem<WebApp>` should return a string similar
+    /// to: `"Web App: File Download"`. This allows tags to be grouped by the
+    /// concept / information they are associated with, rather than grouping
+    /// tags by the type of operation.
+    #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
+    fn interactions_tag_name(&self) -> String;
 }

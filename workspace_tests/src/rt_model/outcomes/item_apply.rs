@@ -5,8 +5,8 @@ use peace::{
 };
 
 #[test]
-fn try_from_returns_ok_when_state_current_stored_is_none_and_others_are_some()
--> Result<(), Box<dyn std::error::Error>> {
+fn try_from_returns_ok_when_state_current_stored_is_none_and_others_are_some(
+) -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_current_stored: None,
         state_current: Some(123u32),
@@ -192,8 +192,8 @@ fn try_from_returns_err_when_apply_check_is_none() -> Result<(), Box<dyn std::er
 }
 
 #[test]
-fn item_apply_rt_state_current_stored_returns_state_current_stored()
--> Result<(), Box<dyn std::error::Error>> {
+fn item_apply_rt_state_current_stored_returns_state_current_stored(
+) -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_current_stored: Some(456u32),
         state_current: Some(123u32),

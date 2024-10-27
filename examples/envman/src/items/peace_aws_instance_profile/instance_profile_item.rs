@@ -79,6 +79,26 @@ where
         Ok(())
     }
 
+    #[cfg(feature = "item_state_example")]
+    fn state_example(params: &Self::Params<'_>, _data: Self::Data<'_>) -> Self::State {
+        use peace::cfg::state::Generated;
+
+        use crate::items::peace_aws_instance_profile::model::InstanceProfileIdAndArn;
+
+        let name = params.name().to_string();
+        let path = params.path().to_string();
+        let aws_account_id = "123456789012"; // Can this be looked up without calling AWS?
+        let id = String::from("instance_profile_example_id");
+        let arn = format!("arn:aws:iam::{aws_account_id}:instance-profile/{name}");
+
+        InstanceProfileState::Some {
+            name,
+            path,
+            instance_profile_id_and_arn: Generated::Value(InstanceProfileIdAndArn::new(id, arn)),
+            role_associated: true,
+        }
+    }
+
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -174,5 +194,27 @@ where
             diff,
         )
         .await
+    }
+
+    #[cfg(feature = "item_interactions")]
+    fn interactions(
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
+    ) -> Vec<peace::item_model::ItemInteraction> {
+        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+
+        let instance_profile_name = format!("📝 {}", params.name());
+
+        let item_interaction = ItemInteractionPush::new(
+            ItemLocationAncestors::new(vec![ItemLocation::localhost()]),
+            ItemLocationAncestors::new(vec![
+                ItemLocation::group(String::from("IAM")),
+                ItemLocation::group(String::from("Instance Profiles")),
+                ItemLocation::path(instance_profile_name),
+            ]),
+        )
+        .into();
+
+        vec![item_interaction]
     }
 }

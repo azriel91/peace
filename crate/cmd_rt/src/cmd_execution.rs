@@ -249,6 +249,21 @@ where
                 });
             }
 
+            #[cfg(feature = "output_progress")]
+            {
+                let cmd_block_item_interaction_type =
+                    cmd_block_rt.cmd_block_item_interaction_type();
+                cmd_progress_tx
+                    .send(CmdProgressUpdate::CmdBlockStart {
+                        cmd_block_item_interaction_type,
+                    })
+                    .await
+                    .expect(
+                        "Expected `CmdProgressUpdate` channel to remain open \
+                            while iterating over `CmdBlock`s.",
+                    );
+            }
+
             let block_cmd_outcome_result = cmd_block_rt
                 .exec(
                     cmd_view,

@@ -188,6 +188,7 @@ fn impl_with_param_key_unknown(
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
@@ -231,6 +232,7 @@ fn impl_with_param_key_unknown(
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder,
                 }
             }
@@ -346,6 +348,7 @@ fn impl_with_param_key_known(
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
@@ -385,6 +388,7 @@ fn impl_with_param_key_known(
                     output,
                     interruptibility,
                     workspace,
+                    resources,
                     scope_builder,
                 }
             }

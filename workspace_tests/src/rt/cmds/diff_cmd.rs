@@ -44,7 +44,7 @@ async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn s
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -118,7 +118,7 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -196,7 +196,7 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -274,7 +274,7 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
         (&workspace).into(),
     )
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -348,7 +348,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile_0.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -372,7 +372,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile_1.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -395,7 +395,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
             output.into(),
             (&workspace).into(),
         )
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .await?;
 
     // Diff current states for profile_0 and profile_1.
@@ -473,7 +473,7 @@ async fn diff_stored_with_missing_profile_0() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile_1.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -488,7 +488,7 @@ async fn diff_stored_with_missing_profile_0() -> Result<(), Box<dyn std::error::
             output.into(),
             (&workspace).into(),
         )
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .await?;
 
     let diff_result =
@@ -526,7 +526,7 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
         (&workspace).into(),
     )
     .with_profile(profile_0.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -542,7 +542,7 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
             output.into(),
             (&workspace).into(),
         )
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .await?;
 
     let diff_result =
@@ -559,8 +559,8 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
 }
 
 #[tokio::test]
-async fn diff_stored_with_profile_0_missing_states_current()
--> Result<(), Box<dyn std::error::Error>> {
+async fn diff_stored_with_profile_0_missing_states_current(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -581,7 +581,7 @@ async fn diff_stored_with_profile_0_missing_states_current()
         (&workspace).into(),
     )
     .with_profile(profile_0.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -596,7 +596,7 @@ async fn diff_stored_with_profile_0_missing_states_current()
         (&workspace).into(),
     )
     .with_profile(profile_1.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -611,7 +611,7 @@ async fn diff_stored_with_profile_0_missing_states_current()
             output.into(),
             (&workspace).into(),
         )
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .await?;
 
     let diff_result =
@@ -628,8 +628,8 @@ async fn diff_stored_with_profile_0_missing_states_current()
 }
 
 #[tokio::test]
-async fn diff_stored_with_profile_1_missing_states_current()
--> Result<(), Box<dyn std::error::Error>> {
+async fn diff_stored_with_profile_1_missing_states_current(
+) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -650,7 +650,7 @@ async fn diff_stored_with_profile_1_missing_states_current()
         (&workspace).into(),
     )
     .with_profile(profile_0.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -665,7 +665,7 @@ async fn diff_stored_with_profile_1_missing_states_current()
         (&workspace).into(),
     )
     .with_profile(profile_1.clone())
-    .with_flow(&flow)
+    .with_flow((&flow).into())
     .with_item_params::<VecCopyItem>(
         VecCopyItem::ID_DEFAULT.clone(),
         VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -678,7 +678,7 @@ async fn diff_stored_with_profile_1_missing_states_current()
             output.into(),
             (&workspace).into(),
         )
-        .with_flow(&flow)
+        .with_flow((&flow).into())
         .await?;
 
     let diff_result =
@@ -716,14 +716,12 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         CliOutput<&mut Vec<u8>>,
     >(output.into(), (&workspace).into())
     .with_profile(profile!("test_profile"))
-    .with_flow(&flow)
+    .with_flow((&flow).into())
+    // overwrite initial state
+    .with_resource(VecA(vec![0, 1, 2, 4, 5, 6, 8, 9]))
+    .with_resource(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]))
     .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), ParamsSpec::InMemory)
     .await?;
-    // overwrite initial state
-    let resources = cmd_ctx.resources_mut();
-    #[rustfmt::skip]
-    resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
-    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
         cmd_blocks_processed: _,

@@ -23,7 +23,7 @@ impl Clone for Box<dyn AnySpecDataType> {
     }
 }
 
-impl<'a> serde::Serialize for dyn AnySpecDataType + 'a {
+impl serde::Serialize for dyn AnySpecDataType + '_ {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

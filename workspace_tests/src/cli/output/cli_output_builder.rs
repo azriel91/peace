@@ -105,8 +105,8 @@ async fn build_passes_through_progress_format() -> Result<(), Box<dyn std::error
 // * Build a small executable and run it via `process::Command`.
 
 #[tokio::test]
-async fn build_colorize_auto_passes_uncolored_for_non_interactive_terminal()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_colorize_auto_passes_uncolored_for_non_interactive_terminal(
+) -> Result<(), Box<dyn std::error::Error>> {
     let cli_output = CliOutputBuilder::new().build();
 
     assert_eq!(CliColorize::Uncolored, cli_output.colorize());
@@ -115,8 +115,8 @@ async fn build_colorize_auto_passes_uncolored_for_non_interactive_terminal()
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
-async fn build_progress_format_auto_passes_stderr_for_non_interactive_terminal()
--> Result<(), Box<dyn std::error::Error>> {
+async fn build_progress_format_auto_passes_stderr_for_non_interactive_terminal(
+) -> Result<(), Box<dyn std::error::Error>> {
     let cli_output = CliOutputBuilder::new().build();
 
     assert_eq!(CliProgressFormat::Outcome, cli_output.progress_format());

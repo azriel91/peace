@@ -54,6 +54,8 @@ where
     interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     workspace: OwnedOrRef<'ctx, Workspace>,
+    /// Runtime borrow-checked typemap of data available to the command context.
+    resources: Resources<Empty>,
     /// Data held while building `CmdCtx`.
     scope_builder: ScopeBuilder,
 }
@@ -371,6 +373,7 @@ where
     if params_no_issues {
         Ok(params_specs)
     } else {
+        let params_specs_stored_mismatches = Box::new(params_specs_stored_mismatches);
         Err(peace_rt_model::Error::ParamsSpecsMismatch {
             item_ids_with_no_params_specs,
             params_specs_provided_mismatches,

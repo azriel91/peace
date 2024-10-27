@@ -15,7 +15,7 @@ use peace_rt_model_core::IndexMap;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::CmdProgressUpdate;
+        use peace_cfg::progress::{CmdBlockItemInteractionType, CmdProgressUpdate};
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -51,6 +51,11 @@ where
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
     type Outcome = StatesClean;
+
+    #[cfg(feature = "output_progress")]
+    fn cmd_block_item_interaction_type(&self) -> CmdBlockItemInteractionType {
+        CmdBlockItemInteractionType::Local
+    }
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Result<(), ResourceFetchError> {
         Ok(())

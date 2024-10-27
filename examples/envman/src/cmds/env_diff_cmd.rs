@@ -113,7 +113,7 @@ impl EnvDiffCmd {
 
         output
             .present(&(
-                Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                Heading::new(HeadingLevel::Level1, "State Diffs"),
                 states_diffs_presentables,
                 "\n",
             ))

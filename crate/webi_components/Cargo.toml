@@ -20,14 +20,39 @@ doctest = true
 test = false
 
 [dependencies]
-dot_ix = { workspace = true, features = ["rt", "web_components", "flex_diag"] }
+dot_ix = { workspace = true, features = ["rt", "web_components"] }
+futures = { workspace = true }
+gloo-timers = { workspace = true, features = ["futures"] }
 leptos = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
+peace_cmd = { workspace = true }
+peace_cmd_model = { workspace = true }
+peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
+peace_item_model = { workspace = true }
+peace_params = { workspace = true }
+peace_resource_rt = { workspace = true }
+peace_rt_model = { workspace = true }
+peace_webi_model = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+
+# Used to print serialized info graph for debugging.
+serde_yaml = { workspace = true }
 
 [features]
 default = []
+
+# Technically always needed, but we need to put these in its own feature so that
+# these aren't enabled in the underlying crates when `--no-default-features` is
+# used.
+item_interactions = ["peace_rt_model/item_interactions"]
+item_state_example = [
+    "peace_cmd/item_state_example",
+    "peace_rt_model/item_state_example",
+]
+
 ssr = [
     "dot_ix/ssr",
     "leptos/ssr",

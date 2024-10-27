@@ -1,7 +1,7 @@
 [package]
 name = "peace_webi_model"
 description = "Web interface data types for the peace automation framework."
-documentation = "https://docs.rs/peace_webi/"
+documentation = "https://docs.rs/peace_webi_model/"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -20,8 +20,22 @@ doctest = true
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
+dot_ix_model = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
 miette = { workspace = true, optional = true }
+peace_core = { workspace = true }
+peace_cmd_model = { workspace = true }
+peace_item_model = { workspace = true, optional = true }
+serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
 
 [features]
+default = []
 error_reporting = ["dep:miette"]
+output_progress = [
+    "dep:peace_item_model",
+    "peace_core/output_progress",
+    "peace_cmd_model/output_progress",
+    "peace_item_model/output_progress",
+]
