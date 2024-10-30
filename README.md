@@ -35,7 +35,7 @@ See:
 * 🟢 **Clean:** Every item creation is paired with how it is cleaned up.
 * 🟢 **Understandable:** Progress is shown at an understandable level of detail.
 * 🔵 **Understandable:** Error reporting is compatible with [`miette`].
-* 🟡 **Interruptible:** Execution can be interrupted.
+* 🟢 **Interruptible:** Execution can be interrupted.
 * 🟢 **Resumable:** Automation resumes where it was interrupted.
 * 🟢 **Diffable:** States and diffs are serialized as YAML.
 * 🟢 **Efficient:** Tasks are concurrently executed via [`fn_graph`].
@@ -57,16 +57,19 @@ See:
 * 🟢 Store and recall parameters across commands.
 * 🟢 Diff states between multiple profiles.
 * 🟢 Type-safe referential parameters -- specify usage of values generated during automation as parameters to subsequent items.
+* 🟢 Cancel-safe interruption.
 * 🟡 Feature-gated incremental functionality.
 * 🟡 Off-the-shelf support for common items.
 * 🟡 Dry run.
 * 🟣 WASM support.
-* ⚫ Cancel-safe interruption via [`tokio-graceful-shutdown`].
+* 🟡 Web based UI with interactive graph.
+* ⚫ Run command with subset of items.
+* ⚫ Params specification: Read values from other flows.
+* ⚫ Flow versions: Support migrating environment deployed using previous flow version.
 * ⚫ Secure-by-design Support: Encrypted value storage, decrypted per execution / time based agent.
 * ⚫ Tutorial for writing a software lifecycle management tool.
 * ⚫ Built-in application execution methods -- CLI, web service.
 * ⚫ `peace` binary for configuration based workflows.
-* ⚫ Web based UI with interactive graph.
 * ⚫ Agent mode to run `peace` on servers (Web API invocation).
 
 Further ideas:
@@ -81,6 +84,8 @@ Further ideas:
 ## Examples
 
 Examples are run using `--package` instead of `--example`, as each example is organized as its own crate.
+
+<details><summary><code>download</code> example</summary>
 
 ```bash
 cargo run --package $example_name --all-features
@@ -121,6 +126,84 @@ simple-http-server --nocache --port 8000 -i
 
 [`wasm-pack`]: https://rustwasm.github.io/
 [HTTP server]: https://crates.io/crates/simple-http-server
+
+</details>
+
+<details><summary><code>envman</code> example</summary>
+
+1. Install [`cargo-leptos`](https://github.com/leptos-rs/cargo-leptos).
+
+    ```bash
+    cargo install --locked cargo-leptos
+    ```
+
+2. Build the `envman` example:
+
+    ```bash
+    # defined in .cargo/config.toml
+    cargo envman_build_debug
+    ```
+
+3. Copy artifacts to a temporary directory:
+
+    ```bash
+    demo_dir=/tmp/demo/envman
+    test -d "${demo_dir}" || mkdir -p "${demo_dir}"
+    cp ./target/debug/envman "${demo_dir}"
+    cp ./target/web/envman/pkg "${demo_dir}"
+    ```
+
+4. Switch to the demo directory:
+
+    ```bash
+    demo_dir=/tmp/demo/envman
+    cd "${demo_dir}"
+    ```
+
+5. Make sure you have AWS credentials set up in `~/.aws/credentials`.
+
+6. Run the appropriate `envman` commands:
+
+    1. Initialize a project:
+
+        ```bash
+        # initialize a project to download from `azriel91/web_app`
+        ./envman init \
+          --type development \
+          --flow deploy \
+          demo_1 azriel91/web_app 0.1.1
+        ```
+
+    2. Status / Goal / Diff:
+
+        ```bash
+        ./envman status
+        ./envman goal
+        ./envman diff
+        ```
+
+    3. Deploy / Clean
+
+        ```bash
+        ./envman deploy
+        ./envman deploy --format json
+        ./envman deploy --format none
+
+        ./envman clean
+        ./envman clean --format json
+        ./envman clean --format none
+        ```
+
+    4. You can also interrupt the deploy/clean process.
+
+7. Run the web interface:
+
+    ```bash
+    ./envman web
+    ```
+
+
+</details>
 
 
 ## License
