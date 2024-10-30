@@ -4,6 +4,10 @@
     border-radius: 4px;
     color: #dddddd;
     font-size: 0.8em;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    text-overflow: ellipsis;
+    max-height: 15.0em;
 }
 
 /* prompt arrow */
