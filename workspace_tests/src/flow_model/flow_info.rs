@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, item_id},
-    data::fn_graph::{daggy::Dag, Edge, WouldCycle},
+    data::fn_graph::{daggy2::Dag, Edge, WouldCycle},
     flow_model::{FlowInfo, FlowSpecInfo, GraphInfo, ItemInfo, ItemSpecInfo},
     rt_model::{Flow, ItemGraph, ItemGraphBuilder},
 };

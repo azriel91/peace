@@ -2,13 +2,14 @@
 
 use std::{any::Any, fmt};
 
+use downcast_rs::DowncastSync;
 use dyn_clone::DynClone;
 use peace_resource_rt::type_reg::untagged::DataType;
 
 use crate::AnySpecRt;
 
 /// A [`DataType`] that is also an [`AnySpecRt`].
-pub trait AnySpecDataType: DataType + AnySpecRt {}
+pub trait AnySpecDataType: AnySpecRt + DataType + DowncastSync {}
 
 impl<T> AnySpecDataType for T where
     T: Any + DynClone + fmt::Debug + AnySpecRt + erased_serde::Serialize + Send + Sync
