@@ -163,58 +163,59 @@ peace_item_tar_x = { path = "items/tar_x", version = "0.0.13" }
 #
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.
-async-trait = "0.1.81"
-axum = "0.7.5"
+async-trait = "0.1.85"
+axum = "0.7.9"
 base64 = "0.22.1"
-bytes = "1.7.1"
+bytes = "1.9.0"
 cfg-if = "1.0.0"
-chrono = { version = "0.4.38", default-features = false, features = ["clock", "serde"] }
-console = "0.15.8"
+chrono = { version = "0.4.39", default-features = false, features = ["clock", "serde"] }
+console = "0.15.10"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
-dot_ix = { version = "0.8.1", default-features = false }
-dot_ix_model = "0.8.1"
-downcast-rs = "1.2.1"
+dot_ix = { version = "0.9.1", default-features = false }
+dot_ix_model = "0.9.1"
+downcast-rs = "2.0.1"
 dyn-clone = "1.0.17"
 enser = "0.1.4"
 erased-serde = "0.4.5"
-fn_graph = { version = "0.13.3", features = ["async", "graph_info", "interruptible", "resman"] }
-futures = "0.3.30"
+fn_graph = { version = "0.15.0", features = ["async", "graph_info", "interruptible", "resman"] }
+futures = "0.3.31"
 gloo-timers = "0.3.0"
 heck = "0.5.0"
-indexmap = "2.5.0"
-indicatif = "0.17.8"
+indexmap = "2.7.0"
+indicatif = "0.17.9"
 interruptible = "0.2.4"
-leptos = { version = "0.6" }
-leptos_axum = "0.6"
-leptos_meta = { version = "0.6" }
-leptos_router = { version = "0.6" }
-libc = "0.2.158"
-miette = "7.2.0"
+leptos = { version = "0.7" }
+leptos_axum = "0.7"
+leptos_config = "0.7"
+leptos_meta = { version = "0.7" }
+leptos_router = { version = "0.7" }
+libc = "0.2.169"
+miette = "7.4.0"
 own = "0.1.3"
-pretty_assertions = "1.4.0"
-proc-macro2 = "1.0.86"
-quote = "1.0.37"
+pretty_assertions = "1.4.1"
+proc-macro2 = "1.0.93"
+quote = "1.0.38"
 raw_tty = "0.1.0"
-reqwest = "0.12.7"
-resman = "0.17.2"
-serde = "1.0.209"
+reqwest = "0.12.12"
+resman = "0.18.0"
+serde = "1.0.217"
 serde-wasm-bindgen = "0.6.5"
-serde_json = "1.0.127"
+serde_json = "1.0.135"
 serde_yaml = "0.9.34"
 smallvec = "1.13.2"
-syn = "2.0.77"
-tar = "0.4.41"
-tempfile = "3.12.0"
-thiserror = "1.0.63"
-tokio = "1.40"
-tokio-util = "0.7.11"
-tower-http = "0.5.2"
+syn = "2.0.96"
+tar = "0.4.43"
+tempfile = "3.15.0"
+thiserror = "2.0.11"
+tokio = "1.43"
+tokio-util = "0.7.13"
+tower-http = "0.6.2"
 tynm = "0.1.10"
-type_reg = { version = "0.7.0", features = ["debug", "untagged", "ordered"] }
-url = "2.5.2"
-wasm-bindgen = "0.2.95"
-web-sys = "0.3.70"
+type_reg = { version = "0.8.0", features = ["debug", "untagged", "ordered"] }
+url = "2.5.4"
+wasm-bindgen = "0.2.99"
+web-sys = "0.3.76"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
