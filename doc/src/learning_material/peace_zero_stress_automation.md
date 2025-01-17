@@ -25,6 +25,32 @@
 
 <div class="hidden">
 
+### Building `envman` in Nushell
+
+```nu
+# in $nu.config-path
+# usually C:\Users\$env.USER\AppData\Roaming\nushell\config.nu
+def envman_demo_prepare_release [] {
+    cargo envman_build_release
+    let envman_demo_dir = [$env.TEMP demo envman] | path join
+    if not ($envman_demo_dir | path exists) {
+        mkdir $envman_demo_dir
+    }
+
+    let envman_exe_path = [target release envman.exe] | path join
+    cp -f $envman_exe_path $envman_demo_dir
+    echo $"Copied ($envman_exe_path) to ($envman_demo_dir)"
+
+    let envman_pkg_dir = [target web envman pkg] | path join
+    cp -f --recursive $envman_pkg_dir $envman_demo_dir
+}
+
+# then
+envman_demo_prepare_release
+cd ([$env.TEMP demo envman] | path join)
+```
+
+
 ### Notes
 
 1. Heya everyone, my name is Azriel, and today I'll be showing you my automation side project, called Peace.
