@@ -3,7 +3,11 @@ use dot_ix::{
     rt::IntoGraphvizDotSrc,
     web_components::DotSvg,
 };
-use leptos::{component, server, view, IntoView, ServerFnError, SignalSet, Transition};
+use leptos::{
+    component,
+    prelude::{ClassAttribute, ElementChild, ServerFnError, Set, Transition},
+    server, view, IntoView,
+};
 
 /// Renders the flow graph.
 ///
@@ -25,18 +29,19 @@ pub fn FlowGraph() -> impl IntoView {
 
 #[server]
 async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
-    use leptos::{ReadSignal, SignalGet};
+    use leptos::prelude::{Get, ReadSignal};
     use peace_core::FlowId;
     use peace_webi_model::FlowProgressInfoGraphs;
 
-    let flow_id = leptos::use_context::<ReadSignal<FlowId>>();
-    let flow_progress_info_graphs = leptos::use_context::<FlowProgressInfoGraphs<FlowId>>();
+    let flow_id = leptos::prelude::use_context::<ReadSignal<FlowId>>();
+    let flow_progress_info_graphs =
+        leptos::prelude::use_context::<FlowProgressInfoGraphs<FlowId>>();
     let progress_info_graph = if let Some(flow_progress_info_graphs) = flow_progress_info_graphs {
         let flow_progress_info_graphs = flow_progress_info_graphs.lock().ok();
 
         flow_id
             .as_ref()
-            .map(SignalGet::get)
+            .map(Get::get)
             .zip(flow_progress_info_graphs)
             .and_then(|(flow_id, flow_progress_info_graphs)| {
                 flow_progress_info_graphs.get(&flow_id).cloned()
@@ -52,25 +57,21 @@ async fn progress_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
 #[component]
 fn ProgressGraph() -> impl IntoView {
     let (progress_info_graph, progress_info_graph_set) =
-        leptos::create_signal(InfoGraph::default());
-    let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
+        leptos::prelude::signal(InfoGraph::default());
+    let (dot_src_and_styles, dot_src_and_styles_set) = leptos::prelude::signal(None);
 
-    leptos::create_local_resource(
-        move || (),
-        move |()| async move {
-            let progress_info_graph = progress_info_graph_fetch().await.unwrap_or_default();
-            let dot_src_and_styles =
-                IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
+    leptos::prelude::LocalResource::new(move || async move {
+        let progress_info_graph = progress_info_graph_fetch().await.unwrap_or_default();
+        let dot_src_and_styles =
+            IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
 
-            if let Ok(progress_info_graph_serialized) = serde_yaml::to_string(&progress_info_graph)
-            {
-                leptos::logging::log!("{progress_info_graph_serialized}");
-            }
+        if let Ok(progress_info_graph_serialized) = serde_yaml::to_string(&progress_info_graph) {
+            leptos::logging::log!("{progress_info_graph_serialized}");
+        }
 
-            progress_info_graph_set.set(progress_info_graph);
-            dot_src_and_styles_set.set(Some(dot_src_and_styles));
-        },
-    );
+        progress_info_graph_set.set(progress_info_graph);
+        dot_src_and_styles_set.set(Some(dot_src_and_styles));
+    });
 
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
@@ -84,18 +85,18 @@ fn ProgressGraph() -> impl IntoView {
 
 #[server]
 async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
-    use leptos::{ReadSignal, SignalGet};
+    use leptos::prelude::{Get, ReadSignal};
     use peace_core::FlowId;
     use peace_webi_model::FlowOutcomeInfoGraphs;
 
-    let flow_id = leptos::use_context::<ReadSignal<FlowId>>();
-    let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<FlowId>>();
+    let flow_id = leptos::prelude::use_context::<ReadSignal<FlowId>>();
+    let flow_outcome_info_graphs = leptos::prelude::use_context::<FlowOutcomeInfoGraphs<FlowId>>();
     let outcome_info_graph = if let Some(flow_outcome_info_graphs) = flow_outcome_info_graphs {
         let flow_outcome_info_graphs = flow_outcome_info_graphs.lock().ok();
 
         flow_id
             .as_ref()
-            .map(SignalGet::get)
+            .map(Get::get)
             .zip(flow_outcome_info_graphs)
             .and_then(|(flow_id, flow_outcome_info_graphs)| {
                 flow_outcome_info_graphs.get(&flow_id).cloned()
@@ -110,24 +111,22 @@ async fn outcome_info_graph_fetch() -> Result<InfoGraph, ServerFnError> {
 
 #[component]
 fn OutcomeGraph() -> impl IntoView {
-    let (outcome_info_graph, outcome_info_graph_set) = leptos::create_signal(InfoGraph::default());
-    let (dot_src_and_styles, dot_src_and_styles_set) = leptos::create_signal(None);
+    let (outcome_info_graph, outcome_info_graph_set) =
+        leptos::prelude::signal(InfoGraph::default());
+    let (dot_src_and_styles, dot_src_and_styles_set) = leptos::prelude::signal(None);
 
-    leptos::create_local_resource(
-        move || (),
-        move |()| async move {
-            let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();
-            let dot_src_and_styles =
-                IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
+    leptos::prelude::LocalResource::new(move || async move {
+        let outcome_info_graph = outcome_info_graph_fetch().await.unwrap_or_default();
+        let dot_src_and_styles =
+            IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
 
-            if let Ok(outcome_info_graph_serialized) = serde_yaml::to_string(&outcome_info_graph) {
-                leptos::logging::log!("{outcome_info_graph_serialized}");
-            }
+        if let Ok(outcome_info_graph_serialized) = serde_yaml::to_string(&outcome_info_graph) {
+            leptos::logging::log!("{outcome_info_graph_serialized}");
+        }
 
-            outcome_info_graph_set.set(outcome_info_graph);
-            dot_src_and_styles_set.set(Some(dot_src_and_styles));
-        },
-    );
+        outcome_info_graph_set.set(outcome_info_graph);
+        dot_src_and_styles_set.set(Some(dot_src_and_styles));
+    });
 
     view! {
         <Transition fallback=move || view! { <p>"Loading graph..."</p> }>

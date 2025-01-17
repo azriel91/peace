@@ -61,9 +61,8 @@ cfg_if::cfg_if! {
 cfg_if::cfg_if! {
     if #[cfg(feature = "hydrate")] {
         use wasm_bindgen::prelude::wasm_bindgen;
-        use leptos::*;
-
-        use peace::webi_components::{ChildrenFn, Home};
+        use leptos::prelude::view;
+        use peace::webi_components::{App, ChildrenFn};
 
         #[wasm_bindgen]
         pub async fn hydrate() {
@@ -75,9 +74,9 @@ cfg_if::cfg_if! {
 
             let app_home = ChildrenFn::new(EnvDeployHome);
 
-            leptos::mount_to_body(move || {
+            leptos::mount::hydrate_body(move || {
                 view! {
-                    <Home app_home />
+                    <App app_home />
                 }
             });
         }

@@ -1,4 +1,13 @@
-use leptos::{component, ev::Event, html, view, Callable, Callback, IntoView, NodeRef};
+use leptos::{
+    callback::{Callable, Callback},
+    component,
+    ev::Event,
+    html,
+    prelude::{
+        ClassAttribute, ElementChild, GlobalAttributes, NodeRef, NodeRefAttribute, OnAttribute,
+    },
+    view, IntoView,
+};
 
 /// The label that users click to switch to that tab.
 #[component]
@@ -9,9 +18,8 @@ pub fn TabLabel(
     #[prop(default = "")] class: &'static str,
     #[prop(default = false)] checked: bool,
     #[prop(into, optional, default = None)] on_change: Option<Callback<Event>>,
-    #[prop(into, optional, default = leptos::create_node_ref::<html::Input>())] node_ref: NodeRef<
-        html::Input,
-    >,
+    #[prop(into, optional, default = leptos::prelude::create_node_ref::<html::Input>())]
+    node_ref: NodeRef<html::Input>,
 ) -> impl IntoView {
     let tab_classes = format!(
         "\
@@ -49,7 +57,7 @@ pub fn TabLabel(
             id=tab_id
             class=tab_classes
             checked=checked
-            on:change={move |ev| { if let Some(on_change) = on_change { on_change.call(ev) } }}
+            on:change={move |ev| { if let Some(on_change) = on_change { on_change.run(ev) } }}
             node_ref=node_ref
         />
         <label for=tab_id class=label_classes>

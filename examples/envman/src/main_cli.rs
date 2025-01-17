@@ -273,6 +273,7 @@ async fn run_command(
             };
 
             WebiServer::start(
+                env!("CARGO_CRATE_NAME").to_string(),
                 Some(SocketAddr::from((address, port))),
                 ChildrenFn::new(EnvDeployHome),
                 flow_webi_fns,
