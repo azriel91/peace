@@ -230,7 +230,7 @@ where
         Ok(())
     }
 
-    async fn output_yaml<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_yaml<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,
@@ -247,7 +247,7 @@ where
         Ok(())
     }
 
-    async fn output_json<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_json<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,

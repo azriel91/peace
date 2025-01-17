@@ -67,9 +67,9 @@ where
     }
 
     /// Returns the result of executing the command.
-    pub async fn exec<'ctx>(
+    pub async fn exec(
         &mut self,
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, CmdCtxTypesT>>,
     ) -> Result<
         CmdOutcome<ExecutionOutcome, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
         <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,

@@ -416,7 +416,7 @@ where
     dest: W<'exec, MockDest>,
 }
 
-impl<'exec, Id> MockData<'exec, Id>
+impl<Id> MockData<'_, Id>
 where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
