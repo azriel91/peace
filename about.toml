@@ -11,3 +11,7 @@ accepted = [
     "OpenSSL",
     "Zlib",
 ]
+
+# `cbindgen` has MPL-2.0 as a build dependency, which doesn't apply to our
+# compiled software.
+ignore-build-dependencies = true
