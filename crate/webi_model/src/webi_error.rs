@@ -36,6 +36,22 @@ pub enum WebiError {
         error: std::io::Error,
     },
 
+    /// Failed to read leptos configuration.
+    ///
+    /// This may be a bug in the Peace framework or `leptos`.
+    #[error("Failed to read leptos configuration. This may be a bug in the Peace framework or `leptos`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_webi_model::leptos_config_read),
+            help("Ask for help on Discord.")
+        )
+    )]
+    LeptosConfigRead {
+        /// The underlying error.
+        error: leptos_config::errors::LeptosConfigError,
+    },
+
     /// Failed to start web server for Web interface.
     #[error("Failed to start web server for Web interface on socket: {socket_addr}")]
     #[cfg_attr(

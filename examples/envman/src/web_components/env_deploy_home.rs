@@ -1,4 +1,10 @@
-use leptos::{component, server, spawn_local, view, IntoView, ServerFnError};
+use leptos::{
+    component,
+    prelude::{ClassAttribute, ElementChild, OnAttribute, ServerFnError},
+    server,
+    task::spawn_local,
+    view, IntoView,
+};
 use peace::webi_components::{FlowGraph, FlowGraphCurrent};
 
 use crate::web_components::TabLabel;
@@ -9,7 +15,7 @@ async fn discover_cmd_exec() -> Result<(), ServerFnError> {
 
     use crate::web_components::CmdExecRequest;
 
-    let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
+    let cmd_exec_request_tx = leptos::context::use_context::<mpsc::Sender<CmdExecRequest>>();
 
     if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
         match cmd_exec_request_tx.try_send(CmdExecRequest::Discover) {
@@ -31,7 +37,7 @@ async fn deploy_cmd_exec() -> Result<(), ServerFnError> {
 
     use crate::web_components::CmdExecRequest;
 
-    let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
+    let cmd_exec_request_tx = leptos::context::use_context::<mpsc::Sender<CmdExecRequest>>();
 
     if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
         match cmd_exec_request_tx.try_send(CmdExecRequest::Ensure) {
@@ -53,7 +59,7 @@ async fn clean_cmd_exec() -> Result<(), ServerFnError> {
 
     use crate::web_components::CmdExecRequest;
 
-    let cmd_exec_request_tx = leptos::use_context::<mpsc::Sender<CmdExecRequest>>();
+    let cmd_exec_request_tx = leptos::context::use_context::<mpsc::Sender<CmdExecRequest>>();
 
     if let Some(cmd_exec_request_tx) = cmd_exec_request_tx {
         match cmd_exec_request_tx.try_send(CmdExecRequest::Clean) {

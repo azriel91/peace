@@ -4,7 +4,9 @@ use dot_ix::{
     web_components::DotSvg,
 };
 use leptos::{
-    component, server, view, IntoView, ServerFnError, SignalGetUntracked, SignalSet, Transition,
+    component,
+    prelude::{ClassAttribute, ElementChild, GetUntracked, ServerFnError, Set, Transition},
+    server, view, IntoView,
 };
 
 /// Renders the flow graph.
@@ -18,54 +20,48 @@ use leptos::{
 #[component]
 pub fn FlowGraphCurrent() -> impl IntoView {
     let (progress_info_graph_get, progress_info_graph_set) =
-        leptos::create_signal(InfoGraph::default());
+        leptos::prelude::signal(InfoGraph::default());
     let (progress_dot_src_and_styles, progress_dot_src_and_styles_set) =
-        leptos::create_signal(None);
+        leptos::prelude::signal(None);
 
     let (outcome_info_graph_get, outcome_info_graph_set) =
-        leptos::create_signal(InfoGraph::default());
-    let (outcome_dot_src_and_styles, outcome_dot_src_and_styles_set) = leptos::create_signal(None);
+        leptos::prelude::signal(InfoGraph::default());
+    let (outcome_dot_src_and_styles, outcome_dot_src_and_styles_set) =
+        leptos::prelude::signal(None);
 
-    leptos::create_local_resource(
-        move || (),
-        move |()| async move {
-            use gloo_timers::future::TimeoutFuture;
+    leptos::prelude::LocalResource::new(move || async move {
+        use gloo_timers::future::TimeoutFuture;
 
-            loop {
-                if let Ok(Some((progress_info_graph, outcome_info_graph))) =
-                    info_graphs_fetch().await
-                {
-                    // Progress
-                    let progress_dot_src_and_styles = IntoGraphvizDotSrc::into(
-                        &progress_info_graph,
-                        &GraphvizDotTheme::default(),
-                    );
+        loop {
+            if let Ok(Some((progress_info_graph, outcome_info_graph))) = info_graphs_fetch().await {
+                // Progress
+                let progress_dot_src_and_styles =
+                    IntoGraphvizDotSrc::into(&progress_info_graph, &GraphvizDotTheme::default());
 
-                    if progress_info_graph != progress_info_graph_get.get_untracked() {
-                        progress_info_graph_set.set(progress_info_graph);
-                        progress_dot_src_and_styles_set.set(Some(progress_dot_src_and_styles));
-                    }
-
-                    // Outcome
-                    let outcome_dot_src_and_styles =
-                        IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
-
-                    if outcome_info_graph != outcome_info_graph_get.get_untracked() {
-                        if let Ok(outcome_info_graph_serialized) =
-                            serde_yaml::to_string(&outcome_info_graph)
-                        {
-                            leptos::logging::log!("{outcome_info_graph_serialized}");
-                        }
-
-                        outcome_info_graph_set.set(outcome_info_graph);
-                        outcome_dot_src_and_styles_set.set(Some(outcome_dot_src_and_styles));
-                    }
+                if progress_info_graph != progress_info_graph_get.get_untracked() {
+                    progress_info_graph_set.set(progress_info_graph);
+                    progress_dot_src_and_styles_set.set(Some(progress_dot_src_and_styles));
                 }
 
-                TimeoutFuture::new(250).await;
+                // Outcome
+                let outcome_dot_src_and_styles =
+                    IntoGraphvizDotSrc::into(&outcome_info_graph, &GraphvizDotTheme::default());
+
+                if outcome_info_graph != outcome_info_graph_get.get_untracked() {
+                    if let Ok(outcome_info_graph_serialized) =
+                        serde_yaml::to_string(&outcome_info_graph)
+                    {
+                        leptos::logging::log!("{outcome_info_graph_serialized}");
+                    }
+
+                    outcome_info_graph_set.set(outcome_info_graph);
+                    outcome_dot_src_and_styles_set.set(Some(outcome_dot_src_and_styles));
+                }
             }
-        },
-    );
+
+            TimeoutFuture::new(250).await;
+        }
+    });
 
     view! {
         <div class="flex items-center justify-center">
@@ -90,9 +86,11 @@ async fn info_graphs_fetch() -> Result<Option<(InfoGraph, InfoGraph)>, ServerFnE
     use peace_cmd_model::CmdExecutionId;
     use peace_webi_model::{FlowOutcomeInfoGraphs, FlowProgressInfoGraphs};
 
-    let cmd_execution_id = leptos::use_context::<Arc<Mutex<Option<CmdExecutionId>>>>();
-    let flow_progress_info_graphs = leptos::use_context::<FlowProgressInfoGraphs<CmdExecutionId>>();
-    let flow_outcome_info_graphs = leptos::use_context::<FlowOutcomeInfoGraphs<CmdExecutionId>>();
+    let cmd_execution_id = leptos::prelude::use_context::<Arc<Mutex<Option<CmdExecutionId>>>>();
+    let flow_progress_info_graphs =
+        leptos::prelude::use_context::<FlowProgressInfoGraphs<CmdExecutionId>>();
+    let flow_outcome_info_graphs =
+        leptos::prelude::use_context::<FlowOutcomeInfoGraphs<CmdExecutionId>>();
 
     if let Some(((cmd_execution_id, flow_progress_info_graphs), flow_outcome_info_graphs)) =
         cmd_execution_id

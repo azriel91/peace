@@ -73,8 +73,14 @@ ignore = [
     # `proc-macro-error` is Unmaintained.
     #
     # Transitive dependency of `syn_derive`.
-    # Pending https://github.com/Kyuuhachi/syn_derive/issues/4.
+    # Pending <https://github.com/rs-tml/rstml/issues/56>.
     "RUSTSEC-2024-0370",
+
+    # `derivative` is unmaintained.
+    #
+    # Transitive dependency of `log4rs`.
+    # Pending <https://github.com/estk/log4rs/issues/391>.
+    "RUSTSEC-2024-0388",
 ]
 
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
@@ -101,6 +107,7 @@ allow = [
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
     "NOASSERTION",
     "OpenSSL",
     "Zlib",

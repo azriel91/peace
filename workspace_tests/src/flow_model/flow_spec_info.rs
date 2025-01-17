@@ -78,7 +78,7 @@ fn debug() -> Result<(), Box<dyn std::error::Error>> {
         "FlowSpecInfo { \
             flow_id: FlowId(\"flow_id\"), \
             graph_info: GraphInfo { \
-                graph: Dag { graph: Graph { Ty: \"Directed\", node_count: 6, edge_count: 9, edges: (0, 1), (0, 2), (1, 4), (2, 3), (3, 4), (5, 4), (1, 2), (5, 1), (0, 5), node weights: {0: ItemSpecInfo { item_id: ItemId(\"a\") }, 1: ItemSpecInfo { item_id: ItemId(\"b\") }, 2: ItemSpecInfo { item_id: ItemId(\"c\") }, 3: ItemSpecInfo { item_id: ItemId(\"d\") }, 4: ItemSpecInfo { item_id: ItemId(\"e\") }, 5: ItemSpecInfo { item_id: ItemId(\"f\") }}, edge weights: {0: Contains, 1: Logic, 2: Logic, 3: Contains, 4: Logic, 5: Logic, 6: Data, 7: Data, 8: Data} }, cycle_state: DfsSpace { dfs: Dfs { stack: [], discovered: FixedBitSet { data: [], length: 0 } } } } \
+                graph: Dag { graph: Graph { Ty: \"Directed\", node_count: 6, edge_count: 9, edges: (0, 1), (0, 2), (1, 4), (2, 3), (3, 4), (5, 4), (1, 2), (5, 1), (0, 5), node weights: {0: ItemSpecInfo { item_id: ItemId(\"a\") }, 1: ItemSpecInfo { item_id: ItemId(\"b\") }, 2: ItemSpecInfo { item_id: ItemId(\"c\") }, 3: ItemSpecInfo { item_id: ItemId(\"d\") }, 4: ItemSpecInfo { item_id: ItemId(\"e\") }, 5: ItemSpecInfo { item_id: ItemId(\"f\") }}, edge weights: {0: Contains, 1: Logic, 2: Logic, 3: Contains, 4: Logic, 5: Logic, 6: Data, 7: Data, 8: Data} }, cycle_state: DfsSpace { dfs: Dfs { stack: [], discovered: FixedBitSet { data: 0x10, capacity: 0, length: 0 } } } } \
             } \
         }",
         format!("{flow_spec_info:?}")
