@@ -3,7 +3,7 @@ use leptos::{
     prelude::{ElementChild, GlobalAttributes, IntoView, LeptosOptions},
     view,
 };
-use leptos_meta::{MetaTags, Stylesheet, Title};
+use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 
 use crate::{App, ChildrenFn};
 
@@ -17,6 +17,14 @@ use crate::{App, ChildrenFn};
 /// * `options`: The `LeptosOptions` from
 ///   `leptos::prelude::get_configuration(None)?.leptos_options`.
 pub fn Shell(app_name: String, options: LeptosOptions, app_home: ChildrenFn) -> impl IntoView {
+    // Provides context that manages stylesheets, titles, meta tags, etc.
+    //
+    // Normally this is in the `App` component, but for `peace_webi_components`, we
+    // also include it in the `Shell` because the `Title` component calls
+    // `leptos_meta::use_head()`, which logs a debug message about the meta context
+    // not being provided.
+    provide_meta_context();
+
     view! {
         <!DOCTYPE html>
         <html lang="en">
