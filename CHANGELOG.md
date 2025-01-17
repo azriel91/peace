@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.14 (2025-01-18)
 
 * Move `Cli*` types to `peace_cli` crate under `cli::output` module. ([#182], [#189])
 * Move `OutputFormat` and `OutputFormatParseError` to `peace_cli_model` crate. ([#182], [#189])
