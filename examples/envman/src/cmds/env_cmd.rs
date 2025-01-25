@@ -123,7 +123,17 @@ impl EnvCmd {
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-            cmd_ctx_builder.with_flow((&flow).into()).await?
+            let iam_role_path = String::from("/");
+            let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
+                .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
+                .with_path(iam_role_path)
+                .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
+                .build();
+
+            cmd_ctx_builder
+                .with_flow((&flow).into())
+                .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
+                .await?
         };
 
         let t = f(&mut cmd_ctx).await?;
