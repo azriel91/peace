@@ -664,7 +664,7 @@ fn impl_build_for(
                 //     .and_then(|(profile, flow_dir)| async move {
                 //         let states_current_file = peace_resource_rt::paths::StatesCurrentFile::from(flow_dir);
                 //
-                //         let states_current_stored = peace_rt_model::StatesSerializer::<
+                //         let states_current_stored = peace_state_rt::StatesSerializer::<
                 //             peace_rt_model::Error
                 //         >::deserialize_stored_opt(
                 //             flow_id,
@@ -731,7 +731,7 @@ fn impl_build_for(
                 // // States loading and storage.
                 // let states_type_reg_ref = &states_type_reg;
                 // let states_current_file = peace_resource_rt::paths::StatesCurrentFile::from(&flow_dir);
-                // let states_current_stored = peace_rt_model::StatesSerializer::<
+                // let states_current_stored = peace_state_rt::StatesSerializer::<
                 //     peace_rt_model::Error
                 // >::deserialize_stored_opt(
                 //     flow_id,
@@ -1689,7 +1689,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     .and_then(|(profile, flow_dir)| async move {
                         let states_current_file = peace_resource_rt::paths::StatesCurrentFile::from(flow_dir);
 
-                        let states_current_stored = peace_rt_model::StatesSerializer::<
+                        let states_current_stored = peace_state_rt::StatesSerializer::<
                             peace_rt_model::Error
                         >::deserialize_stored_opt(
                             flow_id,
@@ -1774,7 +1774,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 // States loading and storage.
                 let states_type_reg_ref = &states_type_reg;
                 let states_current_file = peace_resource_rt::paths::StatesCurrentFile::from(&flow_dir);
-                let states_current_stored = peace_rt_model::StatesSerializer::<
+                let states_current_stored = peace_state_rt::StatesSerializer::<
                     peace_rt_model::Error
                 >::deserialize_stored_opt(
                     flow_id,

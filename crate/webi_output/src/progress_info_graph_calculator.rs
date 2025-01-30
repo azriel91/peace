@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use dot_ix_model::info_graph::InfoGraph;
 use peace_core::{progress::ProgressStatus, ItemId};
-use peace_rt_model::Flow;
+use peace_flow_rt::Flow;
 
 /// Calculates the actual `InfoGraph` for a flow's progress.
 #[derive(Debug)]

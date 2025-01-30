@@ -7,9 +7,10 @@ use peace::{
         },
     },
     cmd_model::CmdOutcome,
+    flow_rt::Flow,
     fmt::{presentable::CodeInline, presentln},
     rt::cmds::StatesDiscoverCmd,
-    rt_model::{output::OutputWrite, Flow, Workspace, WorkspaceSpec},
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 use peace_items::file_download::FileDownloadItem;
 use semver::Version;

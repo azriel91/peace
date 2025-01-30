@@ -1,7 +1,8 @@
 use peace::{
     cfg::{app_name, flow_id, profile, AppName},
     cmd::ctx::CmdCtxBuilder,
-    rt_model::{Flow, ItemGraphBuilder, Workspace},
+    flow_rt::{Flow, ItemGraphBuilder},
+    rt_model::Workspace,
 };
 
 use crate::{no_op_output::NoOpOutput, PeaceTestError};

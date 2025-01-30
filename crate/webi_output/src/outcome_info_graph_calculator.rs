@@ -11,13 +11,13 @@ use dot_ix_model::{
 };
 use indexmap::IndexMap;
 use peace_core::ItemId;
+use peace_flow_rt::Flow;
 use peace_item_model::{
     ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin, ItemLocation,
     ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{resources::ts::SetUp, Resources};
-use peace_rt_model::Flow;
 use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
 

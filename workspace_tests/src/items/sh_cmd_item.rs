@@ -3,8 +3,9 @@ use peace::{
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     data::marker::Clean,
+    flow_rt::{Flow, ItemGraphBuilder},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{InMemoryTextOutput, Workspace, WorkspaceSpec},
 };
 use peace_items::sh_cmd::{
     ShCmd, ShCmdError, ShCmdItem, ShCmdParams, ShCmdState, ShCmdStateDiff, ShCmdStateLogical,

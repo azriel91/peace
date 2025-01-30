@@ -31,12 +31,14 @@ peace_cmd_rt = { workspace = true }
 peace_data = { workspace = true }
 peace_diff = { workspace = true }
 peace_flow_model = { workspace = true }
+peace_flow_rt = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
 peace_item_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt = { workspace = true }
 peace_rt_model = { workspace = true }
+peace_state_rt = { workspace = true }
 peace_webi = { workspace = true, optional = true }
 peace_webi_components = { workspace = true, optional = true }
 peace_webi_model = { workspace = true, optional = true }
@@ -72,6 +74,7 @@ output_progress = [
     "peace_cli?/output_progress",
     "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
+    "peace_flow_rt/output_progress",
     "peace_item_model/output_progress",
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
@@ -81,6 +84,7 @@ output_progress = [
 item_interactions = [
     "dep:peace_item_model",
     "peace_cfg/item_interactions",
+    "peace_flow_rt/item_interactions",
     "peace_webi?/item_interactions",
     "peace_webi_components?/item_interactions",
 ]
@@ -88,6 +92,7 @@ item_state_example = [
     "peace_cfg/item_state_example",
     "peace_cmd/item_state_example",
     "peace_data/item_state_example",
+    "peace_flow_rt/item_state_example",
     "peace_params/item_state_example",
     "peace_rt_model/item_state_example",
     "peace_webi?/item_state_example",
@@ -133,6 +138,7 @@ peace_data = { path = "crate/data", version = "0.0.14" }
 peace_data_derive = { path = "crate/data_derive", version = "0.0.14" }
 peace_diff = { path = "crate/diff", version = "0.0.14" }
 peace_flow_model = { path = "crate/flow_model", version = "0.0.14" }
+peace_flow_rt = { path = "crate/flow_rt", version = "0.0.14" }
 peace_fmt = { path = "crate/fmt", version = "0.0.14" }
 peace_params = { path = "crate/params", version = "0.0.14" }
 peace_params_derive = { path = "crate/params_derive", version = "0.0.14" }
@@ -144,6 +150,7 @@ peace_rt_model_core = { path = "crate/rt_model_core", version = "0.0.14" }
 peace_rt_model_hack = { path = "crate/rt_model_hack", version = "0.0.14" }
 peace_rt_model_native = { path = "crate/rt_model_native", version = "0.0.14" }
 peace_rt_model_web = { path = "crate/rt_model_web", version = "0.0.14" }
+peace_state_rt = { path = "crate/state_rt", version = "0.0.14" }
 peace_static_check_macros = { path = "crate/static_check_macros", version = "0.0.14" }
 peace_value_traits = { path = "crate/value_traits", version = "0.0.14" }
 peace_webi = { path = "crate/webi", version = "0.0.14" }
@@ -216,6 +223,7 @@ type_reg = { version = "0.8.0", features = ["debug", "untagged", "ordered"] }
 url = "2.5.4"
 wasm-bindgen = "0.2.100"
 web-sys = "0.3.77"
+yaml_error_context_hack = "0.1.0"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }

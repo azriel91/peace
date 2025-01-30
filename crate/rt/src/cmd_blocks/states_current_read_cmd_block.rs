@@ -11,7 +11,8 @@ use peace_resource_rt::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::{StatesSerializer, Storage};
+use peace_rt_model::Storage;
+use peace_state_rt::StatesSerializer;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

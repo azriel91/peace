@@ -9,6 +9,7 @@ use peace_cmd::{
 };
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_flow_rt::Flow;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::StateDiffsMut,
@@ -20,7 +21,6 @@ use peace_resource_rt::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     ResourceFetchError, Resources,
 };
-use peace_rt_model::Flow;
 
 use crate::cmds::DiffStateSpec;
 

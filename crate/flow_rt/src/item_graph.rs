@@ -5,8 +5,7 @@ use std::{
 
 use peace_data::fn_graph::FnGraph;
 use peace_resource_rt::states::{States, StatesSerde};
-
-use crate::ItemBoxed;
+use peace_rt_model::ItemBoxed;
 
 /// Graph of all [`Item`]s, `FnGraph<ItemBoxed<E>>` newtype.
 ///

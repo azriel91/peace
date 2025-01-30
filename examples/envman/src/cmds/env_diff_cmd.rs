@@ -5,13 +5,14 @@ use peace::{
         MultiProfileSingleFlowView, SingleProfileSingleFlowView,
         SingleProfileSingleFlowViewAndOutput,
     },
+    flow_rt::Flow,
     fmt::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
         PresentableExt,
     },
     resource_rt::states::StateDiffs,
     rt::cmds::DiffCmd,
-    rt_model::{output::OutputWrite, Flow},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{

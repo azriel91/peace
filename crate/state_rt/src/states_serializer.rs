@@ -1,6 +1,7 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace_cfg::{FlowId, ItemId};
+use peace_flow_rt::ItemGraph;
 use peace_resource_rt::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{
@@ -9,8 +10,8 @@ use peace_resource_rt::{
     },
     type_reg::untagged::{BoxDtDisplay, TypeMapOpt, TypeReg},
 };
-
-use crate::{Error, ItemGraph, Storage};
+use peace_rt_model::Storage;
+use peace_rt_model_core::Error;
 
 /// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
 /// from storage.
@@ -180,11 +181,15 @@ where
                 #[cfg(feature = "error_reporting")]
                 {
                     use miette::NamedSource;
+                    use yaml_error_context_hack::ErrorAndContext;
 
                     let file_contents = std::fs::read_to_string(states_file_path).unwrap();
 
-                    let (error_span, error_message, context_span) =
-                        crate::yaml_error_context_hack::error_and_context(&file_contents, &error);
+                    let ErrorAndContext {
+                        error_span,
+                        error_message,
+                        context_span,
+                    } = ErrorAndContext::new(&file_contents, &error);
                     let states_file_source =
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
@@ -247,11 +252,15 @@ where
                 #[cfg(feature = "error_reporting")]
                 {
                     use miette::NamedSource;
+                    use yaml_error_context_hack::ErrorAndContext;
 
                     let file_contents = std::fs::read_to_string(states_file_path).unwrap();
 
-                    let (error_span, error_message, context_span) =
-                        crate::yaml_error_context_hack::error_and_context(&file_contents, &error);
+                    let ErrorAndContext {
+                        error_span,
+                        error_message,
+                        context_span,
+                    } = ErrorAndContext::new(&file_contents, &error);
                     let states_file_source =
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 

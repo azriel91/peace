@@ -1,12 +1,12 @@
 use peace::{
     cfg::{app_name, flow_id, item_id, profile, Item, Profile},
     cmd::ctx::CmdCtx,
+    flow_rt::{Flow, ItemGraphBuilder},
     params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
     resource_rt::{
         paths::{FlowDir, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::BoxDataTypeDowncast,
     },
-    rt_model::{Flow, ItemGraphBuilder},
 };
 
 use crate::{

@@ -8,6 +8,7 @@ use peace_cmd::{
 };
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
+use peace_flow_rt::Flow;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::StateDiffsMut,
@@ -19,7 +20,7 @@ use peace_resource_rt::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
-use peace_rt_model::{Error, Flow};
+use peace_rt_model::Error;
 
 use crate::cmd_blocks::{
     DiffCmdBlock, DiffCmdBlockStatesTsExt, StatesCurrentReadCmdBlock, StatesDiscoverCmdBlock,

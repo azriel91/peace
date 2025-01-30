@@ -105,14 +105,15 @@ where
                     #[cfg(feature = "error_reporting")]
                     {
                         use miette::NamedSource;
+                        use yaml_error_context_hack::ErrorAndContext;
 
                         let file_contents = std::fs::read_to_string(params_specs_file).unwrap();
 
-                        let (error_span, error_message, context_span) =
-                            crate::yaml_error_context_hack::error_and_context(
-                                &file_contents,
-                                &error,
-                            );
+                        let ErrorAndContext {
+                            error_span,
+                            error_message,
+                            context_span,
+                        } = ErrorAndContext::new(&file_contents, &error);
                         let params_specs_file_source =
                             NamedSource::new(params_specs_file.to_string_lossy(), file_contents);
 
@@ -169,11 +170,15 @@ where
                 #[cfg(feature = "error_reporting")]
                 {
                     use miette::NamedSource;
+                    use yaml_error_context_hack::ErrorAndContext;
 
                     let file_contents = std::fs::read_to_string(params_specs_file).unwrap();
 
-                    let (error_span, error_message, context_span) =
-                        crate::yaml_error_context_hack::error_and_context(&file_contents, &error);
+                    let ErrorAndContext {
+                        error_span,
+                        error_message,
+                        context_span,
+                    } = ErrorAndContext::new(&file_contents, &error);
                     let params_specs_file_source =
                         NamedSource::new(params_specs_file.to_string_lossy(), file_contents);
 

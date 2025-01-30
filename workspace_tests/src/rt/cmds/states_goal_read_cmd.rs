@@ -2,8 +2,9 @@ use peace::{
     cfg::{app_name, profile, FlowId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
+    flow_rt::{Flow, ItemGraphBuilder},
     rt::cmds::{StatesDiscoverCmd, StatesGoalReadCmd},
-    rt_model::{Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Error, Workspace, WorkspaceSpec},
 };
 
 use crate::{

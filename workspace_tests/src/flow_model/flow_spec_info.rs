@@ -13,7 +13,7 @@ use peace::{
         },
         FlowSpecInfo,
     },
-    rt_model::{Flow, ItemGraph, ItemGraphBuilder},
+    flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
 };
 use peace_items::blank::BlankItem;
 

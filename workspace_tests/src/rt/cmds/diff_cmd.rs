@@ -4,13 +4,14 @@ use peace::{
     cli::output::CliOutput,
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
+    flow_rt::{Flow, ItemGraphBuilder},
     params::ParamsSpec,
     resource_rt::states::{
         ts::{Current, CurrentStored, Goal, GoalStored},
         StatesCurrent, StatesGoal,
     },
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
-    rt_model::{output::OutputWrite, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
 use crate::{

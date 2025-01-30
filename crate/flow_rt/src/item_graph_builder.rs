@@ -1,8 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
 use peace_data::fn_graph::FnGraphBuilder;
+use peace_rt_model::ItemBoxed;
 
-use crate::{ItemBoxed, ItemGraph};
+use crate::ItemGraph;
 
 /// Builder for an [`ItemGraph`], `FnGraphBuilder<ItemBoxed<E>>`
 /// newtype.
