@@ -65,13 +65,15 @@ js-sys = "0.3.77"
 web-sys = "0.3.77"
 
 [features]
-default = ["item_interactions", "item_state_example"]
+default = []
 
 # === envman modes === #
 cli = [
     "error_reporting",
-    "output_progress",
     "flow_logic",
+    "item_interactions",
+    "item_state_example",
+    "output_progress",
     "web_server",
 
     "peace/cli",
