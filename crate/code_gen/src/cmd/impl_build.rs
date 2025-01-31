@@ -762,7 +762,7 @@ fn impl_build_for(
                 //         peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
                 //         |mut progress_trackers, item| {
                 //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
-                //             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
+                //             let progress_tracker = peace_progress_model::ProgressTracker::new(progress_bar);
                 //             progress_trackers.insert(item.id().clone(), progress_tracker);
                 //             progress_trackers
                 //         },
@@ -1805,7 +1805,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                         peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
                         |mut progress_trackers, item| {
                             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
-                            let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
+                            let progress_tracker = peace_progress_model::ProgressTracker::new(progress_bar);
                             progress_trackers.insert(item.id().clone(), progress_tracker);
                             progress_trackers
                         },

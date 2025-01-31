@@ -22,7 +22,7 @@ use peace_webi_model::OutcomeInfoGraphVariant;
 use std::collections::HashMap;
 
 #[cfg(feature = "output_progress")]
-use peace_core::progress::CmdBlockItemInteractionType;
+use peace_progress_model::CmdBlockItemInteractionType;
 
 #[cfg(feature = "output_progress")]
 use crate::ProgressInfoGraphCalculator;

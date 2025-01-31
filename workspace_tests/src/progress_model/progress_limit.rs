@@ -1,4 +1,4 @@
-use peace::cfg::progress::ProgressLimit;
+use peace::progress_model::ProgressLimit;
 
 #[test]
 fn defaults_to_unknown() {

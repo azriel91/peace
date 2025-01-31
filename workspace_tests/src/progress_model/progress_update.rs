@@ -1,4 +1,4 @@
-use peace::cfg::progress::{ProgressComplete, ProgressDelta, ProgressLimit, ProgressUpdate};
+use peace::progress_model::{ProgressComplete, ProgressDelta, ProgressLimit, ProgressUpdate};
 
 #[test]
 fn clone() {

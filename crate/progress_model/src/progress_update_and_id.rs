@@ -1,9 +1,7 @@
+use peace_core::ItemId;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    progress::{ProgressMsgUpdate, ProgressUpdate},
-    ItemId,
-};
+use crate::{ProgressMsgUpdate, ProgressUpdate};
 
 /// An item ID and its progress update.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]

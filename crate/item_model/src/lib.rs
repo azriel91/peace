@@ -5,7 +5,7 @@ pub use url::{self, Host, Url};
 
 // TODO: Remove this when we have refactored where progress types live.
 #[cfg(feature = "output_progress")]
-pub use peace_core::progress::ItemLocationState;
+pub use peace_progress_model::ItemLocationState;
 
 pub use crate::{
     item_interaction::{

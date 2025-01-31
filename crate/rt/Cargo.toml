@@ -32,6 +32,7 @@ peace_cmd = { workspace = true }
 peace_cmd_rt = { workspace = true }
 peace_flow_rt = { workspace = true }
 peace_params = { workspace = true }
+peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
@@ -60,6 +61,7 @@ error_reporting = [
     "peace_state_rt/error_reporting",
 ]
 output_progress = [
+    "dep:peace_progress_model",
     "peace_cfg/output_progress",
     "peace_cmd/output_progress",
     "peace_flow_rt/output_progress",

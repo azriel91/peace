@@ -20,6 +20,8 @@ pub use peace_fmt as fmt;
 #[cfg(feature = "item_interactions")]
 pub use peace_item_model as item_model;
 pub use peace_params as params;
+#[cfg(feature = "output_progress")]
+pub use peace_progress_model as progress_model;
 pub use peace_resource_rt as resource_rt;
 pub use peace_rt as rt;
 pub use peace_rt_model as rt_model;

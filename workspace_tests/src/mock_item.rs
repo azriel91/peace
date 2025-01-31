@@ -5,11 +5,6 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-#[cfg(feature = "output_progress")]
-use peace::{
-    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
-    item_model::ItemLocationState,
-};
 use peace::{
     cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
     data::{
@@ -18,6 +13,11 @@ use peace::{
     },
     params::Params,
     resource_rt::{resources::ts::Empty, states::StatesCurrentStored, Resources},
+};
+#[cfg(feature = "output_progress")]
+use peace::{
+    item_model::ItemLocationState,
+    progress_model::{ProgressLimit, ProgressMsgUpdate},
 };
 use serde::{Deserialize, Serialize};
 

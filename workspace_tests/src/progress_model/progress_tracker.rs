@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use peace::{
-    cfg::progress::{ProgressLimit, ProgressStatus, ProgressTracker},
+    progress_model::{ProgressLimit, ProgressStatus, ProgressTracker},
     rt_model::indicatif::ProgressBar,
 };
 

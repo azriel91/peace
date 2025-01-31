@@ -31,16 +31,14 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use std::error::Error;
 
-        use peace_cfg::{
-            progress::{
-                CmdBlockItemInteractionType,
-                CmdProgressUpdate,
-                ProgressComplete,
-                ProgressMsgUpdate,
-                ProgressUpdate,
-                ProgressUpdateAndId,
-                ProgressSender,
-            },
+        use peace_progress_model::{
+            CmdBlockItemInteractionType,
+            CmdProgressUpdate,
+            ProgressComplete,
+            ProgressMsgUpdate,
+            ProgressUpdate,
+            ProgressUpdateAndId,
+            ProgressSender,
         };
     }
 }

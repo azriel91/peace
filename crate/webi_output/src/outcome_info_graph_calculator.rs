@@ -25,9 +25,9 @@ use smallvec::SmallVec;
 use std::{collections::HashSet, ops::ControlFlow};
 
 #[cfg(feature = "output_progress")]
-use peace_core::progress::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
-#[cfg(feature = "output_progress")]
 use peace_item_model::{ItemLocationState, ItemLocationStateInProgress};
+#[cfg(feature = "output_progress")]
+use peace_progress_model::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
 
 /// Calculates the example / actual `InfoGraph` for a flow's outcome.
 #[derive(Debug)]

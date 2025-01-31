@@ -6,7 +6,7 @@ use aws_sdk_s3::{
     types::{BucketLocationConstraint, CreateBucketConfiguration},
 };
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::progress_model::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::items::peace_aws_s3_bucket::{

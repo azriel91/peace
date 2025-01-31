@@ -1,4 +1,4 @@
-use peace::cfg::progress::ProgressComplete;
+use peace::progress_model::ProgressComplete;
 
 #[test]
 fn debug() {

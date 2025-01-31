@@ -3,7 +3,7 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use indicatif::ProgressBar;
 
-use crate::progress::{ProgressLimit, ProgressStatus};
+use crate::{ProgressLimit, ProgressStatus};
 
 /// Tracks progress for an item's `ApplyFns::exec` method.
 #[derive(Debug)]

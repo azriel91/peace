@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::progress::ProgressComplete;
+use crate::ProgressComplete;
 
 /// Status of an item's execution progress.
 ///

@@ -1,4 +1,4 @@
-use peace::cfg::progress::ProgressDelta;
+use peace::progress_model::ProgressDelta;
 
 #[test]
 fn debug() {

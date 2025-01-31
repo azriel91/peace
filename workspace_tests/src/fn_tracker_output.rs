@@ -9,11 +9,9 @@ use crate::FnInvocation;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace::{
-            cfg::{
-                progress::{CmdBlockItemInteractionType, ProgressTracker, ProgressUpdateAndId},
-                ItemId,
-            },
+            cfg::ItemId,
             item_model::ItemLocationState,
+            progress_model::{CmdBlockItemInteractionType, ProgressTracker, ProgressUpdateAndId},
             rt_model::CmdProgressTracker,
         };
     }

@@ -33,6 +33,7 @@ peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
 peace_item_model = { workspace = true, optional = true }
 peace_params = { workspace = true }
+peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_rt_model_hack = { workspace = true, optional = true }
@@ -59,6 +60,7 @@ error_reporting = [
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
 output_progress = [
     "dep:peace_item_model",
+    "dep:peace_progress_model",
     "peace_cfg/output_progress",
     "peace_item_model/output_progress",
     "peace_rt_model_hack/output_progress"

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`ItemLocation`]: crate::ItemLocation
 /// [`ItemLocationStateInProgress`]: crate::ItemLocationStateInProgress
-/// [`ProgressStatus`]: peace_core::progress::ProgressStatus
+/// [`ProgressStatus`]: crate::ProgressStatus
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ItemLocationState {
     /// [`ItemLocation`] does not exist.

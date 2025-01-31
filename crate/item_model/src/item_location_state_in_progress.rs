@@ -1,4 +1,4 @@
-use peace_core::progress::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
+use peace_progress_model::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
 use serde::{Deserialize, Serialize};
 
 use crate::ItemLocationState;

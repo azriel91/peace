@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "output_progress")]
-use peace_core::{
-    progress::{CmdBlockItemInteractionType, ProgressLimit, ProgressStatus},
-    ItemId,
-};
-#[cfg(feature = "output_progress")]
-use peace_item_model::ItemLocationState;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_core::ItemId;
+        use peace_item_model::ItemLocationState;
+        use peace_progress_model::{CmdBlockItemInteractionType, ProgressLimit, ProgressStatus};
+    }
+}
 
 /// A message that carries what needs to be updated in the web UI.
 ///

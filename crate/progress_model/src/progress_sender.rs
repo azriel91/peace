@@ -1,11 +1,9 @@
+use peace_core::ItemId;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    progress::{
-        CmdProgressUpdate, ItemLocationState, ProgressDelta, ProgressMsgUpdate, ProgressUpdate,
-        ProgressUpdateAndId,
-    },
-    ItemId,
+    CmdProgressUpdate, ItemLocationState, ProgressDelta, ProgressMsgUpdate, ProgressUpdate,
+    ProgressUpdateAndId,
 };
 
 /// Submits progress for an item's `ApplyFns::exec` method.

@@ -8,19 +8,18 @@ use serde::{Deserialize, Serialize};
 
 use crate::ItemSpecInfo;
 
-#[cfg(feature = "output_progress")]
-use std::collections::HashMap;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use std::collections::HashMap;
 
-#[cfg(feature = "output_progress")]
-use dot_ix::model::{
-    common::AnyId,
-    theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr},
-};
-#[cfg(feature = "output_progress")]
-use peace_core::{
-    progress::{ProgressComplete, ProgressStatus},
-    ItemId,
-};
+        use dot_ix::model::{
+            common::AnyId,
+            theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr},
+        };
+        use peace_core::ItemId;
+        use peace_progress_model::{ProgressComplete, ProgressStatus};
+    }
+}
 
 /// Serializable representation of how a [`Flow`] is configured.
 ///

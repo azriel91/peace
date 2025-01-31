@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_smithy_types::byte_stream::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
+use peace::progress_model::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::items::peace_aws_s3_object::{

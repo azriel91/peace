@@ -1,6 +1,6 @@
-use peace::cfg::{
-    item_id,
-    progress::{
+use peace::{
+    cfg::item_id,
+    progress_model::{
         ProgressComplete, ProgressDelta, ProgressLimit, ProgressMsgUpdate, ProgressUpdate,
         ProgressUpdateAndId,
     },

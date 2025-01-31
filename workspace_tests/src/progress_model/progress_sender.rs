@@ -1,10 +1,7 @@
 use peace::{
-    cfg::{
-        item_id,
-        progress::{
-            CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressSender,
-            ProgressUpdateAndId,
-        },
+    cfg::item_id,
+    progress_model::{
+        CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressSender, ProgressUpdateAndId,
     },
     rt_model::ProgressUpdate,
 };

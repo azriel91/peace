@@ -26,6 +26,7 @@ enser = { workspace = true }
 peace_core = { workspace = true }
 peace_data = { workspace = true }
 peace_params = { workspace = true }
+peace_progress_model = { workspace = true, optional = true }
 peace_item_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
@@ -36,7 +37,7 @@ default = []
 error_reporting = ["peace_params/error_reporting"]
 output_progress = [
     "dep:peace_item_model",
-    "peace_core/output_progress",
+    "dep:peace_progress_model",
     "peace_item_model/output_progress",
 ]
 item_interactions = ["dep:peace_item_model"]

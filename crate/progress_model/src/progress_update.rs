@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::progress::{ProgressDelta, ProgressLimit};
+use crate::{ProgressDelta, ProgressLimit};
 
 use super::ProgressComplete;
 

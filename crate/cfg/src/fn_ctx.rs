@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use peace_core::ItemId;
 
 #[cfg(feature = "output_progress")]
-use peace_core::progress::ProgressSender;
+use peace_progress_model::ProgressSender;
 
 /// References to pass information between the Peace framework and an item.
 #[derive(Clone, Copy, Debug)]

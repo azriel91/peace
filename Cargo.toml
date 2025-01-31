@@ -35,6 +35,7 @@ peace_flow_rt = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
 peace_item_model = { workspace = true, optional = true }
+peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt = { workspace = true }
 peace_rt_model = { workspace = true }
@@ -71,6 +72,7 @@ error_reporting = [
 ]
 output_in_memory = ["peace_cli?/output_in_memory"]
 output_progress = [
+    "dep:peace_progress_model",
     "peace_cli?/output_progress",
     "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
@@ -142,6 +144,7 @@ peace_flow_rt = { path = "crate/flow_rt", version = "0.0.14" }
 peace_fmt = { path = "crate/fmt", version = "0.0.14" }
 peace_params = { path = "crate/params", version = "0.0.14" }
 peace_params_derive = { path = "crate/params_derive", version = "0.0.14" }
+peace_progress_model = { path = "crate/progress_model", version = "0.0.14" }
 peace_item_model = { path = "crate/item_model", version = "0.0.14" }
 peace_resource_rt = { path = "crate/resource_rt", version = "0.0.14" }
 peace_rt = { path = "crate/rt", version = "0.0.14" }

@@ -1,6 +1,7 @@
 use indexmap::IndexMap;
 use indicatif::MultiProgress;
-use peace_core::{progress::ProgressTracker, ItemId};
+use peace_core::ItemId;
+use peace_progress_model::ProgressTracker;
 
 /// Tracks command execution progress for all items.
 ///

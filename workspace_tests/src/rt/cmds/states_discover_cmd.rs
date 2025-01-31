@@ -20,7 +20,7 @@ use crate::{
 };
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressComplete, ProgressStatus};
+use peace::progress_model::{ProgressComplete, ProgressStatus};
 
 #[tokio::test]
 async fn current_and_goal_discovers_both_states_current_and_goal(

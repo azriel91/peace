@@ -15,7 +15,7 @@ use peace::{
 use peace_items::blank::BlankItem;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace::cfg::progress::{ProgressLimit, ProgressSender};
+        use peace::progress_model::{ProgressLimit, ProgressSender};
         use tokio::sync::mpsc;
     }
 }

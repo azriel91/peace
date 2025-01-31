@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "output_progress")]
-use crate::progress::ProgressLimit;
+use peace_progress_model::ProgressLimit;
 
 /// Whether the `apply` function needs to be executed.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
