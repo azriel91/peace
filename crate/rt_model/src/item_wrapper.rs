@@ -32,7 +32,7 @@ use peace_cfg::RefInto;
 #[cfg(feature = "item_state_example")]
 use peace_data::marker::Example;
 #[cfg(feature = "output_progress")]
-use peace_item_model::ItemLocationState;
+use peace_item_interaction_model::ItemLocationState;
 
 /// Wraps a type implementing [`Item`].
 ///
@@ -957,14 +957,14 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_item_model::ItemInteractionsExample, E> {
+    ) -> Result<peace_item_interaction_model::ItemInteractionsExample, E> {
         let params = self.params(params_specs, resources, ValueResolutionMode::Example)?;
 
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
         let item_interactions = I::interactions(&params, data);
 
-        Ok(peace_item_model::ItemInteractionsExample::from(
+        Ok(peace_item_interaction_model::ItemInteractionsExample::from(
             item_interactions,
         ))
     }
@@ -974,7 +974,7 @@ where
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E> {
+    ) -> Result<peace_item_interaction_model::ItemInteractionsCurrentOrExample, E> {
         let params_partial_current =
             self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
         let mut params_example =
@@ -987,7 +987,8 @@ where
             Ok(params_current) => {
                 let item_interactions = I::interactions(&params_current, data);
 
-                peace_item_model::ItemInteractionsCurrent::from(item_interactions).into()
+                peace_item_interaction_model::ItemInteractionsCurrent::from(item_interactions)
+                    .into()
             }
             Err(params_partial_current) => {
                 // Rust cannot guarantee that `I::Params.try_from(params_partial)`'s
@@ -998,7 +999,8 @@ where
                 let params_merged = params_example;
                 let item_interactions = I::interactions(&params_merged, data);
 
-                peace_item_model::ItemInteractionsExample::from(item_interactions).into()
+                peace_item_interaction_model::ItemInteractionsExample::from(item_interactions)
+                    .into()
             }
         };
 

@@ -12,7 +12,7 @@ use dot_ix_model::{
 use indexmap::IndexMap;
 use peace_core::ItemId;
 use peace_flow_rt::Flow;
-use peace_item_model::{
+use peace_item_interaction_model::{
     ItemInteraction, ItemInteractionPull, ItemInteractionPush, ItemInteractionWithin, ItemLocation,
     ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
@@ -25,7 +25,7 @@ use smallvec::SmallVec;
 use std::{collections::HashSet, ops::ControlFlow};
 
 #[cfg(feature = "output_progress")]
-use peace_item_model::{ItemLocationState, ItemLocationStateInProgress};
+use peace_item_interaction_model::{ItemLocationState, ItemLocationStateInProgress};
 #[cfg(feature = "output_progress")]
 use peace_progress_model::{CmdBlockItemInteractionType, ProgressComplete, ProgressStatus};
 

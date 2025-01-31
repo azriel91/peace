@@ -1,4 +1,4 @@
-use peace::item_model::{ItemInteractionWithin, ItemLocation};
+use peace::item_interaction_model::{ItemInteractionWithin, ItemLocation};
 
 #[test]
 fn location() {

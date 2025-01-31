@@ -167,8 +167,8 @@ where
     fn interactions(
         _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
-    ) -> Vec<peace::item_model::ItemInteraction> {
-        use peace::item_model::{ItemInteractionWithin, ItemLocation};
+    ) -> Vec<peace::item_interaction_model::ItemInteraction> {
+        use peace::item_interaction_model::{ItemInteractionWithin, ItemLocation};
 
         let item_interaction =
             ItemInteractionWithin::new(vec![ItemLocation::localhost()].into()).into();

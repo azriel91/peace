@@ -26,7 +26,7 @@ mod diff;
 mod flow_model;
 mod fmt;
 #[cfg(feature = "item_interactions")]
-mod item_model;
+mod item_interaction_model;
 mod params;
 #[cfg(feature = "output_progress")]
 mod progress_model;

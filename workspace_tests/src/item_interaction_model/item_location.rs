@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, path::Path};
 
-use peace::item_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
+use peace::item_interaction_model::{url::ParseError, ItemLocation, ItemLocationType, Url};
 
 #[test]
 fn group() {
@@ -8,7 +8,7 @@ fn group() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Group,
+            peace::item_interaction_model::ItemLocationType::Group,
             "Cloud".to_string(),
         ),
         item_location
@@ -21,7 +21,7 @@ fn host() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Host,
+            peace::item_interaction_model::ItemLocationType::Host,
             "Server".to_string(),
         ),
         item_location
@@ -34,7 +34,7 @@ fn host_unknown() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Host,
+            peace::item_interaction_model::ItemLocationType::Host,
             ItemLocation::HOST_UNKNOWN.to_string(),
         ),
         item_location
@@ -47,7 +47,7 @@ fn host_from_url_https() -> Result<(), ParseError> {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Host,
+            peace::item_interaction_model::ItemLocationType::Host,
             "🌐 example.com".to_string(),
         ),
         item_location
@@ -62,7 +62,7 @@ fn host_from_url_file() -> Result<(), ParseError> {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Host,
+            peace::item_interaction_model::ItemLocationType::Host,
             ItemLocation::LOCALHOST.to_string(),
         ),
         item_location
@@ -77,7 +77,7 @@ fn localhost() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Host,
+            peace::item_interaction_model::ItemLocationType::Host,
             ItemLocation::LOCALHOST.to_string(),
         ),
         item_location
@@ -90,7 +90,7 @@ fn path() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Path,
+            peace::item_interaction_model::ItemLocationType::Path,
             "/path/to/resource".to_string(),
         ),
         item_location
@@ -108,7 +108,7 @@ fn path_lossy() {
 
     assert_eq!(
         ItemLocation::new(
-            peace::item_model::ItemLocationType::Path,
+            peace::item_interaction_model::ItemLocationType::Path,
             "/path/to/lossy_fo�.txt".to_string(),
         ),
         item_location

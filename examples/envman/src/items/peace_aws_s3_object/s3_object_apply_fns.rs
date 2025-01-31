@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 
 use aws_smithy_types::byte_stream::ByteStream;
 use base64::Engine;
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 #[cfg(feature = "output_progress")]
 use peace::progress_model::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::items::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectParams, S3ObjectState, S3ObjectStateDiff,

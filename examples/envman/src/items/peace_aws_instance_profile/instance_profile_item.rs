@@ -200,8 +200,10 @@ where
     fn interactions(
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
-    ) -> Vec<peace::item_model::ItemInteraction> {
-        use peace::item_model::{ItemInteractionPush, ItemLocation, ItemLocationAncestors};
+    ) -> Vec<peace::item_interaction_model::ItemInteraction> {
+        use peace::item_interaction_model::{
+            ItemInteractionPush, ItemLocation, ItemLocationAncestors,
+        };
 
         let instance_profile_name = format!("📝 {}", params.name());
 

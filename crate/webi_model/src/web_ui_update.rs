@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_core::ItemId;
-        use peace_item_model::ItemLocationState;
+        use peace_item_interaction_model::ItemLocationState;
         use peace_progress_model::{CmdBlockItemInteractionType, ProgressLimit, ProgressStatus};
     }
 }
@@ -25,8 +25,8 @@ pub enum WebUiUpdate {
     ///
     /// # Design Note
     ///
-    /// `ItemLocationState` should live in `peace_item_model`, but this creates
-    /// a circular dependency.
+    /// `ItemLocationState` should live in `peace_item_interaction_model`, but
+    /// this creates a circular dependency.
     #[cfg(feature = "output_progress")]
     ItemLocationState {
         /// ID of the `Item`.

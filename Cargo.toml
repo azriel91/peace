@@ -34,7 +34,7 @@ peace_flow_model = { workspace = true }
 peace_flow_rt = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
-peace_item_model = { workspace = true, optional = true }
+peace_item_interaction_model = { workspace = true, optional = true }
 peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt = { workspace = true }
@@ -77,14 +77,14 @@ output_progress = [
     "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
     "peace_flow_rt/output_progress",
-    "peace_item_model/output_progress",
+    "peace_item_interaction_model/output_progress",
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
     "peace_webi?/output_progress",
     "peace_cmd_model/output_progress",
 ]
 item_interactions = [
-    "dep:peace_item_model",
+    "dep:peace_item_interaction_model",
     "peace_cfg/item_interactions",
     "peace_flow_rt/item_interactions",
     "peace_webi?/item_interactions",
@@ -145,7 +145,7 @@ peace_fmt = { path = "crate/fmt", version = "0.0.14" }
 peace_params = { path = "crate/params", version = "0.0.14" }
 peace_params_derive = { path = "crate/params_derive", version = "0.0.14" }
 peace_progress_model = { path = "crate/progress_model", version = "0.0.14" }
-peace_item_model = { path = "crate/item_model", version = "0.0.14" }
+peace_item_interaction_model = { path = "crate/item_interaction_model", version = "0.0.14" }
 peace_resource_rt = { path = "crate/resource_rt", version = "0.0.14" }
 peace_rt = { path = "crate/rt", version = "0.0.14" }
 peace_rt_model = { path = "crate/rt_model", version = "0.0.14" }

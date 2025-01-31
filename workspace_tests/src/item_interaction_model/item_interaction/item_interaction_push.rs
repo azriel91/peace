@@ -1,4 +1,4 @@
-use peace::item_model::{ItemInteractionPush, ItemLocation};
+use peace::item_interaction_model::{ItemInteractionPush, ItemLocation};
 
 #[test]
 fn location_from() {

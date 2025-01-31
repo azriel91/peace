@@ -317,7 +317,7 @@ pub trait ItemRt<E>:
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_item_model::ItemInteractionsExample, E>;
+    ) -> Result<peace_item_interaction_model::ItemInteractionsExample, E>;
 
     /// Returns the physical resources that this item interacts with, merging
     /// any available current state over example state.
@@ -351,7 +351,7 @@ pub trait ItemRt<E>:
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-    ) -> Result<peace_item_model::ItemInteractionsCurrentOrExample, E>;
+    ) -> Result<peace_item_interaction_model::ItemInteractionsCurrentOrExample, E>;
 
     /// Returns a human readable tag name that represents this item.
     ///

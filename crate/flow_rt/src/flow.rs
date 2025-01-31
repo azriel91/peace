@@ -10,7 +10,7 @@ cfg_if::cfg_if! {
 
         use indexmap::IndexMap;
         use peace_cfg::ItemId;
-        use peace_item_model::{
+        use peace_item_interaction_model::{
             ItemInteraction,
             ItemInteractionsCurrentOrExample,
             ItemLocation,

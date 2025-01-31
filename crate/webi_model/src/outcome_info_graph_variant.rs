@@ -5,7 +5,7 @@ cfg_if::cfg_if! {
         use std::collections::HashMap;
 
         use peace_core::ItemId;
-        use peace_item_model::ItemLocationState;
+        use peace_item_interaction_model::ItemLocationState;
         use peace_progress_model::{CmdBlockItemInteractionType, ProgressStatus};
     }
 }

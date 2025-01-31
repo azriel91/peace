@@ -179,8 +179,10 @@ where
     fn interactions(
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
-    ) -> Vec<peace::item_model::ItemInteraction> {
-        use peace::item_model::{ItemInteractionPull, ItemLocation, ItemLocationAncestors};
+    ) -> Vec<peace::item_interaction_model::ItemInteraction> {
+        use peace::item_interaction_model::{
+            ItemInteractionPull, ItemLocation, ItemLocationAncestors,
+        };
 
         let location_server: ItemLocationAncestors = vec![
             ItemLocation::host_from_url(params.src()),

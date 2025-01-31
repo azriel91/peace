@@ -16,7 +16,7 @@ use peace::{
 };
 #[cfg(feature = "output_progress")]
 use peace::{
-    item_model::ItemLocationState,
+    item_interaction_model::ItemLocationState,
     progress_model::{ProgressLimit, ProgressMsgUpdate},
 };
 use serde::{Deserialize, Serialize};
@@ -235,8 +235,8 @@ impl Item for VecCopyItem {
     fn interactions(
         _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
-    ) -> Vec<peace::item_model::ItemInteraction> {
-        use peace::item_model::{ItemInteractionPush, ItemLocation};
+    ) -> Vec<peace::item_interaction_model::ItemInteraction> {
+        use peace::item_interaction_model::{ItemInteractionPush, ItemLocation};
 
         let item_interaction = ItemInteractionPush::new(
             vec![

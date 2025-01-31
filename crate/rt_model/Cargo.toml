@@ -31,7 +31,7 @@ peace_cfg = { workspace = true }
 peace_data = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
-peace_item_model = { workspace = true, optional = true }
+peace_item_interaction_model = { workspace = true, optional = true }
 peace_params = { workspace = true }
 peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
@@ -59,17 +59,17 @@ error_reporting = [
 ]
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
 output_progress = [
-    "dep:peace_item_model",
+    "dep:peace_item_interaction_model",
     "dep:peace_progress_model",
     "peace_cfg/output_progress",
-    "peace_item_model/output_progress",
+    "peace_item_interaction_model/output_progress",
     "peace_rt_model_hack/output_progress"
 ]
 item_interactions = [
     "dep:heck",
-    "dep:peace_item_model",
+    "dep:peace_item_interaction_model",
     "peace_cfg/item_interactions",
-    "peace_item_model/item_locations_and_interactions",
+    "peace_item_interaction_model/item_locations_and_interactions",
 ]
 item_state_example = [
     "peace_cfg/item_state_example",

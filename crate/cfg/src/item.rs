@@ -116,7 +116,7 @@ pub trait Item: DynClone {
         + Send
         + Sync
         + 'static
-        + crate::RefInto<peace_item_model::ItemLocationState>;
+        + crate::RefInto<peace_item_interaction_model::ItemLocationState>;
 
     /// Diff between the current and target [`State`]s.
     ///
@@ -510,5 +510,5 @@ pub trait Item: DynClone {
     fn interactions(
         params: &Self::Params<'_>,
         data: Self::Data<'_>,
-    ) -> Vec<peace_item_model::ItemInteraction>;
+    ) -> Vec<peace_item_interaction_model::ItemInteraction>;
 }

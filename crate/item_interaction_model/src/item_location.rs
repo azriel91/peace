@@ -179,7 +179,8 @@ impl ItemLocation {
     pub fn path_lossy(name: &Path) -> Self {
         Self {
             // For some reason, calling `to_string_lossy()` on the path itself doesn't return the
-            // replacement character, and breaks the `item_model::item_location::path_lossy` test.
+            // replacement character, and breaks the
+            // `item_interaction_model::item_location::path_lossy` test.
             //
             // The rust source code on 1.80.0 stable uses `String::from_utf8_lossy` internally:
             // <https://doc.rust-lang.org/src/std/sys/os_str/bytes.rs.html#271>

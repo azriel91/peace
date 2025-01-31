@@ -35,7 +35,7 @@ peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_flow_rt = { workspace = true }
 peace_fmt = { workspace = true }
-peace_item_model = { workspace = true }
+peace_item_interaction_model = { workspace = true }
 peace_params = { workspace = true }
 peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
@@ -62,7 +62,7 @@ output_progress = [
     "dep:peace_progress_model",
     "peace_cmd_model/output_progress",
     "peace_flow_model/output_progress",
-    "peace_item_model/output_progress",
+    "peace_item_interaction_model/output_progress",
     "peace_rt_model_core/output_progress",
     "peace_rt_model/output_progress",
     "peace_webi_model/output_progress",

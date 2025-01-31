@@ -29,8 +29,8 @@ pub enum CmdProgressUpdate {
     ///
     /// # Design Note
     ///
-    /// `ItemLocationState` should live in `peace_item_model`, but this creates
-    /// a circular dependency.
+    /// `ItemLocationState` should live in `peace_item_interaction_model`, but
+    /// this creates a circular dependency.
     ItemLocationState {
         /// ID of the `Item`.
         item_id: ItemId,

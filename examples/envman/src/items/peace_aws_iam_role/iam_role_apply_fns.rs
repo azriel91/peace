@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 #[cfg(feature = "output_progress")]
 use peace::progress_model::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::items::peace_aws_iam_role::{
     model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleParams, IamRoleState, IamRoleStateDiff,
