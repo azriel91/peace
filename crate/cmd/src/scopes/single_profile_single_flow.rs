@@ -2,9 +2,9 @@ use std::{fmt::Debug, hash::Hash};
 
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
-use peace_core::Profile;
 use peace_flow_rt::Flow;
 use peace_params::ParamsSpecs;
+use peace_profile_model::Profile;
 use peace_resource_rt::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     resources::ts::SetUp,

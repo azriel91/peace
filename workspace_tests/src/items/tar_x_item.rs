@@ -1,7 +1,7 @@
 use std::{io::Cursor, path::PathBuf};
 
 use peace::{
-    cfg::{app_name, profile, ApplyCheck, Item, Profile},
+    cfg::{app_name, ApplyCheck, Item},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     cmd_model::CmdOutcome,
     data::Data,
@@ -9,6 +9,7 @@ use peace::{
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
     item_model::{item_id, ItemId},
     params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
+    profile_model::{profile, Profile},
     resource_rt::paths::{FlowDir, ProfileDir},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{InMemoryTextOutput, Workspace, WorkspaceSpec},

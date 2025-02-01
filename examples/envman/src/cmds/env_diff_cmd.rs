@@ -1,6 +1,5 @@
 use futures::FutureExt;
 use peace::{
-    cfg::Profile,
     cmd::scopes::{
         MultiProfileSingleFlowView, SingleProfileSingleFlowView,
         SingleProfileSingleFlowViewAndOutput,
@@ -10,6 +9,7 @@ use peace::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
         PresentableExt,
     },
+    profile_model::Profile,
     resource_rt::states::StateDiffs,
     rt::cmds::DiffCmd,
     rt_model::output::OutputWrite,

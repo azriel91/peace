@@ -353,11 +353,11 @@ fn impl_build_for(
                 //     .iter()
                 //     .fold((
                 //         std::collections::BTreeMap::<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             peace_resource_rt::paths::ProfileDir
                 //         >::new(),
                 //         std::collections::BTreeMap::<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             peace_resource_rt::paths::ProfileHistoryDir
                 //         >::new()
                 //     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
@@ -380,7 +380,7 @@ fn impl_build_for(
                 // let flow_dirs = profile_dirs
                 //     .iter()
                 //     .fold(std::collections::BTreeMap::<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             peace_resource_rt::paths::ProfileDir
                 //         >::new(
                 //     ), |mut flow_dirs, (profile, profile_dir)| {
@@ -438,7 +438,7 @@ fn impl_build_for(
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             _ // peace_rt_model::params::ProfileParams<K>
                 //         >
                 //     >()
@@ -473,7 +473,7 @@ fn impl_build_for(
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             _ // peace_rt_model::params::FlowParams<K>
                 //         >
                 //     >()
@@ -649,7 +649,7 @@ fn impl_build_for(
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             Option<peace_params::ParamsSpecs>
                 //         >
                 //     >()
@@ -679,7 +679,7 @@ fn impl_build_for(
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
-                //             peace_core::Profile,
+                //             peace_profile_model::Profile,
                 //             Option<peace_resource_rt::states::StatesCurrentStored>
                 //         >
                 //     >()
@@ -1110,7 +1110,7 @@ fn profile_params_load_save(
             let profile_params_deserialize = match profile_params_selection {
                 ProfileParamsSelection::None => quote! {
                     let profile_to_profile_params = std::collections::BTreeMap::<
-                        peace_core::Profile,
+                        peace_profile_model::Profile,
                         peace_rt_model::params::ProfileParams<
                             <
                                 #profile_params_k_maybe_type_param as
@@ -1147,7 +1147,7 @@ fn profile_params_load_save(
                             })
                             .try_collect::<
                                 std::collections::BTreeMap<
-                                    peace_core::Profile,
+                                    peace_profile_model::Profile,
                                     peace_rt_model::params::ProfileParams<
                                         <
                                             #profile_params_k_maybe_type_param as
@@ -1254,7 +1254,7 @@ fn flow_params_load_save(
             let flow_params_deserialize = match flow_params_selection {
                 FlowParamsSelection::None => quote! {
                     let profile_to_flow_params = std::collections::BTreeMap::<
-                        peace_core::Profile,
+                        peace_profile_model::Profile,
                         peace_rt_model::params::FlowParams<
                             <
                                 #flow_params_k_maybe_type_param as
@@ -1290,7 +1290,7 @@ fn flow_params_load_save(
                             })
                             .try_collect::<
                                 std::collections::BTreeMap<
-                                    peace_core::Profile,
+                                    peace_profile_model::Profile,
                                     peace_rt_model::params::FlowParams<
                                         <
                                             #flow_params_k_maybe_type_param as
@@ -1421,11 +1421,11 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                     .iter()
                     .fold((
                         std::collections::BTreeMap::<
-                            peace_core::Profile,
+                            peace_profile_model::Profile,
                             peace_resource_rt::paths::ProfileDir
                         >::new(),
                         std::collections::BTreeMap::<
-                            peace_core::Profile,
+                            peace_profile_model::Profile,
                             peace_resource_rt::paths::ProfileHistoryDir
                         >::new()
                     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
@@ -1459,7 +1459,7 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                     let flow_dirs = profile_dirs
                         .iter()
                         .fold(std::collections::BTreeMap::<
-                                peace_core::Profile,
+                                peace_profile_model::Profile,
                                 peace_resource_rt::paths::FlowDir
                             >::new(
                         ), |mut flow_dirs, (profile, profile_dir)| {
@@ -1674,7 +1674,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
-                            peace_core::Profile,
+                            peace_profile_model::Profile,
                             Option<peace_params::ParamsSpecs>
                         >
                     >()
@@ -1704,7 +1704,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
-                            peace_core::Profile,
+                            peace_profile_model::Profile,
                             Option<peace_resource_rt::states::StatesCurrentStored>
                         >
                     >()

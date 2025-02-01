@@ -1,10 +1,11 @@
 use peace::{
-    cfg::{app_name, profile, Item, Profile},
+    cfg::{app_name, Item},
     cmd::ctx::CmdCtx,
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
     params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+    profile_model::{profile, Profile},
     resource_rt::{
         paths::{FlowDir, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::BoxDataTypeDowncast,

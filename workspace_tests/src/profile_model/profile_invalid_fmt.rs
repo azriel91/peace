@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use peace::cfg::ProfileInvalidFmt;
+use peace::profile_model::ProfileInvalidFmt;
 
 #[test]
 fn debug() {

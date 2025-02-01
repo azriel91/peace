@@ -1,8 +1,8 @@
 use std::{borrow::Cow, collections::HashMap, str::FromStr};
 
 use peace::{
-    cfg::{Profile, ProfileInvalidFmt},
     fmt::Presentable,
+    profile_model::{Profile, ProfileInvalidFmt},
 };
 
 use crate::{FnInvocation, FnTrackerPresenter};

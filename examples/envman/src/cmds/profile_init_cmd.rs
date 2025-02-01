@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, Profile},
+    cfg::app_name,
     cmd::{
         ctx::CmdCtx,
         scopes::{
@@ -10,6 +10,7 @@ use peace::{
     flow_rt::Flow,
     fmt::{presentable::CodeInline, presentln},
     item_model::item_id,
+    profile_model::Profile,
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
