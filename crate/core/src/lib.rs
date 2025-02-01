@@ -12,23 +12,22 @@
 //!
 //! [peace#67]: https://github.com/azriel91/peace/issues/67
 
+pub extern crate id_newtype;
+
 // Re-exports
+// needed for dependencies' usage of our `id_newtype` macro to resolve
+pub use peace_fmt;
 pub use peace_static_check_macros::{app_name, flow_id, item_id, profile};
 
 pub use crate::{
     app_name::{AppName, AppNameInvalidFmt},
     flow_id::{FlowId, FlowIdInvalidFmt},
-    item_id::{ItemId, ItemIdInvalidFmt},
     profile::{Profile, ProfileInvalidFmt},
 };
 
 mod app_name;
 mod flow_id;
-mod item_id;
 mod profile;
-
-#[macro_use]
-extern crate id_newtype;
 
 /// Implements common behaviour for an ID type.
 ///
@@ -68,20 +67,21 @@ extern crate id_newtype;
 ///     tag,                // The `peace_fmt::Presentable` method to style the ID
 /// );
 /// ```
-macro_rules! core_id_newtype {
+#[macro_export]
+macro_rules! id_newtype {
     ($ty_name:ident, $ty_err_name:ident, $macro_name:ident, $presentable_method:ident) => {
-        id_newtype!($ty_name, $ty_err_name, $macro_name);
+        use $crate::id_newtype::id_newtype;
 
-        #[peace_fmt::async_trait(?Send)]
-        impl peace_fmt::Presentable for $ty_name {
+        $crate::id_newtype::id_newtype!($ty_name, $ty_err_name, $macro_name);
+
+        #[$crate::peace_fmt::async_trait(?Send)]
+        impl $crate::peace_fmt::Presentable for $ty_name {
             async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
             where
-                PR: peace_fmt::Presenter<'output>,
+                PR: $crate::peace_fmt::Presenter<'output>,
             {
                 presenter.$presentable_method(self.as_str()).await
             }
         }
     };
 }
-
-pub(crate) use core_id_newtype;

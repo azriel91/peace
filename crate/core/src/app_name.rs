@@ -26,4 +26,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AppName(Cow<'static, str>);
 
-crate::core_id_newtype!(AppName, AppNameInvalidFmt, app_name, name);
+crate::id_newtype!(AppName, AppNameInvalidFmt, app_name, name);

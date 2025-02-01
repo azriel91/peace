@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// The following are all examples of valid `ItemId`s:
 ///
 /// ```rust
-/// # use peace_core::{item_id, ItemId};
+/// # use peace_item_model::{item_id, ItemId};
 /// #
 /// let _snake = item_id!("snake_case");
 /// let _camel = item_id!("camelCase");
@@ -35,4 +35,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ItemId(Cow<'static, str>);
 
-crate::core_id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);
+peace_core::id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);

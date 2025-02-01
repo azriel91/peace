@@ -27,4 +27,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize, PartialOrd, Ord)]
 pub struct Profile(Cow<'static, str>);
 
-crate::core_id_newtype!(Profile, ProfileInvalidFmt, profile, tag);
+crate::id_newtype!(Profile, ProfileInvalidFmt, profile, tag);
