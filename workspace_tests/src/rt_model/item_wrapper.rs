@@ -1,7 +1,8 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{item_id, ApplyCheck, FnCtx},
+    cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Goal},
+    item_model::item_id,
     params::{ParamsSpec, ParamsSpecs},
     resource_rt::{
         internal::StatesMut,

@@ -1,8 +1,9 @@
 use peace::{
-    cfg::{flow_id, item_id},
+    cfg::flow_id,
     data::fn_graph::{daggy2::Dag, Edge, WouldCycle},
     flow_model::{FlowInfo, FlowSpecInfo, GraphInfo, ItemInfo, ItemSpecInfo},
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
+    item_model::item_id,
 };
 use peace_items::blank::BlankItem;
 

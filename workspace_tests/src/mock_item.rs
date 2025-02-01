@@ -6,11 +6,12 @@ use std::{
 };
 
 use peace::{
-    cfg::{async_trait, item_id, ApplyCheck, FnCtx, Item, ItemId},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item},
     data::{
         accessors::{RMaybe, R, W},
         Data,
     },
+    item_model::{item_id, ItemId},
     params::Params,
     resource_rt::{resources::ts::Empty, states::StatesCurrentStored, Resources},
 };

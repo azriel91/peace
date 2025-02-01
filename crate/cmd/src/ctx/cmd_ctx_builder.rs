@@ -5,8 +5,8 @@ use std::{fmt::Debug, hash::Hash};
 use futures::stream::{StreamExt, TryStreamExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
-use peace_cfg::ItemId;
 use peace_flow_rt::{Flow, ItemGraph};
+use peace_item_model::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},

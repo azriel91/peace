@@ -20,9 +20,9 @@ doctest = true
 test = false
 
 [dependencies]
-peace_core = { workspace = true }
 chrono = { workspace = true, default-features = false }
 indicatif = { workspace = true }
+peace_item_model = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_yaml = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }

@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use peace_core::ItemId;
+use peace_item_model::ItemId;
 use serde::{Deserialize, Serialize};
 
 use crate::{ItemInteraction, ItemLocationTree};

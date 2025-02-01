@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use dot_ix_model::info_graph::InfoGraph;
-use peace_core::ItemId;
 use peace_flow_rt::Flow;
+use peace_item_model::ItemId;
 use peace_progress_model::ProgressStatus;
 
 /// Calculates the actual `InfoGraph` for a flow's progress.

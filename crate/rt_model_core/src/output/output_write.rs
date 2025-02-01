@@ -67,7 +67,7 @@ pub trait OutputWrite<E>: Debug + Unpin {
     #[cfg(feature = "output_progress")]
     async fn item_location_state(
         &mut self,
-        item_id: peace_core::ItemId,
+        item_id: peace_item_model::ItemId,
         item_location_state: peace_item_interaction_model::ItemLocationState,
     );
 

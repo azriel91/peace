@@ -1,7 +1,8 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item},
+    item_model::ItemId,
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };

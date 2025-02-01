@@ -17,7 +17,7 @@ pub extern crate id_newtype;
 // Re-exports
 // needed for dependencies' usage of our `id_newtype` macro to resolve
 pub use peace_fmt;
-pub use peace_static_check_macros::{app_name, flow_id, item_id, profile};
+pub use peace_static_check_macros::{app_name, flow_id, profile};
 
 pub use crate::{
     app_name::{AppName, AppNameInvalidFmt},

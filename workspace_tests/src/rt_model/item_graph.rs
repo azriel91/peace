@@ -1,6 +1,6 @@
 use peace::{
-    cfg::item_id,
     flow_rt::{ItemGraph, ItemGraphBuilder},
+    item_model::item_id,
     resource_rt::{
         internal::StatesMut,
         states::{StatesCurrent, StatesSerde},

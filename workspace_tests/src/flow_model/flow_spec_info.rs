@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, item_id},
+    cfg::flow_id,
     data::fn_graph::{Edge, WouldCycle},
     flow_model::{
         dot_ix::{
@@ -14,6 +14,7 @@ use peace::{
         FlowSpecInfo,
     },
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
+    item_model::item_id,
 };
 use peace_items::blank::BlankItem;
 

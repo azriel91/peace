@@ -5,12 +5,13 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId};
+use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item};
 use peace_data::{
     fn_graph::{DataAccess, DataAccessDyn, TypeIds},
     marker::{ApplyDry, Clean, Current, Goal},
     Data,
 };
+use peace_item_model::ItemId;
 use peace_params::{
     Params, ParamsMergeExt, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode,
 };

@@ -1,7 +1,8 @@
 use std::{marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item, ItemId},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, Item},
+    item_model::ItemId,
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };

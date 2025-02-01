@@ -1,8 +1,9 @@
 use peace::{
-    cfg::{app_name, profile, FlowId, ItemId},
+    cfg::{app_name, profile, FlowId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     flow_rt::{Flow, ItemGraphBuilder},
+    item_model::ItemId,
     resource_rt::{
         paths::StatesGoalFile,
         states::{StatesCurrentStored, StatesGoal},

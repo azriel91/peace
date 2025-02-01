@@ -1,9 +1,10 @@
 use peace::{
-    cfg::{app_name, item_id, profile, FlowId, ItemId},
+    cfg::{app_name, profile, FlowId},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     data::marker::Clean,
     flow_rt::{Flow, ItemGraphBuilder},
+    item_model::{item_id, ItemId},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{InMemoryTextOutput, Workspace, WorkspaceSpec},
 };

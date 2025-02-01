@@ -2,7 +2,6 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::FutureExt;
-use peace_cfg::ItemId;
 use peace_cmd::{
     ctx::CmdCtxTypesConstrained, interruptible::InterruptibilityState,
     scopes::SingleProfileSingleFlowView,
@@ -10,6 +9,7 @@ use peace_cmd::{
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_flow_rt::Flow;
+use peace_item_model::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::StateDiffsMut,

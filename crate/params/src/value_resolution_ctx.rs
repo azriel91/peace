@@ -1,6 +1,6 @@
 use std::fmt;
 
-use peace_core::ItemId;
+use peace_item_model::ItemId;
 use serde::{Deserialize, Serialize};
 
 use crate::{FieldNameAndType, ValueResolutionMode};

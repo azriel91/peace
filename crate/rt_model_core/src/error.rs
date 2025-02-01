@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use peace_cmd_model::CmdExecutionError;
-use peace_core::{FlowId, ItemId, Profile};
+use peace_core::{FlowId, Profile};
+use peace_item_model::ItemId;
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resource_rt::paths::ParamsSpecsFile;
 

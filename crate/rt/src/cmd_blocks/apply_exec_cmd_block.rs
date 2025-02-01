@@ -2,10 +2,11 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::join;
-use peace_cfg::{ApplyCheck, FnCtx, ItemId};
+use peace_cfg::{ApplyCheck, FnCtx};
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_item_model::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::StatesMut,

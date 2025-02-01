@@ -1,5 +1,5 @@
 use peace::{
-    cfg::item_id,
+    item_model::item_id,
     progress_model::{
         CmdProgressUpdate, ProgressDelta, ProgressMsgUpdate, ProgressSender, ProgressUpdateAndId,
     },

@@ -2,7 +2,8 @@ use std::marker::PhantomData;
 
 use aws_config::BehaviorVersion;
 use peace::{
-    cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId},
+    cfg::{async_trait, ApplyCheck, FnCtx, Item},
+    item_model::ItemId,
     params::Params,
     resource_rt::{resources::ts::Empty, Resources},
 };

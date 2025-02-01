@@ -1,8 +1,8 @@
 use std::{borrow::Cow, str::FromStr};
 
 use peace::{
-    cfg::{ItemId, ItemIdInvalidFmt},
     fmt::Presentable,
+    item_model::{ItemId, ItemIdInvalidFmt},
 };
 
 use crate::{FnInvocation, FnTrackerPresenter};

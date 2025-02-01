@@ -1,11 +1,12 @@
 use std::{io::Cursor, path::PathBuf};
 
 use peace::{
-    cfg::{app_name, item_id, profile, ApplyCheck, FlowId, Item, ItemId, Profile},
+    cfg::{app_name, profile, ApplyCheck, FlowId, Item, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     cmd_model::CmdOutcome,
     data::Data,
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
+    item_model::{item_id, ItemId},
     params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     resource_rt::paths::{FlowDir, ProfileDir},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},

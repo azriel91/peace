@@ -1,10 +1,11 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::join;
-use peace_cfg::{FnCtx, ItemId};
+use peace_cfg::FnCtx;
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_item_model::ItemId;
 use peace_resource_rt::{
     internal::StatesMut,
     resources::ts::SetUp,

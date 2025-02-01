@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
-use peace_cfg::{ItemId, Profile};
+use peace_cfg::Profile;
 use peace_cmd::{
     ctx::{CmdCtx, CmdCtxTypesConstrained},
     scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
@@ -9,6 +9,7 @@ use peace_cmd::{
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_flow_rt::Flow;
+use peace_item_model::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{
     internal::StateDiffsMut,

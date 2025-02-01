@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_core::ItemId;
+use peace_item_model::ItemId;
 
 #[cfg(feature = "output_progress")]
 use peace_progress_model::ProgressSender;

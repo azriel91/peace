@@ -22,4 +22,5 @@ test = false
 [dependencies]
 id_newtype = { workspace = true }
 peace_core = { workspace = true }
+peace_static_check_macros = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

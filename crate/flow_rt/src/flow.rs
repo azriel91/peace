@@ -9,7 +9,6 @@ cfg_if::cfg_if! {
         use std::collections::{BTreeMap, BTreeSet};
 
         use indexmap::IndexMap;
-        use peace_cfg::ItemId;
         use peace_item_interaction_model::{
             ItemInteraction,
             ItemInteractionsCurrentOrExample,
@@ -17,6 +16,7 @@ cfg_if::cfg_if! {
             ItemLocationsAndInteractions,
             ItemLocationTree,
         };
+        use peace_item_model::ItemId;
         use peace_params::ParamsSpecs;
         use peace_resource_rt::{resources::ts::SetUp, Resources};
     }

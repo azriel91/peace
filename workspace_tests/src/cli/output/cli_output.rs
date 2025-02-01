@@ -1,7 +1,8 @@
 use peace::{
-    cfg::{item_id, State},
+    cfg::State,
     cli::output::{CliColorizeOpt, CliOutput, CliOutputBuilder},
     cli_model::OutputFormat,
+    item_model::item_id,
     resource_rt::{
         internal::{StateDiffsMut, StatesMut},
         states::{StateDiffs, StatesCurrentStored},

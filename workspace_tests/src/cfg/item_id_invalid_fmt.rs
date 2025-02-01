@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use peace::cfg::ItemIdInvalidFmt;
+use peace::item_model::ItemIdInvalidFmt;
 
 #[test]
 fn debug() {

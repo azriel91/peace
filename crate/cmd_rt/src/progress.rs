@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
 use futures::stream::{self, StreamExt};
-use peace_cfg::ItemId;
+use peace_item_model::ItemId;
 use peace_progress_model::{
     CmdBlockItemInteractionType, CmdProgressUpdate, ItemLocationState, ProgressDelta,
     ProgressMsgUpdate, ProgressStatus, ProgressTracker, ProgressUpdate, ProgressUpdateAndId,

@@ -16,7 +16,7 @@ cfg_if::cfg_if! {
             common::AnyId,
             theme::{AnyIdOrDefaults, CssClassPartials, Theme, ThemeAttr},
         };
-        use peace_core::ItemId;
+        use peace_item_model::ItemId;
         use peace_progress_model::{ProgressComplete, ProgressStatus};
     }
 }

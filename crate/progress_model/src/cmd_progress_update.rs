@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use peace_core::ItemId;
+use peace_item_model::ItemId;
 
 use crate::{CmdBlockItemInteractionType, ItemLocationState, ProgressUpdateAndId};
 

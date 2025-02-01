@@ -1,4 +1,4 @@
-use peace_core::ItemId;
+use peace_item_model::ItemId;
 use tokio::sync::mpsc::Sender;
 
 use crate::{

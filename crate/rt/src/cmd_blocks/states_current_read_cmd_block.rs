@@ -1,9 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{FlowId, ItemId};
+use peace_cfg::FlowId;
 use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
+use peace_item_model::ItemId;
 use peace_resource_rt::{
     paths::{FlowDir, StatesCurrentFile},
     resources::ts::SetUp,

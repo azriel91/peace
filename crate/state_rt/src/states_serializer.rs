@@ -1,7 +1,8 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace_cfg::{FlowId, ItemId};
+use peace_cfg::FlowId;
 use peace_flow_rt::ItemGraph;
+use peace_item_model::ItemId;
 use peace_resource_rt::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{

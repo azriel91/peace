@@ -1,6 +1,6 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::{app_name, item_id, Profile},
+    cfg::{app_name, Profile},
     cmd::{
         ctx::CmdCtx,
         scopes::{
@@ -9,6 +9,7 @@ use peace::{
         },
     },
     fmt::presentln,
+    item_model::item_id,
     params::Params,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
