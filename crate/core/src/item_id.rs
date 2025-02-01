@@ -35,4 +35,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ItemId(Cow<'static, str>);
 
-crate::id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);
+crate::core_id_newtype!(ItemId, ItemIdInvalidFmt, item_id, code_inline);

@@ -21,6 +21,7 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
+id_newtype = { workspace = true }
 peace_fmt = { workspace = true }
 peace_static_check_macros = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

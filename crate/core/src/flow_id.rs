@@ -34,4 +34,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct FlowId(Cow<'static, str>);
 
-crate::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id, code_inline);
+crate::core_id_newtype!(FlowId, FlowIdInvalidFmt, flow_id, code_inline);
