@@ -1,5 +1,5 @@
 use peace::{
-    cfg::flow_id,
+    flow_model::flow_id,
     flow_rt::ItemGraphBuilder,
     item_model::item_id,
     resource_rt::{

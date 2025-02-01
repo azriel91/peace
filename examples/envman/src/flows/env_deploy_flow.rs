@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{app_name, flow_id, Profile},
+    cfg::{app_name, Profile},
+    flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
     params::{Params, ParamsSpec},

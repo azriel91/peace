@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, str::FromStr};
 
 use peace::{
-    cfg::{FlowId, FlowIdInvalidFmt},
+    flow_model::{FlowId, FlowIdInvalidFmt},
     fmt::Presentable,
 };
 

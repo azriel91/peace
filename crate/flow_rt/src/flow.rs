@@ -1,6 +1,5 @@
-use peace_cfg::FlowId;
 use peace_data::fn_graph::GraphInfo;
-use peace_flow_model::{FlowSpecInfo, ItemSpecInfo};
+use peace_flow_model::{FlowId, FlowSpecInfo, ItemSpecInfo};
 
 use crate::ItemGraph;
 

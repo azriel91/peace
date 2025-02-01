@@ -1,7 +1,8 @@
 use peace::{
-    cfg::{app_name, FlowId, Profile},
+    cfg::{app_name, Profile},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     cmd_model::CmdOutcome,
+    flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::{item_id, ItemId},
     rt::cmds::{

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use peace::cfg::FlowIdInvalidFmt;
+use peace::flow_model::FlowIdInvalidFmt;
 
 #[test]
 fn debug() {

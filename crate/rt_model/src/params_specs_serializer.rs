@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use peace_cfg::{FlowId, Profile};
+use peace_cfg::Profile;
+use peace_flow_model::FlowId;
 use peace_params::ParamsSpecs;
 use peace_resource_rt::{paths::ParamsSpecsFile, type_reg::untagged::TypeMapOpt};
 

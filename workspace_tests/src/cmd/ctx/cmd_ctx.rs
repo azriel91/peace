@@ -1,6 +1,7 @@
 use peace::{
-    cfg::{app_name, flow_id, profile, AppName},
+    cfg::{app_name, profile, AppName},
     cmd::ctx::CmdCtxBuilder,
+    flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     rt_model::Workspace,
 };

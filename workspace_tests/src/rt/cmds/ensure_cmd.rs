@@ -1,10 +1,11 @@
 use peace::{
-    cfg::{app_name, profile, FlowId},
+    cfg::{app_name, profile},
     cmd::{
         ctx::CmdCtx,
         interruptible::{InterruptSignal, InterruptStrategy, Interruptibility},
     },
     cmd_model::{CmdBlockDesc, CmdOutcome},
+    flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
     resource_rt::{
         paths::{StatesCurrentFile, StatesGoalFile},

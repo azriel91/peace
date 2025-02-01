@@ -1,8 +1,9 @@
 use peace::{
-    cfg::{app_name, profile, FlowId},
+    cfg::{app_name, profile},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
     cmd_rt::{CmdBlockRt, CmdBlockWrapper, CmdExecution},
+    flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
     resource_rt::states::{
         ts::{Current, Goal},

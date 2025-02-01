@@ -1,5 +1,4 @@
 use peace::{
-    cfg::flow_id,
     data::fn_graph::{Edge, WouldCycle},
     flow_model::{
         dot_ix::{
@@ -11,7 +10,7 @@ use peace::{
                 node_id,
             },
         },
-        FlowSpecInfo,
+        flow_id, FlowSpecInfo,
     },
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
     item_model::item_id,

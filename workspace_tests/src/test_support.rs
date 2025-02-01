@@ -1,6 +1,7 @@
 use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
-    cfg::{AppName, FlowId, Profile},
+    cfg::{AppName, Profile},
+    flow_model::FlowId,
     resource_rt::{
         internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
         paths::{FlowDir, ProfileDir},

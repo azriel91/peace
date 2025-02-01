@@ -1,7 +1,8 @@
 use peace::{
-    cfg::{app_name, profile, FlowId},
+    cfg::{app_name, profile},
     cmd::ctx::CmdCtx,
     cmd_model::CmdOutcome,
+    flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
     resource_rt::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{
