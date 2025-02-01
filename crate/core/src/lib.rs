@@ -19,13 +19,9 @@ pub extern crate id_newtype;
 pub use peace_fmt;
 pub use peace_static_check_macros::{app_name, profile};
 
-pub use crate::{
-    app_name::{AppName, AppNameInvalidFmt},
-    profile::{Profile, ProfileInvalidFmt},
-};
+pub use crate::app_name::{AppName, AppNameInvalidFmt};
 
 mod app_name;
-mod profile;
 
 /// Implements common behaviour for an ID type.
 ///

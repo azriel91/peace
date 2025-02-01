@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// The following are all examples of valid `Profile`s:
 ///
 /// ```rust
-/// # use peace_core::{profile, Profile};
+/// # use peace_profile_model::{profile, Profile};
 /// #
 /// let _snake = profile!("snake_case");
 /// let _camel = profile!("camelCase");
@@ -27,4 +27,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize, PartialOrd, Ord)]
 pub struct Profile(Cow<'static, str>);
 
-crate::id_newtype!(Profile, ProfileInvalidFmt, profile, tag);
+peace_core::id_newtype!(Profile, ProfileInvalidFmt, profile, tag);

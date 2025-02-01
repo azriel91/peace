@@ -108,7 +108,7 @@ pub fn item_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///
 /// ```rust
 /// # use peace_static_check_macros::profile;
-/// // use peace::cfg::{profile, Profile};
+/// // use peace::profile_model::{profile, Profile};
 ///
 /// let _my_profile: Profile = profile!("valid_id"); // Ok!
 ///
@@ -122,7 +122,7 @@ pub fn item_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///
 /// ```rust,compile_fail
 /// # use peace_static_check_macros::profile;
-/// // use peace::cfg::{profile, Profile};
+/// // use peace::profile_model::{profile, Profile};
 ///
 /// let _my_profile: Profile = profile!("-invalid_id"); // Compile error
 /// //                         ^^^^^^^^^^^^^^^^^^^^^^^
@@ -137,7 +137,7 @@ pub fn item_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro]
 pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     ensure_valid_id(
-        parse_quote!(peace::cfg),
+        parse_quote!(peace::profile_model),
         &parse_macro_input!(input as LitStrMaybe),
         "Profile",
         None,
