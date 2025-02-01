@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// The following are all examples of valid `FlowId`s:
 ///
 /// ```rust
-/// # use peace_core::{flow_id, FlowId};
+/// # use peace_flow_model::{flow_id, FlowId};
 /// #
 /// let _snake = flow_id!("snake_case");
 /// let _camel = flow_id!("camelCase");
@@ -34,4 +34,4 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct FlowId(Cow<'static, str>);
 
-crate::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id, code_inline);
+peace_core::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id, code_inline);

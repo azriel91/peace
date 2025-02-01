@@ -22,11 +22,12 @@ test = false
 [dependencies]
 async-trait = { workspace = true }
 cfg-if = { workspace = true }
-indicatif = { workspace = true, features = ["tokio"] }
 indexmap = { workspace = true }
+indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
-peace_core = { workspace = true }
 peace_cmd_model = { workspace = true }
+peace_core = { workspace = true }
+peace_flow_model = { workspace = true }
 peace_fmt = { workspace = true }
 peace_item_interaction_model = { workspace = true, optional = true }
 peace_item_model = { workspace = true }

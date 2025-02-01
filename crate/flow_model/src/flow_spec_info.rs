@@ -3,10 +3,9 @@ use dot_ix::model::{
     info_graph::{GraphDir, GraphStyle, InfoGraph},
 };
 use fn_graph::{daggy2::Walker, Edge, GraphInfo};
-use peace_core::FlowId;
 use serde::{Deserialize, Serialize};
 
-use crate::ItemSpecInfo;
+use crate::{FlowId, ItemSpecInfo};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

@@ -80,7 +80,7 @@ pub fn app_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// // use peace::item_model::{item_id, ItemId};
 ///
 /// let _my_item_id: ItemId = item_id!("-invalid_id"); // Compile error
-/// //                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/// //                        ^^^^^^^^^^^^^^^^^^^^^^^^
 /// // error: "-invalid_id" is not a valid `ItemId`.
 /// //        `ItemId`s must begin with a letter or underscore, and contain only letters, numbers, or underscores.
 /// #
@@ -153,7 +153,7 @@ pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///
 /// ```rust
 /// # use peace_static_check_macros::flow_id;
-/// // use peace::cfg::{flow_id, FlowId};
+/// // use peace::flow_model::{flow_id, FlowId};
 ///
 /// let _my_flow: FlowId = flow_id!("valid_id"); // Ok!
 ///
@@ -167,7 +167,7 @@ pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///
 /// ```rust,compile_fail
 /// # use peace_static_check_macros::flow_id;
-/// // use peace::cfg::{flow_id, FlowId};
+/// // use peace::flow_model::{flow_id, FlowId};
 ///
 /// let _my_flow: FlowId = flow_id!("-invalid_id"); // Compile error
 /// //                     ^^^^^^^^^^^^^^^^^^^^^^^
@@ -182,7 +182,7 @@ pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro]
 pub fn flow_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     ensure_valid_id(
-        parse_quote!(peace::cfg),
+        parse_quote!(peace::flow_model),
         &parse_macro_input!(input as LitStrMaybe),
         "FlowId",
         None,
