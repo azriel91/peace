@@ -14,12 +14,12 @@ pub struct Progress;
 impl Progress {
     /// Receives progress updates and updates `output` to render it.
     // TODO: write test for this
-    pub async fn progress_render<E, O>(
+    pub async fn progress_render<O>(
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         mut cmd_progress_rx: Receiver<CmdProgressUpdate>,
     ) where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         while let Some(cmd_progress_update) = cmd_progress_rx.recv().await {
             let _control_flow =
@@ -28,13 +28,13 @@ impl Progress {
         }
     }
 
-    async fn handle_cmd_progress_update<E, O>(
+    async fn handle_cmd_progress_update<O>(
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         cmd_progress_update: CmdProgressUpdate,
     ) -> ControlFlow<()>
     where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         match cmd_progress_update {
             CmdProgressUpdate::CmdBlockStart {
@@ -113,35 +113,35 @@ impl Progress {
         }
     }
 
-    async fn handle_cmd_block_start<E, O>(
+    async fn handle_cmd_block_start<O>(
         output: &mut O,
         cmd_block_item_interaction_type: CmdBlockItemInteractionType,
     ) where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         output
             .cmd_block_start(cmd_block_item_interaction_type)
             .await;
     }
 
-    async fn handle_item_location_state<E, O>(
+    async fn handle_item_location_state<O>(
         output: &mut O,
         item_id: ItemId,
         item_location_state: ItemLocationState,
     ) where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         output
             .item_location_state(item_id, item_location_state)
             .await;
     }
 
-    async fn handle_progress_update_and_id<E, O>(
+    async fn handle_progress_update_and_id<O>(
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemId, ProgressTracker>,
         progress_update_and_id: ProgressUpdateAndId,
     ) where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         let item_id = &progress_update_and_id.item_id;
         let Some(progress_tracker) = progress_trackers.get_mut(item_id) else {
@@ -156,12 +156,12 @@ impl Progress {
         .await;
     }
 
-    async fn handle_progress_tracker_progress_update<E, O>(
+    async fn handle_progress_tracker_progress_update<O>(
         output: &mut O,
         progress_tracker: &mut ProgressTracker,
         progress_update_and_id: ProgressUpdateAndId,
     ) where
-        O: OutputWrite<E>,
+        O: OutputWrite,
     {
         let ProgressUpdateAndId {
             item_id: _,
