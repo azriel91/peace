@@ -87,9 +87,9 @@ pub struct CliOutput<W> {
     /// `^C\n`.
     #[cfg(unix)]
     pub(crate) stdin_tty_with_guard: Option<raw_tty::TtyWithGuard<std::io::Stdin>>,
-    /// The `miette::ReportHandler` to format errors nicely.
+    /// The `miette::GraphicalReportHandler` to format errors nicely.
     #[cfg(feature = "error_reporting")]
-    pub(crate) report_handler: crate::output::ReportHandler,
+    pub(crate) report_handler: miette::GraphicalReportHandler,
 }
 
 #[cfg(unix)]
@@ -806,26 +806,53 @@ where
     {
         use miette::Diagnostic;
 
-        let mut err_buffer = String::new();
+        match self.outcome_format {
+            OutputFormat::Text => {
+                let mut err_buffer = String::new();
 
-        let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
-        while let Some(diagnostic) = diagnostic_opt {
-            if diagnostic.help().is_some()
-                || diagnostic.labels().is_some()
-                || diagnostic.diagnostic_source().is_none()
-            {
-                // Ignore failures when writing errors
-                let (Ok(()) | Err(_)) = self
-                    .report_handler
-                    .render_report(&mut err_buffer, diagnostic);
-                err_buffer.push_str("\n");
+                let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+                while let Some(diagnostic) = diagnostic_opt {
+                    // Helps with deduplicating wrapped errors.
+                    if diagnostic.help().is_some()
+                        || diagnostic.labels().is_some()
+                        || diagnostic.diagnostic_source().is_none()
+                    {
+                        // Ignore failures when writing errors
+                        let (Ok(()) | Err(_)) = self
+                            .report_handler
+                            .render_report(&mut err_buffer, diagnostic);
+                        err_buffer.push('\n');
 
-                let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
+                        let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
+                    }
+
+                    diagnostic_opt = diagnostic.diagnostic_source();
+
+                    err_buffer.clear();
+                }
             }
-
-            diagnostic_opt = diagnostic.diagnostic_source();
+            OutputFormat::Yaml => {
+                // TODO: proper parsable structure with error code.
+                let error_serialized =
+                    serde_yaml::to_string(&format!("{error}")).map_err(Error::ErrorSerialize)?;
+                self.writer
+                    .write_all(error_serialized.as_bytes())
+                    .await
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
+            }
+            OutputFormat::Json => {
+                // TODO: proper parsable structure with error code.
+                let error_serialized = serde_json::to_string(&format!("{error}"))
+                    .map_err(Error::ErrorSerializeJson)?;
+                self.writer
+                    .write_all(error_serialized.as_bytes())
+                    .await
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
+            }
+            OutputFormat::None => {}
         }
-        err_buffer.clear();
 
         Ok(())
     }

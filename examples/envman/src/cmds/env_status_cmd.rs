@@ -31,7 +31,7 @@ impl EnvStatusCmd {
     /// * `output`: Output to write the execution outcome.
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -55,7 +55,7 @@ macro_rules! run {
 
 async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     let states_current_stored_outcome = StatesCurrentReadCmd::exec(cmd_ctx).await?;
     let SingleProfileSingleFlowViewAndOutput {

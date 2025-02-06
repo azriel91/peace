@@ -84,7 +84,8 @@ pub async fn cmd_ctx<'ctx, O>(
     file_download_params: Option<FileDownloadParams<FileId>>,
 ) -> Result<DownloadCmdCtx<'ctx, O>, DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
     let mut cmd_ctx_builder =
@@ -104,7 +105,8 @@ where
 
 pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let CmdOutcome::Complete {
         value: (_states_current, _states_goal),
@@ -118,7 +120,8 @@ where
 
 pub async fn status<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     // Already displayed by the command
     let _states_current_stored = StatesCurrentStoredDisplayCmd::exec(cmd_ctx).await?;
@@ -127,7 +130,8 @@ where
 
 pub async fn goal<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     // Already displayed by the command
     let _states_goal = StatesGoalDisplayCmd::exec(cmd_ctx).await?;
@@ -136,7 +140,8 @@ where
 
 pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let cmd_outcome = DiffCmd::diff_stored(cmd_ctx).await?;
     let states_diff = cmd_outcome
@@ -148,7 +153,8 @@ where
 
 pub async fn ensure_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx).await?;
     let states_ensured_dry = states_ensured_dry_outcome
@@ -160,7 +166,8 @@ where
 
 pub async fn ensure<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let states_ensured_outcome = EnsureCmd::exec(cmd_ctx).await?;
     let states_ensured = states_ensured_outcome
@@ -172,7 +179,8 @@ where
 
 pub async fn clean_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx).await?;
     let states_cleaned_dry = states_cleaned_dry_outcome
@@ -184,7 +192,8 @@ where
 
 pub async fn clean<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite,
+    DownloadError: From<<O as OutputWrite>::Error>,
 {
     let states_cleaned_outcome = CleanCmd::exec(cmd_ctx).await?;
     let states_cleaned = states_cleaned_outcome

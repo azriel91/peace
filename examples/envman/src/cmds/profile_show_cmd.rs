@@ -22,7 +22,7 @@ impl ProfileShowCmd {
     /// * `output`: Output to write the execution outcome.
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError>,
+        O: OutputWrite,
     {
         let workspace = Workspace::new(
             app_name!(),

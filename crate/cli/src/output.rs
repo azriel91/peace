@@ -26,11 +26,3 @@ cfg_if::cfg_if! {
         mod cli_progress_format_opt_parse_error;
     }
 }
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "error_reporting")] {
-        pub(crate) use self::report_handler::ReportHandler;
-
-        mod report_handler;
-    }
-}

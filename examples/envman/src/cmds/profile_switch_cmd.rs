@@ -24,7 +24,7 @@ impl ProfileSwitchCmd {
     /// * `output`: Output to write the execution outcome.
     pub async fn run<O>(output: &mut O, profile_switch: ProfileSwitch) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError>,
+        O: OutputWrite,
     {
         let app_name = app_name!();
         let workspace = workspace()?;

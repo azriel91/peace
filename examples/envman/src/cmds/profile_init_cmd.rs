@@ -55,7 +55,7 @@ impl ProfileInitCmd {
         profile_reinit_allowed: bool,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError>,
+        O: OutputWrite,
     {
         let app_name = app_name!();
         let workspace = Workspace::new(
@@ -207,7 +207,7 @@ async fn app_upload_flow_init<'f, O>(
     workspace: &'f Workspace,
 ) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     let AppUploadFlowParamsSpecs {
         app_download_params_spec,
@@ -247,7 +247,7 @@ async fn env_deploy_flow_init<'f, O>(
     workspace: &'f Workspace,
 ) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     let EnvDeployFlowParamsSpecs {
         app_download_params_spec,

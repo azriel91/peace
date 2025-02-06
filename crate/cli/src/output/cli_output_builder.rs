@@ -288,10 +288,12 @@ where
         };
 
         #[cfg(feature = "error_reporting")]
-        let report_handler = match outcome_format {
-            OutputFormat::Text => miette::GraphicalReportHandler::new().into(),
-            OutputFormat::Yaml | OutputFormat::Json => miette::JSONReportHandler::new().into(),
-            OutputFormat::None => crate::output::ReportHandler::None,
+        let report_handler = match colorize {
+            CliColorize::Colored => {
+                miette::GraphicalReportHandler::new().with_theme(miette::GraphicalTheme::unicode())
+            }
+            CliColorize::Uncolored => miette::GraphicalReportHandler::new()
+                .with_theme(miette::GraphicalTheme::unicode_nocolor()),
         };
 
         CliOutput {
