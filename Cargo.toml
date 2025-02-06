@@ -65,6 +65,7 @@ webi = [
 ]
 error_reporting = [
     "dep:miette",
+    "peace_cli/error_reporting",
     "peace_cmd_model/error_reporting",
     "peace_cmd_rt/error_reporting",
     "peace_params/error_reporting",
