@@ -32,7 +32,7 @@ impl EnvDiscoverCmd {
     /// * `debug`: Whether to print `CmdOutcome` debug info.
     pub async fn run<O>(output: &mut O, debug: bool) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -56,7 +56,7 @@ macro_rules! run {
 
 async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>, debug: bool) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     let states_discover_outcome = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?;
 

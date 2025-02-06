@@ -2,7 +2,6 @@ use std::convert::Infallible;
 
 use peace_fmt::Presentable;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
-use peace_value_traits::AppError;
 use peace_webi_model::WebUiUpdate;
 use tokio::sync::mpsc;
 

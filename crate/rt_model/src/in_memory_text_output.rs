@@ -115,14 +115,14 @@ impl OutputWrite for InMemoryTextOutput {
                 let (Ok(()) | Err(_)) = self
                     .report_handler
                     .render_report(&mut err_buffer, diagnostic);
-                err_buffer.push_str("\n");
+                err_buffer.push('\n');
 
                 let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
             }
 
             diagnostic_opt = diagnostic.diagnostic_source();
+            err_buffer.clear();
         }
-        err_buffer.clear();
 
         Ok(())
     }

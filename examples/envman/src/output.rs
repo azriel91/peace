@@ -14,7 +14,7 @@ use crate::model::EnvManError;
 /// Presents errors.
 pub async fn errors_present<O>(output: &mut O, errors: &[EnvManError]) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     output
         .present(Heading::new(HeadingLevel::Level1, "Errors"))
@@ -70,7 +70,7 @@ pub async fn item_errors_present<O>(
     errors: &IndexMap<ItemId, EnvManError>,
 ) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     output
         .present(Heading::new(HeadingLevel::Level1, "Errors"))
@@ -131,7 +131,7 @@ pub async fn cmd_outcome_completion_present<O, T>(
     cmd_outcome: CmdOutcome<T, EnvManError>,
 ) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     match &cmd_outcome {
         CmdOutcome::Complete {

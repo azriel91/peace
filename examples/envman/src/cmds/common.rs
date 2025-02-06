@@ -23,7 +23,7 @@ pub async fn env_man_flow<O>(
     workspace: &Workspace,
 ) -> Result<EnvManFlow, EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
 {
     let cmd_ctx_builder =
         CmdCtx::builder_no_profile_no_flow::<EnvManError, O>(output.into(), workspace.into());

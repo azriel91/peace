@@ -88,7 +88,12 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
     <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
-        "CliOutputTest display message.\n",
+        r#"workspace_tests::cli::output::cli_output_test
+
+  × CliOutputTest display message.
+  help: Try fixing the test.
+
+"#,
         String::from_utf8(buffer)?
     );
     Ok(())
@@ -163,7 +168,12 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
     <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
-        "CliOutputTest display message.\n",
+        concat!(
+            "\u{1b}[31mworkspace_tests::cli::output::cli_output_test\u{1b}[0m\n",
+            "\n",
+            "  \u{1b}[31m×\u{1b}[0m CliOutputTest display message.\n",
+            "\u{1b}[36m  help: \u{1b}[0mTry fixing the test.\n\n"
+        ),
         String::from_utf8(buffer)?
     );
     Ok(())
@@ -1068,15 +1078,30 @@ msg_update: NoChange"#,
     }
 }
 
+#[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 enum Error {
     /// CliOutputTest display message.
     #[error("CliOutputTest display message.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(workspace_tests::cli::output::cli_output_test),
+            help("Try fixing the test.")
+        )
+    )]
     CliOutputTest,
 
     // Framework errors
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(workspace_tests::cli::output::peace_rt_error),
+            help("Try fixing the test.")
+        )
+    )]
     PeaceRtError(#[from] peace::rt_model::Error),
 }
 
