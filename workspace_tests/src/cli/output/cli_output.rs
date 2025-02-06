@@ -44,7 +44,7 @@ async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         "\
@@ -67,7 +67,7 @@ async fn outputs_state_diffs_as_text() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         "\
@@ -85,7 +85,7 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         "CliOutputTest display message.\n",
@@ -105,7 +105,7 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     let output = String::from_utf8(buffer)?;
     assert_eq!(
@@ -135,7 +135,7 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     let output = String::from_utf8(buffer)?;
     assert_eq!(
@@ -160,7 +160,7 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
     let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         "CliOutputTest display message.\n",
@@ -180,7 +180,7 @@ async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"item_0:
@@ -206,7 +206,7 @@ async fn outputs_state_diffs_as_yaml() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         r#"item_0: need one more server
@@ -223,7 +223,7 @@ async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         r#"CliOutputTest display message.
@@ -244,7 +244,7 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"{"item_0":{"logical":"logical","physical":1.1},"item_1":{"logical":1,"physical":true}}"#,
@@ -264,7 +264,7 @@ async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         r#"{"item_0":"need one more server","item_1":1}"#,
@@ -279,7 +279,7 @@ async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         r#""CliOutputTest display message.""#,
@@ -303,11 +303,7 @@ mod color_always {
         );
         let (cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -343,11 +339,7 @@ mod color_always {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -367,7 +359,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -412,11 +404,7 @@ mod color_always {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -436,7 +424,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -464,7 +452,7 @@ mod color_always {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -493,11 +481,7 @@ mod color_always {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -517,7 +501,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -545,7 +529,7 @@ mod color_always {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -574,11 +558,7 @@ mod color_always {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -593,7 +573,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -610,7 +590,7 @@ mod color_always {
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -649,11 +629,7 @@ msg_update: NoChange"#,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -668,7 +644,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -685,7 +661,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -720,11 +696,7 @@ mod color_never {
         );
         let (cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -757,11 +729,7 @@ mod color_never {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -781,7 +749,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -823,11 +791,7 @@ mod color_never {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -847,7 +811,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -875,7 +839,7 @@ mod color_never {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -904,11 +868,7 @@ mod color_never {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -928,7 +888,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -956,7 +916,7 @@ mod color_never {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -985,11 +945,7 @@ mod color_never {
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -1004,7 +960,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1021,7 +977,7 @@ mod color_never {
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1060,11 +1016,7 @@ msg_update: NoChange"#,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -1079,7 +1031,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1096,7 +1048,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,

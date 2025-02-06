@@ -146,7 +146,7 @@ where
 ///
 /// This also runs the progress task if the `"output_progress"` feature is
 /// enabled.
-async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] O: OutputWrite<E>>(
+async fn exec_internal<ExecutionOutcome, E, #[cfg(feature = "output_progress")] O: OutputWrite>(
     cmd_outcome_task: impl Future<Output = Result<CmdOutcome<ExecutionOutcome, E>, E>>,
     #[cfg(feature = "output_progress")] progress_render_enabled: bool,
     #[cfg(feature = "output_progress")] output: &mut O,

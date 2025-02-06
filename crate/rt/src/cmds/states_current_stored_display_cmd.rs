@@ -32,6 +32,8 @@ where
     >
     where
         CmdCtxTypesT: 'ctx,
+        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError:
+            From<<<CmdCtxTypesT as CmdCtxTypesConstrained>::Output as OutputWrite>::Error>,
     {
         let states_current_stored_result = StatesCurrentReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();

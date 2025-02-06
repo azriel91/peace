@@ -37,10 +37,9 @@ impl FnTrackerOutput {
 }
 
 #[async_trait(?Send)]
-impl<E> OutputWrite<E> for FnTrackerOutput
-where
-    E: std::error::Error + From<rt_model::Error>,
-{
+impl OutputWrite for FnTrackerOutput {
+    type Error = rt_model::Error;
+
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
@@ -70,7 +69,7 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), Self::Error>
     where
         P: Presentable,
     {
@@ -84,7 +83,23 @@ where
         Ok(())
     }
 
-    async fn write_err(&mut self, error: &E) -> Result<(), E> {
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Self::Error>
+    where
+        E: std::error::Error,
+    {
+        self.fn_invocations.push(FnInvocation::new(
+            "write_err",
+            vec![Some(format!("{error:?}"))],
+        ));
+        Ok(())
+    }
+
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Self::Error>
+    where
+        E: miette::Diagnostic,
+    {
         self.fn_invocations.push(FnInvocation::new(
             "write_err",
             vec![Some(format!("{error:?}"))],

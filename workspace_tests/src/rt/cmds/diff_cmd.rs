@@ -740,7 +740,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     else {
         panic!("Expected `DiffCmd::diff_stored` to complete successfully.");
     };
-    <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
+    <_ as OutputWrite>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(

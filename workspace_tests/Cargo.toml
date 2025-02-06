@@ -20,6 +20,9 @@ workspace = true
 doctest = false
 test = true
 
+[dependencies]
+miette = { workspace = true, optional = true }
+
 [dev-dependencies]
 cfg-if = { workspace = true }
 console = { workspace = true }
@@ -43,7 +46,7 @@ tynm = { workspace = true }
 default = ["items", "output_in_memory", "webi"]
 
 # `peace` features
-error_reporting = ["peace/error_reporting"]
+error_reporting = ["dep:miette", "peace/error_reporting"]
 output_in_memory = ["peace/output_in_memory"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]
 item_interactions = ["peace/item_interactions", "peace_items/item_interactions"]
