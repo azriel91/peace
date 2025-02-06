@@ -287,6 +287,13 @@ where
             }
         };
 
+        #[cfg(feature = "error_reporting")]
+        let report_handler = match outcome_format {
+            OutputFormat::Text => miette::GraphicalReportHandler::new().into(),
+            OutputFormat::Yaml | OutputFormat::Json => miette::JSONReportHandler::new().into(),
+            OutputFormat::None => crate::output::ReportHandler::None,
+        };
+
         CliOutput {
             writer,
             outcome_format,
@@ -299,6 +306,8 @@ where
             pb_item_id_width: None,
             #[cfg(unix)]
             stdin_tty_with_guard,
+            #[cfg(feature = "error_reporting")]
+            report_handler,
         }
     }
 }

@@ -23,6 +23,7 @@ test = false
 cfg-if = { workspace = true }
 console = { workspace = true }
 futures = { workspace = true }
+miette = { workspace = true, optional = true }
 peace_cli_model = { workspace = true }
 peace_cmd_model = { workspace = true, optional = true }
 peace_core = { workspace = true }
@@ -42,6 +43,7 @@ raw_tty = { workspace = true }
 
 [features]
 default = []
+error_reporting = ["dep:miette"]
 output_in_memory = ["peace_rt_model_core/output_in_memory"]
 output_progress = [
     "dep:peace_cmd_model",

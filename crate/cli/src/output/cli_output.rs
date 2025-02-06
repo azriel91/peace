@@ -72,7 +72,7 @@ pub struct CliOutput<W> {
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
     pub(crate) progress_target: CliOutputTarget,
-    /// Whether the writer is an interactive terminal.
+    /// Whether the writer is an interactive terminal.-
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
@@ -87,6 +87,9 @@ pub struct CliOutput<W> {
     /// `^C\n`.
     #[cfg(unix)]
     pub(crate) stdin_tty_with_guard: Option<raw_tty::TtyWithGuard<std::io::Stdin>>,
+    /// The `miette::ReportHandler` to format errors nicely.
+    #[cfg(feature = "error_reporting")]
+    pub(crate) report_handler: crate::output::ReportHandler,
 }
 
 #[cfg(unix)]
@@ -207,9 +210,8 @@ where
         self.pb_item_id_width
     }
 
-    async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
+    async fn output_presentable<P>(&mut self, presentable: P) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         P: Presentable,
     {
         let presenter = &mut CliMdPresenter::new(self);
@@ -228,9 +230,8 @@ where
         Ok(())
     }
 
-    async fn output_yaml<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_yaml<T, F>(&mut self, t: &T, fn_error: F) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,
         F: FnOnce(serde_yaml::Error) -> Error,
     {
@@ -245,9 +246,8 @@ where
         Ok(())
     }
 
-    async fn output_json<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_json<T, F>(&mut self, t: &T, fn_error: F) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,
         F: FnOnce(serde_json::Error) -> Error,
     {
@@ -503,11 +503,12 @@ impl Default for CliOutput<Stdout> {
 /// Outputs progress and `Presentable`s in either serialized or presentable
 /// form.
 #[async_trait(?Send)]
-impl<E, W> OutputWrite<E> for CliOutput<W>
+impl<W> OutputWrite for CliOutput<W>
 where
-    E: std::error::Error + From<Error>,
     W: AsyncWrite + Debug + Unpin,
 {
+    type Error = Error;
+
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
         let progress_draw_target = match &self.progress_target {
@@ -744,7 +745,7 @@ where
         }
     }
 
-    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), Error>
     where
         P: Presentable,
     {
@@ -759,7 +760,11 @@ where
         }
     }
 
-    async fn write_err(&mut self, error: &E) -> Result<(), E> {
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: std::error::Error,
+    {
         match self.outcome_format {
             OutputFormat::Text => {
                 self.writer
@@ -790,6 +795,37 @@ where
             }
             OutputFormat::None => {}
         }
+
+        Ok(())
+    }
+
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: miette::Diagnostic,
+    {
+        use miette::Diagnostic;
+
+        let mut err_buffer = String::new();
+
+        let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+        while let Some(diagnostic) = diagnostic_opt {
+            if diagnostic.help().is_some()
+                || diagnostic.labels().is_some()
+                || diagnostic.diagnostic_source().is_none()
+            {
+                // Ignore failures when writing errors
+                let (Ok(()) | Err(_)) = self
+                    .report_handler
+                    .render_report(&mut err_buffer, diagnostic);
+                err_buffer.push_str("\n");
+
+                let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
+            }
+
+            diagnostic_opt = diagnostic.diagnostic_source();
+        }
+        err_buffer.clear();
 
         Ok(())
     }
