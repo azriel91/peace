@@ -31,7 +31,13 @@ cfg_if::cfg_if! {
 ///
 /// Progress updates sent during `ApplyFns::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
-pub trait OutputWrite<E>: Debug + Unpin {
+pub trait OutputWrite: Debug + Unpin {
+    /// Error type of this `OutputWrite`.
+    ///
+    /// Returned when an error occurs while attempting to output some
+    /// information.
+    type Error: std::error::Error;
+
     /// Prepares this `OutputWrite` implementation for rendering progress.
     ///
     /// # Implementors
@@ -100,13 +106,20 @@ pub trait OutputWrite<E>: Debug + Unpin {
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker);
 
     /// Writes presentable information to the output.
-    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), Self::Error>
     where
-        E: std::error::Error,
-        P: Presentable;
+        P: Presentable,
+        Self: Sized;
 
     /// Writes an error to the output.
-    async fn write_err(&mut self, error: &E) -> Result<(), E>
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Self::Error>
     where
         E: std::error::Error;
+
+    /// Writes an error to the output.
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Self::Error>
+    where
+        E: miette::Diagnostic;
 }
