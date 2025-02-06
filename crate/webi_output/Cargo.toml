@@ -30,6 +30,7 @@ leptos = { workspace = true }
 leptos_axum = { workspace = true }
 leptos_meta = { workspace = true }
 leptos_router = { workspace = true }
+miette = { workspace = true, optional = true }
 peace_cmd_model = { workspace = true }
 peace_core = { workspace = true }
 peace_flow_model = { workspace = true }
