@@ -34,8 +34,6 @@ where
     >
     where
         CmdCtxTypesT: 'ctx,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError:
-            From<<<CmdCtxTypesT as CmdCtxTypesConstrained>::Output as OutputWrite>::Error>,
     {
         let states_goal_stored_result = StatesGoalReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();
@@ -77,8 +75,6 @@ where
     >
     where
         CmdCtxTypesT: 'ctx,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError:
-            From<<<CmdCtxTypesT as CmdCtxTypesConstrained>::Output as OutputWrite>::Error>,
     {
         let states_goal_stored_result = StatesGoalReadCmd::exec(cmd_ctx).await;
         let output = cmd_ctx.output_mut();

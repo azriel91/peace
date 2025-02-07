@@ -40,6 +40,7 @@ impl EnvDiffCmd {
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -60,6 +61,7 @@ impl EnvDiffCmd {
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         match env_man_flow {
             EnvManFlow::AppUpload => run!(output, AppUploadCmd),
@@ -75,6 +77,7 @@ impl EnvDiffCmd {
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         match env_man_flow {
             EnvManFlow::AppUpload => {
@@ -93,6 +96,7 @@ impl EnvDiffCmd {
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let state_diffs_raw_map = &***state_diffs;
 

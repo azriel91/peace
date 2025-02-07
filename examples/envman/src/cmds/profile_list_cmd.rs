@@ -20,6 +20,7 @@ impl ProfileListCmd {
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = Workspace::new(
             app_name!(),
