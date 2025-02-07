@@ -30,7 +30,9 @@ pub trait CmdCtxTypesConstrained:
     + Unpin
 {
     /// Error type of the automation software.
-    type AppError: AppError + From<peace_rt_model::Error>;
+    type AppError: AppError
+        + From<peace_rt_model::Error>
+        + From<<<Self as CmdCtxTypesConstrained>::Output as OutputWrite>::Error>;
     /// Output to write progress or outcome to.
     type Output: OutputWrite;
     /// Parameter key types for workspace params, profile params, and flow
@@ -44,6 +46,7 @@ where
     T::AppError: AppError + From<peace_rt_model::Error>,
     T::Output: OutputWrite,
     T::ParamsKeys: ParamsKeys,
+    <T as CmdCtxTypes>::AppError: From<<<T as CmdCtxTypes>::Output as OutputWrite>::Error>,
 {
     type AppError = T::AppError;
     type Output = T::Output;

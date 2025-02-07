@@ -33,6 +33,7 @@ impl EnvCleanCmd {
     pub async fn run<O>(output: &mut O, debug: bool) -> Result<(), EnvManError>
     where
         O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -59,6 +60,7 @@ macro_rules! run {
 async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>, debug: bool) -> Result<(), EnvManError>
 where
     O: OutputWrite,
+    EnvManError: From<<O as OutputWrite>::Error>,
 {
     let states_cleaned_outcome =
         CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;

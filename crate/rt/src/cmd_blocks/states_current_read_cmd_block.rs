@@ -50,11 +50,10 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        let states_current_stored = StatesSerializer::deserialize_stored(
-            &flow_id,
-            &storage,
-            states_type_reg,
-            &states_current_file,
+        let states_current_stored = StatesSerializer::<
+            <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        >::deserialize_stored(
+            &flow_id, &storage, states_type_reg, &states_current_file
         )
         .await?;
 

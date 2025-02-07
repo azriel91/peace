@@ -35,6 +35,7 @@ impl EnvCmd {
     pub async fn cmd_ctx<O>(output: &mut O) -> Result<EnvManCmdCtx<O>, EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = Workspace::new(
             app_name!(),
@@ -78,6 +79,7 @@ impl EnvCmd {
     pub async fn run<O, T, F>(output: &mut O, cmd_opts: CmdOpts, f: F) -> Result<T, EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
         for<'fn_once> F: FnOnce(
             &'fn_once mut EnvManCmdCtx<'_, O>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
@@ -104,6 +106,7 @@ impl EnvCmd {
     pub async fn multi_profile<O, T, F>(output: &mut O, f: F) -> Result<T, EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
         for<'fn_once> F: FnOnce(
             &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
@@ -146,6 +149,7 @@ impl EnvCmd {
     async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let SingleProfileSingleFlowViewAndOutput {
             output,

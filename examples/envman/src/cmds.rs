@@ -26,7 +26,6 @@ pub use self::{
 mod app_upload_cmd;
 mod cmd_ctx_builder;
 mod cmd_opts;
-mod common;
 mod env_clean_cmd;
 mod env_cmd;
 mod env_deploy_cmd;
@@ -38,3 +37,5 @@ mod profile_init_cmd;
 mod profile_list_cmd;
 mod profile_show_cmd;
 mod profile_switch_cmd;
+
+pub(crate) mod common;

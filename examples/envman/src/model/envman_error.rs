@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 #[cfg(feature = "error_reporting")]
 use peace::miette;
 
@@ -186,4 +188,10 @@ pub enum EnvManError {
         #[source]
         error: tokio::task::JoinError,
     },
+}
+
+impl From<Infallible> for EnvManError {
+    fn from(_infallible: Infallible) -> Self {
+        unreachable!("By definition the `Infallible` error can never be reached.");
+    }
 }

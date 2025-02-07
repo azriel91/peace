@@ -25,6 +25,7 @@ impl ProfileSwitchCmd {
     pub async fn run<O>(output: &mut O, profile_switch: ProfileSwitch) -> Result<(), EnvManError>
     where
         O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let app_name = app_name!();
         let workspace = workspace()?;
