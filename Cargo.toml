@@ -26,6 +26,7 @@ peace_cfg = { workspace = true }
 peace_cli = { workspace = true, optional = true }
 peace_cli_model = { workspace = true, optional = true }
 peace_cmd = { workspace = true }
+peace_cmd_ctx = { workspace = true }
 peace_cmd_model = { workspace = true }
 peace_cmd_rt = { workspace = true }
 peace_data = { workspace = true }
@@ -135,6 +136,7 @@ peace_cfg = { path = "crate/cfg", version = "0.0.14" }
 peace_cli = { path = "crate/cli", version = "0.0.14" }
 peace_cli_model = { path = "crate/cli_model", version = "0.0.14" }
 peace_cmd = { path = "crate/cmd", version = "0.0.14" }
+peace_cmd_ctx = { path = "crate/cmd_ctx", version = "0.0.14" }
 peace_cmd_model = { path = "crate/cmd_model", version = "0.0.14" }
 peace_cmd_rt = { path = "crate/cmd_rt", version = "0.0.14" }
 peace_code_gen = { path = "crate/code_gen", version = "0.0.14" }
