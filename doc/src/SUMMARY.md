@@ -187,7 +187,6 @@
         - [What's Next](learning_material/dot_ix_diagram_generator/whats_next.md)
         - [Q & A](learning_material/dot_ix_diagram_generator/qna.md)
     - [Peace: Zero Stress Automation](learning_material/peace_zero_stress_automation.md)
-        - [🕊️ Peace Framework](learning_material/peace_zero_stress_automation/peace_framework.md)
         - [🐉 Origin Story](learning_material/peace_zero_stress_automation/origin_story.md)
             - [Manual Deployment](learning_material/peace_zero_stress_automation/origin_story/manual_deployment.md)
             - [Automation](learning_material/peace_zero_stress_automation/origin_story/automation.md)
@@ -195,6 +194,7 @@
             - [Engineering Success](learning_material/peace_zero_stress_automation/origin_story/engineering_success.md)
             - [Automation (For Real)](learning_material/peace_zero_stress_automation/origin_story/automation_for_real.md)
             - [Human Eyes](learning_material/peace_zero_stress_automation/origin_story/human_eyes.md)
+        - [🕊️ Peace Framework](learning_material/peace_zero_stress_automation/peace_framework.md)
         - [🏗️ envman (example tool)](learning_material/peace_zero_stress_automation/envman_example_tool.md)
         - [💡 Understandability](learning_material/peace_zero_stress_automation/understandability.md)
             - [Demo](learning_material/peace_zero_stress_automation/understandability/demo.md)
@@ -213,15 +213,15 @@
         - [🏭 Architecture](learning_material/peace_zero_stress_automation/architecture.md)
             - [Components](learning_material/peace_zero_stress_automation/architecture/components.md)
             - [Item](learning_material/peace_zero_stress_automation/architecture/item.md)
-            - [Item Implementations](learning_material/peace_zero_stress_automation/architecture/item_implementations.md)
+                <!-- - [Item Implementations](learning_material/peace_zero_stress_automation/architecture/item_implementations.md) -->
             - [Flow](learning_material/peace_zero_stress_automation/architecture/flow.md)
             - [Commands](learning_material/peace_zero_stress_automation/architecture/commands.md)
-            - [Item Parameters](learning_material/peace_zero_stress_automation/architecture/item_parameters.md)
+                <!-- - [Item Parameters](learning_material/peace_zero_stress_automation/architecture/item_parameters.md) -->
             - [Tool](learning_material/peace_zero_stress_automation/architecture/tool.md)
-            <!-- - [Rationale](learning_material/peace_zero_stress_automation/architecture/rationale.md) -->
-        - [🪆 Side-Side Projects](learning_material/peace_zero_stress_automation/side_side_projects.md)
-            - [🛑 Interruptible](learning_material/peace_zero_stress_automation/side_side_projects/interruptible.md)
-            - [🎨 Dot IX](learning_material/peace_zero_stress_automation/side_side_projects/dot_ix.md)
+                <!-- - [Rationale](learning_material/peace_zero_stress_automation/architecture/rationale.md) -->
+            <!-- - [🪆 Side-Side Projects](learning_material/peace_zero_stress_automation/side_side_projects.md) -->
+                <!-- - [🛑 Interruptible](learning_material/peace_zero_stress_automation/side_side_projects/interruptible.md) -->
+                <!-- - [🎨 Dot IX](learning_material/peace_zero_stress_automation/side_side_projects/dot_ix.md) -->
         - [🦖 Project Status](learning_material/peace_zero_stress_automation/project_status.md)
             - [Readiness](learning_material/peace_zero_stress_automation/project_status/readiness.md)
         - [🔗 Links](learning_material/peace_zero_stress_automation/links.md)
