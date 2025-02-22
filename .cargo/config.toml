@@ -10,6 +10,9 @@ clippy_cli = [
     "--",
     "-D",
     "warnings",
+    # https://github.com/rust-lang/rust-clippy/issues/14275
+    "-A",
+    "clippy::doc_overindented_list_items",
 ]
 
 # Nextest for different feature combinations
