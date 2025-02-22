@@ -93,7 +93,7 @@ fn to_file_state_diff(file_state: &FileDownloadStateLogical) -> (Tracked<usize>,
     match file_state {
         FileDownloadStateLogical::None { .. } => (Tracked::None, Tracked::None),
         FileDownloadStateLogical::StringContents { path: _, contents } => (
-            Tracked::Known(contents.bytes().len()),
+            Tracked::Known(contents.len()),
             Tracked::Known(contents.to_owned()),
         ),
         FileDownloadStateLogical::Length {

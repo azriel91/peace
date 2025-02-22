@@ -31,7 +31,7 @@ where
         diff: &S3BucketStateDiff,
     ) -> Result<ApplyCheck, S3BucketError> {
         match diff {
-            S3BucketStateDiff::Added { .. } => {
+            S3BucketStateDiff::Added => {
                 let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {

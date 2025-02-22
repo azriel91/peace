@@ -289,7 +289,7 @@ where
                     {
                         ApplyCheck::ExecRequired {
                             progress_limit: ProgressLimit::Bytes(
-                                contents.as_bytes().len().try_into().unwrap(),
+                                contents.len().try_into().unwrap(),
                             ),
                         }
                     }

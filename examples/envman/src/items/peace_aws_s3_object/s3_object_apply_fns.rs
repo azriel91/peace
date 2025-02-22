@@ -26,7 +26,7 @@ where
         diff: &S3ObjectStateDiff,
     ) -> Result<ApplyCheck, S3ObjectError> {
         match diff {
-            S3ObjectStateDiff::Added { .. } | S3ObjectStateDiff::ObjectContentModified { .. } => {
+            S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
                 let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
