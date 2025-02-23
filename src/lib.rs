@@ -10,6 +10,7 @@ pub use peace_cli as cli;
 #[cfg(feature = "cli")]
 pub use peace_cli_model as cli_model;
 pub use peace_cmd as cmd;
+pub use peace_cmd_ctx as cmd_ctx;
 pub use peace_cmd_model as cmd_model;
 pub use peace_cmd_rt as cmd_rt;
 pub use peace_data as data;

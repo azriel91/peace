@@ -76,6 +76,7 @@ pub use crate::{
     mapping_fn_impl::MappingFnImpl,
     params::Params,
     params_fieldless::ParamsFieldless,
+    params_key::ParamsKey,
     params_merge_ext::ParamsMergeExt,
     params_resolve_error::ParamsResolveError,
     params_spec::ParamsSpec,
@@ -100,6 +101,7 @@ mod mapping_fn;
 mod mapping_fn_impl;
 mod params;
 mod params_fieldless;
+mod params_key;
 mod params_merge_ext;
 mod params_resolve_error;
 mod params_spec;
