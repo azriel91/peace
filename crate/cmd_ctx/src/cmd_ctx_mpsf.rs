@@ -7,7 +7,7 @@ use peace_params::ParamsSpecs;
 use peace_profile_model::Profile;
 use peace_resource_rt::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
-    resources::ts::SetUp,
+    resources::ts::{Empty, SetUp},
     states::StatesCurrentStored,
     Resources,
 };
@@ -16,6 +16,7 @@ use peace_rt_model::{
     ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use type_reg::untagged::{BoxDt, TypeReg};
+use typed_builder::TypedBuilder;
 
 use crate::CmdCtxTypes;
 
@@ -71,7 +72,7 @@ use crate::CmdCtxTypes;
 ///
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
-#[derive(Debug)]
+#[derive(Debug, TypedBuilder)]
 pub struct CmdCtxMpsf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
@@ -86,6 +87,7 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
+    #[builder(default = InterruptibilityState::new_non_interruptible())]
     pub interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
@@ -102,19 +104,21 @@ where
     /// Type registry for [`WorkspaceParams`] deserialization.
     ///
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    #[builder(default = TypeReg::new())]
     pub workspace_params_type_reg: TypeReg<CmdCtxTypesT::WorkspaceParamsKey, BoxDt>,
-    /// Workspace params.
     /// Workspace params.
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
     /// Type registry for [`ProfileParams`] deserialization.
     ///
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    #[builder(default = TypeReg::new())]
     pub profile_params_type_reg: TypeReg<CmdCtxTypesT::ProfileParamsKey, BoxDt>,
     /// Profile params for the profile.
     pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
     /// Type registry for [`FlowParams`] deserialization.
     ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    #[builder(default = TypeReg::new())]
     pub flow_params_type_reg: TypeReg<CmdCtxTypesT::FlowParamsKey, BoxDt>,
     /// Flow params for the selected flow.
     pub profile_to_flow_params: BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>,
@@ -126,6 +130,7 @@ where
     ///
     /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
+    #[builder(default = ParamsSpecsTypeReg::new())]
     pub params_specs_type_reg: ParamsSpecsTypeReg,
     /// Item params specs for each profile for the selected flow.
     pub profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
@@ -136,8 +141,10 @@ where
     ///
     /// [`StatesCurrentFile`]: peace_resource_rt::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resource_rt::paths::StatesGoalFile
+    #[builder(default = StatesTypeReg::new())]
     pub states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
+    #[builder(default = Resources::<SetUp>::from(Resources::<Empty>::new()))]
     pub resources: Resources<SetUp>,
 }
 

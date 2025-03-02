@@ -29,6 +29,7 @@ peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
 type_reg = { workspace = true }
+typed-builder = { workspace = true }
 
 [features]
 default = []
