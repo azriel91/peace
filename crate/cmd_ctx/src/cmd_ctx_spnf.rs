@@ -41,7 +41,7 @@ use crate::CmdCtxTypes;
 /// [`CmdCtxMpnf`]: crate::CmdCtxMpnf
 /// [`CmdCtxMpsf`]: crate::CmdCtxMpsf
 /// [`CmdCtxSpsf`]: crate::CmdCtxSpsf
-#[derive(Debug, TypedBuilder)]
+#[derive(Debug)]
 pub struct CmdCtxSpnf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
@@ -56,7 +56,6 @@ where
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
-    #[builder(default = InterruptibilityState::new_non_interruptible())]
     pub interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
@@ -72,14 +71,12 @@ where
     /// Type registry for [`WorkspaceParams`] deserialization.
     ///
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    #[builder(default = TypeReg::new())]
     pub workspace_params_type_reg: TypeReg<CmdCtxTypesT::WorkspaceParamsKey, BoxDt>,
     /// Workspace params.
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
     /// Type registry for [`ProfileParams`] deserialization.
     ///
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
-    #[builder(default = TypeReg::new())]
     pub profile_params_type_reg: TypeReg<CmdCtxTypesT::ProfileParamsKey, BoxDt>,
     /// Profile params for the profile.
     pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
