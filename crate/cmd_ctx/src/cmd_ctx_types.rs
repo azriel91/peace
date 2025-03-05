@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use peace_params::ParamsKey;
+use peace_rt_model::output::OutputWrite;
 
 /// Trait so that a single type parameter can be used in `CmdCtx` and `Scopes`.
 ///
@@ -8,9 +9,13 @@ use peace_params::ParamsKey;
 /// this trait.
 pub trait CmdCtxTypes {
     /// Error type of the automation software.
-    type AppError: Debug;
+    type AppError: Debug
+        + std::error::Error
+        + From<peace_rt_model::Error>
+        + From<<Self::Output as OutputWrite>::Error>
+        + 'static;
     /// Output to write progress or outcome to.
-    type Output;
+    type Output: OutputWrite;
     /// Key type for parameters that are common for the workspace.
     ///
     /// If this is not needed, you may use the [`!` never type][never_type].

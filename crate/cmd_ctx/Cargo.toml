@@ -20,19 +20,30 @@ doctest = false
 test = false
 
 [dependencies]
+futures = { workspace = true }
 interruptible = { workspace = true }
 own = { workspace = true }
+peace_cfg = { workspace = true }
 peace_flow_rt = { workspace = true }
+peace_item_model = { workspace = true }
 peace_params = { workspace = true }
 peace_profile_model = { workspace = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
+peace_state_rt = { workspace = true }
+tokio = { workspace = true, features = ["fs"] }
 type_reg = { workspace = true }
 typed-builder = { workspace = true }
 
 [features]
 default = []
+item_state_example = [
+    "peace_cfg/item_state_example",
+    "peace_flow_rt/item_state_example",
+    "peace_params/item_state_example",
+    "peace_rt_model/item_state_example",
+]
 output_progress = [
     "peace_flow_rt/output_progress",
     "peace_rt_model/output_progress",

@@ -24,6 +24,12 @@ use serde::{de::DeserializeOwned, Serialize};
 ///     type WorkspaceParamsKey = WorkspaceParam;
 /// }
 /// ```
-pub trait ParamsKey: Copy + Debug + Eq + Hash + DeserializeOwned + Serialize {}
+pub trait ParamsKey:
+    Copy + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
+{
+}
 
-impl<T> ParamsKey for T where T: Copy + Debug + Eq + Hash + DeserializeOwned + Serialize {}
+impl<T> ParamsKey for T where
+    T: Copy + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
+{
+}
