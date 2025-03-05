@@ -554,17 +554,17 @@ fn impl_build_for(
                 // Track items in memory.
                 let mut resources = peace_resource_rt::Resources::new();
                 // === WorkspaceParamsSelected === //
-                // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params.clone(), &mut resources);
                 // resources.insert(workspace_params_file);
                 #workspace_params_insert
 
                 // === Single Profile === //
-                // crate::ctx::cmd_ctx_builder::profile_params_insert(profile_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::profile_params_insert(profile_params.clone(), &mut resources);
                 // resources.insert(profile_params_file);
                 #profile_params_insert
 
                 // === Single Flow === //
-                // crate::ctx::cmd_ctx_builder::flow_params_insert(flow_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::flow_params_insert(flow_params.clone(), &mut resources);
                 // resources.insert(flow_params_file);
                 #flow_params_insert
 
