@@ -1,28 +1,22 @@
 use std::{collections::BTreeMap, fmt::Debug};
 
-use futures::TryStreamExt;
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_flow_rt::Flow;
 use peace_item_model::ItemId;
 use peace_params::ParamsSpecs;
 use peace_profile_model::Profile;
-use peace_resource_rt::{
-    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    paths::{FlowDir, ParamsSpecsFile, ProfileDir, ProfileHistoryDir, StatesCurrentFile},
-    resources::ts::Empty,
-    states::StatesCurrentStored,
-    Resources,
-};
+use peace_resource_rt::{internal::WorkspaceParamsFile, resources::ts::Empty, Resources};
 use peace_rt_model::{
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    ParamsSpecsSerializer, Workspace, WorkspaceInitializer,
+    Workspace, WorkspaceInitializer,
 };
-use peace_state_rt::StatesSerializer;
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
-use crate::{CmdCtxBuilderSupport, CmdCtxMpsf, CmdCtxTypes, ProfileFilterFn};
+use crate::{
+    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpsf, CmdCtxTypes, ProfileFilterFn,
+};
 
 /// A command that works with multiple profiles, and a single flow.
 ///
@@ -188,8 +182,8 @@ where
             profile_filter_fn,
             flow,
             mut workspace_params,
-            profile_to_profile_params: mut profile_to_profile_params_provided,
-            profile_to_flow_params: mut profile_to_flow_params_provided,
+            profile_to_profile_params: profile_to_profile_params_provided,
+            profile_to_flow_params: profile_to_flow_params_provided,
             profile_to_params_specs: profile_to_params_specs_provided,
             resources: resources_override,
         } = self.build_partial();
@@ -210,39 +204,20 @@ where
         )
         .await?;
 
-        let profiles = CmdCtxBuilderSupport::profiles_from_peace_app_dir(
+        let profiles = CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profiles_from_peace_app_dir(
             workspace_dirs.peace_app_dir(),
             profile_filter_fn.as_ref(),
         )
         .await?;
 
-        let profiles_ref = &profiles;
-        let (profile_dirs, profile_history_dirs) = profiles_ref.iter().fold(
-            (
-                BTreeMap::<Profile, ProfileDir>::new(),
-                BTreeMap::<Profile, ProfileHistoryDir>::new(),
-            ),
-            |(mut profile_dirs, mut profile_history_dirs), profile| {
-                let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile));
-                let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+        let (profile_dirs, profile_history_dirs) =
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_and_history_dirs_read(
+                &profiles,
+                workspace_dirs,
+            );
 
-                profile_dirs.insert(profile.clone(), profile_dir);
-                profile_history_dirs.insert(profile.clone(), profile_history_dir);
-
-                (profile_dirs, profile_history_dirs)
-            },
-        );
-
-        let flow_dirs = profile_dirs.iter().fold(
-            BTreeMap::<Profile, FlowDir>::new(),
-            |mut flow_dirs, (profile, profile_dir)| {
-                let flow_dir = FlowDir::from((profile_dir, flow.flow_id()));
-
-                flow_dirs.insert(profile.clone(), flow_dir);
-
-                flow_dirs
-            },
-        );
+        let flow_dirs =
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::flow_dirs_read(&profile_dirs, &flow);
 
         let mut dirs_to_create = vec![
             AsRef::<std::path::Path>::as_ref(workspace_dirs.workspace_dir()),
@@ -260,61 +235,6 @@ where
             )
             .chain(flow_dirs.values().map(AsRef::<std::path::Path>::as_ref))
             .for_each(|dir| dirs_to_create.push(dir));
-
-        let storage = workspace.storage();
-
-        // profile_params_deserialize
-        let profile_params_type_reg_ref = &profile_params_type_reg;
-        let profile_to_profile_params = futures::stream::iter(
-            profile_dirs
-                .iter()
-                .map(Result::<_, peace_rt_model::Error>::Ok),
-        )
-        .and_then(|(profile, profile_dir)| {
-            let mut profile_params = profile_to_profile_params_provided
-                .remove(profile)
-                .unwrap_or_default();
-            async move {
-                let profile_params_file = ProfileParamsFile::from(profile_dir);
-
-                CmdCtxBuilderSupport::profile_params_merge(
-                    storage,
-                    profile_params_type_reg_ref,
-                    &mut profile_params,
-                    &profile_params_file,
-                )
-                .await?;
-
-                Ok((profile.clone(), profile_params))
-            }
-        })
-        .try_collect::<BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>>()
-        .await?;
-
-        // flow_params_deserialize
-        let flow_params_type_reg_ref = &flow_params_type_reg;
-        let profile_to_flow_params =
-            futures::stream::iter(flow_dirs.iter().map(Result::<_, peace_rt_model::Error>::Ok))
-                .and_then(|(profile, flow_dir)| {
-                    let mut flow_params = profile_to_flow_params_provided
-                        .remove(profile)
-                        .unwrap_or_default();
-                    async move {
-                        let flow_params_file = FlowParamsFile::from(flow_dir);
-
-                        CmdCtxBuilderSupport::flow_params_merge(
-                            storage,
-                            flow_params_type_reg_ref,
-                            &mut flow_params,
-                            &flow_params_file,
-                        )
-                        .await?;
-
-                        Ok((profile.clone(), flow_params))
-                    }
-                })
-                .try_collect::<BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>>()
-                .await?;
 
         // Create directories and write init parameters to storage.
         #[cfg(target_arch = "wasm32")]
@@ -334,6 +254,26 @@ where
             })?;
         }
 
+        // profile_params_deserialize
+        let profile_to_profile_params =
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_params_deserialize(
+                &profile_dirs,
+                profile_to_profile_params_provided,
+                storage,
+                &profile_params_type_reg,
+            )
+            .await?;
+
+        // flow_params_deserialize
+        let profile_to_flow_params =
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::flow_params_deserialize(
+                &flow_dirs,
+                profile_to_flow_params_provided,
+                storage,
+                &flow_params_type_reg,
+            )
+            .await?;
+
         let interruptibility_state = interruptibility.into();
 
         // Serialize params to `PeaceAppDir`.
@@ -345,49 +285,19 @@ where
         .await?;
 
         // profile_params_serialize
-        futures::stream::iter(
-            profile_to_profile_params
-                .iter()
-                .map(Result::<_, peace_rt_model_core::Error>::Ok),
+        CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_params_serialize(
+            &profile_to_profile_params,
+            &profile_dirs,
+            storage,
         )
-        .try_for_each(|(profile, profile_params)| async {
-            let profile_dir = profile_dirs.get(profile);
-            // Should always exist, but don't panic if it doesn't.
-            if let Some(profile_dir) = profile_dir {
-                let profile_params_file = ProfileParamsFile::from(profile_dir);
-
-                CmdCtxBuilderSupport::profile_params_serialize(
-                    profile_params,
-                    storage,
-                    &profile_params_file,
-                )
-                .await?;
-            }
-            Ok(())
-        })
         .await?;
 
         // flow_params_serialize
-        futures::stream::iter(
-            profile_to_flow_params
-                .iter()
-                .map(Result::<_, peace_rt_model_core::Error>::Ok),
+        CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::flow_params_serialize(
+            &profile_to_flow_params,
+            &flow_dirs,
+            storage,
         )
-        .try_for_each(|(profile, flow_params)| async {
-            let flow_dir = flow_dirs.get(profile);
-            // Should always exist, but don't panic if it doesn't.
-            if let Some(flow_dir) = flow_dir {
-                let flow_params_file = FlowParamsFile::from(flow_dir);
-
-                CmdCtxBuilderSupport::flow_params_serialize(
-                    flow_params,
-                    storage,
-                    &flow_params_file,
-                )
-                .await?;
-            }
-            Ok(())
-        })
         .await?;
 
         // Track items in memory.
@@ -413,90 +323,32 @@ where
             resources.insert(flow.flow_id().clone());
         }
 
-        let flow_ref = &flow;
-        let flow_id = flow_ref.flow_id();
-        let item_graph = flow_ref.graph();
+        let flow_id = flow.flow_id();
+        let item_graph = flow.graph();
 
         let (params_specs_type_reg, states_type_reg) =
             CmdCtxBuilderSupport::params_and_states_type_reg(item_graph);
 
-        let params_specs_type_reg_ref = &params_specs_type_reg;
         let app_name = workspace.app_name();
         let profile_to_params_specs =
-            futures::stream::iter(flow_dirs.iter().map(Result::<_, peace_rt_model::Error>::Ok))
-                .and_then(|(profile, flow_dir)| {
-                    let params_specs_provided =
-                        profile_to_params_specs_provided.get(profile).cloned();
-                    async move {
-                        let params_specs_file = ParamsSpecsFile::from(flow_dir);
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::params_specs_load_merge_and_store(
+                &flow_dirs,
+                profile_to_params_specs_provided,
+                &flow,
+                storage,
+                &params_specs_type_reg,
+                app_name,
+            )
+            .await?;
 
-                        let params_specs_stored =
-                            ParamsSpecsSerializer::<peace_rt_model::Error>::deserialize_opt(
-                                profile,
-                                flow_id,
-                                storage,
-                                params_specs_type_reg_ref,
-                                &params_specs_file,
-                            )
-                            .await?;
-
-                        // For mapping fns, we still need the developer to provide the params spec
-                        // so that multi-profile diffs can be done.
-                        let profile = profile.clone();
-                        let params_specs = match (params_specs_stored, params_specs_provided) {
-                            (None, None) => {
-                                return Err(
-                                    peace_rt_model_core::Error::ProfileParamsSpecsNotPresent {
-                                        app_name: app_name.clone(),
-                                        profile,
-                                    },
-                                );
-                            }
-                            (None, Some(params_specs_provided)) => params_specs_provided,
-                            (Some(params_specs_stored), None) => params_specs_stored,
-                            (Some(params_specs_stored), Some(params_specs_provided)) => {
-                                CmdCtxBuilderSupport::params_specs_merge(
-                                    flow_ref,
-                                    params_specs_provided,
-                                    Some(params_specs_stored),
-                                )?
-                            }
-                        };
-
-                        // Serialize params specs back to disk.
-                        CmdCtxBuilderSupport::params_specs_serialize(
-                            &params_specs,
-                            storage,
-                            &params_specs_file,
-                        )
-                        .await?;
-
-                        Ok((profile, params_specs))
-                    }
-                })
-                .try_collect::<BTreeMap<Profile, ParamsSpecs>>()
-                .await?;
-
-        let states_type_reg_ref = &states_type_reg;
         let profile_to_states_current_stored =
-            futures::stream::iter(flow_dirs.iter().map(Result::<_, peace_rt_model::Error>::Ok))
-                .and_then(|(profile, flow_dir)| async move {
-                    let states_current_file = StatesCurrentFile::from(flow_dir);
-
-                    let states_current_stored =
-                        StatesSerializer::<peace_rt_model::Error>::deserialize_stored_opt(
-                            flow_id,
-                            storage,
-                            states_type_reg_ref,
-                            &states_current_file,
-                        )
-                        .await?
-                        .map(Into::<StatesCurrentStored>::into);
-
-                    Ok((profile.clone(), states_current_stored))
-                })
-                .try_collect::<BTreeMap<Profile, Option<StatesCurrentStored>>>()
-                .await?;
+            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::states_current_read(
+                &flow_dirs,
+                flow_id,
+                storage,
+                &states_type_reg,
+            )
+            .await?;
 
         // Call each `Item`'s initialization function.
         let mut resources = CmdCtxBuilderSupport::item_graph_setup(item_graph, resources).await?;

@@ -8,9 +8,13 @@ pub use crate::{
     profile_filter_fn::ProfileFilterFn, profile_selection::ProfileSelection,
 };
 
-pub(crate) use crate::cmd_ctx_builder_support::CmdCtxBuilderSupport;
+pub(crate) use crate::{
+    cmd_ctx_builder_support::CmdCtxBuilderSupport,
+    cmd_ctx_builder_support_multi::CmdCtxBuilderSupportMulti,
+};
 
 mod cmd_ctx_builder_support;
+mod cmd_ctx_builder_support_multi;
 mod cmd_ctx_mpnf;
 mod cmd_ctx_mpsf;
 mod cmd_ctx_mpsf_builder;
