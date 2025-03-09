@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use peace_cmd_model::CmdExecutionError;
+use peace_core::AppName;
 use peace_flow_model::FlowId;
 use peace_item_model::ItemId;
 use peace_params::{ParamsResolveError, ParamsSpecs};
@@ -195,6 +196,23 @@ pub enum Error {
         diagnostic(code(peace_rt_model::presentable_serialize))
     )]
     PresentableSerialize(#[source] serde_yaml::Error),
+
+    /// Params specs were not stored or provided for a profile in a
+    /// multi-profile command context.
+    #[error(
+        "Params specs were not stored or provided for a profile in a \
+        multi-profile command context."
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::profile_params_specs_not_provided)),
+        help(
+            "Make sure params specs are either stored in \
+            `.peace/{app_name}/{profile}/`, or are provided in code for all \
+            profiles that are loaded."
+        )
+    )]
+    ProfileParamsSpecsNotPresent { app_name: AppName, profile: Profile },
 
     /// Failed to serialize progress update.
     #[error("Failed to serialize progress update.")]

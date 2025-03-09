@@ -2,9 +2,10 @@ use futures::{StreamExt, TryStreamExt};
 use peace_flow_rt::{Flow, ItemGraph};
 use peace_item_model::ItemId;
 use peace_params::{ParamsKey, ParamsSpecs};
+use peace_profile_model::Profile;
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    paths::ParamsSpecsFile,
+    paths::{ParamsSpecsFile, PeaceAppDir},
     resources::ts::{Empty, SetUp},
     Resource, Resources,
 };
@@ -13,6 +14,8 @@ use peace_rt_model::{
     ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage, WorkspaceInitializer,
 };
 use type_reg::untagged::{BoxDt, TypeReg};
+
+use crate::ProfileFilterFn;
 
 /// Common code used to build different `CmdCtx*` types.
 pub(crate) struct CmdCtxBuilderSupport;
@@ -264,15 +267,88 @@ impl CmdCtxBuilderSupport {
         });
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) async fn profiles_from_peace_app_dir(
+        peace_app_dir: &PeaceAppDir,
+        profile_filter_fn: Option<&ProfileFilterFn>,
+    ) -> Result<Vec<Profile>, peace_rt_model::Error> {
+        use std::{ffi::OsStr, str::FromStr};
+
+        let mut profiles = Vec::new();
+        let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(
+            #[cfg_attr(coverage_nightly, coverage(off))]
+            |error| {
+                peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirRead {
+                    peace_app_dir: peace_app_dir.to_path_buf(),
+                    error,
+                })
+            },
+        )?;
+        while let Some(entry) = peace_app_read_dir.next_entry().await.map_err(
+            #[cfg_attr(coverage_nightly, coverage(off))]
+            |error| {
+                peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirEntryRead {
+                    peace_app_dir: peace_app_dir.to_path_buf(),
+                    error,
+                })
+            },
+        )? {
+            let file_type = entry.file_type().await.map_err(
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                |error| {
+                    peace_rt_model::Error::Native(
+                        peace_rt_model::NativeError::PeaceAppDirEntryFileTypeRead {
+                            path: entry.path(),
+                            error,
+                        },
+                    )
+                },
+            )?;
+
+            if file_type.is_dir() {
+                let entry_path = entry.path();
+                if let Some(dir_name) = entry_path.file_name().and_then(OsStr::to_str) {
+                    // Assume this is a profile directory
+                    let profile =
+                        peace_profile_model::Profile::from_str(dir_name).map_err(|error| {
+                            peace_rt_model::Error::Native(
+                                peace_rt_model::NativeError::ProfileDirInvalidName {
+                                    dir_name: dir_name.to_string(),
+                                    path: entry_path.to_path_buf(),
+                                    error,
+                                },
+                            )
+                        })?;
+
+                    if let Some(profile_filter_fn) = profile_filter_fn {
+                        if !profile_filter_fn.call(&profile) {
+                            // Exclude any profiles that do not pass the filter
+                            continue;
+                        }
+                    }
+
+                    profiles.push(profile)
+                }
+
+                // Assume non-UTF8 file names are not profile directories
+            }
+        }
+
+        // Ensure profiles are in a consistent, sensible order.
+        profiles.sort();
+
+        Ok(profiles)
+    }
+
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn profiles_from_peace_app_dir(
-        _peace_app_dir: &peace_resource_rt::paths::PeaceAppDir,
-        _profiles_filter_fn: Option<&dyn Fn(&peace_profile_model::Profile) -> bool>,
-    ) -> Result<Vec<peace_profile_model::Profile>, peace_rt_model::Error> {
+        _peace_app_dir: &PeaceAppDir,
+        _profile_filter_fn: Option<&ProfileFilterFn>,
+    ) -> Result<Vec<Profile>, peace_rt_model::Error> {
         let profiles = Vec::new();
 
-        // Not supported yet -- needs a `Storage` abstraction over both native an web
-        // assembly.
+        // TODO: Not supported yet -- needs a `Storage` abstraction over both native an
+        // web assembly.
 
         Ok(profiles)
     }
