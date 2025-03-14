@@ -12,7 +12,7 @@ use peace_rt_model::{
 };
 use type_reg::untagged::{BoxDt, TypeReg};
 
-use crate::CmdCtxTypes;
+use crate::{CmdCtxMpnfParams, CmdCtxMpnfParamsBuilder, CmdCtxTypes};
 
 /// A command that works with multiple profiles, not scoped to a flow.
 ///
@@ -91,6 +91,11 @@ impl<CmdCtxTypesT> CmdCtxMpnf<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
+    /// Returns a [`CmdCtxMpnfParamsBuilder`] to construct this command context.
+    pub fn builder<'ctx>() -> CmdCtxMpnfParamsBuilder<'ctx, CmdCtxTypesT> {
+        CmdCtxMpnfParams::<'ctx, CmdCtxTypesT>::builder()
+    }
+
     /// Returns a reference to the output.
     pub fn output(&self) -> &CmdCtxTypesT::Output {
         &self.output

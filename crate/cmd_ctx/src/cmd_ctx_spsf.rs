@@ -12,7 +12,7 @@ use peace_rt_model::{ParamsSpecsTypeReg, StatesTypeReg, Workspace};
 use peace_rt_model_core::params::{FlowParams, ProfileParams, WorkspaceParams};
 use type_reg::untagged::{BoxDt, TypeReg};
 
-use crate::CmdCtxTypes;
+use crate::{CmdCtxSpsfParams, CmdCtxSpsfParamsBuilder, CmdCtxTypes};
 
 /// Context for a command that works with one profile and one flow.
 ///
@@ -116,6 +116,11 @@ impl<CmdCtxTypesT> CmdCtxSpsf<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
+    /// Returns a [`CmdCtxSpsfParamsBuilder`] to construct this command context.
+    pub fn builder<'ctx>() -> CmdCtxSpsfParamsBuilder<'ctx, CmdCtxTypesT> {
+        CmdCtxSpsfParams::<'ctx, CmdCtxTypesT>::builder()
+    }
+
     /// Returns a reference to the output.
     pub fn output(&self) -> &CmdCtxTypesT::Output {
         &self.output

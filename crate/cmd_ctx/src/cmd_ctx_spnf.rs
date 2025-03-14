@@ -8,7 +8,7 @@ use peace_rt_model::Workspace;
 use peace_rt_model_core::params::{ProfileParams, WorkspaceParams};
 use type_reg::untagged::{BoxDt, TypeReg};
 
-use crate::CmdCtxTypes;
+use crate::{CmdCtxSpnfParams, CmdCtxSpnfParamsBuilder, CmdCtxTypes};
 
 /// A command that works with a single profile, not scoped to a flow.
 ///
@@ -85,6 +85,11 @@ impl<CmdCtxTypesT> CmdCtxSpnf<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
+    /// Returns a [`CmdCtxSpnfParamsBuilder`] to construct this command context.
+    pub fn builder<'ctx>() -> CmdCtxSpnfParamsBuilder<'ctx, CmdCtxTypesT> {
+        CmdCtxSpnfParams::<'ctx, CmdCtxTypesT>::builder()
+    }
+
     /// Returns a reference to the output.
     pub fn output(&self) -> &CmdCtxTypesT::Output {
         &self.output

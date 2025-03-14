@@ -17,7 +17,7 @@ use peace_rt_model::{
 };
 use type_reg::untagged::{BoxDt, TypeReg};
 
-use crate::CmdCtxTypes;
+use crate::{CmdCtxMpsfParams, CmdCtxMpsfParamsBuilder, CmdCtxTypes};
 
 /// A command that works with multiple profiles, and a single flow.
 ///
@@ -144,6 +144,11 @@ impl<CmdCtxTypesT> CmdCtxMpsf<'_, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
+    /// Returns a [`CmdCtxMpsfParamsBuilder`] to construct this command context.
+    pub fn builder<'ctx>() -> CmdCtxMpsfParamsBuilder<'ctx, CmdCtxTypesT> {
+        CmdCtxMpsfParams::<'ctx, CmdCtxTypesT>::builder()
+    }
+
     /// Returns a reference to the output.
     pub fn output(&self) -> &CmdCtxTypesT::Output {
         &self.output
