@@ -72,7 +72,7 @@ use crate::{
 /// * Read or write flow state for different flows.
 #[derive(Debug, TypedBuilder)]
 #[builder(build_method(vis="", name=build_partial))]
-pub struct CmdCtxMpsfBuilder<'ctx, CmdCtxTypesT>
+pub struct CmdCtxMpsfParams<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -155,7 +155,7 @@ impl<
         __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>>,
         __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
-    CmdCtxMpsfBuilderBuilder<
+    CmdCtxMpsfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
         (
@@ -175,7 +175,7 @@ where
     CmdCtxTypesT: CmdCtxTypes,
 {
     pub async fn build(self) -> Result<CmdCtxMpsf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
-        let CmdCtxMpsfBuilder {
+        let CmdCtxMpsfParams {
             output,
             interruptibility,
             workspace,

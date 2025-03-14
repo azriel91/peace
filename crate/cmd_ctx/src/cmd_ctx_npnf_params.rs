@@ -1,39 +1,20 @@
-use std::{collections::BTreeMap, fmt::Debug};
-
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
-use peace_profile_model::Profile;
 use peace_resource_rt::internal::WorkspaceParamsFile;
-use peace_rt_model::{
-    params::{ProfileParams, WorkspaceParams},
-    Workspace, WorkspaceInitializer,
-};
+use peace_rt_model::{params::WorkspaceParams, Workspace, WorkspaceInitializer};
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
-use crate::{
-    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpnf, CmdCtxTypes, ProfileFilterFn,
-};
+use crate::{CmdCtxBuilderSupport, CmdCtxNpnf, CmdCtxTypes};
 
-/// A command that works with multiple profiles, not scoped to a flow.
+/// Context for a command that only works with workspace parameters -- no
+/// profile / no flow.
 ///
 /// ```bash
 /// path/to/repo/.peace/envman
 /// |- 📝 workspace_params.yaml    # ✅ can read or write `WorkspaceParams`
 /// |
-/// |- 🌏 internal_dev_a           # ✅ can list multiple `Profile`s
-/// |   |- 📝 profile_params.yaml  # ✅ can read multiple `ProfileParams`
-/// |   |
-/// |   |- ..                      # ❌ cannot read or write `Flow` information
-/// |
-/// |- 🌏 customer_a_dev           # ✅
-/// |   |- 📝 profile_params.yaml  # ✅
-/// |
-/// |- 🌏 customer_a_prod          # ✅
-/// |   |- 📝 profile_params.yaml  # ✅
-/// |
-/// |- 🌏 workspace_init           # ✅ can list multiple `Profile`s
-///     |- 📝 profile_params.yaml  # ❌ cannot read profile params of different underlying type
+/// |- 🌏 ..                       # ❌ cannot read or write `Profile` information
 /// ```
 ///
 /// ## Capabilities
@@ -41,18 +22,20 @@ use crate::{
 /// This kind of command can:
 ///
 /// * Read or write workspace parameters.
-/// * Read or write multiple profiles' parameters &ndash; as long as they are of
-///   the same type (same `struct`).
 ///
 /// This kind of command cannot:
 ///
-/// * Read or write flow parameters -- see [`CmdCtxMpsf`].
-/// * Read or write flow state -- see [`CmdCtxMpsf`].
+/// * Read or write profile parameters -- see [`CmdCtxSpnf`] or [`CmdCtxMpnf`].
+/// * Read or write flow parameters or state -- see [`CmdCtxSpsf`] or
+///   [`CmdCtxMpsf`].
 ///
+/// [`CmdCtxMpnf`]: crate::CmdCtxMpnf
 /// [`CmdCtxMpsf`]: crate::CmdCtxMpsf
+/// [`CmdCtxSpnf`]: crate::CmdCtxSpnf
+/// [`CmdCtxSpsf`]: crate::CmdCtxSpsf
 #[derive(Debug, TypedBuilder)]
 #[builder(build_method(vis="", name=build_partial))]
-pub struct CmdCtxMpnfBuilder<'ctx, CmdCtxTypesT>
+pub struct CmdCtxNpnfParams<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -68,19 +51,14 @@ where
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
-    /// Function to filter the profiles that are accessible by this command.
-    #[builder(default = None)]
-    pub profile_filter_fn: Option<ProfileFilterFn>,
     /// Workspace params.
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
-    /// Profile params for the profile.
-    pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
 }
 
 // Use one of the following to obtain the generated type signature:
 //
 // ```sh
-// cargo expand -p peace_cmd_ctx cmd_ctx_mpnf_builder
+// cargo expand -p peace_cmd_ctx cmd_ctx_npnf_builder
 // ```
 //
 // Sublime text command:
@@ -92,35 +70,29 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>>,
     >
-    CmdCtxMpnfBuilderBuilder<
+    CmdCtxNpnfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
         (
             (OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,),
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
-            __profile_filter_fn,
             (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
-    pub async fn build(self) -> Result<CmdCtxMpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
-        let CmdCtxMpnfBuilder {
+    pub async fn build(self) -> Result<CmdCtxNpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
+        let CmdCtxNpnfParams {
             output,
             interruptibility,
             workspace,
-            profile_filter_fn,
             mut workspace_params,
-            profile_to_profile_params: profile_to_profile_params_provided,
         } = self.build_partial();
 
         let workspace_params_type_reg = TypeReg::new();
-        let profile_params_type_reg = TypeReg::new();
 
         let workspace_dirs = workspace.dirs();
         let storage = workspace.storage();
@@ -134,33 +106,11 @@ where
         )
         .await?;
 
-        let profiles = CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profiles_from_peace_app_dir(
-            workspace_dirs.peace_app_dir(),
-            profile_filter_fn.as_ref(),
-        )
-        .await?;
-
-        let (profile_dirs, profile_history_dirs) =
-            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_and_history_dirs_read(
-                &profiles,
-                workspace_dirs,
-            );
-
-        let mut dirs_to_create = vec![
+        let dirs_to_create = [
             AsRef::<std::path::Path>::as_ref(workspace_dirs.workspace_dir()),
             AsRef::<std::path::Path>::as_ref(workspace_dirs.peace_dir()),
             AsRef::<std::path::Path>::as_ref(workspace_dirs.peace_app_dir()),
         ];
-
-        profile_dirs
-            .values()
-            .map(AsRef::<std::path::Path>::as_ref)
-            .chain(
-                profile_history_dirs
-                    .values()
-                    .map(AsRef::<std::path::Path>::as_ref),
-            )
-            .for_each(|dir| dirs_to_create.push(dir));
 
         // Create directories and write init parameters to storage.
         #[cfg(target_arch = "wasm32")]
@@ -180,16 +130,6 @@ where
             })?;
         }
 
-        // profile_params_deserialize
-        let profile_to_profile_params =
-            CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_params_deserialize(
-                &profile_dirs,
-                profile_to_profile_params_provided,
-                storage,
-                &profile_params_type_reg,
-            )
-            .await?;
-
         let interruptibility_state = interruptibility.into();
 
         // Serialize params to `PeaceAppDir`.
@@ -200,27 +140,14 @@ where
         )
         .await?;
 
-        // profile_params_serialize
-        CmdCtxBuilderSupportMulti::<CmdCtxTypesT>::profile_params_serialize(
-            &profile_to_profile_params,
-            &profile_dirs,
-            storage,
-        )
-        .await?;
-
-        let cmd_ctx_mpnf = CmdCtxMpnf {
+        let cmd_ctx_npnf = CmdCtxNpnf {
             output,
             interruptibility_state,
             workspace,
-            profiles,
-            profile_dirs,
-            profile_history_dirs,
             workspace_params_type_reg,
             workspace_params,
-            profile_params_type_reg,
-            profile_to_profile_params,
         };
 
-        Ok(cmd_ctx_mpnf)
+        Ok(cmd_ctx_npnf)
     }
 }

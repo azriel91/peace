@@ -48,7 +48,7 @@ use crate::{CmdCtxBuilderSupport, CmdCtxSpsf, CmdCtxTypes, ProfileSelection};
 /// [`CmdCtxMpsf`]: crate::CmdCtxMpsf
 #[derive(Debug, TypedBuilder)]
 #[builder(build_method(vis="", name=build_partial))]
-pub struct CmdCtxSpsfBuilder<'ctx, CmdCtxTypesT>
+pub struct CmdCtxSpsfParams<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
@@ -122,7 +122,7 @@ impl<
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
         __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
-    CmdCtxSpsfBuilderBuilder<
+    CmdCtxSpsfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
         (
@@ -142,7 +142,7 @@ where
     CmdCtxTypesT: CmdCtxTypes,
 {
     pub async fn build(self) -> Result<CmdCtxSpsf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
-        let CmdCtxSpsfBuilder {
+        let CmdCtxSpsfParams {
             output,
             interruptibility,
             workspace,
