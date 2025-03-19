@@ -52,15 +52,32 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+    /// Inner fields without the `output`.
+    ///
+    /// # Design
+    ///
+    /// This is necessary so that the `output` can be separated from the fields
+    /// during execution.
+    pub fields: CmdCtxSpnfFields<'ctx, CmdCtxTypesT>,
+}
+
+/// Fields of [`CmdCtxSpnf`].
+///
+/// # Design
+///
+/// This is necessary so that the `output` can be separated from the fields
+/// during execution.
+#[derive(Debug)]
+pub struct CmdCtxSpnfFields<'ctx, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
     pub interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
-    /// Tracks progress of each function execution.
-    #[cfg(feature = "output_progress")]
-    pub cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     pub profile: Profile,
     /// Profile directory that stores params and flows.
@@ -81,13 +98,13 @@ where
     pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
 }
 
-impl<CmdCtxTypesT> CmdCtxSpnf<'_, CmdCtxTypesT>
+impl<'ctx, CmdCtxTypesT> CmdCtxSpnf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a [`CmdCtxSpnfParamsBuilder`] to construct this command context.
-    pub fn builder<'ctx>() -> CmdCtxSpnfParamsBuilder<'ctx, CmdCtxTypesT> {
-        CmdCtxSpnfParams::<'ctx, CmdCtxTypesT>::builder()
+    pub fn builder<'ctx_local>() -> CmdCtxSpnfParamsBuilder<'ctx_local, CmdCtxTypesT> {
+        CmdCtxSpnfParams::<'ctx_local, CmdCtxTypesT>::builder()
     }
 
     /// Returns a reference to the output.
@@ -100,6 +117,21 @@ where
         &mut self.output
     }
 
+    /// Returns a reference to the fields.
+    pub fn fields(&self) -> &CmdCtxSpnfFields<'_, CmdCtxTypesT> {
+        &self.fields
+    }
+
+    /// Returns a mutable reference to the fields.
+    pub fn fields_mut(&mut self) -> &mut CmdCtxSpnfFields<'ctx, CmdCtxTypesT> {
+        &mut self.fields
+    }
+}
+
+impl<CmdCtxTypesT> CmdCtxSpnfFields<'_, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Returns the interruptibility capability.
     pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()
@@ -129,19 +161,6 @@ where
     /// Convenience method for `cmd_ctx_Spsf.workspace.dirs().peace_app_dir()`.
     pub fn peace_app_dir(&self) -> &PeaceAppDir {
         self.workspace.dirs().peace_app_dir()
-    }
-
-    /// Returns the progress tracker for all functions' executions.
-    #[cfg(feature = "output_progress")]
-    pub fn cmd_progress_tracker(&self) -> &peace_rt_model::CmdProgressTracker {
-        &self.cmd_progress_tracker
-    }
-
-    /// Returns a mutable reference to the progress tracker for all functions'
-    /// executions.
-    #[cfg(feature = "output_progress")]
-    pub fn cmd_progress_tracker_mut(&mut self) -> &mut peace_rt_model::CmdProgressTracker {
-        &mut self.cmd_progress_tracker
     }
 
     /// Returns a reference to the profile.

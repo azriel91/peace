@@ -61,6 +61,26 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+    /// Inner fields without the `output`.
+    ///
+    /// # Design
+    ///
+    /// This is necessary so that the `output` can be separated from the fields
+    /// during execution.
+    pub fields: CmdCtxMpnfFields<'ctx, CmdCtxTypesT>,
+}
+
+/// Fields of [`CmdCtxMpnf`].
+///
+/// # Design
+///
+/// This is necessary so that the `output` can be separated from the fields
+/// during execution.
+#[derive(Debug)]
+pub struct CmdCtxMpnfFields<'ctx, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -87,13 +107,13 @@ where
     pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
 }
 
-impl<CmdCtxTypesT> CmdCtxMpnf<'_, CmdCtxTypesT>
+impl<'ctx, CmdCtxTypesT> CmdCtxMpnf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a [`CmdCtxMpnfParamsBuilder`] to construct this command context.
-    pub fn builder<'ctx>() -> CmdCtxMpnfParamsBuilder<'ctx, CmdCtxTypesT> {
-        CmdCtxMpnfParams::<'ctx, CmdCtxTypesT>::builder()
+    pub fn builder<'ctx_local>() -> CmdCtxMpnfParamsBuilder<'ctx_local, CmdCtxTypesT> {
+        CmdCtxMpnfParams::<'ctx_local, CmdCtxTypesT>::builder()
     }
 
     /// Returns a reference to the output.
@@ -106,6 +126,21 @@ where
         &mut self.output
     }
 
+    /// Returns a reference to the fields.
+    pub fn fields(&self) -> &CmdCtxMpnfFields<'_, CmdCtxTypesT> {
+        &self.fields
+    }
+
+    /// Returns a mutable reference to the fields.
+    pub fn fields_mut(&mut self) -> &mut CmdCtxMpnfFields<'ctx, CmdCtxTypesT> {
+        &mut self.fields
+    }
+}
+
+impl<CmdCtxTypesT> CmdCtxMpnfFields<'_, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Returns the interruptibility capability.
     pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()

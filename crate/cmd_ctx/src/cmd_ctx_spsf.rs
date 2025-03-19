@@ -54,15 +54,35 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+    /// Tracks progress of each function execution.
+    #[cfg(feature = "output_progress")]
+    pub cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
+    /// Inner fields without the `output` and `cmd_progress_tracker`.
+    ///
+    /// # Design
+    ///
+    /// This is necessary so that the `output` and `cmd_progress_tracker` can be
+    /// used in `CmdExecution` while passing the fields to the `CmdBlock`.
+    pub fields: CmdCtxSpsfFields<'ctx, CmdCtxTypesT>,
+}
+
+/// Fields of [`CmdCtxSpsf`].
+///
+/// # Design
+///
+/// This is necessary so that the `output` and `cmd_progress_tracker` can be
+/// used in `CmdExecution` while passing the fields to the `CmdBlock`.
+#[derive(Debug)]
+pub struct CmdCtxSpsfFields<'ctx, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
     pub interruptibility_state: InterruptibilityState<'static, 'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
-    /// Tracks progress of each function execution.
-    #[cfg(feature = "output_progress")]
-    pub cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     pub profile: Profile,
     /// Profile directory that stores params and flows.
@@ -112,13 +132,13 @@ where
     pub resources: Resources<SetUp>,
 }
 
-impl<CmdCtxTypesT> CmdCtxSpsf<'_, CmdCtxTypesT>
+impl<'ctx, CmdCtxTypesT> CmdCtxSpsf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a [`CmdCtxSpsfParamsBuilder`] to construct this command context.
-    pub fn builder<'ctx>() -> CmdCtxSpsfParamsBuilder<'ctx, CmdCtxTypesT> {
-        CmdCtxSpsfParams::<'ctx, CmdCtxTypesT>::builder()
+    pub fn builder<'ctx_local>() -> CmdCtxSpsfParamsBuilder<'ctx_local, CmdCtxTypesT> {
+        CmdCtxSpsfParams::<'ctx_local, CmdCtxTypesT>::builder()
     }
 
     /// Returns a reference to the output.
@@ -131,6 +151,34 @@ where
         &mut self.output
     }
 
+    /// Returns the progress tracker for all functions' executions.
+    #[cfg(feature = "output_progress")]
+    pub fn cmd_progress_tracker(&self) -> &peace_rt_model::CmdProgressTracker {
+        &self.cmd_progress_tracker
+    }
+
+    /// Returns a mutable reference to the progress tracker for all functions'
+    /// executions.
+    #[cfg(feature = "output_progress")]
+    pub fn cmd_progress_tracker_mut(&mut self) -> &mut peace_rt_model::CmdProgressTracker {
+        &mut self.cmd_progress_tracker
+    }
+
+    /// Returns a reference to the fields.
+    pub fn fields(&self) -> &CmdCtxSpsfFields<'_, CmdCtxTypesT> {
+        &self.fields
+    }
+
+    /// Returns a mutable reference to the fields.
+    pub fn fields_mut(&mut self) -> &mut CmdCtxSpsfFields<'ctx, CmdCtxTypesT> {
+        &mut self.fields
+    }
+}
+
+impl<CmdCtxTypesT> CmdCtxSpsfFields<'_, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Returns the interruptibility capability.
     pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()
@@ -160,19 +208,6 @@ where
     /// Convenience method for `cmd_ctx_Spsf.workspace.dirs().peace_app_dir()`.
     pub fn peace_app_dir(&self) -> &PeaceAppDir {
         self.workspace.dirs().peace_app_dir()
-    }
-
-    /// Returns the progress tracker for all functions' executions.
-    #[cfg(feature = "output_progress")]
-    pub fn cmd_progress_tracker(&self) -> &peace_rt_model::CmdProgressTracker {
-        &self.cmd_progress_tracker
-    }
-
-    /// Returns a mutable reference to the progress tracker for all functions'
-    /// executions.
-    #[cfg(feature = "output_progress")]
-    pub fn cmd_progress_tracker_mut(&mut self) -> &mut peace_rt_model::CmdProgressTracker {
-        &mut self.cmd_progress_tracker
     }
 
     /// Returns a reference to the profile.

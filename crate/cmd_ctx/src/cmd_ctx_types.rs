@@ -7,7 +7,7 @@ use peace_rt_model::output::OutputWrite;
 ///
 /// The associated types linked to the concrete type can all be queried through
 /// this trait.
-pub trait CmdCtxTypes: 'static {
+pub trait CmdCtxTypes: Debug + Unpin + 'static {
     /// Error type of the automation software.
     type AppError: Debug
         + std::error::Error

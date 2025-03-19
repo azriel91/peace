@@ -12,7 +12,8 @@ use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
 use crate::{
-    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpnf, CmdCtxTypes, ProfileFilterFn,
+    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpnf, CmdCtxMpnfFields, CmdCtxTypes,
+    ProfileFilterFn,
 };
 
 /// A command that works with multiple profiles, not scoped to a flow.
@@ -210,15 +211,17 @@ where
 
         let cmd_ctx_mpnf = CmdCtxMpnf {
             output,
-            interruptibility_state,
-            workspace,
-            profiles,
-            profile_dirs,
-            profile_history_dirs,
-            workspace_params_type_reg,
-            workspace_params,
-            profile_params_type_reg,
-            profile_to_profile_params,
+            fields: CmdCtxMpnfFields {
+                interruptibility_state,
+                workspace,
+                profiles,
+                profile_dirs,
+                profile_history_dirs,
+                workspace_params_type_reg,
+                workspace_params,
+                profile_params_type_reg,
+                profile_to_profile_params,
+            },
         };
 
         Ok(cmd_ctx_mpnf)

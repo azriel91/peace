@@ -83,6 +83,26 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+    /// Inner fields without the `output`.
+    ///
+    /// # Design
+    ///
+    /// This is necessary so that the `output` can be separated from the fields
+    /// during execution.
+    pub fields: CmdCtxMpsfFields<'ctx, CmdCtxTypesT>,
+}
+
+/// Fields of [`CmdCtxMpsf`].
+///
+/// # Design
+///
+/// This is necessary so that the `output` can be separated from the fields
+/// during execution.
+#[derive(Debug)]
+pub struct CmdCtxMpsfFields<'ctx, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -140,13 +160,13 @@ where
     pub resources: Resources<SetUp>,
 }
 
-impl<CmdCtxTypesT> CmdCtxMpsf<'_, CmdCtxTypesT>
+impl<'ctx, CmdCtxTypesT> CmdCtxMpsf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a [`CmdCtxMpsfParamsBuilder`] to construct this command context.
-    pub fn builder<'ctx>() -> CmdCtxMpsfParamsBuilder<'ctx, CmdCtxTypesT> {
-        CmdCtxMpsfParams::<'ctx, CmdCtxTypesT>::builder()
+    pub fn builder<'ctx_local>() -> CmdCtxMpsfParamsBuilder<'ctx_local, CmdCtxTypesT> {
+        CmdCtxMpsfParams::<'ctx_local, CmdCtxTypesT>::builder()
     }
 
     /// Returns a reference to the output.
@@ -159,6 +179,21 @@ where
         &mut self.output
     }
 
+    /// Returns a reference to the fields.
+    pub fn fields(&self) -> &CmdCtxMpsfFields<'_, CmdCtxTypesT> {
+        &self.fields
+    }
+
+    /// Returns a mutable reference to the fields.
+    pub fn fields_mut(&mut self) -> &mut CmdCtxMpsfFields<'ctx, CmdCtxTypesT> {
+        &mut self.fields
+    }
+}
+
+impl<CmdCtxTypesT> CmdCtxMpsfFields<'_, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Returns the interruptibility capability.
     pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()

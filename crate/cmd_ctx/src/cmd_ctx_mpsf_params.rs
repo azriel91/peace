@@ -15,7 +15,8 @@ use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
 use crate::{
-    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpsf, CmdCtxTypes, ProfileFilterFn,
+    CmdCtxBuilderSupport, CmdCtxBuilderSupportMulti, CmdCtxMpsf, CmdCtxMpsfFields, CmdCtxTypes,
+    ProfileFilterFn,
 };
 
 /// A command that works with multiple profiles, and a single flow.
@@ -359,24 +360,26 @@ where
 
         let cmd_ctx_mpsf = CmdCtxMpsf {
             output,
-            interruptibility_state,
-            workspace,
-            profiles,
-            profile_dirs,
-            profile_history_dirs,
-            flow,
-            flow_dirs,
-            workspace_params_type_reg,
-            workspace_params,
-            profile_params_type_reg,
-            profile_to_profile_params,
-            flow_params_type_reg,
-            profile_to_flow_params,
-            profile_to_states_current_stored,
-            params_specs_type_reg,
-            profile_to_params_specs,
-            states_type_reg,
-            resources,
+            fields: CmdCtxMpsfFields {
+                interruptibility_state,
+                workspace,
+                profiles,
+                profile_dirs,
+                profile_history_dirs,
+                flow,
+                flow_dirs,
+                workspace_params_type_reg,
+                workspace_params,
+                profile_params_type_reg,
+                profile_to_profile_params,
+                flow_params_type_reg,
+                profile_to_flow_params,
+                profile_to_states_current_stored,
+                params_specs_type_reg,
+                profile_to_params_specs,
+                states_type_reg,
+                resources,
+            },
         };
 
         Ok(cmd_ctx_mpsf)

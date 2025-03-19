@@ -2,15 +2,15 @@
 //! framework.
 
 pub use crate::{
-    cmd_ctx_mpnf::CmdCtxMpnf,
+    cmd_ctx_mpnf::{CmdCtxMpnf, CmdCtxMpnfFields},
     cmd_ctx_mpnf_params::{CmdCtxMpnfParams, CmdCtxMpnfParamsBuilder},
-    cmd_ctx_mpsf::CmdCtxMpsf,
+    cmd_ctx_mpsf::{CmdCtxMpsf, CmdCtxMpsfFields},
     cmd_ctx_mpsf_params::{CmdCtxMpsfParams, CmdCtxMpsfParamsBuilder},
-    cmd_ctx_npnf::CmdCtxNpnf,
+    cmd_ctx_npnf::{CmdCtxNpnf, CmdCtxNpnfFields},
     cmd_ctx_npnf_params::{CmdCtxNpnfParams, CmdCtxNpnfParamsBuilder},
-    cmd_ctx_spnf::CmdCtxSpnf,
+    cmd_ctx_spnf::{CmdCtxSpnf, CmdCtxSpnfFields},
     cmd_ctx_spnf_params::{CmdCtxSpnfParams, CmdCtxSpnfParamsBuilder},
-    cmd_ctx_spsf::CmdCtxSpsf,
+    cmd_ctx_spsf::{CmdCtxSpsf, CmdCtxSpsfFields},
     cmd_ctx_spsf_params::{CmdCtxSpsfParams, CmdCtxSpsfParamsBuilder},
     cmd_ctx_types::CmdCtxTypes,
     profile_filter_fn::ProfileFilterFn,

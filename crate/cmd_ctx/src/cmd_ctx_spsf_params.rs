@@ -16,7 +16,7 @@ use peace_state_rt::StatesSerializer;
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
-use crate::{CmdCtxBuilderSupport, CmdCtxSpsf, CmdCtxTypes, ProfileSelection};
+use crate::{CmdCtxBuilderSupport, CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes, ProfileSelection};
 
 /// Context for a command that works with one profile and one flow.
 ///
@@ -64,9 +64,6 @@ where
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
-    /// Tracks progress of each function execution.
-    #[cfg(feature = "output_progress")]
-    pub cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     pub profile_selection: ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,
     /// The chosen process flow.
@@ -366,23 +363,27 @@ where
 
         let cmd_ctx_spsf = CmdCtxSpsf {
             output,
-            interruptibility_state,
-            workspace,
-            profile,
-            profile_dir,
-            profile_history_dir,
-            flow,
-            flow_dir,
-            workspace_params_type_reg,
-            workspace_params,
-            profile_params_type_reg,
-            profile_params,
-            flow_params_type_reg,
-            flow_params,
-            params_specs_type_reg,
-            params_specs,
-            states_type_reg,
-            resources,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            fields: CmdCtxSpsfFields {
+                interruptibility_state,
+                workspace,
+                profile,
+                profile_dir,
+                profile_history_dir,
+                flow,
+                flow_dir,
+                workspace_params_type_reg,
+                workspace_params,
+                profile_params_type_reg,
+                profile_params,
+                flow_params_type_reg,
+                flow_params,
+                params_specs_type_reg,
+                params_specs,
+                states_type_reg,
+                resources,
+            },
         };
 
         Ok(cmd_ctx_spsf)

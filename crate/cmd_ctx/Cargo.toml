@@ -21,6 +21,7 @@ test = false
 
 [dependencies]
 futures = { workspace = true }
+indicatif = { workspace = true, optional = true }
 interruptible = { workspace = true }
 own = { workspace = true }
 peace_cfg = { workspace = true }
@@ -46,6 +47,7 @@ item_state_example = [
     "peace_rt_model/item_state_example",
 ]
 output_progress = [
+    "dep:indicatif",
     "peace_flow_model/output_progress",
     "peace_flow_rt/output_progress",
     "peace_rt_model/output_progress",

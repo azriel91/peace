@@ -12,7 +12,7 @@ use peace_rt_model_core::{
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
-use crate::{CmdCtxBuilderSupport, CmdCtxSpnf, CmdCtxTypes, ProfileSelection};
+use crate::{CmdCtxBuilderSupport, CmdCtxSpnf, CmdCtxSpnfFields, CmdCtxTypes, ProfileSelection};
 
 /// A command that works with a single profile, not scoped to a flow.
 ///
@@ -62,9 +62,6 @@ where
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
     pub workspace: OwnedOrRef<'ctx, Workspace>,
-    /// Tracks progress of each function execution.
-    #[cfg(feature = "output_progress")]
-    pub cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     pub profile_selection: ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,
     /// Workspace params.
@@ -224,15 +221,17 @@ where
 
         let cmd_ctx_spnf = CmdCtxSpnf {
             output,
-            interruptibility_state,
-            workspace,
-            profile,
-            profile_dir,
-            profile_history_dir,
-            workspace_params_type_reg,
-            workspace_params,
-            profile_params_type_reg,
-            profile_params,
+            fields: CmdCtxSpnfFields {
+                interruptibility_state,
+                workspace,
+                profile,
+                profile_dir,
+                profile_history_dir,
+                workspace_params_type_reg,
+                workspace_params,
+                profile_params_type_reg,
+                profile_params,
+            },
         };
 
         Ok(cmd_ctx_spnf)

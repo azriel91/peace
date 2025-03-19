@@ -5,7 +5,7 @@ use peace_rt_model::{params::WorkspaceParams, Workspace, WorkspaceInitializer};
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
-use crate::{CmdCtxBuilderSupport, CmdCtxNpnf, CmdCtxTypes};
+use crate::{CmdCtxBuilderSupport, CmdCtxNpnf, CmdCtxNpnfFields, CmdCtxTypes};
 
 /// Context for a command that only works with workspace parameters -- no
 /// profile / no flow.
@@ -142,10 +142,12 @@ where
 
         let cmd_ctx_npnf = CmdCtxNpnf {
             output,
-            interruptibility_state,
-            workspace,
-            workspace_params_type_reg,
-            workspace_params,
+            fields: CmdCtxNpnfFields {
+                interruptibility_state,
+                workspace,
+                workspace_params_type_reg,
+                workspace_params,
+            },
         };
 
         Ok(cmd_ctx_npnf)

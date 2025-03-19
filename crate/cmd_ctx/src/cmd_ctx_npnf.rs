@@ -45,6 +45,19 @@ where
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+    /// Inner fields without the `output`.
+    ///
+    /// # Design
+    ///
+    /// This is necessary so that the `output` can be separated from the fields
+    /// during execution.
+    pub fields: CmdCtxNpnfFields<'ctx, CmdCtxTypesT>,
+}
+#[derive(Debug)]
+pub struct CmdCtxNpnfFields<'ctx, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Whether the `CmdExecution` is interruptible.
     ///
     /// If it is, this holds the interrupt channel receiver.
@@ -59,13 +72,13 @@ where
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
 }
 
-impl<CmdCtxTypesT> CmdCtxNpnf<'_, CmdCtxTypesT>
+impl<'ctx, CmdCtxTypesT> CmdCtxNpnf<'ctx, CmdCtxTypesT>
 where
     CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a [`CmdCtxNpnfParamsBuilder`] to construct this command context.
-    pub fn builder<'ctx>() -> CmdCtxNpnfParamsBuilder<'ctx, CmdCtxTypesT> {
-        CmdCtxNpnfParams::<'ctx, CmdCtxTypesT>::builder()
+    pub fn builder<'ctx_local>() -> CmdCtxNpnfParamsBuilder<'ctx_local, CmdCtxTypesT> {
+        CmdCtxNpnfParams::<'ctx_local, CmdCtxTypesT>::builder()
     }
 
     /// Returns a reference to the output.
@@ -78,6 +91,21 @@ where
         &mut self.output
     }
 
+    /// Returns a reference to the fields.
+    pub fn fields(&self) -> &CmdCtxNpnfFields<'_, CmdCtxTypesT> {
+        &self.fields
+    }
+
+    /// Returns a mutable reference to the fields.
+    pub fn fields_mut(&mut self) -> &mut CmdCtxNpnfFields<'ctx, CmdCtxTypesT> {
+        &mut self.fields
+    }
+}
+
+impl<CmdCtxTypesT> CmdCtxNpnfFields<'_, CmdCtxTypesT>
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
     /// Returns the interruptibility capability.
     pub fn interruptibility_state(&mut self) -> InterruptibilityState<'_, '_> {
         self.interruptibility_state.reborrow()
