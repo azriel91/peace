@@ -30,6 +30,7 @@ peace_flow_rt = { workspace = true }
 peace_item_model = { workspace = true }
 peace_params = { workspace = true }
 peace_profile_model = { workspace = true }
+peace_progress_model = { workspace = true, optional = true }
 peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
@@ -48,6 +49,7 @@ item_state_example = [
 ]
 output_progress = [
     "dep:indicatif",
+    "dep:peace_progress_model",
     "peace_flow_model/output_progress",
     "peace_flow_rt/output_progress",
     "peace_rt_model/output_progress",
