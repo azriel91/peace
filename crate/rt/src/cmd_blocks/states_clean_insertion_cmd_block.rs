@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::FutureExt;
-use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resource_rt::{
@@ -29,7 +29,7 @@ pub struct StatesCleanInsertionCmdBlock<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>)
 
 impl<CmdCtxTypesT> StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a new `StatesCleanInsertionCmdBlock`.
     pub fn new() -> Self {
@@ -46,7 +46,7 @@ impl<CmdCtxTypesT> Default for StatesCleanInsertionCmdBlock<CmdCtxTypesT> {
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for StatesCleanInsertionCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -68,19 +68,19 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         let params_specs = &*params_specs;
         let resources = &*resources;

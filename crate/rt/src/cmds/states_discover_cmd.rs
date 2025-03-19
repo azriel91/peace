@@ -1,9 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypesConstrained},
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-};
+use peace_cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_flow_rt::ItemGraph;
@@ -27,7 +24,7 @@ impl<CmdCtxTypesT> Debug for StatesDiscoverCmd<CmdCtxTypesT> {
 
 impl<CmdCtxTypesT> StatesDiscoverCmd<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Runs [`try_state_current`] for each [`Item`].
     ///
@@ -48,10 +45,10 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -74,11 +71,11 @@ where
     ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesCurrent, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -96,10 +93,12 @@ where
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
         if let Some(states_current) = cmd_outcome.value() {
-            let SingleProfileSingleFlowView {
-                flow, resources, ..
-            } = cmd_ctx.view();
-            let (item_graph, resources) = (flow.graph(), resources);
+            let CmdCtxSpsfFields {
+                flow,
+                ref mut resources,
+                ..
+            } = cmd_ctx.fields_mut();
+            let item_graph = flow.graph();
 
             if serialize_to_storage {
                 Self::serialize_current(item_graph, resources, states_current).await?;
@@ -128,10 +127,10 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -154,11 +153,11 @@ where
     ///
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesGoal, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -176,10 +175,12 @@ where
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
         if let Some(states_goal) = cmd_outcome.value() {
-            let SingleProfileSingleFlowView {
-                flow, resources, ..
-            } = cmd_ctx.view();
-            let (item_graph, resources) = (flow.graph(), resources);
+            let CmdCtxSpsfFields {
+                flow,
+                ref mut resources,
+                ..
+            } = cmd_ctx.fields_mut();
+            let item_graph = flow.graph();
 
             if serialize_to_storage {
                 Self::serialize_goal(item_graph, resources, states_goal).await?;
@@ -217,10 +218,10 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -245,11 +246,11 @@ where
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn current_and_goal_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         serialize_to_storage: bool,
     ) -> Result<
-        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<(StatesCurrent, StatesGoal), <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -280,10 +281,12 @@ where
         let cmd_outcome = cmd_execution.exec(cmd_ctx).await?;
 
         if let Some((states_current, states_goal)) = cmd_outcome.value() {
-            let SingleProfileSingleFlowView {
-                flow, resources, ..
-            } = cmd_ctx.view();
-            let (item_graph, resources) = (flow.graph(), resources);
+            let CmdCtxSpsfFields {
+                flow,
+                ref mut resources,
+                ..
+            } = cmd_ctx.fields_mut();
+            let item_graph = flow.graph();
 
             if serialize_to_storage {
                 Self::serialize_current(item_graph, resources, states_current).await?;
@@ -296,10 +299,10 @@ where
 
     // TODO: This duplicates a bit of code with `EnsureCmd` and `CleanCmd`.
     async fn serialize_current(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         use peace_state_rt::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -318,10 +321,10 @@ where
     }
 
     async fn serialize_goal(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         resources: &mut Resources<SetUp>,
         states_goal: &StatesGoal,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         use peace_state_rt::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();

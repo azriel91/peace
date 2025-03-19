@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use futures::join;
 use peace_cfg::FnCtx;
-use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_item_model::ItemId;
@@ -74,7 +74,7 @@ impl<CmdCtxTypesT, DiscoverFor> Debug for StatesDiscoverCmdBlock<CmdCtxTypesT, D
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
@@ -88,7 +88,7 @@ where
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
@@ -102,7 +102,7 @@ where
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
@@ -116,7 +116,7 @@ where
 
 impl<CmdCtxTypesT, DiscoverFor> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverFor>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
     DiscoverFor: Discover,
 {
     /// Indicate that the progress tracker should be marked complete on success.
@@ -135,9 +135,9 @@ where
         params_specs: &peace_params::ParamsSpecs,
         resources: &Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::Sender<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >,
-        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item: &ItemBoxed<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
     ) {
         let item_id = item.id();
         let fn_ctx = FnCtx::new(
@@ -215,10 +215,10 @@ where
     fn discover_progress_update(
         progress_complete_on_success: bool,
         states_current_result: Option<
-            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >,
         states_goal_result: Option<
-            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            &Result<Option<BoxDtDisplay>, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >,
         progress_tx: &Sender<CmdProgressUpdate>,
         item_id: &ItemId,
@@ -260,7 +260,7 @@ pub enum ItemDiscoverOutcome<AppErrorT> {
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -282,22 +282,22 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -348,19 +348,17 @@ where
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrent>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        >,
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>>,
         mut states_current_mut: StatesMut<Current>,
     ) -> Result<
         (
             States<Current>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
         ),
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -374,9 +372,9 @@ where
 
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -408,7 +406,7 @@ where
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -430,22 +428,22 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -496,19 +494,17 @@ where
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        >,
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>>,
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
         ),
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -522,9 +518,9 @@ where
 
     fn outcome_collate(
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
@@ -556,7 +552,7 @@ where
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -591,22 +587,22 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         let (outcomes_tx, outcomes_rx) = mpsc::channel::<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         >(flow.graph().node_count());
 
         let (stream_outcome, outcome_collate) = {
@@ -659,21 +655,19 @@ where
 
 impl<CmdCtxTypesT> StatesDiscoverCmdBlock<CmdCtxTypesT, DiscoverForCurrentAndGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     async fn outcome_collate_task(
-        mut outcomes_rx: Receiver<
-            ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        >,
+        mut outcomes_rx: Receiver<ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>>,
         mut states_current_mut: StatesMut<Current>,
         mut states_goal_mut: StatesMut<Goal>,
     ) -> Result<
         (
             States<Current>,
             States<Goal>,
-            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+            IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
         ),
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     > {
         let mut errors = IndexMap::new();
         while let Some(item_outcome) = outcomes_rx.recv().await {
@@ -694,9 +688,9 @@ where
     fn outcome_collate(
         states_current_mut: &mut StatesMut<Current>,
         states_goal_mut: &mut StatesMut<Goal>,
-        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+        errors: &mut IndexMap<ItemId, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        outcome_partial: ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,

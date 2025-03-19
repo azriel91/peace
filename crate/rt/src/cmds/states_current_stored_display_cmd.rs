@@ -1,9 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypesConstrained},
-    scopes::SingleProfileSingleFlow,
-};
+use peace_cmd_ctx::{CmdCtxSpsf, CmdCtxTypes};
 use peace_cmd_model::CmdOutcome;
 use peace_resource_rt::states::StatesCurrentStored;
 use peace_rt_model_core::output::OutputWrite;
@@ -17,7 +14,7 @@ pub struct StatesCurrentStoredDisplayCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>
 #[cfg(not(feature = "error_reporting"))]
 impl<CmdCtxTypesT> StatesCurrentStoredDisplayCmd<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Displays [`StatesCurrentStored`]s from storage.
     ///
@@ -26,10 +23,10 @@ where
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -56,8 +53,8 @@ where
 #[cfg(feature = "error_reporting")]
 impl<CmdCtxTypesT> StatesCurrentStoredDisplayCmd<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
-    <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError: miette::Diagnostic,
+    CmdCtxTypesT: CmdCtxTypes,
+    <CmdCtxTypesT as CmdCtxTypes>::AppError: miette::Diagnostic,
 {
     /// Displays [`StatesCurrentStored`]s from storage.
     ///
@@ -66,10 +63,10 @@ where
     ///
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesCurrentStored, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
