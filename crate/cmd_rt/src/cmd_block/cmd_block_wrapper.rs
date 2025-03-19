@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use fn_graph::StreamOutcomeState;
-use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::{CmdBlockDesc, CmdBlockOutcome};
 use peace_resource_rt::Resource;
 
@@ -73,7 +73,7 @@ impl<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT> CmdBlockRt
     for CmdBlockWrapper<CB, CmdCtxTypesT, ExecutionOutcome, BlockOutcome, InputT>
 where
     CB: CmdBlock<CmdCtxTypes = CmdCtxTypesT, Outcome = BlockOutcome, InputT = InputT> + Unpin,
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcome: Debug + Unpin + Send + Sync + 'static,
     InputT: Debug + Resource + Unpin + 'static,
@@ -83,19 +83,17 @@ where
 
     async fn exec(
         &self,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, CmdCtxTypesT>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<CmdProgressUpdate>,
-    ) -> Result<
-        (),
-        CmdBlockError<ExecutionOutcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-    > {
+    ) -> Result<(), CmdBlockError<ExecutionOutcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>>
+    {
         let cmd_block = &self.cmd_block;
-        let input = cmd_block.input_fetch(cmd_view.resources)?;
+        let input = cmd_block.input_fetch(&mut cmd_ctx_spsf_fields.resources)?;
 
         let cmd_block_outcome = cmd_block
             .exec(
                 input,
-                cmd_view,
+                cmd_ctx_spsf_fields,
                 #[cfg(feature = "output_progress")]
                 &progress_tx,
             )
@@ -108,7 +106,7 @@ where
 
         match cmd_block_outcome {
             CmdBlockOutcome::Single(block_outcome) => {
-                cmd_block.outcome_insert(cmd_view.resources, block_outcome);
+                cmd_block.outcome_insert(&mut cmd_ctx_spsf_fields.resources, block_outcome);
                 Ok(())
             }
             CmdBlockOutcome::ItemWise {
@@ -134,7 +132,8 @@ where
                         }
                         StreamOutcomeState::Finished => {
                             let block_outcome = stream_outcome.value;
-                            cmd_block.outcome_insert(cmd_view.resources, block_outcome);
+                            cmd_block
+                                .outcome_insert(&mut cmd_ctx_spsf_fields.resources, block_outcome);
 
                             Ok(())
                         }

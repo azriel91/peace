@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use peace_cmd::ctx::CmdCtxTypesConstrained;
+use peace_cmd_ctx::CmdCtxTypes;
 use peace_cmd_model::{CmdBlockDesc, CmdExecutionError};
 use peace_resource_rt::ResourceFetchError;
 
@@ -52,7 +52,7 @@ impl CmdExecutionErrorBuilder {
         resource_fetch_error: ResourceFetchError,
     ) -> CmdExecutionError
     where
-        CmdCtxTypesT: CmdCtxTypesConstrained + 'f,
+        CmdCtxTypesT: CmdCtxTypes + 'f,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
         CmdBlockIterator:
             Iterator<Item = &'f CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
@@ -97,7 +97,7 @@ fn cmd_execution_src<ExecutionOutcome, CmdCtxTypesT>(
 ) -> Result<(String, Option<SourceSpan>), fmt::Error>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     let mut cmd_execution_src = String::with_capacity(2048);
 

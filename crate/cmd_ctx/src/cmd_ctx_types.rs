@@ -13,6 +13,9 @@ pub trait CmdCtxTypes: Debug + Unpin + 'static {
         + std::error::Error
         + From<peace_rt_model::Error>
         + From<<Self::Output as OutputWrite>::Error>
+        + Send
+        + Sync
+        + Unpin
         + 'static;
     /// Output to write progress or outcome to.
     type Output: OutputWrite;
