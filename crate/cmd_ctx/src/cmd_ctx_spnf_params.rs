@@ -1,3 +1,6 @@
+use std::future::IntoFuture;
+
+use futures::{future::LocalBoxFuture, FutureExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_resource_rt::{
@@ -238,5 +241,41 @@ where
         };
 
         Ok(cmd_ctx_spnf)
+    }
+}
+
+#[allow(non_camel_case_types)]
+impl<
+        'ctx,
+        CmdCtxTypesT,
+        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
+    > IntoFuture
+    for CmdCtxSpnfParamsBuilder<
+        'ctx,
+        CmdCtxTypesT,
+        (
+            (OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,),
+            __interruptibility,
+            (OwnedOrRef<'ctx, Workspace>,),
+            (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
+            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (ProfileParams<CmdCtxTypesT::ProfileParamsKey>,),
+        ),
+    >
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
+    /// Future that returns the `CmdCtxSpnf`.
+    ///
+    /// This is boxed since [TAIT] is not yet available ([rust#63063]).
+    ///
+    /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
+    /// [rust#63063]: https://github.com/rust-lang/rust/issues/63063
+    type IntoFuture =
+        LocalBoxFuture<'ctx, Result<CmdCtxSpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError>>;
+    type Output = <Self::IntoFuture as std::future::Future>::Output;
+
+    fn into_future(self) -> Self::IntoFuture {
+        self.build().boxed_local()
     }
 }

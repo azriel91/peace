@@ -1,3 +1,6 @@
+use std::future::IntoFuture;
+
+use futures::{future::LocalBoxFuture, FutureExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_flow_rt::Flow;
@@ -395,5 +398,49 @@ where
         };
 
         Ok(cmd_ctx_spsf)
+    }
+}
+
+#[allow(non_camel_case_types)]
+impl<
+        'ctx,
+        CmdCtxTypesT,
+        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
+        __workspace_params: ::typed_builder::Optional<WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>> + 'ctx,
+        __profile_params: ::typed_builder::Optional<ProfileParams<CmdCtxTypesT::ProfileParamsKey>> + 'ctx,
+        __flow_params: ::typed_builder::Optional<FlowParams<CmdCtxTypesT::FlowParamsKey>> + 'ctx,
+        __resources: ::typed_builder::Optional<Resources<Empty>> + 'ctx,
+    > IntoFuture
+    for CmdCtxSpsfParamsBuilder<
+        'ctx,
+        CmdCtxTypesT,
+        (
+            (OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,),
+            __interruptibility,
+            (OwnedOrRef<'ctx, Workspace>,),
+            (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
+            (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
+            __workspace_params,
+            __profile_params,
+            __flow_params,
+            (ParamsSpecs,),
+            __resources,
+        ),
+    >
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
+    /// Future that returns the `CmdCtxSpsf`.
+    ///
+    /// This is boxed since [TAIT] is not yet available ([rust#63063]).
+    ///
+    /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
+    /// [rust#63063]: https://github.com/rust-lang/rust/issues/63063
+    type IntoFuture =
+        LocalBoxFuture<'ctx, Result<CmdCtxSpsf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError>>;
+    type Output = <Self::IntoFuture as std::future::Future>::Output;
+
+    fn into_future(self) -> Self::IntoFuture {
+        self.build().boxed_local()
     }
 }

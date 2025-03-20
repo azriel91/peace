@@ -1,5 +1,6 @@
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug, future::IntoFuture};
 
+use futures::{future::LocalBoxFuture, FutureExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_profile_model::Profile;
@@ -229,5 +230,42 @@ where
         };
 
         Ok(cmd_ctx_mpnf)
+    }
+}
+
+#[allow(non_camel_case_types)]
+impl<
+        'ctx,
+        CmdCtxTypesT,
+        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
+        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>> + 'ctx,
+    > IntoFuture
+    for CmdCtxMpnfParamsBuilder<
+        'ctx,
+        CmdCtxTypesT,
+        (
+            (OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,),
+            __interruptibility,
+            (OwnedOrRef<'ctx, Workspace>,),
+            __profile_filter_fn,
+            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
+        ),
+    >
+where
+    CmdCtxTypesT: CmdCtxTypes,
+{
+    /// Future that returns the `CmdCtxMpnf`.
+    ///
+    /// This is boxed since [TAIT] is not yet available ([rust#63063]).
+    ///
+    /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
+    /// [rust#63063]: https://github.com/rust-lang/rust/issues/63063
+    type IntoFuture =
+        LocalBoxFuture<'ctx, Result<CmdCtxMpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError>>;
+    type Output = <Self::IntoFuture as std::future::Future>::Output;
+
+    fn into_future(self) -> Self::IntoFuture {
+        self.build().boxed_local()
     }
 }
