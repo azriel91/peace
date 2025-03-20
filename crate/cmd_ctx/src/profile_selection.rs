@@ -11,9 +11,9 @@ use peace_profile_model::Profile;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProfileSelection<'f, WorkspaceParamsK> {
     /// A `Profile` is selected.
-    ProfileSelected(Profile),
+    Specified(Profile),
 
     /// The `Profile` will be read from workspace params using the provided key
     /// during command context build.
-    ProfileFromWorkspaceParam(OwnedOrRef<'f, WorkspaceParamsK>),
+    FromWorkspaceParam(OwnedOrRef<'f, WorkspaceParamsK>),
 }

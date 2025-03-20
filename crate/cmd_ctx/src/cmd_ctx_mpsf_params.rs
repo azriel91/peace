@@ -83,22 +83,29 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    #[builder(setter(prefix = "with_"))]
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    #[builder(default = Interruptibility::NonInterruptible)]
+    #[builder(setter(prefix = "with_"), default = Interruptibility::NonInterruptible)]
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
+    #[builder(setter(prefix = "with_"))]
     pub workspace: OwnedOrRef<'ctx, Workspace>,
     /// Function to filter the profiles that are accessible by this command.
     #[builder(default = None)]
+    #[builder(setter(prefix = "with_"))]
     pub profile_filter_fn: Option<ProfileFilterFn>,
     /// The chosen process flow.
+    #[builder(setter(prefix = "with_"))]
     pub flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Workspace params.
+    #[builder(setter(prefix = "with_"))]
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
     /// Profile params for each profile.
+    #[builder(setter(prefix = "with_"))]
     pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
     /// Flow params for each profile.
+    #[builder(setter(prefix = "with_"))]
     pub profile_to_flow_params: BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>,
     /// Item params specs for the selected flow for each profile.
     //
@@ -134,7 +141,7 @@ where
     )]
     pub profile_to_params_specs: BTreeMap<Profile, ParamsSpecs>,
     /// `Resources` for flow execution.
-    #[builder(default = Resources::<Empty>::new())]
+    #[builder(setter(prefix = "with_"), default = Resources::<Empty>::new())]
     pub resources: Resources<Empty>,
 }
 

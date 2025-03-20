@@ -56,17 +56,22 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    #[builder(setter(prefix = "with_"))]
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    #[builder(default = Interruptibility::NonInterruptible)]
+    #[builder(setter(prefix = "with_"), default = Interruptibility::NonInterruptible)]
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
+    #[builder(setter(prefix = "with_"))]
     pub workspace: OwnedOrRef<'ctx, Workspace>,
     /// The profile this command operates on.
+    #[builder(setter(prefix = "with_"))]
     pub profile_selection: ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,
     /// Workspace params.
+    #[builder(setter(prefix = "with_"))]
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
     /// Profile params for the profile.
+    #[builder(setter(prefix = "with_"))]
     pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
 }
 
@@ -127,13 +132,11 @@ where
         .await?;
 
         let profile = match profile_selection {
-            ProfileSelection::ProfileSelected(profile) => profile,
-            ProfileSelection::ProfileFromWorkspaceParam(workspace_params_k_profile) => {
-                workspace_params
-                    .get(&workspace_params_k_profile)
-                    .cloned()
-                    .ok_or(Error::WorkspaceParamsProfileNone)?
-            }
+            ProfileSelection::Specified(profile) => profile,
+            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => workspace_params
+                .get(&workspace_params_k_profile)
+                .cloned()
+                .ok_or(Error::WorkspaceParamsProfileNone)?,
         };
 
         let profile_ref = &profile;

@@ -58,21 +58,28 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    #[builder(setter(prefix = "with_"))]
     pub output: OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
     /// The interrupt channel receiver if this `CmdExecution` is interruptible.
-    #[builder(default = Interruptibility::NonInterruptible)]
+    #[builder(setter(prefix = "with_"), default = Interruptibility::NonInterruptible)]
     pub interruptibility: Interruptibility<'static>,
     /// Workspace that the `peace` tool runs in.
+    #[builder(setter(prefix = "with_"))]
     pub workspace: OwnedOrRef<'ctx, Workspace>,
     /// The profile this command operates on.
+    #[builder(setter(prefix = "with_"))]
     pub profile_selection: ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,
     /// The chosen process flow.
+    #[builder(setter(prefix = "with_"))]
     pub flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Workspace params.
+    #[builder(setter(prefix = "with_"), default = WorkspaceParams::default())]
     pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
     /// Profile params for the profile.
+    #[builder(setter(prefix = "with_"), default = ProfileParams::default())]
     pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
     /// Flow params for the selected flow.
+    #[builder(setter(prefix = "with_"), default = FlowParams::default())]
     pub flow_params: FlowParams<CmdCtxTypesT::FlowParamsKey>,
     /// Item params specs for the selected flow.
     //
@@ -98,7 +105,7 @@ where
     )]
     pub params_specs: ParamsSpecs,
     /// `Resources` for flow execution.
-    #[builder(default = Resources::<Empty>::new())]
+    #[builder(setter(prefix = "with_"), default = Resources::<Empty>::new())]
     pub resources: Resources<Empty>,
 }
 
@@ -117,6 +124,9 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
+        __workspace_params: ::typed_builder::Optional<WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>>,
+        __profile_params: ::typed_builder::Optional<ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
+        __flow_params: ::typed_builder::Optional<FlowParams<CmdCtxTypesT::FlowParamsKey>>,
         __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
     CmdCtxSpsfParamsBuilder<
@@ -128,9 +138,9 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (ProfileParams<CmdCtxTypesT::ProfileParamsKey>,),
-            (FlowParams<CmdCtxTypesT::FlowParamsKey>,),
+            __workspace_params,
+            __profile_params,
+            __flow_params,
             (ParamsSpecs,),
             __resources,
         ),
@@ -169,13 +179,11 @@ where
         .await?;
 
         let profile = match profile_selection {
-            ProfileSelection::ProfileSelected(profile) => profile,
-            ProfileSelection::ProfileFromWorkspaceParam(workspace_params_k_profile) => {
-                workspace_params
-                    .get(&workspace_params_k_profile)
-                    .cloned()
-                    .ok_or(peace_rt_model_core::Error::WorkspaceParamsProfileNone)?
-            }
+            ProfileSelection::Specified(profile) => profile,
+            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => workspace_params
+                .get(&workspace_params_k_profile)
+                .cloned()
+                .ok_or(peace_rt_model_core::Error::WorkspaceParamsProfileNone)?,
         };
 
         let profile_ref = &profile;
