@@ -1,6 +1,9 @@
 //! Information such as which profile or flow a command is run for for the Peace
 //! framework.
 
+// Re-exports
+pub use interruptible;
+
 pub use crate::{
     cmd_ctx_mpnf::{CmdCtxMpnf, CmdCtxMpnfFields},
     cmd_ctx_mpnf_params::{CmdCtxMpnfParams, CmdCtxMpnfParamsBuilder},
