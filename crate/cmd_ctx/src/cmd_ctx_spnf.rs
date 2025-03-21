@@ -190,6 +190,18 @@ where
         &mut self.workspace_params_type_reg
     }
 
+    /// Returns the workspace params.
+    pub fn workspace_params(&self) -> &WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey> {
+        &self.workspace_params
+    }
+
+    /// Returns the workspace params.
+    pub fn workspace_params_mut(
+        &mut self,
+    ) -> &mut WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey> {
+        &mut self.workspace_params
+    }
+
     /// Returns a reference to the profile params type registry.
     pub fn profile_params_type_reg(&self) -> &TypeReg<CmdCtxTypesT::ProfileParamsKey, BoxDt> {
         &self.profile_params_type_reg
@@ -200,5 +212,15 @@ where
         &mut self,
     ) -> &mut TypeReg<CmdCtxTypesT::ProfileParamsKey, BoxDt> {
         &mut self.profile_params_type_reg
+    }
+
+    /// Returns the profile params.
+    pub fn profile_params(&self) -> &ProfileParams<CmdCtxTypesT::ProfileParamsKey> {
+        &self.profile_params
+    }
+
+    /// Returns the profile params.
+    pub fn profile_params_mut(&mut self) -> &mut ProfileParams<CmdCtxTypesT::ProfileParamsKey> {
+        &mut self.profile_params
     }
 }
