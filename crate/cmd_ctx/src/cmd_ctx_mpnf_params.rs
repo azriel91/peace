@@ -177,7 +177,7 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
-            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
             (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
         ),
     >
@@ -317,7 +317,7 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
-            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
             (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
         ),
     >
