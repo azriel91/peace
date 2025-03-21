@@ -74,7 +74,11 @@ where
     #[builder(setter(prefix = "with_"))]
     pub workspace: OwnedOrRef<'ctx, Workspace>,
     /// Function to filter the profiles that are accessible by this command.
-    #[builder(setter(prefix = "with_"), default = None)]
+    #[builder(setter(
+        prefix = "with_",
+        transform = |f: impl Fn(&Profile) -> bool + 'static| Some(ProfileFilterFn(Box::new(f)))),
+        default = None
+    )]
     pub profile_filter_fn: Option<ProfileFilterFn>,
     /// Workspace params.
     //
