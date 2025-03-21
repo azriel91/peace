@@ -132,20 +132,106 @@ where
     #[builder(setter(prefix = "with_"))]
     pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
     /// Profile params for each profile.
-    #[builder(setter(prefix = "with_"))]
-    pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
+    //
+    // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = BTreeMap::new()),
+        mutators(
+            /// Sets the value at the given workspace params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_profile_param<V>(
+                &mut self,
+                profile: &Profile,
+                key: CmdCtxTypesT::ProfileParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                match self.profile_to_profile_params.get_mut(profile) {
+                    Some(profile_params) => {
+                        profile_params.insert(key, value);
+                    }
+                    None => {
+                        let mut profile_params = ProfileParams::new();
+                        profile_params.insert(key, value);
+                        self.profile_to_profile_params.insert(profile.clone(), profile_params);
+                    }
+                }
+            }
+        )
+    )]
+    pub profile_to_profile_params:
+        BTreeMap<Profile, ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>>,
     /// Flow params for each profile.
-    #[builder(setter(prefix = "with_"))]
-    pub profile_to_flow_params: BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>,
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = BTreeMap::new()),
+        mutators(
+            /// Sets a parameter for a given profile.
+            ///
+            /// # Parameters
+            ///
+            /// * `profile`: The profile whose parameters to modify.
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_flow_param<V>(
+                &mut self,
+                profile: &Profile,
+                key: CmdCtxTypesT::FlowParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                match self.profile_to_flow_params.get_mut(profile) {
+                    Some(flow_params) => {
+                        flow_params.insert(key, value);
+                    }
+                    None => {
+                        let mut flow_params = FlowParams::new();
+                        flow_params.insert(key, value);
+                        self.profile_to_flow_params.insert(profile.clone(), flow_params);
+                    }
+                }
+            }
+        )
+    )]
+    pub profile_to_flow_params:
+        BTreeMap<Profile, FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>>,
     /// Item params specs for the selected flow for each profile.
     //
     // NOTE: When updating this mutator, also check if `CmdCtxSpsf` needs its mutator updated.
     #[builder(
         via_mutators(init = BTreeMap::new()),
         mutators(
-            /// Sets an item's parameters.
+            /// Sets an item's parameters at a given profile.
             ///
-            /// Note: this **must** be called for each item in the flow.
+            /// # Parameters
+            ///
+            /// * `profile`: The profile whose item parameters to set.
+            /// * `item_id`: The ID of the item whose parameters to set.
+            /// * `params_spec`: The specification of how to resolve the
+            ///   parameters.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `I`: The `Item` type.
             pub fn with_item_params<I>(
                 &mut self,
                 profile: &Profile,

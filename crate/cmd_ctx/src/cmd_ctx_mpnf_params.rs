@@ -108,9 +108,48 @@ where
     )]
     #[builder(setter(prefix = "with_"))]
     pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
-    /// Profile params for the profile.
-    #[builder(setter(prefix = "with_"))]
-    pub profile_to_profile_params: BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
+    /// Profile params for each profile.
+    //
+    // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = BTreeMap::new()),
+        mutators(
+            /// Sets the value at the given workspace params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_profile_param<V>(
+                &mut self,
+                profile: &Profile,
+                key: CmdCtxTypesT::ProfileParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                match self.profile_to_profile_params.get_mut(profile) {
+                    Some(profile_params) => {
+                        profile_params.insert(key, value);
+                    }
+                    None => {
+                        let mut profile_params = ProfileParams::new();
+                        profile_params.insert(key, value);
+                        self.profile_to_profile_params.insert(profile.clone(), profile_params);
+                    }
+                }
+            }
+        )
+    )]
+    pub profile_to_profile_params:
+        BTreeMap<Profile, ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>>,
 }
 
 // Use one of the following to obtain the generated type signature:
