@@ -4,9 +4,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 /// Marker trait for a parameter key type.
 ///
-/// This trait is automatically implemented for types that are `Copy + Debug +
-/// Eq + Hash
-/// + Deserialize + Serialize`.
+/// This trait is automatically implemented for types that are `Clone + Debug +
+/// Eq + Hash + Deserialize + Serialize`.
 ///
 /// # Examples
 ///
@@ -25,11 +24,11 @@ use serde::{de::DeserializeOwned, Serialize};
 /// }
 /// ```
 pub trait ParamsKey:
-    Copy + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
+    Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
 {
 }
 
 impl<T> ParamsKey for T where
-    T: Copy + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
+    T: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
 {
 }

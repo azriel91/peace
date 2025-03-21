@@ -5,7 +5,7 @@ use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_flow_rt::Flow;
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{ParamsSpecs, ParamsValue};
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     paths::{FlowDir, ParamsSpecsFile, ProfileDir, ProfileHistoryDir, StatesCurrentFile},
@@ -76,14 +76,94 @@ where
     #[builder(setter(prefix = "with_"))]
     pub flow: OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,
     /// Workspace params.
-    #[builder(setter(prefix = "with_"), default = WorkspaceParams::default())]
-    pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
+    //
+    // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = WorkspaceParams::default()),
+        mutators(
+            /// Sets the value at the given workspace params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_workspace_param<V>(
+                &mut self,
+                key: CmdCtxTypesT::WorkspaceParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                self.workspace_params.insert(key, value);
+            }
+        )
+    )]
+    pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
     /// Profile params for the profile.
-    #[builder(setter(prefix = "with_"), default = ProfileParams::default())]
-    pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = ProfileParams::default()),
+        mutators(
+            /// Sets the value at the given profile params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_profile_param<V>(
+                &mut self,
+                key: CmdCtxTypesT::ProfileParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                self.profile_params.insert(key, value);
+            }
+        )
+    )]
+    pub profile_params: ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
     /// Flow params for the selected flow.
-    #[builder(setter(prefix = "with_"), default = FlowParams::default())]
-    pub flow_params: FlowParams<CmdCtxTypesT::FlowParamsKey>,
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = FlowParams::default()),
+        mutators(
+            /// Sets the value at the given flow params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_flow_param<V>(
+                &mut self,
+                key: CmdCtxTypesT::FlowParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                self.flow_params.insert(key, value);
+            }
+        )
+    )]
+    pub flow_params: FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,
     /// Item params specs for the selected flow.
     //
     // NOTE: When updating this mutator, also check if `CmdCtxMpsf` needs its mutator updated.
@@ -127,9 +207,6 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-        __workspace_params: ::typed_builder::Optional<WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>>,
-        __profile_params: ::typed_builder::Optional<ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,
-        __flow_params: ::typed_builder::Optional<FlowParams<CmdCtxTypesT::FlowParamsKey>>,
         __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
     CmdCtxSpsfParamsBuilder<
@@ -141,9 +218,9 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            __workspace_params,
-            __profile_params,
-            __flow_params,
+            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
+            (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
             __resources,
         ),
@@ -406,9 +483,6 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
-        __workspace_params: ::typed_builder::Optional<WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>> + 'ctx,
-        __profile_params: ::typed_builder::Optional<ProfileParams<CmdCtxTypesT::ProfileParamsKey>> + 'ctx,
-        __flow_params: ::typed_builder::Optional<FlowParams<CmdCtxTypesT::FlowParamsKey>> + 'ctx,
         __resources: ::typed_builder::Optional<Resources<Empty>> + 'ctx,
     > IntoFuture
     for CmdCtxSpsfParamsBuilder<
@@ -420,9 +494,9 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            __workspace_params,
-            __profile_params,
-            __flow_params,
+            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
+            (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
             __resources,
         ),

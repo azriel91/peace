@@ -84,6 +84,7 @@ pub use crate::{
     params_spec_fieldless::ParamsSpecFieldless,
     params_spec_fieldless_de::ParamsSpecFieldlessDe,
     params_specs::ParamsSpecs,
+    params_value::ParamsValue,
     value_resolution_ctx::ValueResolutionCtx,
     value_resolution_mode::ValueResolutionMode,
     value_spec::ValueSpec,
@@ -109,6 +110,7 @@ mod params_spec_de;
 mod params_spec_fieldless;
 mod params_spec_fieldless_de;
 mod params_specs;
+mod params_value;
 mod std_impl;
 mod value_resolution_ctx;
 mod value_resolution_mode;

@@ -3,6 +3,7 @@ use std::future::IntoFuture;
 use futures::{future::LocalBoxFuture, FutureExt};
 use interruptible::Interruptibility;
 use own::{OwnedOrMutRef, OwnedOrRef};
+use peace_params::ParamsValue;
 use peace_resource_rt::internal::WorkspaceParamsFile;
 use peace_rt_model::{params::WorkspaceParams, Workspace, WorkspaceInitializer};
 use type_reg::untagged::TypeReg;
@@ -57,8 +58,37 @@ where
     #[builder(setter(prefix = "with_"))]
     pub workspace: OwnedOrRef<'ctx, Workspace>,
     /// Workspace params.
+    //
+    // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = WorkspaceParams::default()),
+        mutators(
+            /// Sets the value at the given workspace params key.
+            ///
+            /// # Parameters
+            ///
+            /// * `key`: The key to store the given value against.
+            /// * `value`: The value to store at the given key. This is an
+            ///   `Option` so that you may remove a value if desired.
+            ///
+            /// # Type Parameters
+            ///
+            /// * `V`: The serializable type stored at the given key.
+            pub fn with_workspace_param<V>(
+                &mut self,
+                key: CmdCtxTypesT::WorkspaceParamsKey,
+                value: Option<V>,
+            )
+            where
+                V: ParamsValue,
+            {
+                self.workspace_params.insert(key, value);
+            }
+        )
+    )]
     #[builder(setter(prefix = "with_"))]
-    pub workspace_params: WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,
+    pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
 }
 
 // Use one of the following to obtain the generated type signature:
