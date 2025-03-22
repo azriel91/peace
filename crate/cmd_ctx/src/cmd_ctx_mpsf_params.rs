@@ -128,7 +128,10 @@ where
             where
                 V: ParamsValue,
             {
-                self.workspace_params.insert(key, value);
+                let _ = match value {
+                    Some(value) => self.workspace_params.insert(key, value),
+                    None => self.workspace_params.shift_remove(&key),
+                };
             }
         )
     )]
@@ -163,11 +166,17 @@ where
             {
                 match self.profile_to_profile_params.get_mut(profile) {
                     Some(profile_params) => {
-                        profile_params.insert(key, value);
+                        let _ = match value {
+                            Some(value) => profile_params.insert(key, value),
+                            None => profile_params.shift_remove(&key),
+                        };
                     }
                     None => {
                         let mut profile_params = ProfileParams::new();
-                        profile_params.insert(key, value);
+                        let _ = match value {
+                            Some(value) => profile_params.insert(key, value),
+                            None => profile_params.shift_remove(&key),
+                        };
                         self.profile_to_profile_params.insert(profile.clone(), profile_params);
                     }
                 }

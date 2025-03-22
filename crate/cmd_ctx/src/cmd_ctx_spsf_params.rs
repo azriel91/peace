@@ -101,7 +101,10 @@ where
             where
                 V: ParamsValue,
             {
-                self.workspace_params.insert(key, value);
+                let _ = match value {
+                    Some(value) => self.workspace_params.insert(key, value),
+                    None => self.workspace_params.shift_remove(&key),
+                };
             }
         )
     )]
@@ -130,7 +133,10 @@ where
             where
                 V: ParamsValue,
             {
-                self.profile_params.insert(key, value);
+                let _ = match value {
+                    Some(value) => self.profile_params.insert(key, value),
+                    None => self.profile_params.shift_remove(&key),
+                };
             }
         )
     )]
