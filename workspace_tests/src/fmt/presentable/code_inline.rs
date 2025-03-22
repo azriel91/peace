@@ -7,15 +7,14 @@ use crate::fmt::cli_output;
 
 #[tokio::test]
 async fn present() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     CodeInline::new("code_inline".into())
         .present(&mut presenter)
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("\u{1b}[38;5;75m`code_inline`\u{1b}[0m", output);
     assert_eq!("`code_inline`", console::strip_ansi_codes(&output));
     Ok(())

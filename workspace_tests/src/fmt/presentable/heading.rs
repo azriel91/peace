@@ -45,14 +45,13 @@ async fn present() -> Result<(), Box<dyn std::error::Error>> {
     ])
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected_colorized, expected)| async move {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+        let mut cli_output = cli_output(CliColorizeOpt::Always);
         let mut presenter = CliMdPresenter::new(&mut cli_output);
 
         let heading = Heading::new(heading_level, CodeInline::new("code".into()));
         heading.present(&mut presenter).await?;
 
-        let output = String::from_utf8(buffer)?;
+        let output = String::from_utf8(cli_output.writer().clone())?;
         assert_eq!(expected_colorized, output);
         assert_eq!(expected, console::strip_ansi_codes(&output));
         Ok(())

@@ -1,6 +1,7 @@
 use peace::{
     cfg::app_name,
-    cmd::{ctx::CmdCtx, scopes::MultiProfileNoFlowView},
+    cmd_ctx::{CmdCtxMpnf, CmdCtxMpnfFields},
+    profile_model::Profile,
     rt_model::output::OutputWrite,
 };
 
@@ -9,7 +10,8 @@ use crate::{
         common::{env_man_flow, workspace},
         ProfileInitCmd,
     },
-    model::{EnvManError, ProfileSwitch, WorkspaceParamsKey},
+    model::{EnvManError, EnvManFlow, ProfileSwitch, WorkspaceParamsKey},
+    rt_model::EnvmanCmdCtxTypes,
 };
 
 /// Command to switch between profiles.
@@ -32,19 +34,23 @@ impl ProfileSwitchCmd {
 
         let env_man_flow = env_man_flow(output, &workspace).await?;
 
-        let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<EnvManError, O>(
-            output.into(),
-            (&workspace).into(),
-        );
-        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+        let cmd_ctx_builder = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
+            .with_output(output.into())
+            .with_workspace((&workspace).into())
+            .with_workspace_param::<Profile>(WorkspaceParamsKey::Profile, None)
+            .with_workspace_param::<EnvManFlow>(WorkspaceParamsKey::Flow, None);
+        // .with_profile_param::<EnvType>(ProfileParamsKey::EnvType, None);
 
         let mut cmd_ctx = cmd_ctx_builder.await?;
-        let MultiProfileNoFlowView {
-            output,
-            workspace,
-            profiles,
-            ..
-        } = cmd_ctx.view();
+        let CmdCtxMpnf {
+            ref mut output,
+            fields:
+                CmdCtxMpnfFields {
+                    workspace,
+                    profiles,
+                    ..
+                },
+        } = cmd_ctx;
 
         match profile_switch {
             ProfileSwitch::ToExisting {
@@ -56,13 +62,12 @@ impl ProfileSwitchCmd {
                         app_name,
                     });
                 } else {
-                    let cmd_ctx_builder = CmdCtx::builder_no_profile_no_flow::<EnvManError, O>(
-                        output.into(),
-                        workspace.into(),
-                    );
+                    let cmd_ctx_builder = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
+                        .with_output(output.reborrow())
+                        .with_workspace(workspace.into());
                     crate::cmds::ws_params_augment!(cmd_ctx_builder);
                     cmd_ctx_builder
-                        .with_workspace_param_value(
+                        .with_workspace_param(
                             WorkspaceParamsKey::Profile,
                             Some(profile_to_switch_to.clone()),
                         )
@@ -86,7 +91,7 @@ impl ProfileSwitchCmd {
                 url,
             } => {
                 ProfileInitCmd::run(
-                    output,
+                    &mut **output,
                     profile_to_create.clone(),
                     env_man_flow,
                     env_type,

@@ -1,12 +1,20 @@
-use peace::{
-    cmd::ctx::CmdCtxTypesCollector,
-    rt_model::params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-};
+use std::marker::PhantomData;
+
+use peace::{cmd_ctx::CmdCtxTypes, rt_model::output::OutputWrite};
 
 use crate::model::{EnvManError, ProfileParamsKey, WorkspaceParamsKey};
 
-pub type EnvmanCmdCtxTypes<Output> = CmdCtxTypesCollector<
-    EnvManError,
-    Output,
-    ParamsKeysImpl<KeyKnown<WorkspaceParamsKey>, KeyKnown<ProfileParamsKey>, KeyUnknown>,
->;
+#[derive(Debug)]
+pub struct EnvmanCmdCtxTypes<Output>(PhantomData<Output>);
+
+impl<Output> CmdCtxTypes for EnvmanCmdCtxTypes<Output>
+where
+    Output: OutputWrite,
+    EnvManError: From<<Output as OutputWrite>::Error>,
+{
+    type AppError = EnvManError;
+    type FlowParamsKey = ();
+    type Output = Output;
+    type ProfileParamsKey = ProfileParamsKey;
+    type WorkspaceParamsKey = WorkspaceParamsKey;
+}

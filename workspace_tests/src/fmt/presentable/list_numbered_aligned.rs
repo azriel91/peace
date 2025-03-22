@@ -10,8 +10,7 @@ use crate::fmt::cli_output;
 
 #[tokio::test]
 async fn present() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     let list_numbered_aligned = ListNumberedAligned::new(
@@ -29,7 +28,7 @@ async fn present() -> Result<(), Box<dyn std::error::Error>> {
     );
     list_numbered_aligned.present(&mut presenter).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         " \u{1b}[38;5;15m1.\u{1b}[0m **\u{1b}[1mItem 1\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
  \u{1b}[38;5;15m2.\u{1b}[0m **\u{1b}[1mItem 2\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m

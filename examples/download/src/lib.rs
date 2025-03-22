@@ -1,6 +1,6 @@
 use peace::{
     cfg::app_name,
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
+    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
     cmd_model::CmdOutcome,
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -74,7 +74,7 @@ pub async fn workspace_and_flow_setup(
     Ok(workspace_and_flow)
 }
 
-pub type DownloadCmdCtx<'ctx, O> = CmdCtx<SingleProfileSingleFlow<'ctx, DownloadCmdCtxTypes<O>>>;
+pub type DownloadCmdCtx<'ctx, O> = CmdCtxSpsf<'ctx, DownloadCmdCtxTypes<O>>;
 
 /// Returns a `CmdCtx` initialized from the workspace and item graph
 pub async fn cmd_ctx<'ctx, O>(
@@ -88,10 +88,11 @@ where
     DownloadError: From<<O as OutputWrite>::Error>,
 {
     let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
-    let mut cmd_ctx_builder =
-        CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-            .with_profile(profile)
-            .with_flow(flow.into());
+    let mut cmd_ctx_builder = CmdCtxSpsf::builder()
+        .with_workspace(workspace.into())
+        .with_output(output.into())
+        .with_profile_selection(ProfileSelection::Specified(profile))
+        .with_flow(flow.into());
 
     if let Some(file_download_params) = file_download_params {
         cmd_ctx_builder = cmd_ctx_builder.with_item_params::<FileDownloadItem<FileId>>(

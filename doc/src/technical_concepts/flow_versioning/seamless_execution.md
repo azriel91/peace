@@ -28,7 +28,7 @@ fn envman_cmd_ctx() {
         .add_flow(flow_v3)
         .build();
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let cmd_ctx = CmdCtxSpsf::builder(&mut output, &workspace)
         // .with_flow(flow)
         .with_flow_versions(flow_versions)
         .await?;

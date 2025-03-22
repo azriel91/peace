@@ -1,12 +1,6 @@
-use peace::{cmd::ctx::CmdCtxTypes, rt_model::params::ParamsKeysUnknown};
+pub use self::{
+    test_cct_fn_tracker_output::TestCctFnTrackerOutput, test_cct_no_op_output::TestCctNoOpOutput,
+};
 
-use crate::{NoOpOutput, PeaceTestError};
-
-#[derive(Debug)]
-pub(crate) struct PeaceCmdCtxTypes;
-
-impl CmdCtxTypes for PeaceCmdCtxTypes {
-    type AppError = PeaceTestError;
-    type Output = NoOpOutput;
-    type ParamsKeys = ParamsKeysUnknown;
-}
+mod test_cct_fn_tracker_output;
+mod test_cct_no_op_output;

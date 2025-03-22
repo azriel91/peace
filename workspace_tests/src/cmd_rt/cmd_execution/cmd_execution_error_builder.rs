@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile},
-    cmd::ctx::CmdCtx,
+    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
     cmd_model::CmdExecutionError,
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     flow_model::FlowId,
@@ -17,13 +17,20 @@ use tempfile::TempDir;
 use crate::{
     mock_item::{MockItem, MockSrc},
     no_op_output::NoOpOutput,
+    peace_cmd_ctx_types::TestCctNoOpOutput,
     peace_test_error::PeaceTestError,
     VecA, VecCopyItem,
 };
 
 #[tokio::test]
 async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _>::builder()
+    let TestCtx {
+        tempdir: _tempdir,
+        workspace,
+        flow,
+    } = test_ctx_init().await?;
+
+    let mut cmd_execution = CmdExecution::<StateDiffs, TestCctNoOpOutput>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             // Note: deliberately don't discover `Current`, so error will occur in `DiffCmdBlock`.
             StatesDiscoverCmdBlock::goal(),
@@ -37,15 +44,11 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
         ))
         .build();
 
-    let TestCtx {
-        tempdir: _tempdir,
-        workspace,
-        flow,
-    } = test_ctx_init().await?;
-
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-        .with_profile(profile!("test_profile"))
+    let mut cmd_ctx = CmdCtxSpsf::builder()
+        .with_workspace(workspace.into())
+        .with_output(output.into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
         .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
@@ -112,7 +115,13 @@ CmdBlocks:
 
 #[tokio::test]
 async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _>::builder()
+    let TestCtx {
+        tempdir: _tempdir,
+        workspace,
+        flow,
+    } = test_ctx_init().await?;
+
+    let mut cmd_execution = CmdExecution::<StateDiffs, TestCctNoOpOutput>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             // Note: deliberately don't discover `Goal`, so error will occur in `DiffCmdBlock`.
             StatesDiscoverCmdBlock::current(),
@@ -126,15 +135,11 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
         ))
         .build();
 
-    let TestCtx {
-        tempdir: _tempdir,
-        workspace,
-        flow,
-    } = test_ctx_init().await?;
-
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-        .with_profile(profile!("test_profile"))
+    let mut cmd_ctx = CmdCtxSpsf::builder()
+        .with_workspace(workspace.into())
+        .with_output(output.into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
         .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),

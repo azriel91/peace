@@ -2,14 +2,20 @@ use std::collections::BTreeMap;
 
 use peace::{
     cfg::{app_name, profile},
-    cmd::ctx::CmdCtx,
+    cmd_ctx::CmdCtxMpsf,
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
-    resource_rt::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
-    rt_model::{params::ParamsTypeRegs, ParamsSpecsTypeReg, StatesTypeReg},
+    resource_rt::{
+        paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+        type_reg::untagged::TypeReg,
+    },
+    rt_model::{ParamsSpecsTypeReg, StatesTypeReg},
 };
 
-use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
+use crate::{
+    no_op_output::NoOpOutput, peace_cmd_ctx_types::TestCctNoOpOutput, test_support::workspace_with,
+    PeaceTestError,
+};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,9 +33,10 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -58,14 +65,14 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    let fields = cmd_ctx.fields();
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     Ok(())
 }
 
@@ -85,14 +92,15 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_workspace_param_value(
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -121,15 +129,15 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let workspace_params = scope.workspace_params();
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
@@ -154,12 +162,12 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
-        .with_profile_params_k::<String>()
-        .with_profile_param::<u32>(String::from("profile_param_0"))
-        .with_profile_param::<u64>(String::from("profile_param_1"))
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
         .with_flow((&flow).into())
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -188,14 +196,14 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    let fields = cmd_ctx.fields();
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     Ok(())
 }
 
@@ -215,12 +223,12 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_flow_params_k::<String>()
-        .with_flow_param::<bool>(String::from("flow_param_0"))
-        .with_flow_param::<u16>(String::from("flow_param_1"))
-        .build()
+        .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
+        .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -249,18 +257,18 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let profile_to_flow_params = scope.profile_to_flow_params();
+    let fields = cmd_ctx.fields();
+    let profile_to_flow_params = fields.profile_to_flow_params();
     let flow_params = profile_to_flow_params
         .get(&profile)
         .expect("Expected flow params to exist.");
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
     assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
     Ok(())
@@ -283,17 +291,17 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_profile_params_k::<String>()
-        .with_profile_param::<u32>(String::from("profile_param_0"))
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_profile_param::<u64>(String::from("profile_param_1"))
-        .with_workspace_param_value(
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -322,19 +330,19 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let workspace_params = scope.workspace_params();
-    let profile_to_profile_params = scope.profile_to_profile_params();
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    let profile_to_profile_params = fields.profile_to_profile_params();
     let profile_params = profile_to_profile_params
         .get(&profile)
         .expect("Expected profile params to exist.");
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
@@ -362,20 +370,19 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_profile_params_k::<String>()
-        .with_profile_param::<u32>(String::from("profile_param_0"))
-        .with_flow_params_k::<String>()
-        .with_flow_param::<bool>(String::from("flow_param_0"))
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_flow_param::<u16>(String::from("flow_param_1"))
-        .with_profile_param::<u64>(String::from("profile_param_1"))
-        .with_workspace_param_value(
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -404,23 +411,23 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let workspace_params = scope.workspace_params();
-    let profile_to_profile_params = scope.profile_to_profile_params();
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    let profile_to_profile_params = fields.profile_to_profile_params();
     let profile_params = profile_to_profile_params
         .get(&profile)
         .expect("Expected profile params to exist.");
-    let profile_to_flow_params = scope.profile_to_flow_params();
+    let profile_to_flow_params = fields.profile_to_flow_params();
     let flow_params = profile_to_flow_params
         .get(&profile)
         .expect("Expected flow params to exist.");
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone(), profile_other], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone(), profile_other], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
@@ -450,15 +457,16 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_workspace_param_value(
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .with_profile_filter(|profile| **profile == "test_profile")
+        .with_profile_filter_fn(|profile| **profile == "test_profile")
         .with_flow((&flow).into())
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -480,15 +488,15 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let workspace_params = scope.workspace_params();
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone()], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone()], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
@@ -514,21 +522,20 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
     .await?;
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(output.into(), (&workspace).into())
-        .with_profile_params_k::<String>()
-        .with_profile_param::<u32>(String::from("profile_param_0"))
-        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_profile_param::<u64>(String::from("profile_param_1"))
-        .with_workspace_param_value(
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .with_flow_params_k::<String>()
-        .with_flow_param::<bool>(String::from("flow_param_0"))
-        .with_profile_filter(|profile| **profile == "test_profile")
-        .with_flow_param::<u16>(String::from("flow_param_1"))
+        .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
+        .with_profile_filter_fn(|profile| **profile == "test_profile")
+        .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
         .with_flow((&flow).into())
-        .build()
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -550,23 +557,23 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
         (profile_dirs, profile_history_dirs, flow_dirs)
     };
 
-    let scope = cmd_ctx.scope();
-    let workspace_params = scope.workspace_params();
-    let profile_to_profile_params = scope.profile_to_profile_params();
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    let profile_to_profile_params = fields.profile_to_profile_params();
     let profile_params = profile_to_profile_params
         .get(&profile)
         .expect("Expected profile params to exist.");
-    let profile_to_flow_params = scope.profile_to_flow_params();
+    let profile_to_flow_params = fields.profile_to_flow_params();
     let flow_params = profile_to_flow_params
         .get(&profile)
         .expect("Expected flow params to exist.");
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
-    assert_eq!(&[profile.clone()], scope.profiles());
-    assert_eq!(&profile_dirs, scope.profile_dirs());
-    assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(flow.flow_id(), scope.flow().flow_id());
-    assert_eq!(&flow_dirs, scope.flow_dirs());
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&[profile.clone()], fields.profiles());
+    assert_eq!(&profile_dirs, fields.profile_dirs());
+    assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
@@ -595,29 +602,39 @@ async fn getters() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_flow((&flow).into())
-    .build()
-    .await?;
+    let mut cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_flow((&flow).into())
+        .await?;
 
-    assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
-    assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
-    assert_eq!(workspace.dirs().peace_app_dir(), cmd_ctx.peace_app_dir());
-    assert_eq!(2, cmd_ctx.profile_to_states_current_stored().len());
-    assert_eq!(2, cmd_ctx.profile_to_params_specs().len());
     assert!(matches!(cmd_ctx.output(), NoOpOutput));
     assert!(matches!(cmd_ctx.output_mut(), NoOpOutput));
-    assert!(matches!(cmd_ctx.params_type_regs(), ParamsTypeRegs { .. }));
+    let fields = cmd_ctx.fields_mut();
+    assert_eq!(workspace.dirs().workspace_dir(), fields.workspace_dir());
+    assert_eq!(workspace.dirs().peace_dir(), fields.peace_dir());
+    assert_eq!(workspace.dirs().peace_app_dir(), fields.peace_app_dir());
+    assert_eq!(2, fields.profile_to_states_current_stored().len());
+    assert_eq!(2, fields.profile_to_params_specs().len());
+    assert!(matches!(fields.workspace_params_type_reg(), TypeReg { .. }));
     assert!(matches!(
-        cmd_ctx.params_specs_type_reg(),
+        fields.workspace_params_type_reg_mut(),
+        TypeReg { .. }
+    ));
+    assert!(matches!(fields.profile_params_type_reg(), TypeReg { .. }));
+    assert!(matches!(
+        fields.profile_params_type_reg_mut(),
+        TypeReg { .. }
+    ));
+    assert!(matches!(fields.flow_params_type_reg(), TypeReg { .. }));
+    assert!(matches!(fields.flow_params_type_reg_mut(), TypeReg { .. }));
+    assert!(matches!(
+        fields.params_specs_type_reg(),
         ParamsSpecsTypeReg { .. }
     ));
-    assert!(matches!(cmd_ctx.states_type_reg(), StatesTypeReg { .. }));
-    assert!(!cmd_ctx.resources().is_empty());
-    assert!(!cmd_ctx.resources_mut().is_empty());
+    assert!(matches!(fields.states_type_reg(), StatesTypeReg { .. }));
+    assert!(!fields.resources().is_empty());
+    assert!(!fields.resources_mut().is_empty());
 
     Ok(())
 }
@@ -638,19 +655,17 @@ async fn debug() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_flow((&flow).into())
-    .build()
-    .await?;
+    let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_flow((&flow).into())
+        .build()
+        .await?;
 
-    let multi_profile_single_flow = cmd_ctx.scope();
-    assert!(format!("{multi_profile_single_flow:?}").contains("MultiProfileSingleFlow {"));
+    assert!(format!("{cmd_ctx:?}").contains("CmdCtxMpsf {"));
 
-    let multi_profile_single_flow_view = cmd_ctx.view();
-    assert!(format!("{multi_profile_single_flow_view:?}").contains("MultiProfileSingleFlowView {"));
+    let fields = cmd_ctx.fields();
+    assert!(format!("{fields:?}").contains("CmdCtxMpsfFields {"));
 
     Ok(())
 }

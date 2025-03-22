@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields},
     cmd_model::CmdOutcome,
     fmt::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
@@ -64,13 +64,13 @@ where
 {
     let states_cleaned_outcome =
         CleanCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
-    let SingleProfileSingleFlowViewAndOutput {
+    let CmdCtxSpsf {
         output,
-        cmd_view: SingleProfileSingleFlowView {
+        fields: CmdCtxSpsfFields {
             flow, resources, ..
         },
         ..
-    } = cmd_ctx.view_and_output();
+    } = cmd_ctx;
 
     if let Some(states_cleaned) = states_cleaned_outcome.value() {
         let states_cleaned_raw_map = &***states_cleaned;
@@ -100,12 +100,16 @@ where
             .await?;
     }
     if let CmdOutcome::ItemError { errors, .. } = &states_cleaned_outcome {
-        crate::output::item_errors_present(output, errors).await?;
+        crate::output::item_errors_present(&mut **output, errors).await?;
     }
 
     if debug {
-        crate::output::cmd_outcome_completion_present(output, resources, states_cleaned_outcome)
-            .await?;
+        crate::output::cmd_outcome_completion_present(
+            &mut **output,
+            resources,
+            states_cleaned_outcome,
+        )
+        .await?;
     }
 
     Ok(())

@@ -1,9 +1,6 @@
 use peace::{
     cfg::app_name,
-    cmd::{
-        ctx::CmdCtx,
-        scopes::{SingleProfileNoFlow, SingleProfileSingleFlow},
-    },
+    cmd_ctx::{CmdCtxSpnf, CmdCtxSpsf, ProfileSelection},
     flow_rt::Flow,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
@@ -14,13 +11,11 @@ use crate::{
 };
 
 /// Alias to simplify naming the `CmdCtx` type.
-pub type EnvManCmdCtx<'ctx, O> =
-    peace::cmd::ctx::CmdCtx<SingleProfileSingleFlow<'ctx, EnvmanCmdCtxTypes<O>>>;
+pub type EnvManCmdCtx<'ctx, O> = CmdCtxSpsf<'ctx, EnvmanCmdCtxTypes<O>>;
 
 /// Alias to simplify naming the `CmdCtx` type.
 #[allow(dead_code)] // TODO: maybe remove after refactoring cmd_ctx
-pub type EnvManCmdCtx1p0f<'ctx, O> =
-    peace::cmd::ctx::CmdCtx<SingleProfileNoFlow<'ctx, EnvmanCmdCtxTypes<O>>>;
+pub type EnvManCmdCtx1p0f<'ctx, O> = CmdCtxSpnf<'ctx, EnvmanCmdCtxTypes<O>>;
 
 /// Returns a `CmdCtx<SingleProfileSingleFlow<'ctx,
 /// EnvmanCmdCtxTypes<O>>>`.
@@ -41,15 +36,14 @@ where
         WorkspaceSpec::SessionStorage,
     )?;
 
-    let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
-        output.into(),
-        workspace.into(),
-    );
+    let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into());
     crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
     let profile_key = WorkspaceParamsKey::Profile;
     cmd_ctx_builder
-        .with_profile_from_workspace_param(profile_key.into())
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
         .with_flow(flow.into())
         .await
 }
@@ -70,12 +64,13 @@ where
         WorkspaceSpec::SessionStorage,
     )?;
 
-    let cmd_ctx_builder =
-        CmdCtx::builder_single_profile_no_flow::<EnvManError, O>(output.into(), workspace.into());
+    let cmd_ctx_builder = CmdCtxSpnf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into());
     crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
     let profile_key = WorkspaceParamsKey::Profile;
     cmd_ctx_builder
-        .with_profile_from_workspace_param(profile_key.into())
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
         .await
 }

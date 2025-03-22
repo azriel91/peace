@@ -4,13 +4,13 @@ use peace::{
     rt::cmd_blocks::ApplyExecCmdBlock,
 };
 
-use crate::peace_cmd_ctx_types::PeaceCmdCtxTypes;
+use crate::peace_cmd_ctx_types::TestCctNoOpOutput;
 
 #[test]
 fn input_type_names_includes_states_current_and_states_target() {
     macro_rules! assert_input_type_names {
         ($states_ts:ident, $expected:expr) => {
-            let cmd_block = ApplyExecCmdBlock::<PeaceCmdCtxTypes, $states_ts>::new();
+            let cmd_block = ApplyExecCmdBlock::<TestCctNoOpOutput, $states_ts>::new();
 
             let input_type_names = cmd_block.input_type_names();
 
@@ -28,7 +28,7 @@ fn input_type_names_includes_states_current_and_states_target() {
 fn outcome_type_names_includes_states_previous_states_target() {
     macro_rules! assert_outcome_type_names {
         ($states_ts:ident, $expected:expr) => {
-            let cmd_block = ApplyExecCmdBlock::<PeaceCmdCtxTypes, $states_ts>::new();
+            let cmd_block = ApplyExecCmdBlock::<TestCctNoOpOutput, $states_ts>::new();
 
             let outcome_type_names = cmd_block.outcome_type_names();
 

@@ -7,15 +7,14 @@ use crate::fmt::cli_output;
 
 #[tokio::test]
 async fn present() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     let list_bulleted =
         ListBulleted::new((1..=11).map(|n| format!("Item {n}")).collect::<Vec<_>>());
     list_bulleted.present(&mut presenter).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\u{1b}[38;5;15m*\u{1b}[0m Item 1
 \u{1b}[38;5;15m*\u{1b}[0m Item 2

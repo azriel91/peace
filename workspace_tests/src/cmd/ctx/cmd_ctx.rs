@@ -1,12 +1,13 @@
 use peace::{
     cfg::{app_name, profile, AppName},
-    cmd::ctx::CmdCtxBuilder,
+    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
+    resource_rt::paths::{FlowDir, ProfileDir},
     rt_model::Workspace,
 };
 
-use crate::{no_op_output::NoOpOutput, PeaceTestError};
+use crate::{no_op_output::NoOpOutput, peace_cmd_ctx_types::TestCctNoOpOutput, PeaceTestError};
 
 #[tokio::test]
 async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,21 +18,23 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemGraphBuilder::new().build());
 
     let output = NoOpOutput;
-    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(output.into(), (&workspace).into())
-        .with_profile(profile.clone())
+    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile.clone()))
         .with_flow((&flow).into())
-        .build()
         .await?;
 
-    let scope = cmd_ctx.scope();
-    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
-    assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
-    assert_eq!(workspace.dirs().peace_app_dir(), cmd_ctx.peace_app_dir());
-    assert_eq!(scope.profile(), cmd_ctx.profile());
-    assert_eq!(scope.profile_dir(), cmd_ctx.profile_dir());
-    assert_eq!(scope.flow().flow_id(), cmd_ctx.flow().flow_id());
-    assert_eq!(scope.flow_dir(), cmd_ctx.flow_dir());
+    let fields = cmd_ctx.fields();
+    let profile_dir = ProfileDir::from((workspace.dirs().peace_app_dir(), &profile));
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(workspace.dirs().workspace_dir(), fields.workspace_dir());
+    assert_eq!(workspace.dirs().peace_dir(), fields.peace_dir());
+    assert_eq!(workspace.dirs().peace_app_dir(), fields.peace_app_dir());
+    assert_eq!(&profile, fields.profile());
+    assert_eq!(&profile_dir, fields.profile_dir());
+    assert_eq!(&flow_id, fields.flow().flow_id());
+    assert_eq!(&FlowDir::from((&profile_dir, &flow_id)), fields.flow_dir());
     Ok(())
 }
 

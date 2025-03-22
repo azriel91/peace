@@ -65,8 +65,10 @@ digraph {
 ```rust ,ignore
 // examples/envman/src/cmds/profile_init_cmd.rs
 // fn app_upload_flow_init
-let cmd_ctx = CmdCtx::builder_single_profile_single_flow
-    ::<EnvManError, _>(output, workspace)
+let cmd_ctx = CmdCtxSpsf::builder
+    ::<EnvManError, _>()
+    .with_output(output)
+    .with_workspace(workspace)
     .with_profile_from_workspace_param(profile_key)
     .with_flow(flow)
     .with_item_params::<FileDownloadItem<WebApp>>(

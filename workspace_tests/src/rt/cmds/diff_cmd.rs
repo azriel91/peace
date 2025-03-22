@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile},
     cli::output::CliOutput,
-    cmd::ctx::CmdCtx,
+    cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
     cmd_model::CmdOutcome,
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -17,7 +17,7 @@ use peace::{
 
 use crate::{
     mock_item::{MockDest, MockDiff, MockItem, MockSrc, MockState},
-    peace_cmd_ctx_types::PeaceCmdCtxTypes,
+    peace_cmd_ctx_types::TestCctNoOpOutput,
     NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyItem, VecCopyState,
 };
 
@@ -41,18 +41,17 @@ async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn s
     let output = &mut NoOpOutput;
 
     // Discover current and goal states.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
         cmd_blocks_processed: _,
@@ -115,18 +114,17 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
     let output = &mut NoOpOutput;
 
     // Discover goal state.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
     let CmdOutcome::Complete {
         value: states_goal,
         cmd_blocks_processed: _,
@@ -145,7 +143,7 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
     };
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
-    let resources = &cmd_ctx.view().resources;
+    let resources = cmd_ctx.fields().resources();
     let states_current = resources.borrow::<StatesCurrent>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
@@ -193,18 +191,17 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
     let output = &mut NoOpOutput;
 
     // Discover current state.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
     let CmdOutcome::Complete {
         value: states_current,
         cmd_blocks_processed: _,
@@ -223,7 +220,7 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
     };
 
     // Note: discovered `StatesGoal` is not automatically serialized to storage.
-    let resources = &cmd_ctx.view().resources;
+    let resources = cmd_ctx.fields().resources();
     let states_goal = resources.borrow::<StatesGoal>();
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
@@ -271,18 +268,17 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
     let output = &mut NoOpOutput;
 
     // No discovery of current or goal states before diffing.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
 
     // Diff current and goal states.
     let CmdOutcome::Complete {
@@ -295,7 +291,7 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
 
     // Note: discovered `StatesCurrent` and `StatesGoal` are not automatically
     // serialized to storage.
-    let resources = &cmd_ctx.view().resources;
+    let resources = cmd_ctx.fields().resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let states_goal = resources.borrow::<StatesGoal>();
 
@@ -345,19 +341,18 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
 
     // profile_0
     let profile_0 = profile!("test_profile_0");
-    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_0.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
-    .await?;
-    let resources = cmd_ctx_0.resources_mut();
+    let mut cmd_ctx_0 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_0.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
+        .await?;
+    let resources = cmd_ctx_0.fields_mut().resources_mut();
     resources.insert(MockDest(1));
     let CmdOutcome::Complete {
         value: states_current_0,
@@ -369,19 +364,18 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
-    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_1.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(3).into())
-    .await?;
-    let resources = cmd_ctx_1.resources_mut();
+    let mut cmd_ctx_1 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_1.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(3).into())
+        .await?;
+    let resources = cmd_ctx_1.fields_mut().resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     resources.insert(MockDest(3));
     let CmdOutcome::Complete {
@@ -392,17 +386,15 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
         panic!("Expected `StatesDiscoverCmd::current` to complete successfully.");
     };
 
-    let mut cmd_ctx_multi =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, NoOpOutput>(
-            output.into(),
-            (&workspace).into(),
-        )
+    let mut cmd_ctx_mpsf = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
         .await?;
 
     // Diff current states for profile_0 and profile_1.
     let state_diffs =
-        DiffCmd::diff_current_stored(&mut cmd_ctx_multi, &profile_0, &profile_1).await?;
+        DiffCmd::diff_current_stored(&mut cmd_ctx_mpsf, &profile_0, &profile_1).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
@@ -470,31 +462,27 @@ async fn diff_stored_with_missing_profile_0() -> Result<(), Box<dyn std::error::
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
-    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_1.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
-    let resources = cmd_ctx_1.resources_mut();
+    let mut cmd_ctx_1 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_1.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+    let resources = cmd_ctx_1.fields_mut().resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
 
-    let mut cmd_ctx_multi =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, NoOpOutput>(
-            output.into(),
-            (&workspace).into(),
-        )
+    let mut cmd_ctx_mpsf = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
         .await?;
 
-    let diff_result =
-        DiffCmd::diff_current_stored(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+    let diff_result = DiffCmd::diff_current_stored(&mut cmd_ctx_mpsf, &profile_0, &profile_1).await;
 
     assert!(matches!(
             diff_result,
@@ -523,32 +511,28 @@ async fn diff_stored_with_missing_profile_1() -> Result<(), Box<dyn std::error::
 
     // profile_0
     let profile_0 = profile!("test_profile_0");
-    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_0.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx_0 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_0.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
 
-    let mut cmd_ctx_multi =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, NoOpOutput>(
-            output.into(),
-            (&workspace).into(),
-        )
+    let mut cmd_ctx_mpsf = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
         .await?;
 
-    let diff_result =
-        DiffCmd::diff_current_stored(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+    let diff_result = DiffCmd::diff_current_stored(&mut cmd_ctx_mpsf, &profile_0, &profile_1).await;
 
     assert!(matches!(
             diff_result,
@@ -578,46 +562,41 @@ async fn diff_stored_with_profile_0_missing_states_current(
 
     // profile_0
     let profile_0 = profile!("test_profile_0");
-    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_0.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx_0 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_0.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     StatesDiscoverCmd::goal(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
-    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_1.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
-    let resources = cmd_ctx_1.resources_mut();
+    let mut cmd_ctx_1 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_1.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+    let resources = cmd_ctx_1.fields_mut().resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
 
-    let mut cmd_ctx_multi =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, NoOpOutput>(
-            output.into(),
-            (&workspace).into(),
-        )
+    let mut cmd_ctx_mpsf = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
         .await?;
 
-    let diff_result =
-        DiffCmd::diff_current_stored(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+    let diff_result = DiffCmd::diff_current_stored(&mut cmd_ctx_mpsf, &profile_0, &profile_1).await;
 
     assert!(matches!(
             diff_result,
@@ -647,44 +626,39 @@ async fn diff_stored_with_profile_1_missing_states_current(
 
     // profile_0
     let profile_0 = profile!("test_profile_0");
-    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_0.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx_0 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_0.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
-    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile_1.clone())
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx_1 = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile_1.clone()))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     StatesDiscoverCmd::goal(&mut cmd_ctx_1).await?;
 
-    let mut cmd_ctx_multi =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, NoOpOutput>(
-            output.into(),
-            (&workspace).into(),
-        )
+    let mut cmd_ctx_mpsf = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
         .with_flow((&flow).into())
         .await?;
 
-    let diff_result =
-        DiffCmd::diff_current_stored(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+    let diff_result = DiffCmd::diff_current_stored(&mut cmd_ctx_mpsf, &profile_0, &profile_1).await;
 
     assert!(matches!(
             diff_result,
@@ -709,21 +683,19 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut buffer = Vec::with_capacity(256);
-    let output = CliOutput::new_with_writer(&mut buffer);
+    let mut output = CliOutput::new_with_writer(Vec::with_capacity(256));
 
     // Discover current and goal states.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<
-        PeaceTestError,
-        CliOutput<&mut Vec<u8>>,
-    >(output.into(), (&workspace).into())
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    // overwrite initial state
-    .with_resource(VecA(vec![0, 1, 2, 4, 5, 6, 8, 9]))
-    .with_resource(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]))
-    .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), ParamsSpec::InMemory)
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctCliBuffer>::builder()
+        .with_output((&mut output).into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        // overwrite initial state
+        .with_resource(VecA(vec![0, 1, 2, 4, 5, 6, 8, 9]))
+        .with_resource(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]))
+        .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), ParamsSpec::InMemory)
+        .await?;
     let CmdOutcome::Complete {
         value: (states_current, states_goal),
         cmd_blocks_processed: _,
@@ -766,9 +738,11 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .as_ref(),
         vec_diff
     );
+
+    let buffer = output.writer();
     assert_eq!(
         "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
-        String::from_utf8(buffer)?
+        String::from_utf8(buffer.to_vec())?
     );
 
     Ok(())
@@ -776,9 +750,20 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", DiffCmd::<PeaceCmdCtxTypes, ()>::default());
+    let debug_str = format!("{:?}", DiffCmd::<TestCctNoOpOutput, ()>::default());
     assert_eq!(
-        r#"DiffCmd(PhantomData<(workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes, ())>)"#,
+        r#"DiffCmd(PhantomData<(workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput, ())>)"#,
         debug_str,
     );
+}
+
+#[derive(Debug)]
+pub struct TestCctCliBuffer;
+
+impl CmdCtxTypes for TestCctCliBuffer {
+    type AppError = PeaceTestError;
+    type FlowParamsKey = ();
+    type Output = CliOutput<Vec<u8>>;
+    type ProfileParamsKey = ();
+    type WorkspaceParamsKey = ();
 }

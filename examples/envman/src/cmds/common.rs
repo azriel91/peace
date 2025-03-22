@@ -1,10 +1,13 @@
 use peace::{
     cfg::app_name,
-    cmd::ctx::CmdCtx,
+    cmd_ctx::CmdCtxNpnf,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{EnvManError, EnvManFlow, WorkspaceParamsKey};
+use crate::{
+    model::{EnvManError, EnvManFlow, WorkspaceParamsKey},
+    rt_model::EnvmanCmdCtxTypes,
+};
 
 /// Returns the `Workspace` for all commands.
 pub fn workspace() -> Result<Workspace, EnvManError> {
@@ -26,11 +29,13 @@ where
     O: OutputWrite,
     EnvManError: From<<O as OutputWrite>::Error>,
 {
-    let cmd_ctx_builder =
-        CmdCtx::builder_no_profile_no_flow::<EnvManError, O>(output.into(), workspace.into());
+    let cmd_ctx_builder = CmdCtxNpnf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into());
     crate::cmds::ws_params_augment!(cmd_ctx_builder);
     let cmd_ctx = cmd_ctx_builder.await?;
     Ok(cmd_ctx
+        .fields()
         .workspace_params()
         .get(&WorkspaceParamsKey::Flow)
         .copied()

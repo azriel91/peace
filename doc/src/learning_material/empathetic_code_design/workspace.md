@@ -5,7 +5,7 @@ When a command is run, Peace stores information about that execution.
 It stores this in a `.peace` directory within a workspace directory. The automation tool developer needs to tell Peace how to determine the workspace directory.
 
 ```rust ,ignore
-let cmd_ctx = CmdCtx::builder_single_profile_single_flow
+let cmd_ctx = CmdCtxSpsf::builder
     ::<EnvManError, _>(output, workspace)
     // ..
     .await?;

@@ -1,6 +1,20 @@
-use peace::{cmd::ctx::CmdCtxTypesCollector, rt_model::params::ParamsKeysUnknown};
+use std::marker::PhantomData;
+
+use peace::{cmd_ctx::CmdCtxTypes, rt_model::output::OutputWrite};
 
 use crate::DownloadError;
 
-pub type DownloadCmdCtxTypes<Output> =
-    CmdCtxTypesCollector<DownloadError, Output, ParamsKeysUnknown>;
+#[derive(Debug)]
+pub struct DownloadCmdCtxTypes<Output>(PhantomData<Output>);
+
+impl<Output> CmdCtxTypes for DownloadCmdCtxTypes<Output>
+where
+    Output: OutputWrite,
+    DownloadError: From<<Output as OutputWrite>::Error>,
+{
+    type AppError = DownloadError;
+    type FlowParamsKey = ();
+    type Output = Output;
+    type ProfileParamsKey = ();
+    type WorkspaceParamsKey = ();
+}

@@ -1,13 +1,7 @@
 use futures::future::LocalBoxFuture;
 use peace::{
     cfg::app_name,
-    cmd::{
-        ctx::CmdCtx,
-        scopes::{
-            MultiProfileSingleFlow, SingleProfileSingleFlowView,
-            SingleProfileSingleFlowViewAndOutput,
-        },
-    },
+    cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxSpsfFields, ProfileSelection},
     fmt::presentln,
     item_model::item_id,
     params::Params,
@@ -22,7 +16,7 @@ use crate::{
         peace_aws_s3_bucket::S3BucketState,
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
-    model::{EnvManError, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
+    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
     rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
 };
 
@@ -61,14 +55,13 @@ impl AppUploadCmd {
             .build();
 
         let mut cmd_ctx = {
-            let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
-                output.into(),
-                workspace.into(),
-            );
+            let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+                .with_output(output.into())
+                .with_workspace(workspace.into());
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
-                .with_profile_from_workspace_param(profile_key.into())
+                .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
                 .with_flow((&flow).into())
                 .with_item_params::<S3ObjectItem<WebApp>>(
                     item_id!("s3_object"),
@@ -99,7 +92,7 @@ impl AppUploadCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<MultiProfileSingleFlow<'_, EnvmanCmdCtxTypes<O>>>,
+            &'fn_once mut CmdCtxMpsf<EnvmanCmdCtxTypes<O>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let workspace = Workspace::new(
@@ -111,31 +104,32 @@ impl AppUploadCmd {
         )?;
         let flow = AppUploadFlow::flow().await?;
 
-        let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
-            .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
-                S3BucketState::None => None,
-                S3BucketState::Some {
-                    name,
-                    creation_date: _,
-                } => Some(name.clone()),
-            })
-            .build();
+        // TODO: We don't yet know the profiles at this point, so we can't insert
+        // profile params.
+        //
+        // ```rust
+        // let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
+        //     .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
+        //         S3BucketState::None => None,
+        //         S3BucketState::Some {
+        //             name,
+        //             creation_date: _,
+        //         } => Some(name.clone()),
+        //     })
+        //     .build();
+        // ```
 
-        let mut cmd_ctx = {
-            let cmd_ctx_builder = CmdCtx::builder_multi_profile_single_flow::<EnvManError, O>(
-                output.into(),
-                (&workspace).into(),
-            );
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
-
-            cmd_ctx_builder
-                .with_flow((&flow).into())
-                .with_item_params::<S3ObjectItem<WebApp>>(
-                    item_id!("s3_object"),
-                    s3_object_params_spec,
-                )
-                .await?
-        };
+        let mut cmd_ctx = CmdCtxMpsf::<EnvmanCmdCtxTypes<O>>::builder()
+            .with_output(output.into())
+            .with_workspace((&workspace).into())
+            .with_flow((&flow).into())
+            .with_workspace_param::<Profile>(WorkspaceParamsKey::Profile, None)
+            .with_workspace_param::<EnvManFlow>(WorkspaceParamsKey::Flow, None)
+            // ```rust
+            // .with_profile_param::<EnvType>(ProfileParamsKey::EnvType, None);
+            // .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
+            // ```
+            .await?;
 
         let t = f(&mut cmd_ctx).await?;
 
@@ -147,16 +141,16 @@ impl AppUploadCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
     {
-        let SingleProfileSingleFlowViewAndOutput {
+        let CmdCtxSpsf {
             output,
-            cmd_view:
-                SingleProfileSingleFlowView {
+            fields:
+                CmdCtxSpsfFields {
                     workspace_params,
                     profile_params,
                     ..
                 },
             ..
-        } = cmd_ctx.view_and_output();
+        } = cmd_ctx;
 
         let profile = workspace_params.get::<Profile, _>(&WorkspaceParamsKey::Profile);
         let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);
