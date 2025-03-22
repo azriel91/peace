@@ -176,6 +176,16 @@ where
         CliOutputBuilder::new_with_writer(writer).build()
     }
 
+    /// Returns a reference to the held writer.
+    pub fn writer(&self) -> &W {
+        &self.writer
+    }
+
+    /// Returns a mutable reference to the held writer.
+    pub fn writer_mut(&mut self) -> &mut W {
+        &mut self.writer
+    }
+
     /// Returns how to format outcome output -- human readable or machine
     /// parsable.
     pub fn outcome_format(&self) -> OutputFormat {
@@ -505,7 +515,7 @@ impl Default for CliOutput<Stdout> {
 #[async_trait(?Send)]
 impl<W> OutputWrite for CliOutput<W>
 where
-    W: AsyncWrite + Debug + Unpin,
+    W: AsyncWrite + Debug + Unpin + 'static,
 {
     type Error = Error;
 

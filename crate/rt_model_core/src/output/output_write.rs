@@ -31,7 +31,7 @@ cfg_if::cfg_if! {
 ///
 /// Progress updates sent during `ApplyFns::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
-pub trait OutputWrite: Debug + Unpin {
+pub trait OutputWrite: Debug + Unpin + 'static {
     /// Error type of this `OutputWrite`.
     ///
     /// Returned when an error occurs while attempting to output some
