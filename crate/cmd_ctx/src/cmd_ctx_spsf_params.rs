@@ -168,6 +168,7 @@ where
     //
     // NOTE: When updating this mutator, also check if `CmdCtxMpsf` needs its mutator updated.
     #[builder(
+        setter(prefix = "with_"),
         via_mutators(init = ParamsSpecs::new()),
         mutators(
             /// Sets an item's parameters.
@@ -188,7 +189,31 @@ where
     )]
     pub params_specs: ParamsSpecs,
     /// `Resources` for flow execution.
-    #[builder(setter(prefix = "with_"), default = Resources::<Empty>::new())]
+    ///
+    /// A "resource" is any object, and `resources` is a map where each object
+    /// is keyed by its type. This means only one instance of each type can be
+    /// held by the map.
+    ///
+    /// Resources are made available to `Item`s through their `Data` associated
+    /// type.
+    //
+    // NOTE: When updating this mutator, also check if `CmdCtxMpsf` needs its mutator updated.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = Resources::<Empty>::new()),
+        mutators(
+            /// Adds an object to the in-memory resources.
+            pub fn with_resource<R>(
+                &mut self,
+                resource: R,
+            )
+            where
+                R: peace_resource_rt::Resource,
+            {
+                self.resources.insert(resource);
+            }
+        )
+    )]
     pub resources: Resources<Empty>,
 }
 
@@ -207,7 +232,6 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-        __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
     CmdCtxSpsfParamsBuilder<
         'ctx,
@@ -222,7 +246,7 @@ impl<
             (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
             (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
-            __resources,
+            (Resources<Empty>,),
         ),
     >
 where
@@ -483,7 +507,6 @@ impl<
         'ctx,
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
-        __resources: ::typed_builder::Optional<Resources<Empty>> + 'ctx,
     > IntoFuture
     for CmdCtxSpsfParamsBuilder<
         'ctx,
@@ -498,7 +521,7 @@ impl<
             (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
             (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
-            __resources,
+            (Resources<Empty>,),
         ),
     >
 where

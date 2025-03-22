@@ -260,7 +260,31 @@ where
     )]
     pub profile_to_params_specs: BTreeMap<Profile, ParamsSpecs>,
     /// `Resources` for flow execution.
-    #[builder(setter(prefix = "with_"), default = Resources::<Empty>::new())]
+    ///
+    /// A "resource" is any object, and `resources` is a map where each object
+    /// is keyed by its type. This means only one instance of each type can be
+    /// held by the map.
+    ///
+    /// Resources are made available to `Item`s through their `Data` associated
+    /// type.
+    //
+    // NOTE: When updating this mutator, also check if `CmdCtxMpsf` needs its mutator updated.
+    #[builder(
+        setter(prefix = "with_"),
+        via_mutators(init = Resources::<Empty>::new()),
+        mutators(
+            /// Adds an object to the in-memory resources.
+            pub fn with_resource<R>(
+                &mut self,
+                resource: R,
+            )
+            where
+                R: peace_resource_rt::Resource,
+            {
+                self.resources.insert(resource);
+            }
+        )
+    )]
     pub resources: Resources<Empty>,
 }
 
@@ -280,7 +304,6 @@ impl<
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
         __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>>,
-        __resources: ::typed_builder::Optional<Resources<Empty>>,
     >
     CmdCtxMpsfParamsBuilder<
         'ctx,
@@ -295,7 +318,7 @@ impl<
             (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
             (BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>,),
             (BTreeMap<Profile, ParamsSpecs>,),
-            __resources,
+            (Resources<Empty>,),
         ),
     >
 where
@@ -518,7 +541,6 @@ impl<
         CmdCtxTypesT,
         __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
         __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>> + 'ctx,
-        __resources: ::typed_builder::Optional<Resources<Empty>> + 'ctx,
     > IntoFuture
     for CmdCtxMpsfParamsBuilder<
         'ctx,
@@ -533,7 +555,7 @@ impl<
             (BTreeMap<Profile, ProfileParams<CmdCtxTypesT::ProfileParamsKey>>,),
             (BTreeMap<Profile, FlowParams<CmdCtxTypesT::FlowParamsKey>>,),
             (BTreeMap<Profile, ParamsSpecs>,),
-            __resources,
+            (Resources<Empty>,),
         ),
     >
 where
