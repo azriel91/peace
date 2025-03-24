@@ -213,11 +213,17 @@ where
             {
                 match self.profile_to_flow_params.get_mut(profile) {
                     Some(flow_params) => {
-                        flow_params.insert(key, value);
+                        let _ = match value {
+                            Some(value) => flow_params.insert(key, value),
+                            None => flow_params.shift_remove(&key),
+                        };
                     }
                     None => {
                         let mut flow_params = FlowParams::new();
-                        flow_params.insert(key, value);
+                        let _ = match value {
+                            Some(value) => flow_params.insert(key, value),
+                            None => flow_params.shift_remove(&key),
+                        };
                         self.profile_to_flow_params.insert(profile.clone(), flow_params);
                     }
                 }

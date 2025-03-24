@@ -66,6 +66,30 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
+    /// Params specs were not stored or provided for a profile in a
+    /// multi-profile command context.
+    #[error(
+        "Params specs were not stored or provided for a profile in a \
+        multi-profile command context."
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::item_params_specs_file_not_present)),
+        help(
+            "Make sure params specs are either stored in \
+            `.peace/{app_name}/{profile}/{flow_id}/params_specs.yaml`, \
+            or are provided in code for all profiles that are loaded."
+        )
+    )]
+    ItemParamsSpecsFileNotFound {
+        /// Name of the application that is being executed.
+        app_name: AppName,
+        /// Profile that item params specs were being deserialized for.
+        profile: Profile,
+        /// Flow ID that item params specs where being deserialized for.
+        flow_id: FlowId,
+    },
+
     /// Failed to resolve values for a `Params` object from `resources`.
     ///
     /// This possibly indicates the user has provided a `Params::Spec` with
@@ -196,23 +220,6 @@ pub enum Error {
         diagnostic(code(peace_rt_model::presentable_serialize))
     )]
     PresentableSerialize(#[source] serde_yaml::Error),
-
-    /// Params specs were not stored or provided for a profile in a
-    /// multi-profile command context.
-    #[error(
-        "Params specs were not stored or provided for a profile in a \
-        multi-profile command context."
-    )]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::profile_params_specs_not_provided)),
-        help(
-            "Make sure params specs are either stored in \
-            `.peace/{app_name}/{profile}/`, or are provided in code for all \
-            profiles that are loaded."
-        )
-    )]
-    ProfileParamsSpecsNotPresent { app_name: AppName, profile: Profile },
 
     /// Failed to serialize progress update.
     #[error("Failed to serialize progress update.")]

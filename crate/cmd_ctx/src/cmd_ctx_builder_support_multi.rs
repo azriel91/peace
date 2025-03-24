@@ -368,9 +368,10 @@ where
                 let profile = profile.clone();
                 let params_specs = match (params_specs_stored, params_specs_provided) {
                     (None, None) => {
-                        return Err(peace_rt_model_core::Error::ProfileParamsSpecsNotPresent {
+                        return Err(peace_rt_model_core::Error::ItemParamsSpecsFileNotFound {
                             app_name: app_name.clone(),
                             profile,
+                            flow_id: flow_id.clone(),
                         });
                     }
                     (None, Some(params_specs_provided)) => params_specs_provided,

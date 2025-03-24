@@ -165,7 +165,10 @@ where
             where
                 V: ParamsValue,
             {
-                self.flow_params.insert(key, value);
+                let _ = match value {
+                    Some(value) => self.flow_params.insert(key, value),
+                    None => self.flow_params.shift_remove(&key),
+                };
             }
         )
     )]
