@@ -1898,7 +1898,7 @@ mock: 1
 fn debug() {
     let debug_str = format!("{:?}", EnsureCmd::<TestCctNoOpOutput>::default());
     assert_eq!(
-        r#"EnsureCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput>)"#,
+        r#"EnsureCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str,
     );
 }

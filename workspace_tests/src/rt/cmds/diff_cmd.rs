@@ -752,7 +752,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 fn debug() {
     let debug_str = format!("{:?}", DiffCmd::<TestCctNoOpOutput, ()>::default());
     assert_eq!(
-        r#"DiffCmd(PhantomData<(workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput, ())>)"#,
+        r#"DiffCmd(PhantomData<(workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput, ())>)"#,
         debug_str,
     );
 }

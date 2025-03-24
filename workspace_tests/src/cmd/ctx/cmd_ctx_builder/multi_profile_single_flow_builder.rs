@@ -165,8 +165,12 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
+        // Erase existing value
         .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
         .with_flow((&flow).into())
         .await?;
 
@@ -197,6 +201,10 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let fields = cmd_ctx.fields();
+    let profile_to_profile_params = fields.profile_to_profile_params();
+    let profile_params = profile_to_profile_params
+        .get(&profile)
+        .expect("Expected profile params to exist.");
     assert!(std::ptr::eq(&workspace, fields.workspace()));
     assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
     assert_eq!(&[profile.clone(), profile_other], fields.profiles());
@@ -204,6 +212,9 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
     assert_eq!(flow.flow_id(), fields.flow().flow_id());
     assert_eq!(&flow_dirs, fields.flow_dirs());
+    assert_eq!(Some(3u32), profile_params.get("profile_param_0").copied());
+    assert_eq!(None::<u64>, profile_params.get("profile_param_1").copied());
+    assert_eq!(Some(-4i64), profile_params.get("profile_param_2").copied());
     Ok(())
 }
 
@@ -227,8 +238,12 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
         .with_output(output.into())
         .with_workspace((&workspace).into())
         .with_flow((&flow).into())
+        // Overwrite existing value
         .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
+        // Erase existing value
         .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
+        // Add new value
+        .with_flow_param::<i16>(&profile, String::from("flow_param_2"), Some(-5i16))
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -270,7 +285,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(flow.flow_id(), fields.flow().flow_id());
     assert_eq!(&flow_dirs, fields.flow_dirs());
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
-    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+    assert_eq!(None::<u16>, flow_params.get("flow_param_1").copied());
+    assert_eq!(Some(-5i16), flow_params.get("flow_param_2").copied());
     Ok(())
 }
 
@@ -295,9 +311,13 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         .with_output(output.into())
         .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        // Erase existing value
         .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
         .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
@@ -348,8 +368,9 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
-    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
-    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(3u32), profile_params.get("profile_param_0").copied());
+    assert_eq!(None::<u64>, profile_params.get("profile_param_1").copied());
+    assert_eq!(Some(-4i64), profile_params.get("profile_param_2").copied());
     Ok(())
 }
 
@@ -374,15 +395,23 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
         .with_output(output.into())
         .with_workspace((&workspace).into())
         .with_flow((&flow).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
-        .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
-        .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
         .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
+        // Erase existing value
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
+        // Overwrite existing value
+        .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
+        // Erase existing value
+        .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
+        // Add new value
+        .with_flow_param::<i16>(&profile, String::from("flow_param_2"), Some(-5i16))
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -433,10 +462,12 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
-    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
-    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(3u32), profile_params.get("profile_param_0").copied());
+    assert_eq!(None::<u64>, profile_params.get("profile_param_1").copied());
+    assert_eq!(Some(-4i64), profile_params.get("profile_param_2").copied());
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
-    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+    assert_eq!(None::<u16>, flow_params.get("flow_param_1").copied());
+    assert_eq!(Some(-5i16), flow_params.get("flow_param_2").copied());
     Ok(())
 }
 
@@ -525,17 +556,25 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
     let cmd_ctx = CmdCtxMpsf::<TestCctNoOpOutput>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_flow((&flow).into())
+        .with_profile_filter_fn(|profile| **profile == "test_profile")
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
         .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
+        // Erase existing value
+        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
+        // Overwrite existing value
         .with_flow_param::<bool>(&profile, String::from("flow_param_0"), Some(true))
-        .with_profile_filter_fn(|profile| **profile == "test_profile")
+        // Erase existing value
         .with_flow_param::<u16>(&profile, String::from("flow_param_1"), None)
-        .with_flow((&flow).into())
+        // Add new value
+        .with_flow_param::<i16>(&profile, String::from("flow_param_2"), Some(-5i16))
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -579,10 +618,12 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
-    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
-    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(3u32), profile_params.get("profile_param_0").copied());
+    assert_eq!(None::<u64>, profile_params.get("profile_param_1").copied());
+    assert_eq!(Some(-4i64), profile_params.get("profile_param_2").copied());
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
-    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+    assert_eq!(None::<u16>, flow_params.get("flow_param_1").copied());
+    assert_eq!(Some(-5i16), flow_params.get("flow_param_2").copied());
     Ok(())
 }
 

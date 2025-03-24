@@ -84,6 +84,13 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
 
     <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
+    #[cfg(not(feature = "error_reporting"))]
+    assert_eq!(
+        "CliOutputTest display message.\n",
+        String::from_utf8(cli_output.writer().clone())?
+    );
+
+    #[cfg(feature = "error_reporting")]
     assert_eq!(
         r#"workspace_tests::cli::output::cli_output_test
 
@@ -161,6 +168,13 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
 
     <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
+    #[cfg(not(feature = "error_reporting"))]
+    assert_eq!(
+        "CliOutputTest display message.\n",
+        String::from_utf8(cli_output.writer().clone())?
+    );
+
+    #[cfg(feature = "error_reporting")]
     assert_eq!(
         concat!(
             "\u{1b}[31mworkspace_tests::cli::output::cli_output_test\u{1b}[0m\n",

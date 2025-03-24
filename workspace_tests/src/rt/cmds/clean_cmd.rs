@@ -1014,7 +1014,7 @@ async fn states_current_not_serialized_on_states_discover_cmd_block_fail(
 fn debug() {
     let debug_str = format!("{:?}", CleanCmd::<TestCctNoOpOutput>::default());
     assert_eq!(
-        r#"CleanCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput>)"#,
+        r#"CleanCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str,
     );
 }

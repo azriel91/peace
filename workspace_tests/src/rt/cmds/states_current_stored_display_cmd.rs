@@ -139,7 +139,7 @@ fn debug() {
         StatesCurrentStoredDisplayCmd::<TestCctNoOpOutput>::default()
     );
     assert_eq!(
-        r#"StatesCurrentStoredDisplayCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput>)"#,
+        r#"StatesCurrentStoredDisplayCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str,
     );
 }

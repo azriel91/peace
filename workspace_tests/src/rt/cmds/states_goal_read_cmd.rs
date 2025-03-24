@@ -113,7 +113,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!("{:?}", StatesGoalReadCmd::<TestCctNoOpOutput>::default());
     assert_eq!(
-        r#"StatesGoalReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput>)"#,
+        r#"StatesGoalReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str,
     );
 }

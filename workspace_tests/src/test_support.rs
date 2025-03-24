@@ -2,16 +2,17 @@ use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
     cfg::AppName,
     flow_model::FlowId,
+    params::ParamsSpecs,
     profile_model::Profile,
     resource_rt::{
         internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-        paths::{FlowDir, ProfileDir},
+        paths::{FlowDir, ParamsSpecsFile, ProfileDir},
         resources::ts::SetUp,
         Resources,
     },
     rt_model::{
         params::{FlowParams, ProfileParams, WorkspaceParams},
-        Error, Storage, Workspace, WorkspaceSpec,
+        Error, ParamsSpecsSerializer, Storage, Workspace, WorkspaceSpec,
     },
 };
 
@@ -86,7 +87,9 @@ pub(crate) async fn workspace_with(
                 flow_params.insert(String::from("flow_param_0"), true);
                 flow_params.insert(String::from("flow_param_1"), 456u16);
 
-                Storage
+                let storage = Storage;
+
+                storage
                     .serialized_write(
                         crate::fn_name_short!().to_string(),
                         &flow_params_file,
@@ -94,6 +97,16 @@ pub(crate) async fn workspace_with(
                         Error::FlowParamsSerialize,
                     )
                     .await?;
+
+                // Empty item params specs.
+                let params_specs = ParamsSpecs::new();
+                let params_specs_file = ParamsSpecsFile::from(&flow_dir);
+                ParamsSpecsSerializer::<peace::rt_model::Error>::serialize(
+                    &storage,
+                    &params_specs,
+                    &params_specs_file,
+                )
+                .await?;
             }
 
             Ok(())

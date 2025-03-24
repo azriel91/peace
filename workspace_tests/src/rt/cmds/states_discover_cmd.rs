@@ -1117,7 +1117,7 @@ async fn current_and_goal_with_sets_progress_complete_for_successful_items(
 fn debug() {
     let debug_str = format!("{:?}", StatesDiscoverCmd::<TestCctNoOpOutput>::default());
     assert_eq!(
-        r#"StatesDiscoverCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::TestCctNoOpOutput>)"#,
+        r#"StatesDiscoverCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str
     );
 }

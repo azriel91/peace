@@ -140,7 +140,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = CmdCtxMpnf::<TestCctNoOpOutput>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), None)
         .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
         .await?;
 
@@ -191,9 +191,13 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let cmd_ctx = CmdCtxMpnf::<TestCctNoOpOutput>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        // Erase existing value
         .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
         .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
@@ -236,8 +240,9 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
-    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
-    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(&3u32), profile_params.get("profile_param_0"));
+    assert_eq!(None::<&u64>, profile_params.get("profile_param_1"));
+    assert_eq!(Some(&-4i64), profile_params.get("profile_param_2"));
     Ok(())
 }
 
@@ -315,9 +320,13 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
     let cmd_ctx = CmdCtxMpnf::<TestCctNoOpOutput>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(123))
+        // Overwrite existing value
+        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        // Erase existing value
         .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        // Add new value
+        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
         .with_workspace_param(
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
@@ -356,8 +365,9 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
-    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
-    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(&3u32), profile_params.get("profile_param_0"));
+    assert_eq!(None::<&u64>, profile_params.get("profile_param_1"));
+    assert_eq!(Some(&-4i64), profile_params.get("profile_param_2"));
     Ok(())
 }
 
@@ -462,7 +472,7 @@ async fn debug() -> Result<(), Box<dyn std::error::Error>> {
         .with_workspace((&workspace).into())
         .await?;
 
-    assert!(format!("{cmd_ctx:?}").contains("CmdCtxMpsf {"));
+    assert!(format!("{cmd_ctx:?}").contains("CmdCtxMpnf {"));
 
     let fields = cmd_ctx.fields();
     assert!(format!("{fields:?}").contains("CmdCtxMpnfFields {"));
