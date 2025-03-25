@@ -25,7 +25,6 @@ miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
 peace_cli = { workspace = true, optional = true }
 peace_cli_model = { workspace = true, optional = true }
-peace_cmd = { workspace = true }
 peace_cmd_ctx = { workspace = true }
 peace_cmd_model = { workspace = true }
 peace_cmd_rt = { workspace = true }
@@ -78,6 +77,7 @@ output_in_memory = ["peace_cli?/output_in_memory"]
 output_progress = [
     "dep:peace_progress_model",
     "peace_cli?/output_progress",
+    "peace_cmd_ctx/output_progress",
     "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
     "peace_flow_rt/output_progress",
@@ -96,7 +96,7 @@ item_interactions = [
 ]
 item_state_example = [
     "peace_cfg/item_state_example",
-    "peace_cmd/item_state_example",
+    "peace_cmd_ctx/item_state_example",
     "peace_data/item_state_example",
     "peace_flow_rt/item_state_example",
     "peace_params/item_state_example",
@@ -135,11 +135,9 @@ peace = { path = ".", version = "0.0.14", default-features = false }
 peace_cfg = { path = "crate/cfg", version = "0.0.14" }
 peace_cli = { path = "crate/cli", version = "0.0.14" }
 peace_cli_model = { path = "crate/cli_model", version = "0.0.14" }
-peace_cmd = { path = "crate/cmd", version = "0.0.14" }
 peace_cmd_ctx = { path = "crate/cmd_ctx", version = "0.0.14" }
 peace_cmd_model = { path = "crate/cmd_model", version = "0.0.14" }
 peace_cmd_rt = { path = "crate/cmd_rt", version = "0.0.14" }
-peace_code_gen = { path = "crate/code_gen", version = "0.0.14" }
 peace_core = { path = "crate/core", version = "0.0.14" }
 peace_data = { path = "crate/data", version = "0.0.14" }
 peace_data_derive = { path = "crate/data_derive", version = "0.0.14" }
