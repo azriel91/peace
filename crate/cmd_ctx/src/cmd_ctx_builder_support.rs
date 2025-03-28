@@ -2,6 +2,7 @@ use futures::{StreamExt, TryStreamExt};
 use peace_flow_rt::{Flow, ItemGraph};
 use peace_item_model::ItemId;
 use peace_params::{ParamsKey, ParamsSpecs};
+use peace_profile_model::Profile;
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     paths::ParamsSpecsFile,
@@ -14,10 +15,39 @@ use peace_rt_model::{
 };
 use type_reg::untagged::{BoxDt, TypeReg};
 
+use crate::ProfileSelection;
+
 /// Common code used to build different `CmdCtx*` types.
 pub(crate) struct CmdCtxBuilderSupport;
 
 impl CmdCtxBuilderSupport {
+    /// Selects a profile from the given profile selection.
+    pub fn profile_from_profile_selection<WorkspaceParamsK>(
+        profile_selection: ProfileSelection<'_, WorkspaceParamsK>,
+        workspace_params: &WorkspaceParams<WorkspaceParamsK>,
+        storage: &peace_rt_model::Storage,
+        workspace_params_file: &WorkspaceParamsFile,
+    ) -> Result<Profile, peace_rt_model::Error>
+    where
+        WorkspaceParamsK: ParamsKey,
+    {
+        match profile_selection {
+            ProfileSelection::Specified(profile) => Ok(profile),
+            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => workspace_params
+                .get(&workspace_params_k_profile)
+                .cloned()
+                .ok_or_else(|| peace_rt_model::Error::WorkspaceParamsProfileNone {
+                    profile_key: storage
+                        .serialized_write_string(
+                            &*workspace_params_k_profile,
+                            peace_rt_model::Error::WorkspaceParamsProfileKeySerialize,
+                        )
+                        .expect("Failed to serialize workspace params profile key."),
+                    workspace_params_file: workspace_params_file.clone(),
+                }),
+        }
+    }
+
     /// Merges workspace params provided by the caller with the workspace params
     /// on disk.
     ///

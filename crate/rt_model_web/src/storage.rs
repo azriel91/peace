@@ -417,6 +417,20 @@ impl Storage {
         Ok(())
     }
 
+    /// Serializes an item to a string.
+    ///
+    /// # Parameters
+    ///
+    /// * `t`: Item to serialize.
+    /// * `f_map_err`: Maps the serialization error (if any) to an [`Error`].
+    pub fn serialized_write_string<T, F>(&self, t: &T, f_map_err: F) -> Result<String, Error>
+    where
+        T: Serialize + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        serde_yaml::to_string(t).map_err(f_map_err)
+    }
+
     /// Deletes an item from the web storage.
     pub fn remove_item(&self, path: &Path) -> Result<(), Error> {
         let storage = self.get()?;

@@ -6,7 +6,7 @@ use peace_flow_model::FlowId;
 use peace_item_model::ItemId;
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_profile_model::Profile;
-use peace_resource_rt::paths::ParamsSpecsFile;
+use peace_resource_rt::{internal::WorkspaceParamsFile, paths::ParamsSpecsFile};
 
 pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
 
@@ -415,6 +415,14 @@ pub enum Error {
     )]
     StateDiffsSerializeJson(#[source] serde_json::Error),
 
+    /// Failed to serialize workspace params profile key.
+    #[error("Failed to serialize workspace params profile key.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::workspace_params_profile_key_serialize))
+    )]
+    WorkspaceParamsProfileKeySerialize(#[source] serde_yaml::Error),
+
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]
     #[cfg_attr(
@@ -443,9 +451,17 @@ pub enum Error {
     #[error("Workspace param for `Profile` does not exist.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::workspace_params_profile_none))
+        diagnostic(
+            code(peace_rt_model::workspace_params_profile_none),
+            help("Ensure `{workspace_params_file}` contains a param for `{profile_key}`.")
+        )
     )]
-    WorkspaceParamsProfileNone,
+    WorkspaceParamsProfileNone {
+        /// The key that the profile should be stored against.
+        profile_key: String,
+        /// The file that stores workspace params.
+        workspace_params_file: WorkspaceParamsFile,
+    },
 
     /// Profile to diff does not exist in `MultiProfileSingleFlow` scope.
     ///

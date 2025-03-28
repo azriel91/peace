@@ -291,13 +291,12 @@ where
         )
         .await?;
 
-        let profile = match profile_selection {
-            ProfileSelection::Specified(profile) => profile,
-            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => workspace_params
-                .get(&workspace_params_k_profile)
-                .cloned()
-                .ok_or(peace_rt_model_core::Error::WorkspaceParamsProfileNone)?,
-        };
+        let profile = CmdCtxBuilderSupport::profile_from_profile_selection(
+            profile_selection,
+            &workspace_params,
+            storage,
+            &workspace_params_file,
+        )?;
 
         let profile_ref = &profile;
         let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile_ref));
