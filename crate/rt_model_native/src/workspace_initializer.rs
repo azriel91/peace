@@ -82,6 +82,12 @@ impl WorkspaceInitializer {
             .await
     }
 
+    // TODO: for every variant in `K`, we need to deserialize it
+    // Also do this for profile_params and flow_params
+    //
+    // The TypeReg doesn't know what the Value type is.
+    // *that*s why we had the ws_and_profile_params augment in envman.
+
     pub async fn workspace_params_deserialize<K>(
         storage: &Storage,
         type_reg: &TypeReg<K>,

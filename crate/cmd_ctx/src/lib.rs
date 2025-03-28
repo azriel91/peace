@@ -3,6 +3,7 @@
 
 // Re-exports
 pub use interruptible;
+pub use type_reg;
 
 pub use crate::{
     cmd_ctx_mpnf::{CmdCtxMpnf, CmdCtxMpnfFields},

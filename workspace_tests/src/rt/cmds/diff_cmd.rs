@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile},
     cli::output::CliOutput,
-    cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
+    cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxMpsf, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
     cmd_model::CmdOutcome,
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -766,4 +766,10 @@ impl CmdCtxTypes for TestCctCliBuffer {
     type Output = CliOutput<Vec<u8>>;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();
+
+    fn workspace_params_register(_type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {}
+
+    fn profile_params_register(_type_reg: &mut TypeReg<Self::ProfileParamsKey>) {}
+
+    fn flow_params_register(_type_reg: &mut TypeReg<Self::FlowParamsKey>) {}
 }

@@ -2,7 +2,9 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{app_name, ApplyCheck, Item},
-    cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes, ProfileSelection},
+    cmd_ctx::{
+        type_reg::untagged::TypeReg, CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes, ProfileSelection,
+    },
     cmd_model::CmdOutcome,
     data::Data,
     flow_model::FlowId,
@@ -855,4 +857,10 @@ impl CmdCtxTypes for TestCctTarX {
     type Output = InMemoryTextOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();
+
+    fn workspace_params_register(_type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {}
+
+    fn profile_params_register(_type_reg: &mut TypeReg<Self::ProfileParamsKey>) {}
+
+    fn flow_params_register(_type_reg: &mut TypeReg<Self::FlowParamsKey>) {}
 }
