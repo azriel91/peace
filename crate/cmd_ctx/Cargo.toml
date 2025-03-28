@@ -35,7 +35,7 @@ peace_resource_rt = { workspace = true }
 peace_rt_model = { workspace = true }
 peace_rt_model_core = { workspace = true }
 peace_state_rt = { workspace = true }
-tokio = { workspace = true, features = ["fs"] }
+tokio = { workspace = true }
 type_reg = { workspace = true }
 typed-builder = { workspace = true }
 
