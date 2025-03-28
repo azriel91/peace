@@ -39,7 +39,6 @@ impl ProfileShowCmd {
         let cmd_ctx_builder = CmdCtxSpnf::<EnvmanCmdCtxTypes<O>>::builder()
             .with_output(output.into())
             .with_workspace((&workspace).into());
-        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let profile_key = WorkspaceParamsKey::Profile;
         let mut cmd_ctx = cmd_ctx_builder

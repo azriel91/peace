@@ -36,13 +36,10 @@ where
         WorkspaceSpec::SessionStorage,
     )?;
 
-    let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
-        .with_output(output.into())
-        .with_workspace(workspace.into());
-    crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
-
     let profile_key = WorkspaceParamsKey::Profile;
-    cmd_ctx_builder
+    CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into())
         .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
         .with_flow(flow.into())
         .await
@@ -67,7 +64,6 @@ where
     let cmd_ctx_builder = CmdCtxSpnf::<EnvmanCmdCtxTypes<O>>::builder()
         .with_output(output.into())
         .with_workspace(workspace.into());
-    crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
     let profile_key = WorkspaceParamsKey::Profile;
     cmd_ctx_builder

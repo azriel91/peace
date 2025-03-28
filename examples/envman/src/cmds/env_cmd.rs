@@ -51,7 +51,6 @@ impl EnvCmd {
                 .with_output(output.into())
                 .with_workspace(workspace.into());
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
                 .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))

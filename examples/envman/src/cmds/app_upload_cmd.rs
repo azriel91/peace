@@ -54,21 +54,13 @@ impl AppUploadCmd {
             .with_bucket_name_from_map(S3BucketState::bucket_name)
             .build();
 
-        let mut cmd_ctx = {
-            let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
-                .with_output(output.into())
-                .with_workspace(workspace.into());
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
-
-            cmd_ctx_builder
-                .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
-                .with_flow((&flow).into())
-                .with_item_params::<S3ObjectItem<WebApp>>(
-                    item_id!("s3_object"),
-                    s3_object_params_spec,
-                )
-                .await?
-        };
+        let mut cmd_ctx = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+            .with_output(output.into())
+            .with_workspace(workspace.into())
+            .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
+            .with_flow((&flow).into())
+            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
+            .await?;
 
         let CmdOpts { profile_print } = cmd_opts;
 

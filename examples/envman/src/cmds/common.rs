@@ -29,11 +29,10 @@ where
     O: OutputWrite,
     EnvManError: From<<O as OutputWrite>::Error>,
 {
-    let cmd_ctx_builder = CmdCtxNpnf::<EnvmanCmdCtxTypes<O>>::builder()
+    let cmd_ctx = CmdCtxNpnf::<EnvmanCmdCtxTypes<O>>::builder()
         .with_output(output.into())
-        .with_workspace(workspace.into());
-    crate::cmds::ws_params_augment!(cmd_ctx_builder);
-    let cmd_ctx = cmd_ctx_builder.await?;
+        .with_workspace(workspace.into())
+        .await?;
     Ok(cmd_ctx
         .fields()
         .workspace_params()

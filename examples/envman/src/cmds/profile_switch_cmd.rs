@@ -62,16 +62,14 @@ impl ProfileSwitchCmd {
                         app_name,
                     });
                 } else {
-                    let cmd_ctx_builder = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
+                    // Switches profile
+                    let _cmd_ctx = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
                         .with_output(output.reborrow())
-                        .with_workspace(workspace.into());
-                    crate::cmds::ws_params_augment!(cmd_ctx_builder);
-                    cmd_ctx_builder
+                        .with_workspace(workspace.into())
                         .with_workspace_param(
                             WorkspaceParamsKey::Profile,
                             Some(profile_to_switch_to.clone()),
                         )
-                        .build()
                         .await?;
                 }
 

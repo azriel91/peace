@@ -1,29 +1,3 @@
-// TODO: do we really need to call `.with_workspace_param` and pass in `None`
-// anymore?
-//
-// It was probably to get the keys into the map.
-
-#[rustfmt::skip] // https://github.com/rust-lang/rustfmt/issues/4609
-#[macro_export]
-macro_rules! ws_params_augment {
-    ($cmd_ctx_builder:ident) => {
-        let $cmd_ctx_builder = $cmd_ctx_builder
-            .with_workspace_param::<peace::profile_model::Profile>($crate::model::WorkspaceParamsKey::Profile, None)
-            .with_workspace_param::<$crate::model::EnvManFlow>($crate::model::WorkspaceParamsKey::Flow, None);
-    };
-}
-
-#[rustfmt::skip] // https://github.com/rust-lang/rustfmt/issues/4609
-#[macro_export]
-macro_rules! ws_and_profile_params_augment {
-    ($cmd_ctx_builder:ident) => {
-        let $cmd_ctx_builder = $cmd_ctx_builder
-            .with_workspace_param::<peace::profile_model::Profile>($crate::model::WorkspaceParamsKey::Profile, None)
-            .with_workspace_param::<$crate::model::EnvManFlow>($crate::model::WorkspaceParamsKey::Flow, None)
-            .with_profile_param::<$crate::model::EnvType>($crate::model::ProfileParamsKey::EnvType, None);
-    };
-}
-
 #[rustfmt::skip] // https://github.com/rust-lang/rustfmt/issues/4609
 #[macro_export]
 macro_rules! interruptibility_augment {
@@ -47,5 +21,3 @@ macro_rules! interruptibility_augment {
 }
 
 pub use interruptibility_augment;
-pub use ws_and_profile_params_augment;
-pub use ws_params_augment;
