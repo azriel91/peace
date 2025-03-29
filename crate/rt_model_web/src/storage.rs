@@ -344,6 +344,15 @@ impl Storage {
         })
     }
 
+    /// Reads the file at the given path to string.
+    ///
+    /// # Parameters
+    ///
+    /// * `file_path`: Path to the file to read to string.
+    pub async fn read_to_string(&self, file_path: &Path) -> Result<String, Error> {
+        self.get_item(file_path)
+    }
+
     /// Reads a serializable item from the given key.
     ///
     /// # Parameters

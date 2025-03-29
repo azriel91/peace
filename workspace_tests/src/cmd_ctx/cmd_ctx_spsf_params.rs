@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, Item},
-    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
+    cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
@@ -14,7 +14,6 @@ use peace::{
 
 use crate::{
     no_op_output::NoOpOutput,
-    peace_cmd_ctx_types::TestCctNoOpOutput,
     test_support::{assert_flow_params, assert_profile_params, assert_workspace_params, workspace},
     vec_copy_item::{VecA, VecAFieldWise, VecCopyItem},
     PeaceTestError,
@@ -23,13 +22,13 @@ use crate::{
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -55,13 +54,13 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -103,13 +102,13 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 #[tokio::test]
 async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_param(String::from("profile_param_0"), Some(1u32))
@@ -140,13 +139,13 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -181,13 +180,13 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
 async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -236,13 +235,13 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 async fn build_with_workspace_params_with_profile_params_with_flow_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -294,16 +293,89 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
 }
 
 #[tokio::test]
-async fn build_with_workspace_params_with_profile_from_params(
+async fn build_with_workspace_params_with_profile_params_with_flow_params_none_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_save = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
+        .with_output((&mut output).into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile.clone()))
+        .with_flow((&flow).into())
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .with_workspace_param(String::from("ws_param_2"), None::<u8>)
+        .with_profile_param(String::from("profile_param_0"), Some(1u32))
+        .with_profile_param(String::from("profile_param_1"), Some(2u64))
+        .with_flow_param(String::from("flow_param_0"), Some(true))
+        .with_flow_param(String::from("flow_param_1"), Some(456u16))
+        .await?;
+    drop(cmd_ctx_save);
+
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
+        .with_output((&mut output).into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(
+            String::from("profile").into(),
+        ))
+        .with_flow((&flow).into())
+        .await?;
+
+    let peace_app_dir = workspace.dirs().peace_app_dir();
+    let profile_dir = ProfileDir::from((peace_app_dir, &profile));
+    let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+    let flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
+
+    let fields = cmd_ctx.fields();
+    let workspace_params = fields.workspace_params();
+    let profile_params = fields.profile_params();
+    let flow_params = fields.flow_params();
+    assert!(std::ptr::eq(&workspace, fields.workspace()));
+    assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
+    assert_eq!(&profile, fields.profile());
+    assert_eq!(&profile_dir, fields.profile_dir());
+    assert_eq!(&profile_history_dir, fields.profile_history_dir());
+    assert_eq!(flow.flow_id(), fields.flow().flow_id());
+    assert_eq!(&flow_dir, fields.flow_dir());
+    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&String::from("ws_param_1_value")),
+        workspace_params.get("ws_param_1")
+    );
+    assert_eq!(None::<u8>, workspace_params.get("ws_param_2").copied());
+    assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
+    assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+
+    let resources = fields.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
+    assert_profile_params(resources).await?;
+    assert_flow_params(resources).await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_workspace_params_with_profile_from_params(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
+
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
@@ -348,13 +420,13 @@ async fn build_with_workspace_params_with_profile_from_params(
 async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_param(String::from("profile_param_0"), Some(1u32))
@@ -411,7 +483,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
 async fn build_with_item_params_returns_ok_when_params_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -422,7 +494,7 @@ async fn build_with_item_params_returns_ok_when_params_provided(
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -458,7 +530,7 @@ async fn build_with_item_params_returns_ok_when_params_provided(
 async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -469,7 +541,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -508,7 +580,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
 async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -519,7 +591,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -527,7 +599,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .await?;
 
-    let cmd_ctx_from_stored = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_from_stored = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -562,7 +634,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
 async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -573,7 +645,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -581,7 +653,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .await?;
 
-    let cmd_ctx_from_stored = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_from_stored = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -617,7 +689,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
 async fn build_with_item_params_returns_err_when_params_provided_mismatch(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -628,7 +700,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -636,7 +708,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
         .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
         .await?;
 
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -684,7 +756,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
 async fn build_with_item_params_returns_err_when_params_stored_mismatch(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -695,7 +767,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -713,7 +785,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -761,7 +833,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
 async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -772,7 +844,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -792,7 +864,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -844,7 +916,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -855,7 +927,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -875,7 +947,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -919,7 +991,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
 async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -930,7 +1002,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -950,7 +1022,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -998,7 +1070,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
 async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -1009,7 +1081,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -1024,7 +1096,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -1079,7 +1151,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
 async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -1088,7 +1160,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
 
     let mut output = NoOpOutput;
-    let _cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -1102,7 +1174,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
@@ -1132,4 +1204,31 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     );
 
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct TestCctCmdCtxSpsf;
+
+impl CmdCtxTypes for TestCctCmdCtxSpsf {
+    type AppError = PeaceTestError;
+    type FlowParamsKey = String;
+    type Output = NoOpOutput;
+    type ProfileParamsKey = String;
+    type WorkspaceParamsKey = String;
+
+    fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
+        type_reg.register::<Profile>(String::from("profile"));
+        type_reg.register::<String>(String::from("ws_param_1"));
+        type_reg.register::<u8>(String::from("ws_param_2"));
+    }
+
+    fn profile_params_register(type_reg: &mut TypeReg<Self::ProfileParamsKey>) {
+        type_reg.register::<u32>(String::from("profile_param_0"));
+        type_reg.register::<u64>(String::from("profile_param_1"));
+    }
+
+    fn flow_params_register(type_reg: &mut TypeReg<Self::FlowParamsKey>) {
+        type_reg.register::<bool>(String::from("flow_param_0"));
+        type_reg.register::<u16>(String::from("flow_param_1"));
+    }
 }

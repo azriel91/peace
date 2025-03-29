@@ -13,8 +13,10 @@ use peace_resource_rt::{
     states::StatesCurrentStored,
     Resources,
 };
-use peace_rt_model::{ParamsSpecsSerializer, Workspace, WorkspaceInitializer};
-use peace_rt_model_core::params::{FlowParams, ProfileParams, WorkspaceParams};
+use peace_rt_model::{
+    params::{FlowParamsOpt, ProfileParamsOpt, WorkspaceParamsOpt},
+    ParamsSpecsSerializer, Workspace, WorkspaceInitializer,
+};
 use peace_state_rt::StatesSerializer;
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
@@ -80,7 +82,7 @@ where
     // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
     #[builder(
         setter(prefix = "with_"),
-        via_mutators(init = WorkspaceParams::default()),
+        via_mutators(init = WorkspaceParamsOpt::default()),
         mutators(
             /// Sets the value at the given workspace params key.
             ///
@@ -101,18 +103,16 @@ where
             where
                 V: ParamsValue,
             {
-                let _ = match value {
-                    Some(value) => self.workspace_params.insert(key, value),
-                    None => self.workspace_params.shift_remove(&key),
-                };
+                let _ = self.workspace_params.insert(key, value);
             }
         )
     )]
-    pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
+    #[builder(setter(prefix = "with_"))]
+    pub workspace_params: WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
     /// Profile params for the profile.
     #[builder(
         setter(prefix = "with_"),
-        via_mutators(init = ProfileParams::default()),
+        via_mutators(init = ProfileParamsOpt::default()),
         mutators(
             /// Sets the value at the given profile params key.
             ///
@@ -133,18 +133,15 @@ where
             where
                 V: ParamsValue,
             {
-                let _ = match value {
-                    Some(value) => self.profile_params.insert(key, value),
-                    None => self.profile_params.shift_remove(&key),
-                };
+                let _ = self.profile_params.insert(key, value);
             }
         )
     )]
-    pub profile_params: ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+    pub profile_params: ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
     /// Flow params for the selected flow.
     #[builder(
         setter(prefix = "with_"),
-        via_mutators(init = FlowParams::default()),
+        via_mutators(init = FlowParamsOpt::default()),
         mutators(
             /// Sets the value at the given flow params key.
             ///
@@ -165,14 +162,11 @@ where
             where
                 V: ParamsValue,
             {
-                let _ = match value {
-                    Some(value) => self.flow_params.insert(key, value),
-                    None => self.flow_params.shift_remove(&key),
-                };
+                let _ = self.flow_params.insert(key, value);
             }
         )
     )]
-    pub flow_params: FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,
+    pub flow_params: FlowParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,
     /// Item params specs for the selected flow.
     //
     // NOTE: When updating this mutator, also check if `CmdCtxMpsf` needs its mutator updated.
@@ -251,9 +245,9 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
-            (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
-            (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
+            (FlowParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
             (Resources<Empty>,),
         ),
@@ -268,25 +262,28 @@ where
             workspace,
             profile_selection,
             flow,
-            mut workspace_params,
-            mut profile_params,
-            mut flow_params,
+            workspace_params: workspace_params_provided,
+            profile_params: profile_params_provided,
+            flow_params: flow_params_provided,
             params_specs: params_specs_provided,
             resources: resources_override,
         } = self.build_partial();
 
-        let workspace_params_type_reg = TypeReg::new();
-        let profile_params_type_reg = TypeReg::new();
-        let flow_params_type_reg = TypeReg::new();
+        let mut workspace_params_type_reg = TypeReg::new();
+        CmdCtxTypesT::workspace_params_register(&mut workspace_params_type_reg);
+        let mut profile_params_type_reg = TypeReg::new();
+        CmdCtxTypesT::profile_params_register(&mut profile_params_type_reg);
+        let mut flow_params_type_reg = TypeReg::new();
+        CmdCtxTypesT::flow_params_register(&mut flow_params_type_reg);
 
         let workspace_dirs = workspace.dirs();
         let storage = workspace.storage();
 
         let workspace_params_file = WorkspaceParamsFile::from(workspace_dirs.peace_app_dir());
-        CmdCtxBuilderSupport::workspace_params_merge(
+        let workspace_params = CmdCtxBuilderSupport::workspace_params_merge(
             storage,
             &workspace_params_type_reg,
-            &mut workspace_params,
+            workspace_params_provided,
             &workspace_params_file,
         )
         .await?;
@@ -296,7 +293,8 @@ where
             &workspace_params,
             storage,
             &workspace_params_file,
-        )?;
+        )
+        .await?;
 
         let profile_ref = &profile;
         let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile_ref));
@@ -317,20 +315,20 @@ where
 
         // profile_params_deserialize
         let profile_params_file = ProfileParamsFile::from(&profile_dir);
-        CmdCtxBuilderSupport::profile_params_merge(
+        let profile_params = CmdCtxBuilderSupport::profile_params_merge(
             storage,
             &profile_params_type_reg,
-            &mut profile_params,
+            profile_params_provided,
             &profile_params_file,
         )
         .await?;
 
         // flow_params_deserialize
         let flow_params_file = FlowParamsFile::from(&flow_dir);
-        CmdCtxBuilderSupport::flow_params_merge(
+        let flow_params = CmdCtxBuilderSupport::flow_params_merge(
             storage,
             &flow_params_type_reg,
-            &mut flow_params,
+            flow_params_provided,
             &flow_params_file,
         )
         .await?;
@@ -525,9 +523,9 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            (WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
-            (ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
-            (FlowParams<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
+            (FlowParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>,),
             (ParamsSpecs,),
             (Resources<Empty>,),
         ),

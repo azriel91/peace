@@ -46,6 +46,7 @@ pub(crate) async fn workspace_with(
     let mut workspace_params = WorkspaceParams::new();
     workspace_params.insert(String::from("profile"), profiles_existing[0].clone());
     workspace_params.insert(String::from("ws_param_1"), String::from("ws_param_1_value"));
+    workspace_params.insert(String::from("ws_param_2"), 1u8);
 
     Storage
         .serialized_write(

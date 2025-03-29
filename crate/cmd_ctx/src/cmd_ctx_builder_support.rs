@@ -10,7 +10,10 @@ use peace_resource_rt::{
     Resource, Resources,
 };
 use peace_rt_model::{
-    params::{FlowParams, ProfileParams, WorkspaceParams},
+    params::{
+        FlowParams, FlowParamsOpt, ProfileParams, ProfileParamsOpt, WorkspaceParams,
+        WorkspaceParamsOpt,
+    },
     ParamsSpecsSerializer, ParamsSpecsTypeReg, StatesTypeReg, Storage, WorkspaceInitializer,
 };
 use type_reg::untagged::{BoxDt, TypeReg};
@@ -22,7 +25,7 @@ pub(crate) struct CmdCtxBuilderSupport;
 
 impl CmdCtxBuilderSupport {
     /// Selects a profile from the given profile selection.
-    pub fn profile_from_profile_selection<WorkspaceParamsK>(
+    pub async fn profile_from_profile_selection<WorkspaceParamsK>(
         profile_selection: ProfileSelection<'_, WorkspaceParamsK>,
         workspace_params: &WorkspaceParams<WorkspaceParamsK>,
         storage: &peace_rt_model::Storage,
@@ -33,18 +36,35 @@ impl CmdCtxBuilderSupport {
     {
         match profile_selection {
             ProfileSelection::Specified(profile) => Ok(profile),
-            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => workspace_params
-                .get(&workspace_params_k_profile)
-                .cloned()
-                .ok_or_else(|| peace_rt_model::Error::WorkspaceParamsProfileNone {
-                    profile_key: storage
-                        .serialized_write_string(
-                            &*workspace_params_k_profile,
-                            peace_rt_model::Error::WorkspaceParamsProfileKeySerialize,
-                        )
-                        .expect("Failed to serialize workspace params profile key."),
-                    workspace_params_file: workspace_params_file.clone(),
-                }),
+            ProfileSelection::FromWorkspaceParam(workspace_params_k_profile) => {
+                let profile_from_workspace_params =
+                    workspace_params.get(&workspace_params_k_profile).cloned();
+
+                match profile_from_workspace_params {
+                    Some(profile) => Ok(profile),
+                    None => {
+                        let profile_key = storage
+                            .serialized_write_string(
+                                &*workspace_params_k_profile,
+                                peace_rt_model::Error::WorkspaceParamsProfileKeySerialize,
+                            )
+                            .expect("Failed to serialize workspace params profile key.")
+                            .trim_end()
+                            .to_string();
+                        let workspace_params_file = workspace_params_file.clone();
+                        let workspace_params_file_contents = storage
+                            .read_to_string(&workspace_params_file)
+                            .await
+                            .unwrap_or_default();
+
+                        Err(peace_rt_model::Error::WorkspaceParamsProfileNone {
+                            profile_key,
+                            workspace_params_file,
+                            workspace_params_file_contents,
+                        })
+                    }
+                }
+            }
         }
     }
 
@@ -57,43 +77,32 @@ impl CmdCtxBuilderSupport {
     pub(crate) async fn workspace_params_merge<WorkspaceParamsK>(
         storage: &peace_rt_model::Storage,
         workspace_params_type_reg: &TypeReg<WorkspaceParamsK, BoxDt>,
-        params: &mut peace_rt_model::params::WorkspaceParams<WorkspaceParamsK>,
+        workspace_params_provided: WorkspaceParamsOpt<WorkspaceParamsK>,
         workspace_params_file: &peace_resource_rt::internal::WorkspaceParamsFile,
-    ) -> Result<(), peace_rt_model::Error>
+    ) -> Result<WorkspaceParams<WorkspaceParamsK>, peace_rt_model::Error>
     where
         WorkspaceParamsK: ParamsKey,
     {
-        let params_deserialized =
-            peace_rt_model::WorkspaceInitializer::workspace_params_deserialize::<WorkspaceParamsK>(
-                storage,
-                workspace_params_type_reg,
-                workspace_params_file,
-            )
-            .await?;
-        match params_deserialized {
-            Some(params_deserialized) => {
-                // Merge `params` on top of `params_deserialized`.
-                // or, copy `params_deserialized` to `params` where
-                // there isn't a value.
+        let params_deserialized = WorkspaceInitializer::workspace_params_deserialize::<
+            WorkspaceParamsK,
+        >(
+            storage, workspace_params_type_reg, workspace_params_file
+        )
+        .await?;
 
-                if params.is_empty() {
-                    *params = params_deserialized;
-                } else {
-                    params_deserialized
-                        .into_inner()
-                        .into_inner()
-                        .into_iter()
-                        .for_each(|(key, param)| {
-                            if !params.contains_key(&key) {
-                                params.insert_raw(key, param);
-                            }
-                        });
-                }
-            }
-            None => {}
-        }
+        let mut workspace_params = params_deserialized.unwrap_or_default();
+        workspace_params_provided
+            .into_inner()
+            .into_inner()
+            .into_iter()
+            .for_each(|(key, param)| {
+                let _ = match param {
+                    Some(value) => workspace_params.insert_raw(key, value),
+                    None => workspace_params.shift_remove(&key),
+                };
+            });
 
-        Ok(())
+        Ok(workspace_params)
     }
 
     /// Merges profile params provided by the caller with the profile params
@@ -105,43 +114,33 @@ impl CmdCtxBuilderSupport {
     pub(crate) async fn profile_params_merge<ProfileParamsK>(
         storage: &peace_rt_model::Storage,
         profile_params_type_reg: &TypeReg<ProfileParamsK, BoxDt>,
-        params: &mut peace_rt_model::params::ProfileParams<ProfileParamsK>,
+        profile_params_provided: ProfileParamsOpt<ProfileParamsK>,
         profile_params_file: &peace_resource_rt::internal::ProfileParamsFile,
-    ) -> Result<(), peace_rt_model::Error>
+    ) -> Result<ProfileParams<ProfileParamsK>, peace_rt_model::Error>
     where
         ProfileParamsK: ParamsKey,
     {
         let params_deserialized =
-            peace_rt_model::WorkspaceInitializer::profile_params_deserialize::<ProfileParamsK>(
+            WorkspaceInitializer::profile_params_deserialize::<ProfileParamsK>(
                 storage,
                 profile_params_type_reg,
                 profile_params_file,
             )
             .await?;
-        match params_deserialized {
-            Some(params_deserialized) => {
-                // Merge `params` on top of `params_deserialized`.
-                // or, copy `params_deserialized` to `params` where
-                // there isn't a value.
 
-                if params.is_empty() {
-                    *params = params_deserialized;
-                } else {
-                    params_deserialized
-                        .into_inner()
-                        .into_inner()
-                        .into_iter()
-                        .for_each(|(key, param)| {
-                            if !params.contains_key(&key) {
-                                params.insert_raw(key, param);
-                            }
-                        });
-                }
-            }
-            None => {}
-        }
+        let mut profile_params = params_deserialized.unwrap_or_default();
+        profile_params_provided
+            .into_inner()
+            .into_inner()
+            .into_iter()
+            .for_each(|(key, param)| {
+                let _ = match param {
+                    Some(value) => profile_params.insert_raw(key, value),
+                    None => profile_params.shift_remove(&key),
+                };
+            });
 
-        Ok(())
+        Ok(profile_params)
     }
 
     /// Merges flow params provided by the caller with the flow params
@@ -153,40 +152,32 @@ impl CmdCtxBuilderSupport {
     pub(crate) async fn flow_params_merge<FlowParamsK>(
         storage: &peace_rt_model::Storage,
         flow_params_type_reg: &TypeReg<FlowParamsK, BoxDt>,
-        params: &mut peace_rt_model::params::FlowParams<FlowParamsK>,
+        flow_params_provided: FlowParamsOpt<FlowParamsK>,
         flow_params_file: &peace_resource_rt::internal::FlowParamsFile,
-    ) -> Result<(), peace_rt_model::Error>
+    ) -> Result<FlowParams<FlowParamsK>, peace_rt_model::Error>
     where
         FlowParamsK: ParamsKey,
     {
-        let params_deserialized = peace_rt_model::WorkspaceInitializer::flow_params_deserialize::<
-            FlowParamsK,
-        >(storage, flow_params_type_reg, flow_params_file)
+        let params_deserialized = WorkspaceInitializer::flow_params_deserialize::<FlowParamsK>(
+            storage,
+            flow_params_type_reg,
+            flow_params_file,
+        )
         .await?;
-        match params_deserialized {
-            Some(params_deserialized) => {
-                // Merge `params` on top of `params_deserialized`.
-                // or, copy `params_deserialized` to `params` where
-                // there isn't a value.
 
-                if params.is_empty() {
-                    *params = params_deserialized;
-                } else {
-                    params_deserialized
-                        .into_inner()
-                        .into_inner()
-                        .into_iter()
-                        .for_each(|(key, param)| {
-                            if !params.contains_key(&key) {
-                                params.insert_raw(key, param);
-                            }
-                        });
-                }
-            }
-            None => {}
-        }
+        let mut flow_params = params_deserialized.unwrap_or_default();
+        flow_params_provided
+            .into_inner()
+            .into_inner()
+            .into_iter()
+            .for_each(|(key, param)| {
+                let _ = match param {
+                    Some(value) => flow_params.insert_raw(key, value),
+                    None => flow_params.shift_remove(&key),
+                };
+            });
 
-        Ok(())
+        Ok(flow_params)
     }
 
     /// Serializes workspace params to storage.

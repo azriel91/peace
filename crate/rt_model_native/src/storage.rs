@@ -8,7 +8,7 @@ use peace_rt_model_core::{Error, NativeError};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
     fs::File,
-    io::{BufReader, BufWriter},
+    io::{AsyncReadExt, BufReader, BufWriter},
 };
 use tokio_util::io::SyncIoBridge;
 
@@ -17,6 +17,42 @@ use tokio_util::io::SyncIoBridge;
 pub struct Storage;
 
 impl Storage {
+    /// Reads the file at the given path to string.
+    ///
+    /// Note: This does not check the file size, so it will use as much memory
+    /// as the file size.
+    ///
+    /// # Parameters
+    ///
+    /// * `file_path`: Path to the file to read to string.
+    pub async fn read_to_string(&self, file_path: &Path) -> Result<String, Error> {
+        if file_path.exists() {
+            let mut file = File::open(file_path).await.map_err(
+                // Tests currently don't cover file system failure cases,
+                // e.g. disk space limits.
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                |error| {
+                    let path = file_path.to_path_buf();
+                    Error::Native(NativeError::FileOpen { path, error })
+                },
+            )?;
+
+            let mut buffer = String::new();
+            file.read_to_string(&mut buffer).await.map_err(|error| {
+                Error::Native(NativeError::FileRead {
+                    error,
+                    path: file_path.to_path_buf(),
+                })
+            })?;
+
+            Ok(buffer)
+        } else {
+            Err(Error::ItemNotExists {
+                path: file_path.to_path_buf(),
+            })
+        }
+    }
+
     /// Reads a serializable item from the given path.
     ///
     /// # Parameters

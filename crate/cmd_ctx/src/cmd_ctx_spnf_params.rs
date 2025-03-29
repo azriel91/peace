@@ -8,8 +8,10 @@ use peace_resource_rt::{
     internal::{ProfileParamsFile, WorkspaceParamsFile},
     paths::{ProfileDir, ProfileHistoryDir},
 };
-use peace_rt_model::{Workspace, WorkspaceInitializer};
-use peace_rt_model_core::params::{ProfileParams, WorkspaceParams};
+use peace_rt_model::{
+    params::{ProfileParamsOpt, WorkspaceParamsOpt},
+    Workspace, WorkspaceInitializer,
+};
 use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
@@ -73,7 +75,7 @@ where
     // NOTE: When updating this mutator, also update it for all the other `CmdCtx*Params` types.
     #[builder(
         setter(prefix = "with_"),
-        via_mutators(init = WorkspaceParams::default()),
+        via_mutators(init = WorkspaceParamsOpt::default()),
         mutators(
             /// Sets the value at the given workspace params key.
             ///
@@ -94,19 +96,16 @@ where
             where
                 V: ParamsValue,
             {
-                let _ = match value {
-                    Some(value) => self.workspace_params.insert(key, value),
-                    None => self.workspace_params.shift_remove(&key),
-                };
+                let _ = self.workspace_params.insert(key, value);
             }
         )
     )]
     #[builder(setter(prefix = "with_"))]
-    pub workspace_params: WorkspaceParams<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
+    pub workspace_params: WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,
     /// Profile params for the profile.
     #[builder(
         setter(prefix = "with_"),
-        via_mutators(init = ProfileParams::default()),
+        via_mutators(init = ProfileParamsOpt::default()),
         mutators(
             /// Sets the value at the given profile params key.
             ///
@@ -127,14 +126,11 @@ where
             where
                 V: ParamsValue,
             {
-                let _ = match value {
-                    Some(value) => self.profile_params.insert(key, value),
-                    None => self.profile_params.shift_remove(&key),
-                };
+                let _ = self.profile_params.insert(key, value);
             }
         )
     )]
-    pub profile_params: ProfileParams<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+    pub profile_params: ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
 }
 
 // Use one of the following to obtain the generated type signature:
@@ -161,8 +157,8 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
-            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (ProfileParams<CmdCtxTypesT::ProfileParamsKey>,),
+            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>,),
         ),
     >
 where
@@ -174,21 +170,23 @@ where
             interruptibility,
             workspace,
             profile_selection,
-            mut workspace_params,
-            mut profile_params,
+            workspace_params: workspace_params_provided,
+            profile_params: profile_params_provided,
         } = self.build_partial();
 
-        let workspace_params_type_reg = TypeReg::new();
-        let profile_params_type_reg = TypeReg::new();
+        let mut workspace_params_type_reg = TypeReg::new();
+        CmdCtxTypesT::workspace_params_register(&mut workspace_params_type_reg);
+        let mut profile_params_type_reg = TypeReg::new();
+        CmdCtxTypesT::profile_params_register(&mut profile_params_type_reg);
 
         let workspace_dirs = workspace.dirs();
         let storage = workspace.storage();
 
         let workspace_params_file = WorkspaceParamsFile::from(workspace_dirs.peace_app_dir());
-        CmdCtxBuilderSupport::workspace_params_merge(
+        let workspace_params = CmdCtxBuilderSupport::workspace_params_merge(
             storage,
             &workspace_params_type_reg,
-            &mut workspace_params,
+            workspace_params_provided,
             &workspace_params_file,
         )
         .await?;
@@ -198,7 +196,8 @@ where
             &workspace_params,
             storage,
             &workspace_params_file,
-        )?;
+        )
+        .await?;
 
         let profile_ref = &profile;
         let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile_ref));
@@ -216,10 +215,10 @@ where
 
         // profile_params_deserialize
         let profile_params_file = ProfileParamsFile::from(&profile_dir);
-        CmdCtxBuilderSupport::profile_params_merge(
+        let profile_params = CmdCtxBuilderSupport::profile_params_merge(
             storage,
             &profile_params_type_reg,
-            &mut profile_params,
+            profile_params_provided,
             &profile_params_file,
         )
         .await?;
@@ -316,8 +315,8 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
-            (WorkspaceParams<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (ProfileParams<CmdCtxTypesT::ProfileParamsKey>,),
+            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>,),
         ),
     >
 where

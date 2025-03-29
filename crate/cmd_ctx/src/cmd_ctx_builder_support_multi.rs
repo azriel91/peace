@@ -11,7 +11,10 @@ use peace_resource_rt::{
     },
     states::{ts::CurrentStored, States, StatesCurrentStored},
 };
-use peace_rt_model::{params::ProfileParams, ParamsSpecsSerializer, StatesTypeReg};
+use peace_rt_model::{
+    params::{FlowParamsOpt, ProfileParams, ProfileParamsOpt},
+    ParamsSpecsSerializer, StatesTypeReg,
+};
 use peace_rt_model_core::params::FlowParams;
 use peace_state_rt::StatesSerializer;
 use std::{collections::BTreeMap, marker::PhantomData};
@@ -78,7 +81,7 @@ where
         profile_dirs: &BTreeMap<Profile, ProfileDir>,
         mut profile_to_profile_params_provided: BTreeMap<
             Profile,
-            ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
+            ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>,
         >,
         storage: &peace_rt_model::Storage,
         profile_params_type_reg_ref: &TypeReg<CmdCtxTypesT::ProfileParamsKey>,
@@ -92,16 +95,16 @@ where
                 .map(Result::<_, peace_rt_model_core::Error>::Ok),
         )
         .and_then(|(profile, profile_dir)| {
-            let mut profile_params = profile_to_profile_params_provided
+            let profile_params_provided = profile_to_profile_params_provided
                 .remove(profile)
                 .unwrap_or_default();
             async move {
                 let profile_params_file = ProfileParamsFile::from(profile_dir);
 
-                CmdCtxBuilderSupport::profile_params_merge(
+                let profile_params = CmdCtxBuilderSupport::profile_params_merge(
                     storage,
                     profile_params_type_reg_ref,
-                    &mut profile_params,
+                    profile_params_provided,
                     &profile_params_file,
                 )
                 .await?;
@@ -118,7 +121,7 @@ where
         flow_dirs: &BTreeMap<Profile, FlowDir>,
         mut profile_to_flow_params_provided: BTreeMap<
             Profile,
-            FlowParams<CmdCtxTypesT::FlowParamsKey>,
+            FlowParamsOpt<CmdCtxTypesT::FlowParamsKey>,
         >,
         storage: &peace_rt_model::Storage,
         flow_params_type_reg_ref: &TypeReg<CmdCtxTypesT::FlowParamsKey>,
@@ -130,16 +133,16 @@ where
                 .map(Result::<_, peace_rt_model_core::Error>::Ok),
         )
         .and_then(|(profile, flow_dir)| {
-            let mut flow_params = profile_to_flow_params_provided
+            let flow_params_provided = profile_to_flow_params_provided
                 .remove(profile)
                 .unwrap_or_default();
             async move {
                 let flow_params_file = FlowParamsFile::from(flow_dir);
 
-                CmdCtxBuilderSupport::flow_params_merge(
+                let flow_params = CmdCtxBuilderSupport::flow_params_merge(
                     storage,
                     flow_params_type_reg_ref,
-                    &mut flow_params,
+                    flow_params_provided,
                     &flow_params_file,
                 )
                 .await?;

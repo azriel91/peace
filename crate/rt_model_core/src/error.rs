@@ -453,7 +453,15 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::workspace_params_profile_none),
-            help("Ensure `{workspace_params_file}` contains a param for `{profile_key}`.")
+            help(
+                "Ensure `{workspace_params_file}` contains a param for `{profile_key}`.\n\
+                `{workspace_params_file}` contents:\n\
+                \n\
+                ```yaml\n\
+                {workspace_params_file_contents}\n\
+                ```\n\
+                "
+            )
         )
     )]
     WorkspaceParamsProfileNone {
@@ -461,6 +469,8 @@ pub enum Error {
         profile_key: String,
         /// The file that stores workspace params.
         workspace_params_file: WorkspaceParamsFile,
+        /// Contents of the workspace params file.
+        workspace_params_file_contents: String,
     },
 
     /// Profile to diff does not exist in `MultiProfileSingleFlow` scope.
