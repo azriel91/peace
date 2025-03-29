@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 //! Information such as which profile or flow a command is run for for the Peace
 //! framework.
 
