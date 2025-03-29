@@ -4,6 +4,7 @@ use peace_flow_model::FlowId;
 use peace_params::ParamsSpecs;
 use peace_profile_model::Profile;
 use peace_resource_rt::{paths::ParamsSpecsFile, type_reg::untagged::TypeMapOpt};
+use peace_rt_model_core::ParamsSpecsDeserializeError;
 
 use crate::{Error, ParamsSpecsTypeReg, Storage};
 
@@ -89,8 +90,6 @@ where
         params_specs_type_reg: &ParamsSpecsTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<Option<ParamsSpecs>, E> {
-        use peace_rt_model_core::ParamsSpecsDeserializeError;
-
         let params_specs_opt = storage
             .serialized_typemap_read_opt(
                 thread_name,
@@ -99,11 +98,11 @@ where
                 |error| {
                     #[cfg(not(feature = "error_reporting"))]
                     {
-                        Error::ParamsSpecsDeserialize {
+                        Error::ParamsSpecsDeserialize(Box::new(ParamsSpecsDeserializeError {
                             profile: profile.clone(),
                             flow_id: flow_id.clone(),
                             error,
-                        }
+                        }))
                     }
                     #[cfg(feature = "error_reporting")]
                     {
@@ -164,11 +163,11 @@ where
             .serialized_typemap_read_opt(params_specs_type_reg, params_specs_file, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
-                    Error::ParamsSpecsDeserialize {
+                    Error::ParamsSpecsDeserialize(Box::new(ParamsSpecsDeserializeError {
                         profile: profile.clone(),
                         flow_id: flow_id.clone(),
                         error,
-                    }
+                    }))
                 }
                 #[cfg(feature = "error_reporting")]
                 {
@@ -185,7 +184,7 @@ where
                     let params_specs_file_source =
                         NamedSource::new(params_specs_file.to_string_lossy(), file_contents);
 
-                    Error::ParamsSpecsDeserialize {
+                    Error::ParamsSpecsDeserialize(Box::new(ParamsSpecsDeserializeError {
                         profile: profile.clone(),
                         flow_id: flow_id.clone(),
                         params_specs_file_source,
@@ -193,7 +192,7 @@ where
                         error_message,
                         context_span,
                         error,
-                    }
+                    }))
                 }
             })
             .await
