@@ -122,15 +122,6 @@ pub enum S3ObjectError {
         object_key_goal: String,
     },
 
-    /// A `peace` runtime error occurred.
-    #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(
-        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
-        #[source]
-        #[from]
-        peace::rt_model::Error,
-    ),
-
     /// Failed to list S3 objects.
     #[error("Failed to list S3 objects to discover: `{object_key}`.")]
     #[cfg_attr(
@@ -152,7 +143,7 @@ pub enum S3ObjectError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<ListObjectsError>,
+        error: Box<SdkError<ListObjectsError>>,
     },
 
     /// Failed to upload S3 object.
@@ -176,7 +167,7 @@ pub enum S3ObjectError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<PutObjectError>,
+        error: Box<SdkError<PutObjectError>>,
     },
 
     /// Failed to discover S3 object.
@@ -198,7 +189,7 @@ pub enum S3ObjectError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<HeadObjectError>,
+        error: Box<SdkError<HeadObjectError>>,
     },
 
     /// Failed to delete S3 object.
@@ -222,7 +213,7 @@ pub enum S3ObjectError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeleteObjectError>,
+        error: Box<SdkError<DeleteObjectError>>,
     },
 
     /// User changed the S3 object name, but AWS does not support

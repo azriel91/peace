@@ -22,15 +22,6 @@ pub enum S3BucketError {
         s3_bucket_name_goal: String,
     },
 
-    /// A `peace` runtime error occurred.
-    #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(
-        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
-        #[source]
-        #[from]
-        peace::rt_model::Error,
-    ),
-
     /// Failed to list S3 buckets.
     #[error("Failed to discover: `{s3_bucket_name}`.")]
     #[cfg_attr(
@@ -50,7 +41,7 @@ pub enum S3BucketError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<ListBucketsError>,
+        error: Box<SdkError<ListBucketsError>>,
     },
 
     /// Failed to create S3 bucket as someone else owns the name.
@@ -72,7 +63,7 @@ pub enum S3BucketError {
         s3_bucket_name: String,
         /// Underlying error.
         #[source]
-        error: BucketAlreadyExists,
+        error: Box<BucketAlreadyExists>,
     },
 
     /// Failed to create S3 bucket as you already have one with the same name.
@@ -84,7 +75,7 @@ pub enum S3BucketError {
         s3_bucket_name: String,
         /// Underlying error.
         #[source]
-        error: BucketAlreadyOwnedByYou,
+        error: Box<BucketAlreadyOwnedByYou>,
     },
 
     /// Failed to create S3 bucket.
@@ -106,7 +97,7 @@ pub enum S3BucketError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<CreateBucketError>,
+        error: Box<SdkError<CreateBucketError>>,
     },
 
     /// Failed to discover S3 bucket.
@@ -128,7 +119,7 @@ pub enum S3BucketError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<HeadBucketError>,
+        error: Box<SdkError<HeadBucketError>>,
     },
 
     /// Failed to delete S3 bucket.
@@ -150,7 +141,7 @@ pub enum S3BucketError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeleteBucketError>,
+        error: Box<SdkError<DeleteBucketError>>,
     },
 
     /// User changed the S3 bucket name, but AWS does not support

@@ -191,6 +191,7 @@ where
                                 let (aws_desc, aws_desc_span) =
                                     crate::items::aws_error_desc!(&error);
 
+                                let error = Box::new(error);
                                 S3ObjectError::S3ObjectUploadError {
                                     bucket_name,
                                     object_key,
@@ -247,6 +248,7 @@ where
                                 let (aws_desc, aws_desc_span) =
                                     crate::items::aws_error_desc!(&error);
 
+                                let error = Box::new(error);
                                 S3ObjectError::S3ObjectDeleteError {
                                     bucket_name,
                                     object_key,

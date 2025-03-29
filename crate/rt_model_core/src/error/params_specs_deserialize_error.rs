@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use peace_flow_model::FlowId;
 use peace_profile_model::Profile;
 
@@ -44,7 +42,7 @@ pub struct ParamsSpecsDeserializeError {
 }
 
 #[cfg(feature = "error_reporting")]
-impl<'b> Borrow<dyn miette::Diagnostic + 'b> for Box<ParamsSpecsDeserializeError> {
+impl<'b> std::borrow::Borrow<dyn miette::Diagnostic + 'b> for Box<ParamsSpecsDeserializeError> {
     fn borrow<'s>(&'s self) -> &'s (dyn miette::Diagnostic + 'b) {
         self.as_ref()
     }

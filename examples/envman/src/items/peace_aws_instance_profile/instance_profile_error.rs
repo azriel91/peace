@@ -24,15 +24,6 @@ pub enum InstanceProfileError {
         path_diff: Option<(String, String)>,
     },
 
-    /// A `peace` runtime error occurred.
-    #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(
-        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
-        #[source]
-        #[from]
-        peace::rt_model::Error,
-    ),
-
     /// Failed to decode URL-encoded instance profile document.
     #[error("Failed to decode URL-encoded instance_profile document.")]
     InstanceProfileDocumentNonUtf8 {
@@ -69,7 +60,7 @@ pub enum InstanceProfileError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<CreateInstanceProfileError>,
+        error: Box<SdkError<CreateInstanceProfileError>>,
     },
 
     /// Failed to discover instance profile.
@@ -93,7 +84,7 @@ pub enum InstanceProfileError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<GetInstanceProfileError>,
+        error: Box<SdkError<GetInstanceProfileError>>,
     },
 
     /// InstanceProfile existed when listing policies, but did not exist when
@@ -135,7 +126,7 @@ pub enum InstanceProfileError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeleteInstanceProfileError>,
+        error: Box<SdkError<DeleteInstanceProfileError>>,
     },
 
     /// Failed to add role to instance profile.
@@ -161,7 +152,7 @@ pub enum InstanceProfileError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<AddRoleToInstanceProfileError>,
+        error: Box<SdkError<AddRoleToInstanceProfileError>>,
     },
 
     /// Failed to remove role from instance profile.
@@ -185,7 +176,7 @@ pub enum InstanceProfileError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<RemoveRoleFromInstanceProfileError>,
+        error: Box<SdkError<RemoveRoleFromInstanceProfileError>>,
     },
 
     /// User changed the instance profile name or path, but AWS does not support

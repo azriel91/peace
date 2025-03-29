@@ -603,3 +603,45 @@ fn params_specs_mismatch_display(
 
     items.join("\n")
 }
+
+#[cfg(feature = "error_reporting")]
+impl<'b> std::borrow::Borrow<dyn miette::Diagnostic + 'b> for Box<Error> {
+    fn borrow<'s>(&'s self) -> &'s (dyn miette::Diagnostic + 'b) {
+        self.as_ref()
+    }
+}
+
+#[cfg(feature = "error_reporting")]
+impl miette::Diagnostic for Box<Error> {
+    fn code<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().code()
+    }
+
+    fn severity(&self) -> Option<miette::Severity> {
+        self.as_ref().severity()
+    }
+
+    fn help<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().help()
+    }
+
+    fn url<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().url()
+    }
+
+    fn source_code(&self) -> Option<&dyn miette::SourceCode> {
+        self.as_ref().source_code()
+    }
+
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
+        self.as_ref().labels()
+    }
+
+    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn miette::Diagnostic> + 'a>> {
+        self.as_ref().related()
+    }
+
+    fn diagnostic_source(&self) -> Option<&dyn miette::Diagnostic> {
+        self.as_ref().diagnostic_source()
+    }
+}

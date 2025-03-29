@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use peace_flow_model::FlowId;
 
 #[derive(Debug, thiserror::Error)]
@@ -41,7 +39,7 @@ pub struct StatesDeserializeError {
 }
 
 #[cfg(feature = "error_reporting")]
-impl<'b> Borrow<dyn miette::Diagnostic + 'b> for Box<StatesDeserializeError> {
+impl<'b> std::borrow::Borrow<dyn miette::Diagnostic + 'b> for Box<StatesDeserializeError> {
     fn borrow<'s>(&'s self) -> &'s (dyn miette::Diagnostic + 'b) {
         self.as_ref()
     }

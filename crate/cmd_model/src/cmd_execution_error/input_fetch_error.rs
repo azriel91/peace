@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use crate::CmdBlockDesc;
 
 /// Error fetching `CmdBlock::InputT` from `resources`.
@@ -70,7 +68,7 @@ pub struct InputFetchError {
 }
 
 #[cfg(feature = "error_reporting")]
-impl<'b> Borrow<dyn miette::Diagnostic + 'b> for Box<InputFetchError> {
+impl<'b> std::borrow::Borrow<dyn miette::Diagnostic + 'b> for Box<InputFetchError> {
     fn borrow<'s>(&'s self) -> &'s (dyn miette::Diagnostic + 'b) {
         self.as_ref()
     }

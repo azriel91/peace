@@ -36,6 +36,7 @@ impl<Id> InstanceProfileApplyFns<Id> {
                 #[cfg(feature = "error_reporting")]
                 let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                let error = Box::new(error);
                 InstanceProfileError::InstanceProfileRoleAddError {
                     instance_profile_name,
                     instance_profile_path,
@@ -74,6 +75,7 @@ impl<Id> InstanceProfileApplyFns<Id> {
                 #[cfg(feature = "error_reporting")]
                 let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                let error = Box::new(error);
                 InstanceProfileError::InstanceProfileRoleRemoveError {
                     instance_profile_name,
                     instance_profile_path,
@@ -225,6 +227,7 @@ where
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                            let error = Box::new(error);
                             InstanceProfileError::InstanceProfileCreateError {
                                 instance_profile_name,
                                 instance_profile_path,
@@ -313,6 +316,7 @@ where
                                 let (aws_desc, aws_desc_span) =
                                     crate::items::aws_error_desc!(&error);
 
+                                let error = Box::new(error);
                                 InstanceProfileError::InstanceProfileDeleteError {
                                     instance_profile_name,
                                     instance_profile_path,

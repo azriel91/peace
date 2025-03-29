@@ -86,6 +86,7 @@ where
                     SdkError::ServiceError(service_error) => match service_error.err() {
                         GetRoleError::NoSuchEntityException(_) => None,
                         _ => {
+                            let error = Box::new(error);
                             return Err(IamRoleError::RoleGetError {
                                 role_name: name.to_string(),
                                 #[cfg(feature = "error_reporting")]
@@ -97,6 +98,7 @@ where
                         }
                     },
                     _ => {
+                        let error = Box::new(error);
                         return Err(IamRoleError::RoleGetError {
                             role_name: name.to_string(),
                             #[cfg(feature = "error_reporting")]
@@ -137,6 +139,7 @@ where
                         #[cfg(feature = "error_reporting")]
                         let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                        let error = Box::new(error);
                         IamRoleError::ManagedPoliciesListError {
                             role_name: name.to_string(),
                             role_path: path.to_string(),
