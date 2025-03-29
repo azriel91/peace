@@ -75,6 +75,8 @@ ignore = [
     # Transitive dependency of `log4rs`.
     # Pending <https://github.com/estk/log4rs/issues/391>.
     "RUSTSEC-2024-0388",
+    # `paste` is no longer maintained, Mainly used by `leptos`.
+    "RUSTSEC-2024-0436",
 ]
 
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
