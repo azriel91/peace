@@ -13,7 +13,10 @@ pub mod output;
 pub mod params;
 
 pub use crate::{
-    error::{ApplyCmdError, Error, StateDowncastError},
+    error::{
+        ApplyCmdError, Error, ParamsSpecsDeserializeError, StateDowncastError,
+        StatesDeserializeError,
+    },
     items_state_stored_stale::ItemsStateStoredStale,
     state_stored_and_discovered::StateStoredAndDiscovered,
 };

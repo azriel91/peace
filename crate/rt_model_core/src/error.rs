@@ -8,10 +8,15 @@ use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_profile_model::Profile;
 use peace_resource_rt::{internal::WorkspaceParamsFile, paths::ParamsSpecsFile};
 
-pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
+pub use self::{
+    apply_cmd_error::ApplyCmdError, params_specs_deserialize_error::ParamsSpecsDeserializeError,
+    state_downcast_error::StateDowncastError, states_deserialize_error::StatesDeserializeError,
+};
 
 mod apply_cmd_error;
+mod params_specs_deserialize_error;
 mod state_downcast_error;
+mod states_deserialize_error;
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -181,7 +186,7 @@ pub enum Error {
         /// Item IDs for which there are no provided or stored params spec.
         item_ids_with_no_params_specs: Vec<ItemId>,
         /// Provided params specs with no matching item ID in the flow.
-        params_specs_provided_mismatches: ParamsSpecs,
+        params_specs_provided_mismatches: Box<ParamsSpecs>,
         /// Stored params specs with no matching item ID in the flow.
         //
         // Boxed so that this enum variant is not so large compared to other variants
@@ -237,41 +242,13 @@ pub enum Error {
     ProgressUpdateSerializeJson(#[source] serde_json::Error),
 
     /// Failed to deserialize states.
-    #[error("Failed to deserialize states for flow: `{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::states_deserialize),
-            help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
-                \n\
-                If the item graph is different, it may make sense to use a different flow ID."
-            )
-        )
-    )]
-    StatesDeserialize {
-        /// Flow ID whose states are being deserialized.
-        flow_id: FlowId,
-        /// Source text to be deserialized.
-        #[cfg(feature = "error_reporting")]
-        #[source_code]
-        states_file_source: miette::NamedSource<String>,
-        /// Offset within the source text that the error occurred.
-        #[cfg(feature = "error_reporting")]
-        #[label("{}", error_message)]
-        error_span: Option<miette::SourceOffset>,
-        /// Message explaining the error.
-        #[cfg(feature = "error_reporting")]
-        error_message: String,
-        /// Offset within the source text surrounding the error.
-        #[cfg(feature = "error_reporting")]
-        #[label]
-        context_span: Option<miette::SourceOffset>,
-        /// Underlying error.
+    #[error("Failed to deserialize states.")]
+    StatesDeserialize(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
-        error: serde_yaml::Error,
-    },
+        #[from]
+        Box<StatesDeserializeError>,
+    ),
 
     /// Failed to serialize states.
     #[error("Failed to serialize states.")]
@@ -282,43 +259,13 @@ pub enum Error {
     StatesSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize params specs.
-    #[error("Failed to deserialize params specs for `{profile}/{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::params_specs_deserialize),
-            help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
-                \n\
-                If the item graph is different, it may make sense to use a different flow ID."
-            )
-        )
-    )]
-    ParamsSpecsDeserialize {
-        /// Profile of the flow.
-        profile: Profile,
-        /// Flow ID whose params specs are being deserialized.
-        flow_id: FlowId,
-        /// Source text to be deserialized.
-        #[cfg(feature = "error_reporting")]
-        #[source_code]
-        params_specs_file_source: miette::NamedSource<String>,
-        /// Offset within the source text that the error occurred.
-        #[cfg(feature = "error_reporting")]
-        #[label("{}", error_message)]
-        error_span: Option<miette::SourceOffset>,
-        /// Message explaining the error.
-        #[cfg(feature = "error_reporting")]
-        error_message: String,
-        /// Offset within the source text surrounding the error.
-        #[cfg(feature = "error_reporting")]
-        #[label]
-        context_span: Option<miette::SourceOffset>,
-        /// Underlying error.
+    #[error("Failed to deserialize params specs.")]
+    ParamsSpecsDeserialize(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
-        error: serde_yaml::Error,
-    },
+        #[from]
+        Box<ParamsSpecsDeserializeError>,
+    ),
 
     /// Failed to serialize params specs.
     #[error("Failed to serialize params specs.")]

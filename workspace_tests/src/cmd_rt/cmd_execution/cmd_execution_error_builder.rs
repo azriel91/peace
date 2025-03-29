@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, profile},
     cmd_ctx::{CmdCtxSpsf, ProfileSelection},
-    cmd_model::CmdExecutionError,
+    cmd_model::{CmdExecutionError, InputFetchError},
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -60,18 +60,21 @@ async fn builds_error_for_missing_input_tuple_first_parameter() -> Result<(), Pe
     let error = cmd_execution.exec(&mut cmd_ctx).await.unwrap_err();
 
     match error {
-        PeaceTestError::PeaceRt(rt_model::Error::CmdExecution(CmdExecutionError::InputFetch {
-            cmd_block_descs,
-            cmd_block_index,
-            input_name_short,
-            input_name_full,
-            #[cfg(feature = "error_reporting")]
-            cmd_execution_src,
-            #[cfg(feature = "error_reporting")]
-            input_span,
-            #[cfg(feature = "error_reporting")]
-            full_span,
-        })) => {
+        PeaceTestError::PeaceRt(rt_model::Error::CmdExecution(CmdExecutionError::InputFetch(
+            input_fetch_error,
+        ))) => {
+            let InputFetchError {
+                cmd_block_descs,
+                cmd_block_index,
+                input_name_short,
+                input_name_full,
+                #[cfg(feature = "error_reporting")]
+                cmd_execution_src,
+                #[cfg(feature = "error_reporting")]
+                input_span,
+                #[cfg(feature = "error_reporting")]
+                full_span,
+            } = *input_fetch_error;
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
             assert_eq!("States<Current>", input_name_short);
@@ -151,18 +154,21 @@ async fn builds_error_for_missing_input_tuple_second_parameter() -> Result<(), P
     let error = cmd_execution.exec(&mut cmd_ctx).await.unwrap_err();
 
     match error {
-        PeaceTestError::PeaceRt(rt_model::Error::CmdExecution(CmdExecutionError::InputFetch {
-            cmd_block_descs,
-            cmd_block_index,
-            input_name_short,
-            input_name_full,
-            #[cfg(feature = "error_reporting")]
-            cmd_execution_src,
-            #[cfg(feature = "error_reporting")]
-            input_span,
-            #[cfg(feature = "error_reporting")]
-            full_span,
-        })) => {
+        PeaceTestError::PeaceRt(rt_model::Error::CmdExecution(CmdExecutionError::InputFetch(
+            input_fetch_error,
+        ))) => {
+            let InputFetchError {
+                cmd_block_descs,
+                cmd_block_index,
+                input_name_short,
+                input_name_full,
+                #[cfg(feature = "error_reporting")]
+                cmd_execution_src,
+                #[cfg(feature = "error_reporting")]
+                input_span,
+                #[cfg(feature = "error_reporting")]
+                full_span,
+            } = *input_fetch_error;
             assert_eq!(2, cmd_block_descs.len());
             assert_eq!(1, cmd_block_index);
             assert_eq!("States<Goal>", input_name_short);

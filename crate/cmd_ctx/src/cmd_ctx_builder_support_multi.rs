@@ -32,7 +32,7 @@ where
     /// Reads the the `Profile` and `ProfileHistory` directory paths into
     /// memory.
     pub(crate) fn profile_and_history_dirs_read(
-        profiles_ref: &Vec<Profile>,
+        profiles_ref: &[Profile],
         workspace_dirs: &WorkspaceDirs,
     ) -> (
         BTreeMap<Profile, ProfileDir>,
@@ -325,8 +325,7 @@ where
                             states_type_reg_ref,
                             &states_current_file,
                         )
-                        .await?
-                        .map(Into::<StatesCurrentStored>::into);
+                        .await?;
 
                     Ok((profile.clone(), states_current_stored))
                 })

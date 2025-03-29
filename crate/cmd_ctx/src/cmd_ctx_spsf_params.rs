@@ -10,7 +10,6 @@ use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     paths::{FlowDir, ParamsSpecsFile, ProfileDir, ProfileHistoryDir, StatesCurrentFile},
     resources::ts::Empty,
-    states::StatesCurrentStored,
     Resources,
 };
 use peace_rt_model::{
@@ -439,8 +438,7 @@ where
                 states_type_reg_ref,
                 &states_current_file,
             )
-            .await?
-            .map(Into::<StatesCurrentStored>::into);
+            .await?;
         if let Some(states_current_stored) = states_current_stored {
             resources.insert(states_current_stored);
         }

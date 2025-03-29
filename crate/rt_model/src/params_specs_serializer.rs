@@ -89,6 +89,8 @@ where
         params_specs_type_reg: &ParamsSpecsTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<Option<ParamsSpecs>, E> {
+        use peace_rt_model_core::ParamsSpecsDeserializeError;
+
         let params_specs_opt = storage
             .serialized_typemap_read_opt(
                 thread_name,
@@ -118,7 +120,7 @@ where
                         let params_specs_file_source =
                             NamedSource::new(params_specs_file.to_string_lossy(), file_contents);
 
-                        Error::ParamsSpecsDeserialize {
+                        Error::ParamsSpecsDeserialize(Box::new(ParamsSpecsDeserializeError {
                             profile: profile.clone(),
                             flow_id: flow_id.clone(),
                             params_specs_file_source,
@@ -126,7 +128,7 @@ where
                             error_message,
                             context_span,
                             error,
-                        }
+                        }))
                     }
                 },
             )

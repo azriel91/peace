@@ -65,7 +65,7 @@ impl ProfileSwitchCmd {
                     // Switches profile
                     let _cmd_ctx = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
                         .with_output(output.reborrow())
-                        .with_workspace(workspace.into())
+                        .with_workspace(workspace)
                         .with_workspace_param(
                             WorkspaceParamsKey::Profile,
                             Some(profile_to_switch_to.clone()),
