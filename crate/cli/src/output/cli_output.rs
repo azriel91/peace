@@ -72,7 +72,7 @@ pub struct CliOutput<W> {
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
     pub(crate) progress_target: CliOutputTarget,
-    /// Whether the writer is an interactive terminal.-
+    /// Whether the writer is an interactive terminal.
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
