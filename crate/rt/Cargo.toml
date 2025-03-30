@@ -44,14 +44,14 @@ peace_state_rt = { workspace = true }
 peace_value_traits = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
 tynm = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { workspace = true, features = ["fs", "io-util"] }
+tokio = { workspace = true, features = ["fs", "io-util", "sync"] }
 tokio-util = { workspace = true, features = ["io", "io-util"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { workspace = true, features = ["sync"] }
 peace_rt_model_web = { workspace = true }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
 web-sys = { workspace = true, features = ["Storage", "Window"] }
