@@ -180,11 +180,14 @@ async fn deserialize_stored_error_maps_byte_indices() -> Result<(), Box<dyn std:
     {
         assert!(matches!(
             error,
-            PeaceTestError::PeaceRt(Error::StatesDeserialize {
-                flow_id: flow_id_actual,
-                error: _
-            })
-            if flow_id == flow_id_actual
+            PeaceTestError::PeaceRt(Error::StatesDeserialize(states_deserialize_error))
+            if {
+                let StatesDeserializeError {
+                    flow_id: flow_id_actual,
+                    error: _,
+                } = states_deserialize_error.as_ref();
+                &flow_id == flow_id_actual
+            }
         ));
     }
 
