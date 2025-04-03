@@ -38,12 +38,15 @@ impl Storage {
             )?;
 
             let mut buffer = String::new();
-            file.read_to_string(&mut buffer).await.map_err(|error| {
-                Error::Native(NativeError::FileRead {
-                    error,
-                    path: file_path.to_path_buf(),
-                })
-            })?;
+            file.read_to_string(&mut buffer).await.map_err(
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                |error| {
+                    Error::Native(NativeError::FileRead {
+                        error,
+                        path: file_path.to_path_buf(),
+                    })
+                },
+            )?;
 
             Ok(buffer)
         } else {

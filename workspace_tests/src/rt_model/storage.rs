@@ -216,3 +216,17 @@ async fn serialized_write_serializes_t() -> Result<(), Box<dyn std::error::Error
 
     Ok(())
 }
+
+#[tokio::test]
+async fn serialized_write_string_serializes_t() -> Result<(), Box<dyn std::error::Error>> {
+    let test_struct = TestStruct { a: 1 };
+    let serialized = Storage.serialized_write_string(
+        &test_struct,
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        |_error| panic!("Expected `test_struct` to be serialized."),
+    )?;
+
+    assert_eq!("a: 1\n", serialized);
+
+    Ok(())
+}
