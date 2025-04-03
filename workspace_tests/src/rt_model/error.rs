@@ -2,7 +2,7 @@ use std::fmt;
 
 use peace::{
     item_model::item_id,
-    miette::{GraphicalReportHandler, GraphicalTheme},
+    miette::{Diagnostic, GraphicalReportHandler, GraphicalTheme},
     params::{ParamsSpec, ParamsSpecs},
     rt_model::Error,
 };
@@ -86,4 +86,20 @@ fn params_specs_mismatch_display_with_all_error_cases() -> fmt::Result {
     );
 
     Ok(())
+}
+
+#[test]
+fn coverage_diagnostic() {
+    let error = Box::new(Error::StatesCurrentDiscoverRequired);
+
+    std::borrow::Borrow::<dyn miette::Diagnostic + '_>::borrow(&error);
+
+    let _ = error.code();
+    let _ = error.severity();
+    let _ = error.help();
+    let _ = error.url();
+    let _ = error.source_code();
+    let _ = error.labels();
+    let _ = error.related();
+    let _ = error.diagnostic_source();
 }
