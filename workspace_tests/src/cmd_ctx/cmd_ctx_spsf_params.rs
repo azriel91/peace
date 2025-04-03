@@ -7,6 +7,7 @@ use peace::{
     params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
     profile_model::{profile, Profile},
     resource_rt::{
+        internal::WorkspaceParamsFile,
         paths::{FlowDir, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::BoxDataTypeDowncast,
     },
@@ -476,6 +477,50 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     assert_workspace_params(resources).await?;
     assert_profile_params(resources).await?;
     assert_flow_params(resources).await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_with_profile_from_params_returns_error_when_profile_not_found(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
+    let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
+
+    let mut output = NoOpOutput;
+    let error = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
+        .with_output((&mut output).into())
+        .with_workspace((&workspace).into())
+        // Deliberately not setting workspace param.
+        // .with_workspace_param(String::from("profile"), Some(profile!("test_profile")))
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(
+            String::from("profile").into(),
+        ))
+        .with_flow((&flow).into())
+        .await
+        .unwrap_err();
+
+    let workspace_params_file_expected =
+        WorkspaceParamsFile::from(workspace.dirs().peace_app_dir());
+
+    if let PeaceTestError::PeaceRt(peace::rt_model::Error::WorkspaceParamsProfileNone {
+        profile_key,
+        workspace_params_file,
+        workspace_params_file_contents,
+    }) = &error
+    {
+        assert_eq!(profile_key, "profile");
+        assert_eq!(workspace_params_file, &workspace_params_file_expected);
+        assert_eq!(workspace_params_file_contents, "");
+    } else {
+        panic!(
+            "Expected error to be \
+            `PeaceTestError::PeaceRt(Error::WorkspaceParamsProfileNone {{ .. }})`, \
+            but it was: {error:?}"
+        );
+    }
+
     Ok(())
 }
 

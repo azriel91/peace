@@ -402,6 +402,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter_non
         .await?;
     drop(cmd_ctx_save);
 
+    // No workspace / profile params provided.
     let cmd_ctx = CmdCtxMpnf::<TestCctCmdCtxMpnf>::builder()
         .with_output(NoOpOutput.into())
         .with_workspace((&workspace).into())
