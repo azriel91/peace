@@ -5,6 +5,7 @@ use peace::{
     cmd_ctx::{CmdCtxMpsf, CmdCtxTypes},
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
+    params::ParamsSpec,
     profile_model::Profile,
     resource_rt::{
         paths::{FlowDir, ProfileDir, ProfileHistoryDir},
@@ -13,7 +14,9 @@ use peace::{
     rt_model::{ParamsSpecsTypeReg, StatesTypeReg},
 };
 
-use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
+use crate::{
+    no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError, VecA, VecCopyItem,
+};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -776,6 +779,74 @@ async fn getters() -> Result<(), Box<dyn std::error::Error>> {
     assert!(!fields.resources().is_empty());
     assert!(!fields.resources_mut().is_empty());
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_item_params_with_resource() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let flow_id = flow_id!("test_flow_id");
+    let item_graph = {
+        let mut item_graph_builder = ItemGraphBuilder::new();
+        item_graph_builder.add_fn(VecCopyItem::default().into());
+        item_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_cmd_ctx_mpsf_params"),
+        &[profile.clone(), profile_other.clone()],
+        Some(flow.flow_id()),
+    )
+    .await?;
+
+    let output = NoOpOutput;
+    let cmd_ctx = CmdCtxMpsf::<TestCctCmdCtxMpsf>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            &profile,
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![1u8]).into(),
+        )
+        .with_item_params::<VecCopyItem>(
+            &profile_other,
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![2u8]).into(),
+        )
+        .with_resource("Adding &'static str")
+        .await?;
+
+    let fields = cmd_ctx.fields();
+    let profile_to_params_specs = fields.profile_to_params_specs();
+    let params_specs = profile_to_params_specs
+        .get(&profile)
+        .expect("Expected params_specs to exist for test_profile.");
+    assert!(matches!(
+        params_specs.get::<ParamsSpec<VecA>, _>(VecCopyItem::ID_DEFAULT),
+        Some(params_spec)
+            if matches!(
+                params_spec,
+                ParamsSpec::Value { value } if value == &VecA(vec![1u8])
+            )
+    ));
+    let params_specs = profile_to_params_specs
+        .get(&profile_other)
+        .expect("Expected params_specs to exist for test_profile_other.");
+    assert!(matches!(
+        params_specs.get::<ParamsSpec<VecA>, _>(VecCopyItem::ID_DEFAULT),
+        Some(params_spec)
+            if matches!(
+                params_spec,
+                ParamsSpec::Value { value } if value == &VecA(vec![2u8])
+            )
+    ));
+    let resources = fields.resources();
+    let s = resources.try_borrow::<&'static str>();
+    assert_eq!(Ok("Adding &'static str"), s.as_deref().copied());
     Ok(())
 }
 

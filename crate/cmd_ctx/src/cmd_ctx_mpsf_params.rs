@@ -399,12 +399,15 @@ where
             WorkspaceInitializer::dirs_create(dirs_to_create).await?;
 
             let workspace_dir = workspace_dirs.workspace_dir();
-            std::env::set_current_dir(workspace_dir).map_err(|error| {
-                peace_rt_model::Error::Native(peace_rt_model::NativeError::CurrentDirSet {
-                    workspace_dir: workspace_dir.clone(),
-                    error,
-                })
-            })?;
+            std::env::set_current_dir(workspace_dir).map_err(
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                |error| {
+                    peace_rt_model::Error::Native(peace_rt_model::NativeError::CurrentDirSet {
+                        workspace_dir: workspace_dir.clone(),
+                        error,
+                    })
+                },
+            )?;
         }
 
         // profile_params_deserialize
