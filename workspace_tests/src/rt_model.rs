@@ -6,5 +6,6 @@ mod item_graph_builder;
 mod item_wrapper;
 mod native;
 mod outcomes;
+mod params;
 mod storage;
 mod workspace_dirs_builder;
