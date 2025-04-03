@@ -9,6 +9,8 @@ use peace::{
 
 use crate::mock_item::MockSrc;
 
+mod params_specs_deserialize_error;
+
 #[test]
 fn params_specs_mismatch_display_with_all_error_cases() -> fmt::Result {
     let item_ids_with_no_params_specs = vec![item_id!("no_params_0"), item_id!("no_params_1")];
