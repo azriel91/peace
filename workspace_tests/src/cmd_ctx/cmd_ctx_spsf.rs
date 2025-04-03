@@ -30,8 +30,11 @@ async fn coverage_getters() -> Result<(), Box<dyn std::error::Error>> {
 
     let _output = cmd_ctx.output();
     let _output_mut = cmd_ctx.output_mut();
-    let _cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
-    let _cmd_progress_tracker_mut = cmd_ctx.cmd_progress_tracker_mut();
+    #[cfg(feature = "output_progress")]
+    {
+        let _cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
+        let _cmd_progress_tracker_mut = cmd_ctx.cmd_progress_tracker_mut();
+    }
     let _fields = cmd_ctx.fields();
     let fields_mut = cmd_ctx.fields_mut();
     let _ = fields_mut.interruptibility_state();
