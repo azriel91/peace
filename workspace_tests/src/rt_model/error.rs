@@ -10,6 +10,7 @@ use peace::{
 use crate::mock_item::MockSrc;
 
 mod params_specs_deserialize_error;
+mod states_deserialize_error;
 
 #[test]
 fn params_specs_mismatch_display_with_all_error_cases() -> fmt::Result {
