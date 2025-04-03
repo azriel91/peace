@@ -10,7 +10,7 @@ use crate::{
 #[tokio::test]
 async fn coverage_getters() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf")).await?;
     let profile = profile!("test_profile");
 
     let mut output = NoOpOutput;

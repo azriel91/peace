@@ -10,7 +10,7 @@ use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -37,7 +37,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -75,7 +75,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 #[tokio::test]
 async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -108,7 +108,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
 async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -152,7 +152,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 async fn build_with_workspace_params_with_profile_from_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -193,7 +193,7 @@ async fn build_with_workspace_params_with_profile_from_params(
 async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -239,7 +239,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
 async fn build_with_workspace_params_with_profile_params_none_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spnf_params")).await?;
     let profile = profile!("test_profile");
 
     let mut output = NoOpOutput;

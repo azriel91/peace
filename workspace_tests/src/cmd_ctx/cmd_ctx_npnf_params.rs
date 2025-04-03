@@ -9,7 +9,7 @@ use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params")).await?;
 
     let output = NoOpOutput;
     let cmd_ctx = CmdCtxNpnf::<TestCctCmdCtxNpnf>::builder()
@@ -24,7 +24,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;
@@ -55,7 +55,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 #[tokio::test]
 async fn build_with_workspace_params_none_specified() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_npnf_params")).await?;
     let profile = profile!("test_profile");
 
     let output = NoOpOutput;

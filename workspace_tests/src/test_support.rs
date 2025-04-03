@@ -16,7 +16,7 @@ use peace::{
     },
 };
 
-pub(crate) fn workspace(
+pub(crate) async fn workspace(
     tempdir: &tempfile::TempDir,
     app_name: AppName,
 ) -> Result<Workspace, Box<dyn std::error::Error>> {
@@ -24,6 +24,10 @@ pub(crate) fn workspace(
         let workspace_spec = WorkspaceSpec::Path(tempdir.path().to_path_buf());
         Workspace::new(app_name, workspace_spec)?
     };
+
+    let peace_app_dir = workspace.dirs().peace_app_dir();
+    tokio::fs::create_dir_all(peace_app_dir).await?;
+
     Ok(workspace)
 }
 

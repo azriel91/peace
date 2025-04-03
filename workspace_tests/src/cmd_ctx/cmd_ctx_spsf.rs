@@ -13,7 +13,7 @@ use crate::{
 #[tokio::test]
 async fn coverage_getters() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 

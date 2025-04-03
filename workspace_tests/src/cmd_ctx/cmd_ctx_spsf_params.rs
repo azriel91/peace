@@ -22,7 +22,7 @@ use crate::{
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -54,7 +54,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -102,7 +102,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 #[tokio::test]
 async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -139,7 +139,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -180,7 +180,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
 async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -235,7 +235,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 async fn build_with_workspace_params_with_profile_params_with_flow_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -296,7 +296,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params(
 async fn build_with_workspace_params_with_profile_params_with_flow_params_none_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -369,7 +369,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params_none_p
 async fn build_with_workspace_params_with_profile_from_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -420,7 +420,7 @@ async fn build_with_workspace_params_with_profile_from_params(
 async fn build_with_workspace_params_with_profile_params_with_profile_from_params(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
@@ -483,7 +483,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
 async fn build_with_item_params_returns_ok_when_params_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -530,7 +530,7 @@ async fn build_with_item_params_returns_ok_when_params_provided(
 async fn build_with_item_params_returns_err_when_params_not_provided_and_not_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -580,7 +580,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
 async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -634,7 +634,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
 async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_provided_and_stored(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -689,7 +689,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
 async fn build_with_item_params_returns_err_when_params_provided_mismatch(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -756,7 +756,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch(
 async fn build_with_item_params_returns_err_when_params_stored_mismatch(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -833,7 +833,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch(
 async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -916,7 +916,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -991,7 +991,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
 async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -1070,7 +1070,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
 async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
     let item_graph = {
@@ -1151,7 +1151,7 @@ async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_rena
 async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params"))?;
+    let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
