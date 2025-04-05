@@ -214,12 +214,6 @@ where
         self.progress_format
     }
 
-    /// Returns the number of characters used for the progress bar item ID.
-    #[cfg(feature = "output_progress")]
-    pub fn pb_item_id_width(&self) -> Option<usize> {
-        self.pb_item_id_width
-    }
-
     async fn output_presentable<P>(&mut self, presentable: P) -> Result<(), Error>
     where
         P: Presentable,
