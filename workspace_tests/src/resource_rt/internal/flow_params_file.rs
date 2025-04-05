@@ -23,6 +23,19 @@ pub fn debug() {
 }
 
 #[test]
+pub fn display() {
+    let flow_params_file = FlowParamsFile::from(Path::new("flow_params.yaml").to_path_buf());
+
+    assert_eq!(
+        format!(
+            "{flow_params_path}",
+            flow_params_path = AsRef::<Path>::as_ref(&flow_params_file).display()
+        ),
+        format!("{flow_params_file}")
+    );
+}
+
+#[test]
 pub fn partial_eq() {
     let flow_params_file_0 = FlowParamsFile::from(Path::new("flow_params.yaml").to_path_buf());
     #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011

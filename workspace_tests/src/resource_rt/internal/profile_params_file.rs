@@ -23,6 +23,20 @@ pub fn debug() {
 }
 
 #[test]
+pub fn display() {
+    let profile_params_file =
+        ProfileParamsFile::from(Path::new("profile_params.yaml").to_path_buf());
+
+    assert_eq!(
+        format!(
+            "{profile_params_path}",
+            profile_params_path = AsRef::<Path>::as_ref(&profile_params_file).display()
+        ),
+        format!("{profile_params_file}")
+    );
+}
+
+#[test]
 pub fn partial_eq() {
     let profile_params_file_0 =
         ProfileParamsFile::from(Path::new("profile_params.yaml").to_path_buf());

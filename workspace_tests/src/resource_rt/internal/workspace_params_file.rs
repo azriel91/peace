@@ -23,6 +23,20 @@ pub fn debug() {
 }
 
 #[test]
+pub fn display() {
+    let workspace_params_file =
+        WorkspaceParamsFile::from(Path::new("workspace_params.yaml").to_path_buf());
+
+    assert_eq!(
+        format!(
+            "{workspace_params_path}",
+            workspace_params_path = AsRef::<Path>::as_ref(&workspace_params_file).display()
+        ),
+        format!("{workspace_params_file}")
+    );
+}
+
+#[test]
 pub fn partial_eq() {
     let workspace_params_file_0 =
         WorkspaceParamsFile::from(Path::new("workspace_params.yaml").to_path_buf());

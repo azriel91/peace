@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt, path::PathBuf};
 
 use crate::paths::ProfileDir;
 
@@ -24,5 +24,11 @@ impl From<&ProfileDir> for ProfileParamsFile {
         let path = profile_dir.join(Self::NAME);
 
         Self(path)
+    }
+}
+
+impl fmt::Display for ProfileParamsFile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.display())
     }
 }
