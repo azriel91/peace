@@ -95,6 +95,7 @@ where
                 thread_name,
                 params_specs_type_reg,
                 params_specs_file,
+                #[cfg_attr(coverage_nightly, coverage(off))]
                 |error| {
                     #[cfg(not(feature = "error_reporting"))]
                     {
