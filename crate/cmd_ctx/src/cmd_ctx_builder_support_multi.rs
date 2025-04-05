@@ -257,20 +257,26 @@ where
                 .iter()
                 .map(Result::<_, peace_rt_model_core::Error>::Ok),
         )
-        .try_for_each(|(profile, profile_params)| async {
-            let profile_dir = profile_dirs.get(profile);
-            // Should always exist, but don't panic if it doesn't.
-            if let Some(profile_dir) = profile_dir {
-                let profile_params_file = ProfileParamsFile::from(profile_dir);
-
+        .try_for_each(|(profile, profile_params)| {
+            let profile_dir = profile_dirs.get(profile).unwrap_or_else(
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                || {
+                    panic!(
+                        "`profile_dir` for `{profile}` should exist as it is inserted by \
+                        `CmdCtxBuilderSupportMulti::profile_and_history_dirs_read`."
+                    )
+                },
+            );
+            let profile_params_file = ProfileParamsFile::from(profile_dir);
+            async move {
                 CmdCtxBuilderSupport::profile_params_serialize(
                     profile_params,
                     storage,
                     &profile_params_file,
                 )
                 .await?;
+                Ok(())
             }
-            Ok(())
         })
         .await?;
         Ok(())
@@ -287,20 +293,27 @@ where
                 .iter()
                 .map(Result::<_, peace_rt_model_core::Error>::Ok),
         )
-        .try_for_each(|(profile, flow_params)| async {
-            let flow_dir = flow_dirs.get(profile);
-            // Should always exist, but don't panic if it doesn't.
-            if let Some(flow_dir) = flow_dir {
-                let flow_params_file = FlowParamsFile::from(flow_dir);
+        .try_for_each(|(profile, flow_params)| {
+            let flow_dir = flow_dirs.get(profile).unwrap_or_else(
+                #[cfg_attr(coverage_nightly, coverage(off))]
+                || {
+                    panic!(
+                        "`flow_dir` for `{profile}` should exist as it is inserted by \
+                        `CmdCtxBuilderSupportMulti::flow_dirs_read`."
+                    )
+                },
+            );
+            let flow_params_file = FlowParamsFile::from(flow_dir);
 
+            async move {
                 CmdCtxBuilderSupport::flow_params_serialize(
                     flow_params,
                     storage,
                     &flow_params_file,
                 )
                 .await?;
+                Ok(())
             }
-            Ok(())
         })
         .await?;
         Ok(())
