@@ -810,6 +810,12 @@ async fn build_with_item_params_with_resource() -> Result<(), Box<dyn std::error
         .with_item_params::<VecCopyItem>(
             &profile,
             VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0u8]).into(),
+        )
+        // Overwriting should work.
+        .with_item_params::<VecCopyItem>(
+            &profile,
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![1u8]).into(),
         )
         .with_item_params::<VecCopyItem>(
