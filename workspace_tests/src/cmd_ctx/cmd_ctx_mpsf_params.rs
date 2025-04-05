@@ -8,7 +8,7 @@ use peace::{
     params::ParamsSpec,
     profile_model::Profile,
     resource_rt::{
-        paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+        paths::{FlowDir, ParamsSpecsFile, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::TypeReg,
     },
     rt_model::{ParamsSpecsTypeReg, StatesTypeReg},
@@ -847,6 +847,62 @@ async fn build_with_item_params_with_resource() -> Result<(), Box<dyn std::error
     let resources = fields.resources();
     let s = resources.try_borrow::<&'static str>();
     assert_eq!(Ok("Adding &'static str"), s.as_deref().copied());
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_missing_item_params_returns_error() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let flow_id = flow_id!("test_flow_id");
+    let item_graph = {
+        let mut item_graph_builder = ItemGraphBuilder::new();
+        item_graph_builder.add_fn(VecCopyItem::default().into());
+        item_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_cmd_ctx_mpsf_params"),
+        &[profile.clone(), profile_other.clone()],
+        Some(flow.flow_id()),
+    )
+    .await?;
+
+    // Delete the item params specs file.
+    let item_params_specs_file = {
+        let peace_app_dir = workspace.dirs().peace_app_dir();
+        let profile_dir = ProfileDir::from((peace_app_dir, &profile));
+        let flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
+        ParamsSpecsFile::from(&flow_dir)
+    };
+    tokio::fs::remove_file(item_params_specs_file).await?;
+
+    let output = NoOpOutput;
+    let error = CmdCtxMpsf::<TestCctCmdCtxMpsf>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_flow((&flow).into())
+        .await
+        .unwrap_err();
+
+    if let PeaceTestError::PeaceRt(peace::rt_model::Error::ItemParamsSpecsFileNotFound {
+        app_name,
+        profile,
+        flow_id,
+    }) = error
+    {
+        assert_eq!(app_name.as_str(), "test_cmd_ctx_mpsf_params");
+        assert_eq!(profile.as_str(), "test_profile");
+        assert_eq!(flow_id.as_str(), "test_flow_id");
+    } else {
+        panic!(
+            "Expected error to be `PeaceTestError::PeaceRt(\
+            peace::rt_model::Error::ItemParamsSpecsFileNotFound {{ .. }})`, \
+            but it was  {error:?}"
+        );
+    }
     Ok(())
 }
 
