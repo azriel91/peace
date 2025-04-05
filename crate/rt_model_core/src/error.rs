@@ -1,16 +1,22 @@
 use std::path::PathBuf;
 
 use peace_cmd_model::CmdExecutionError;
+use peace_core::AppName;
 use peace_flow_model::FlowId;
 use peace_item_model::ItemId;
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_profile_model::Profile;
-use peace_resource_rt::paths::ParamsSpecsFile;
+use peace_resource_rt::{internal::WorkspaceParamsFile, paths::ParamsSpecsFile};
 
-pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
+pub use self::{
+    apply_cmd_error::ApplyCmdError, params_specs_deserialize_error::ParamsSpecsDeserializeError,
+    state_downcast_error::StateDowncastError, states_deserialize_error::StatesDeserializeError,
+};
 
 mod apply_cmd_error;
+mod params_specs_deserialize_error;
 mod state_downcast_error;
+mod states_deserialize_error;
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -65,6 +71,30 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
+    /// Params specs were not stored or provided for a profile in a
+    /// multi-profile command context.
+    #[error(
+        "Params specs were not stored or provided for a profile in a \
+        multi-profile command context."
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::item_params_specs_file_not_present)),
+        help(
+            "Make sure params specs are either stored in \
+            `.peace/{app_name}/{profile}/{flow_id}/params_specs.yaml`, \
+            or are provided in code for all profiles that are loaded."
+        )
+    )]
+    ItemParamsSpecsFileNotFound {
+        /// Name of the application that is being executed.
+        app_name: AppName,
+        /// Profile that item params specs were being deserialized for.
+        profile: Profile,
+        /// Flow ID that item params specs where being deserialized for.
+        flow_id: FlowId,
+    },
+
     /// Failed to resolve values for a `Params` object from `resources`.
     ///
     /// This possibly indicates the user has provided a `Params::Spec` with
@@ -87,7 +117,7 @@ pub enum Error {
     /// A `Params::Spec` was not present for a given item ID.
     ///
     /// If this happens, this is a bug in the Peace framework.
-    #[error("A `Params::Spec` was not present for item: {item_id}")]
+    #[error("A `Params::Spec` was not present for item: `{item_id}`")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
@@ -156,7 +186,7 @@ pub enum Error {
         /// Item IDs for which there are no provided or stored params spec.
         item_ids_with_no_params_specs: Vec<ItemId>,
         /// Provided params specs with no matching item ID in the flow.
-        params_specs_provided_mismatches: ParamsSpecs,
+        params_specs_provided_mismatches: Box<ParamsSpecs>,
         /// Stored params specs with no matching item ID in the flow.
         //
         // Boxed so that this enum variant is not so large compared to other variants
@@ -212,41 +242,13 @@ pub enum Error {
     ProgressUpdateSerializeJson(#[source] serde_json::Error),
 
     /// Failed to deserialize states.
-    #[error("Failed to deserialize states for flow: `{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::states_deserialize),
-            help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
-                \n\
-                If the item graph is different, it may make sense to use a different flow ID."
-            )
-        )
-    )]
-    StatesDeserialize {
-        /// Flow ID whose states are being deserialized.
-        flow_id: FlowId,
-        /// Source text to be deserialized.
-        #[cfg(feature = "error_reporting")]
-        #[source_code]
-        states_file_source: miette::NamedSource<String>,
-        /// Offset within the source text that the error occurred.
-        #[cfg(feature = "error_reporting")]
-        #[label("{}", error_message)]
-        error_span: Option<miette::SourceOffset>,
-        /// Message explaining the error.
-        #[cfg(feature = "error_reporting")]
-        error_message: String,
-        /// Offset within the source text surrounding the error.
-        #[cfg(feature = "error_reporting")]
-        #[label]
-        context_span: Option<miette::SourceOffset>,
-        /// Underlying error.
+    #[error("Failed to deserialize states.")]
+    StatesDeserialize(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
-        error: serde_yaml::Error,
-    },
+        #[from]
+        Box<StatesDeserializeError>,
+    ),
 
     /// Failed to serialize states.
     #[error("Failed to serialize states.")]
@@ -257,43 +259,13 @@ pub enum Error {
     StatesSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize params specs.
-    #[error("Failed to deserialize params specs for `{profile}/{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::params_specs_deserialize),
-            help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
-                \n\
-                If the item graph is different, it may make sense to use a different flow ID."
-            )
-        )
-    )]
-    ParamsSpecsDeserialize {
-        /// Profile of the flow.
-        profile: Profile,
-        /// Flow ID whose params specs are being deserialized.
-        flow_id: FlowId,
-        /// Source text to be deserialized.
-        #[cfg(feature = "error_reporting")]
-        #[source_code]
-        params_specs_file_source: miette::NamedSource<String>,
-        /// Offset within the source text that the error occurred.
-        #[cfg(feature = "error_reporting")]
-        #[label("{}", error_message)]
-        error_span: Option<miette::SourceOffset>,
-        /// Message explaining the error.
-        #[cfg(feature = "error_reporting")]
-        error_message: String,
-        /// Offset within the source text surrounding the error.
-        #[cfg(feature = "error_reporting")]
-        #[label]
-        context_span: Option<miette::SourceOffset>,
-        /// Underlying error.
+    #[error("Failed to deserialize params specs.")]
+    ParamsSpecsDeserialize(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
-        error: serde_yaml::Error,
-    },
+        #[from]
+        Box<ParamsSpecsDeserializeError>,
+    ),
 
     /// Failed to serialize params specs.
     #[error("Failed to serialize params specs.")]
@@ -390,6 +362,14 @@ pub enum Error {
     )]
     StateDiffsSerializeJson(#[source] serde_json::Error),
 
+    /// Failed to serialize workspace params profile key.
+    #[error("Failed to serialize workspace params profile key.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::workspace_params_profile_key_serialize))
+    )]
+    WorkspaceParamsProfileKeySerialize(#[source] serde_yaml::Error),
+
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]
     #[cfg_attr(
@@ -418,9 +398,27 @@ pub enum Error {
     #[error("Workspace param for `Profile` does not exist.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::workspace_params_profile_none))
+        diagnostic(
+            code(peace_rt_model::workspace_params_profile_none),
+            help(
+                "Ensure `{workspace_params_file}` contains a param for `{profile_key}`.\n\
+                `{workspace_params_file}` contents:\n\
+                \n\
+                ```yaml\n\
+                {workspace_params_file_contents}\n\
+                ```\n\
+                "
+            )
+        )
     )]
-    WorkspaceParamsProfileNone,
+    WorkspaceParamsProfileNone {
+        /// The key that the profile should be stored against.
+        profile_key: String,
+        /// The file that stores workspace params.
+        workspace_params_file: WorkspaceParamsFile,
+        /// Contents of the workspace params file.
+        workspace_params_file_contents: String,
+    },
 
     /// Profile to diff does not exist in `MultiProfileSingleFlow` scope.
     ///
@@ -604,4 +602,46 @@ fn params_specs_mismatch_display(
     }
 
     items.join("\n")
+}
+
+#[cfg(feature = "error_reporting")]
+impl<'b> std::borrow::Borrow<dyn miette::Diagnostic + 'b> for Box<Error> {
+    fn borrow<'s>(&'s self) -> &'s (dyn miette::Diagnostic + 'b) {
+        self.as_ref()
+    }
+}
+
+#[cfg(feature = "error_reporting")]
+impl miette::Diagnostic for Box<Error> {
+    fn code<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().code()
+    }
+
+    fn severity(&self) -> Option<miette::Severity> {
+        self.as_ref().severity()
+    }
+
+    fn help<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().help()
+    }
+
+    fn url<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        self.as_ref().url()
+    }
+
+    fn source_code(&self) -> Option<&dyn miette::SourceCode> {
+        self.as_ref().source_code()
+    }
+
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
+        self.as_ref().labels()
+    }
+
+    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn miette::Diagnostic> + 'a>> {
+        self.as_ref().related()
+    }
+
+    fn diagnostic_source(&self) -> Option<&dyn miette::Diagnostic> {
+        self.as_ref().diagnostic_source()
+    }
 }

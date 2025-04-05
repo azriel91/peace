@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields},
     cmd_model::CmdOutcome,
     fmt::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
@@ -32,7 +32,8 @@ impl EnvDeployCmd {
     /// * `debug`: Whether to print `CmdOutcome` debug info.
     pub async fn run<O>(output: &mut O, debug: bool) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -58,17 +59,18 @@ macro_rules! run {
 
 async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>, debug: bool) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
+    EnvManError: From<<O as OutputWrite>::Error>,
 {
     let states_ensured_outcome =
         EnsureCmd::exec_with(cmd_ctx, ApplyStoredStateSync::Current).await?;
-    let SingleProfileSingleFlowViewAndOutput {
+    let CmdCtxSpsf {
         output,
-        cmd_view: SingleProfileSingleFlowView {
+        fields: CmdCtxSpsfFields {
             flow, resources, ..
         },
         ..
-    } = cmd_ctx.view_and_output();
+    } = cmd_ctx;
 
     if let Some(states_ensured) = states_ensured_outcome.value() {
         let states_ensured_raw_map = &***states_ensured;
@@ -98,12 +100,16 @@ where
             .await?;
     }
     if let CmdOutcome::ItemError { errors, .. } = &states_ensured_outcome {
-        crate::output::item_errors_present(output, errors).await?;
+        crate::output::item_errors_present(&mut **output, errors).await?;
     }
 
     if debug {
-        crate::output::cmd_outcome_completion_present(output, resources, states_ensured_outcome)
-            .await?;
+        crate::output::cmd_outcome_completion_present(
+            &mut **output,
+            resources,
+            states_ensured_outcome,
+        )
+        .await?;
     }
 
     Ok(())

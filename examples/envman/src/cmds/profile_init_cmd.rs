@@ -1,11 +1,6 @@
 use peace::{
     cfg::app_name,
-    cmd::{
-        ctx::CmdCtx,
-        scopes::{
-            MultiProfileNoFlowView, SingleProfileSingleFlow, SingleProfileSingleFlowViewAndOutput,
-        },
-    },
+    cmd_ctx::{CmdCtxMpnf, CmdCtxSpnf, CmdCtxSpsf, ProfileSelection},
     cmd_model::CmdOutcome,
     flow_rt::Flow,
     fmt::{presentable::CodeInline, presentln},
@@ -55,7 +50,8 @@ impl ProfileInitCmd {
         profile_reinit_allowed: bool,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError>,
+        O: OutputWrite,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let app_name = app_name!();
         let workspace = Workspace::new(
@@ -67,16 +63,14 @@ impl ProfileInitCmd {
         )?;
 
         if !profile_reinit_allowed {
-            let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<EnvManError, O>(
-                output.into(),
-                (&workspace).into(),
-            );
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+            let cmd_ctx_result = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
+                .with_output(output.into())
+                .with_workspace((&workspace).into())
+                .await;
 
-            let cmd_ctx_result = cmd_ctx_builder.await;
             match cmd_ctx_result {
-                Ok(mut cmd_ctx) => {
-                    let MultiProfileNoFlowView { profiles, .. } = cmd_ctx.view();
+                Ok(cmd_ctx_mpnf) => {
+                    let profiles = cmd_ctx_mpnf.fields().profiles();
 
                     if profiles.contains(&profile_to_create) {
                         return Err(EnvManError::ProfileToCreateExists {
@@ -93,23 +87,18 @@ impl ProfileInitCmd {
             }
         }
 
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow::<EnvManError, O>(
-            output.into(),
-            (&workspace).into(),
-        );
+        let cmd_ctx_builder = CmdCtxSpnf::<EnvmanCmdCtxTypes<O>>::builder()
+            .with_output(output.into())
+            .with_workspace((&workspace).into());
         crate::cmds::interruptibility_augment!(cmd_ctx_builder);
-        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         // Creating the `CmdCtx` writes the workspace and profile params.
         // We don't need to run any flows with it.
         let cmd_ctx = cmd_ctx_builder
-            .with_workspace_param_value(
-                WorkspaceParamsKey::Profile,
-                Some(profile_to_create.clone()),
-            )
-            .with_workspace_param_value(WorkspaceParamsKey::Flow, Some(env_man_flow))
-            .with_profile_param_value(ProfileParamsKey::EnvType, Some(env_type))
-            .with_profile(profile_to_create.clone())
+            .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile_to_create.clone()))
+            .with_workspace_param(WorkspaceParamsKey::Flow, Some(env_man_flow))
+            .with_profile_param(ProfileParamsKey::EnvType, Some(env_type))
+            .with_profile_selection(ProfileSelection::Specified(profile_to_create.clone()))
             .await?;
         drop(cmd_ctx);
 
@@ -151,7 +140,7 @@ impl ProfileInitCmd {
         };
 
         let states_discover_outcome = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-        let SingleProfileSingleFlowViewAndOutput { output, .. } = cmd_ctx.view_and_output();
+        let output = cmd_ctx.output_mut();
 
         match states_discover_outcome {
             CmdOutcome::Complete {
@@ -205,34 +194,29 @@ async fn app_upload_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
+) -> Result<CmdCtxSpsf<'f, EnvmanCmdCtxTypes<O>>, EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
+    EnvManError: From<<O as OutputWrite>::Error>,
 {
     let AppUploadFlowParamsSpecs {
         app_download_params_spec,
         s3_bucket_params_spec,
         s3_object_params_spec,
     } = AppUploadFlow::params(profile_to_create, slug, version, url)?;
-    let cmd_ctx = {
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
-            output.into(),
-            workspace.into(),
-        );
-        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-        cmd_ctx_builder
-            .with_profile_from_workspace_param(profile_key.into())
-            .with_flow(flow.into())
-            .with_item_params::<FileDownloadItem<WebApp>>(
-                item_id!("app_download"),
-                app_download_params_spec,
-            )
-            .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
-            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
-            .await?
-    };
-    Ok(cmd_ctx)
+    CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into())
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
+        .with_flow(flow.into())
+        .with_item_params::<FileDownloadItem<WebApp>>(
+            item_id!("app_download"),
+            app_download_params_spec,
+        )
+        .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
+        .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
+        .await
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -245,9 +229,10 @@ async fn env_deploy_flow_init<'f, O>(
     url: Option<Url>,
     output: &'f mut O,
     workspace: &'f Workspace,
-) -> Result<CmdCtx<SingleProfileSingleFlow<'f, EnvmanCmdCtxTypes<O>>>, EnvManError>
+) -> Result<CmdCtxSpsf<'f, EnvmanCmdCtxTypes<O>>, EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
+    EnvManError: From<<O as OutputWrite>::Error>,
 {
     let EnvDeployFlowParamsSpecs {
         app_download_params_spec,
@@ -257,32 +242,23 @@ where
         s3_bucket_params_spec,
         s3_object_params_spec,
     } = EnvDeployFlow::params(profile_to_create, slug, version, url)?;
-    let cmd_ctx = {
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow::<EnvManError, O>(
-            output.into(),
-            workspace.into(),
-        );
-        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-        cmd_ctx_builder
-            .with_profile_from_workspace_param(profile_key.into())
-            .with_flow(flow.into())
-            .with_item_params::<FileDownloadItem<WebApp>>(
-                item_id!("app_download"),
-                app_download_params_spec,
-            )
-            .with_item_params::<IamPolicyItem<WebApp>>(
-                item_id!("iam_policy"),
-                iam_policy_params_spec,
-            )
-            .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
-            .with_item_params::<InstanceProfileItem<WebApp>>(
-                item_id!("instance_profile"),
-                instance_profile_params_spec,
-            )
-            .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
-            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
-            .await?
-    };
-    Ok(cmd_ctx)
+    CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into())
+        .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
+        .with_flow(flow.into())
+        .with_item_params::<FileDownloadItem<WebApp>>(
+            item_id!("app_download"),
+            app_download_params_spec,
+        )
+        .with_item_params::<IamPolicyItem<WebApp>>(item_id!("iam_policy"), iam_policy_params_spec)
+        .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
+        .with_item_params::<InstanceProfileItem<WebApp>>(
+            item_id!("instance_profile"),
+            instance_profile_params_spec,
+        )
+        .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
+        .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
+        .await
 }

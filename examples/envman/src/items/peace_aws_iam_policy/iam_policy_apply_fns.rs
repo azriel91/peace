@@ -150,6 +150,7 @@ where
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                            let error = Box::new(error);
                             IamPolicyError::PolicyCreateError {
                                 policy_name,
                                 policy_path,
@@ -250,6 +251,7 @@ where
                                                 let (aws_desc, aws_desc_span) =
                                                     crate::items::aws_error_desc!(&error);
 
+                                                let error = Box::new(error);
                                                 IamPolicyError::PolicyVersionDeleteError {
                                                     policy_name: name.to_string(),
                                                     policy_path: path.to_string(),
@@ -298,6 +300,7 @@ where
                                                     );
                                                 }
                                                 _ => {
+                                                    let error = Box::new(error);
                                                     return Err(
                                                         IamPolicyError::PolicyVersionsListError {
                                                             policy_name: name.to_string(),
@@ -313,6 +316,7 @@ where
                                             }
                                         }
                                         _ => {
+                                            let error = Box::new(error);
                                             return Err(IamPolicyError::PolicyVersionsListError {
                                                 policy_name: name.to_string(),
                                                 policy_path: path.to_string(),
@@ -346,6 +350,7 @@ where
                                     let (aws_desc, aws_desc_span) =
                                         crate::items::aws_error_desc!(&error);
 
+                                    let error = Box::new(error);
                                     IamPolicyError::PolicyDeleteError {
                                         policy_name,
                                         policy_path,
@@ -404,6 +409,7 @@ where
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                            let error = Box::new(error);
                             IamPolicyError::PolicyVersionCreateError {
                                 policy_name,
                                 policy_path,

@@ -34,6 +34,33 @@ fn deserialize() -> Result<(), serde_yaml::Error> {
 }
 
 #[tokio::test]
+async fn read_to_string_returns_string_when_path_exists() -> Result<(), Box<dyn std::error::Error>>
+{
+    let tempdir = tempfile::tempdir()?;
+    let file_path = tempdir.path().join("t.yaml");
+    tokio::fs::write(&file_path, br#"a: 1"#).await?;
+
+    let file_contents = Storage.read_to_string(&file_path).await?;
+
+    assert_eq!(r#"a: 1"#, &file_contents);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn read_to_string_returns_error_when_path_not_exists(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let file_path = tempdir.path().join("t.yaml");
+
+    let error = Storage.read_to_string(&file_path).await.unwrap_err();
+
+    assert!(matches!(error, Error::ItemNotExists { path } if path == file_path ));
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn serialized_read_returns_t_when_path_exists() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let file_path = tempdir.path().join("t.yaml");
@@ -184,6 +211,20 @@ async fn serialized_write_serializes_t() -> Result<(), Box<dyn std::error::Error
         .await?;
 
     let serialized = tokio::fs::read_to_string(&file_path).await?;
+
+    assert_eq!("a: 1\n", serialized);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn serialized_write_string_serializes_t() -> Result<(), Box<dyn std::error::Error>> {
+    let test_struct = TestStruct { a: 1 };
+    let serialized = Storage.serialized_write_string(
+        &test_struct,
+        #[cfg_attr(coverage_nightly, coverage(off))]
+        |_error| panic!("Expected `test_struct` to be serialized."),
+    )?;
 
     assert_eq!("a: 1\n", serialized);
 

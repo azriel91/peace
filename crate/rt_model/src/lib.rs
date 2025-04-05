@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 //! Runtime data types for the peace automation framework.
 //!
 //! This crate re-exports types from `peace_rt_model_native` or

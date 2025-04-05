@@ -1,9 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypesConstrained},
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-};
+use peace_cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution};
 use peace_flow_rt::ItemGraph;
@@ -28,7 +25,7 @@ pub struct EnsureCmd<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
 impl<CmdCtxTypesT> EnsureCmd<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
     ///
@@ -54,10 +51,10 @@ where
     /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -72,11 +69,11 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_dry_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesEnsuredDry, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -88,8 +85,8 @@ where
             EnsureExecChange::Some(stateses_boxed) => {
                 let (states_previous, states_applied_dry, _states_goal) = *stateses_boxed;
                 cmd_ctx
-                    .view()
-                    .resources
+                    .fields_mut()
+                    .resources_mut()
                     .insert::<StatesPrevious>(states_previous);
 
                 states_applied_dry
@@ -123,10 +120,10 @@ where
     /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
     /// [`Item`]: peace_cfg::Item
     pub async fn exec<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -141,21 +138,23 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     pub async fn exec_with<'ctx>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StatesEnsured, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
     {
         let cmd_outcome = Self::exec_internal(cmd_ctx, apply_stored_state_sync).await?;
 
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.view();
-        let (item_graph, resources) = (flow.graph(), resources);
+        let CmdCtxSpsfFields {
+            flow,
+            ref mut resources,
+            ..
+        } = cmd_ctx.fields_mut();
+        let item_graph = flow.graph();
 
         // We shouldn't serialize current or goal if we returned from an interruption /
         // error handler.
@@ -188,11 +187,11 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<'ctx, StatesTs>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<
-        CmdOutcome<EnsureExecChange<StatesTs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<EnsureExecChange<StatesTs>, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         CmdCtxTypesT: 'ctx,
@@ -293,10 +292,10 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         resources: &Resources<SetUp>,
         states_applied: &StatesEnsured,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         use peace_state_rt::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
@@ -313,10 +312,10 @@ where
     }
 
     async fn serialize_goal(
-        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        item_graph: &ItemGraph<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         resources: &Resources<SetUp>,
         states_goal: &StatesGoal,
-    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<(), <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         use peace_state_rt::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();

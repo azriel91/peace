@@ -7,7 +7,7 @@ First execution / init:
 ```rust ,ignore
 let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow
     ::<EnvManError, _>(output, &workspace)
-    .with_profile(profile!("demo"))
+    .with_profile_selection(ProfileSelection::Specified(profile!("demo")))
 
     // for recall
     .with_workspace_param_value(
@@ -19,7 +19,7 @@ let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow
 Subsequent executions:
 
 ```rust ,ignore
-let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow
+let cmd_ctx_builder = CmdCtxSpsf::builder
     ::<EnvManError, _>(output, workspace)
     .with_profile_from_workspace_param(WorkspaceParamsKey::Profile)
     .with_flow(flow);

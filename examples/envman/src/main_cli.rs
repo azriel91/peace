@@ -136,7 +136,7 @@ async fn run_command(
         EnvManCommand::Web { address, port } => {
             use futures::FutureExt;
             use peace::{
-                cmd::scopes::SingleProfileSingleFlowView,
+                cmd_ctx::CmdCtxSpsfFields,
                 cmd_model::CmdOutcome,
                 webi::output::{CmdExecSpawnCtx, FlowWebiFns, WebiServer},
                 webi_components::ChildrenFn,
@@ -156,17 +156,17 @@ async fn run_command(
                 flow: flow.clone(),
                 outcome_info_graph_fn: Box::new(|webi_output, outcome_info_graph_gen| {
                     async move {
-                        let mut cmd_ctx = EnvCmd::cmd_ctx(webi_output)
+                        let cmd_ctx = EnvCmd::cmd_ctx(webi_output)
                             .await
                             .expect("Expected CmdCtx to be successfully constructed.");
 
                         // TODO: consolidate the `flow` above with this?
-                        let SingleProfileSingleFlowView {
+                        let CmdCtxSpsfFields {
                             flow,
                             params_specs,
                             resources,
                             ..
-                        } = cmd_ctx.view();
+                        } = cmd_ctx.fields();
 
                         outcome_info_graph_gen(flow, params_specs, resources)
                     }

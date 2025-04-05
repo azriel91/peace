@@ -211,7 +211,7 @@ where
         if padding > 0 {
             self.output
                 .writer
-                .write_all(padding_bytes[0..padding].as_bytes())
+                .write_all(&padding_bytes.as_bytes()[0..padding])
                 .await?;
         }
         self.output.writer.write_all(b": ").await?;

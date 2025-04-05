@@ -87,6 +87,9 @@ pub struct CliOutput<W> {
     /// `^C\n`.
     #[cfg(unix)]
     pub(crate) stdin_tty_with_guard: Option<raw_tty::TtyWithGuard<std::io::Stdin>>,
+    /// The `miette::GraphicalReportHandler` to format errors nicely.
+    #[cfg(feature = "error_reporting")]
+    pub(crate) report_handler: miette::GraphicalReportHandler,
 }
 
 #[cfg(unix)]
@@ -173,6 +176,16 @@ where
         CliOutputBuilder::new_with_writer(writer).build()
     }
 
+    /// Returns a reference to the held writer.
+    pub fn writer(&self) -> &W {
+        &self.writer
+    }
+
+    /// Returns a mutable reference to the held writer.
+    pub fn writer_mut(&mut self) -> &mut W {
+        &mut self.writer
+    }
+
     /// Returns how to format outcome output -- human readable or machine
     /// parsable.
     pub fn outcome_format(&self) -> OutputFormat {
@@ -207,9 +220,8 @@ where
         self.pb_item_id_width
     }
 
-    async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
+    async fn output_presentable<P>(&mut self, presentable: P) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         P: Presentable,
     {
         let presenter = &mut CliMdPresenter::new(self);
@@ -228,9 +240,8 @@ where
         Ok(())
     }
 
-    async fn output_yaml<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_yaml<T, F>(&mut self, t: &T, fn_error: F) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,
         F: FnOnce(serde_yaml::Error) -> Error,
     {
@@ -245,9 +256,8 @@ where
         Ok(())
     }
 
-    async fn output_json<E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    async fn output_json<T, F>(&mut self, t: &T, fn_error: F) -> Result<(), Error>
     where
-        E: std::error::Error + From<Error>,
         T: Serialize + ?Sized,
         F: FnOnce(serde_json::Error) -> Error,
     {
@@ -503,11 +513,12 @@ impl Default for CliOutput<Stdout> {
 /// Outputs progress and `Presentable`s in either serialized or presentable
 /// form.
 #[async_trait(?Send)]
-impl<E, W> OutputWrite<E> for CliOutput<W>
+impl<W> OutputWrite for CliOutput<W>
 where
-    E: std::error::Error + From<Error>,
-    W: AsyncWrite + Debug + Unpin,
+    W: AsyncWrite + Debug + Unpin + 'static,
 {
+    type Error = Error;
+
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
         let progress_draw_target = match &self.progress_target {
@@ -744,7 +755,7 @@ where
         }
     }
 
-    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), Error>
     where
         P: Presentable,
     {
@@ -759,7 +770,11 @@ where
         }
     }
 
-    async fn write_err(&mut self, error: &E) -> Result<(), E> {
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: std::error::Error,
+    {
         match self.outcome_format {
             OutputFormat::Text => {
                 self.writer
@@ -767,6 +782,77 @@ where
                     .await
                     .map_err(NativeError::StdoutWrite)
                     .map_err(Error::Native)?;
+            }
+            OutputFormat::Yaml => {
+                // TODO: proper parsable structure with error code.
+                let error_serialized =
+                    serde_yaml::to_string(&format!("{error}")).map_err(Error::ErrorSerialize)?;
+                self.writer
+                    .write_all(error_serialized.as_bytes())
+                    .await
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
+            }
+            OutputFormat::Json => {
+                // TODO: proper parsable structure with error code.
+                let error_serialized = serde_json::to_string(&format!("{error}"))
+                    .map_err(Error::ErrorSerializeJson)?;
+                self.writer
+                    .write_all(error_serialized.as_bytes())
+                    .await
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
+            }
+            OutputFormat::None => {}
+        }
+
+        Ok(())
+    }
+
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: miette::Diagnostic,
+    {
+        use miette::Diagnostic;
+
+        match self.outcome_format {
+            OutputFormat::Text => {
+                let mut err_buffer = String::new();
+
+                let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+                while let Some(diagnostic) = diagnostic_opt {
+                    // Helps with deduplicating wrapped errors.
+                    if diagnostic.help().is_some()
+                        || diagnostic.labels().is_some()
+                        || diagnostic.diagnostic_source().is_none()
+                    {
+                        // Ignore failures when writing errors
+                        let (Ok(()) | Err(_)) = self
+                            .report_handler
+                            .render_report(&mut err_buffer, diagnostic);
+                        err_buffer.push('\n');
+
+                        let err_buffer = err_buffer.lines().fold(
+                            String::with_capacity(err_buffer.len()),
+                            |mut buffer, line| {
+                                if line.trim().is_empty() {
+                                    buffer.push('\n');
+                                } else {
+                                    buffer.push_str(line);
+                                    buffer.push('\n');
+                                }
+                                buffer
+                            },
+                        );
+
+                        let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
+                    }
+
+                    diagnostic_opt = diagnostic.diagnostic_source();
+
+                    err_buffer.clear();
+                }
             }
             OutputFormat::Yaml => {
                 // TODO: proper parsable structure with error code.

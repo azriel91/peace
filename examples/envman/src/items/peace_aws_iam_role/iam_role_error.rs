@@ -54,7 +54,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<AttachRolePolicyError>,
+        error: Box<SdkError<AttachRolePolicyError>>,
     },
 
     /// Failed to detach managed policy.
@@ -78,7 +78,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DetachRolePolicyError>,
+        error: Box<SdkError<DetachRolePolicyError>>,
     },
 
     /// Failed to list managed policies for role.
@@ -102,7 +102,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<ListAttachedRolePoliciesError>,
+        error: Box<SdkError<ListAttachedRolePoliciesError>>,
     },
 
     /// Failed to create role.
@@ -124,7 +124,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<CreateRoleError>,
+        error: Box<SdkError<CreateRoleError>>,
     },
 
     /// Failed to discover role.
@@ -146,7 +146,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<GetRoleError>,
+        error: Box<SdkError<GetRoleError>>,
     },
 
     /// Failed to delete role.
@@ -172,7 +172,7 @@ pub enum IamRoleError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeleteRoleError>,
+        error: Box<SdkError<DeleteRoleError>>,
     },
 
     /// User changed the role name or path, but AWS does not support changing

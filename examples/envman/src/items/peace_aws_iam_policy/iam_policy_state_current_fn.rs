@@ -40,6 +40,7 @@ impl<Id> IamPolicyStateCurrentFn<Id> {
                 #[cfg(feature = "error_reporting")]
                 let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                let error = Box::new(error);
                 IamPolicyError::PoliciesListError {
                     path: path.to_string(),
                     #[cfg(feature = "error_reporting")]
@@ -200,6 +201,7 @@ where
                                 });
                             }
                             _ => {
+                                let error = Box::new(error);
                                 return Err(IamPolicyError::PolicyGetError {
                                     policy_name: name.to_string(),
                                     policy_path: path.to_string(),
@@ -212,6 +214,7 @@ where
                             }
                         },
                         _ => {
+                            let error = Box::new(error);
                             return Err(IamPolicyError::PolicyGetError {
                                 policy_name: name.to_string(),
                                 policy_path: path.to_string(),
@@ -240,6 +243,7 @@ where
                     #[cfg(feature = "error_reporting")]
                     let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                    let error = Box::new(error);
                     IamPolicyError::PolicyVersionGetError {
                         policy_name: policy_name.clone(),
                         policy_path: policy_path.clone(),

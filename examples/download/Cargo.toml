@@ -17,6 +17,9 @@ doctest = false
 test = false
 crate-type = ["cdylib", "rlib"]
 
+[lints.clippy]
+result_large_err = "allow"
+
 [dependencies]
 peace_items = { path = "../../items", features = ["file_download"] }
 thiserror = "2.0.11"

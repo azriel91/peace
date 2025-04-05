@@ -287,6 +287,15 @@ where
             }
         };
 
+        #[cfg(feature = "error_reporting")]
+        let report_handler = match colorize {
+            CliColorize::Colored => {
+                miette::GraphicalReportHandler::new().with_theme(miette::GraphicalTheme::unicode())
+            }
+            CliColorize::Uncolored => miette::GraphicalReportHandler::new()
+                .with_theme(miette::GraphicalTheme::unicode_nocolor()),
+        };
+
         CliOutput {
             writer,
             outcome_format,
@@ -299,6 +308,8 @@ where
             pb_item_id_width: None,
             #[cfg(unix)]
             stdin_tty_with_guard,
+            #[cfg(feature = "error_reporting")]
+            report_handler,
         }
     }
 }

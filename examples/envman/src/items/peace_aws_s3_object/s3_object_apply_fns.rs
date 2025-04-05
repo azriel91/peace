@@ -26,7 +26,7 @@ where
         diff: &S3ObjectStateDiff,
     ) -> Result<ApplyCheck, S3ObjectError> {
         match diff {
-            S3ObjectStateDiff::Added { .. } | S3ObjectStateDiff::ObjectContentModified { .. } => {
+            S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
                 let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
@@ -191,6 +191,7 @@ where
                                 let (aws_desc, aws_desc_span) =
                                     crate::items::aws_error_desc!(&error);
 
+                                let error = Box::new(error);
                                 S3ObjectError::S3ObjectUploadError {
                                     bucket_name,
                                     object_key,
@@ -247,6 +248,7 @@ where
                                 let (aws_desc, aws_desc_span) =
                                     crate::items::aws_error_desc!(&error);
 
+                                let error = Box::new(error);
                                 S3ObjectError::S3ObjectDeleteError {
                                     bucket_name,
                                     object_key,

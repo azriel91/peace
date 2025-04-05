@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Debug};
 
-use peace_cmd::ctx::CmdCtxTypesConstrained;
+use peace_cmd_ctx::CmdCtxTypes;
 use peace_resource_rt::{resources::ts::SetUp, Resource, Resources};
 
 use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
@@ -13,7 +13,7 @@ use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 pub struct CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
@@ -34,7 +34,7 @@ impl<'types, ExecutionOutcome, CmdCtxTypesT>
     CmdExecutionBuilder<'types, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
-    CmdCtxTypesT: CmdCtxTypesConstrained + 'types,
+    CmdCtxTypesT: CmdCtxTypes + 'types,
 {
     pub fn new() -> Self {
         Self::default()
@@ -103,7 +103,7 @@ where
     /// Returns the `CmdExecution` to execute.
     pub fn build(self) -> CmdExecution<'types, ExecutionOutcome, CmdCtxTypesT>
     where
-        CmdCtxTypesT: CmdCtxTypesConstrained,
+        CmdCtxTypesT: CmdCtxTypes,
     {
         let CmdExecutionBuilder {
             cmd_blocks,
@@ -125,7 +125,7 @@ impl<ExecutionOutcome, CmdCtxTypesT> Default
     for CmdExecutionBuilder<'_, ExecutionOutcome, CmdCtxTypesT>
 where
     ExecutionOutcome: Debug + Resource + 'static,
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     fn default() -> Self {
         Self {

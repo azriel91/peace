@@ -572,7 +572,6 @@ where
         self.state_clean(params_specs, resources)
             .await
             .map(BoxDtDisplay::new)
-            .map_err(Into::<E>::into)
     }
 
     async fn state_current_try_exec(
@@ -584,7 +583,6 @@ where
         self.state_current_try_exec(params_specs, resources, fn_ctx)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
-            .map_err(Into::<E>::into)
     }
 
     async fn state_current_exec(
@@ -596,7 +594,6 @@ where
         self.state_current_exec(params_specs, resources, fn_ctx)
             .await
             .map(BoxDtDisplay::new)
-            .map_err(Into::<E>::into)
     }
 
     async fn state_goal_try_exec(
@@ -608,7 +605,6 @@ where
         self.state_goal_try_exec(params_specs, resources, fn_ctx)
             .await
             .map(|state_goal| state_goal.map(BoxDtDisplay::new))
-            .map_err(Into::<E>::into)
     }
 
     async fn state_goal_exec(
@@ -632,7 +628,6 @@ where
         )
         .await
         .map(BoxDtDisplay::new)
-        .map_err(Into::<E>::into)
     }
 
     async fn state_diff_exec(
@@ -645,7 +640,6 @@ where
         self.state_diff_exec(params_specs, resources, states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
-            .map_err(Into::<E>::into)
     }
 
     async fn ensure_prepare(

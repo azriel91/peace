@@ -35,6 +35,7 @@ impl<Id> IamRoleApplyFns<Id> {
                 #[cfg(feature = "error_reporting")]
                 let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                let error = Box::new(error);
                 IamRoleError::ManagedPolicyDetachError {
                     role_name,
                     role_path,
@@ -196,6 +197,7 @@ where
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                            let error = Box::new(error);
                             IamRoleError::RoleCreateError {
                                 role_name,
                                 #[cfg(feature = "error_reporting")]
@@ -232,6 +234,7 @@ where
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+                            let error = Box::new(error);
                             IamRoleError::ManagedPolicyAttachError {
                                 role_name: name.clone(),
                                 role_path: path.clone(),
@@ -304,6 +307,7 @@ where
                                     let (aws_desc, aws_desc_span) =
                                         crate::items::aws_error_desc!(&error);
 
+                                    let error = Box::new(error);
                                     IamRoleError::RoleDeleteError {
                                         role_name,
                                         role_id,
@@ -383,6 +387,8 @@ where
                         .map_err(|error| {
                             #[cfg(feature = "error_reporting")]
                             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
+
+                            let error = Box::new(error);
                             IamRoleError::ManagedPolicyAttachError {
                                 role_name: name.clone(),
                                 role_path: path.clone(),

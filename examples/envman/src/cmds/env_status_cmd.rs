@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd_ctx::{CmdCtxSpsf, CmdCtxSpsfFields},
     cmd_model::CmdOutcome,
     fmt::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
@@ -31,7 +31,8 @@ impl EnvStatusCmd {
     /// * `output`: Output to write the execution outcome.
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -55,14 +56,15 @@ macro_rules! run {
 
 async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
 where
-    O: OutputWrite<EnvManError>,
+    O: OutputWrite,
+    EnvManError: From<<O as OutputWrite>::Error>,
 {
     let states_current_stored_outcome = StatesCurrentReadCmd::exec(cmd_ctx).await?;
-    let SingleProfileSingleFlowViewAndOutput {
+    let CmdCtxSpsf {
         output,
-        cmd_view: SingleProfileSingleFlowView { flow, .. },
+        fields: CmdCtxSpsfFields { flow, .. },
         ..
-    } = cmd_ctx.view_and_output();
+    } = cmd_ctx;
 
     if let Some(states_current_stored) = states_current_stored_outcome.value() {
         let states_current_stored_raw_map = &***states_current_stored;
@@ -93,7 +95,7 @@ where
             .await?;
     }
     if let CmdOutcome::ItemError { errors, .. } = &states_current_stored_outcome {
-        crate::output::item_errors_present(output, errors).await?;
+        crate::output::item_errors_present(&mut **output, errors).await?;
     }
 
     Ok(())

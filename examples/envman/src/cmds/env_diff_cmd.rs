@@ -1,9 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::{
-        MultiProfileSingleFlowView, SingleProfileSingleFlowView,
-        SingleProfileSingleFlowViewAndOutput,
-    },
+    cmd_ctx::{CmdCtxMpsf, CmdCtxMpsfFields, CmdCtxSpsf, CmdCtxSpsfFields},
     flow_rt::Flow,
     fmt::{
         presentable::{Heading, HeadingLevel, ListNumberedAligned},
@@ -39,7 +36,8 @@ impl EnvDiffCmd {
         env_diff_selection: EnvDiffSelection,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
@@ -59,7 +57,8 @@ impl EnvDiffCmd {
         env_man_flow: EnvManFlow,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         match env_man_flow {
             EnvManFlow::AppUpload => run!(output, AppUploadCmd),
@@ -74,7 +73,8 @@ impl EnvDiffCmd {
         profile_b: Profile,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         match env_man_flow {
             EnvManFlow::AppUpload => {
@@ -92,7 +92,8 @@ impl EnvDiffCmd {
         state_diffs: &StateDiffs,
     ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<EnvManError> + Send,
+        O: OutputWrite + Send,
+        EnvManError: From<<O as OutputWrite>::Error>,
     {
         let state_diffs_raw_map = &***state_diffs;
 
@@ -130,14 +131,14 @@ macro_rules! run {
             async {
                 let state_diffs_outcome = DiffCmd::diff_stored(ctx).await?;
 
-                let SingleProfileSingleFlowViewAndOutput {
+                let CmdCtxSpsf {
                     output,
-                    cmd_view: SingleProfileSingleFlowView { flow, .. },
+                    fields: CmdCtxSpsfFields { flow, .. },
                     ..
-                } = ctx.view_and_output();
+                } = ctx;
 
                 if let Some(state_diffs) = state_diffs_outcome.value() {
-                    Self::state_diffs_present(output, flow, &state_diffs).await?;
+                    Self::state_diffs_present(&mut **output, flow, &state_diffs).await?;
                 }
 
                 Ok(())
@@ -154,9 +155,12 @@ macro_rules! run_multi {
             async move {
                 let state_diffs =
                     DiffCmd::diff_current_stored(ctx, &$profile_a, &$profile_b).await?;
-                let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let CmdCtxMpsf {
+                    output,
+                    fields: CmdCtxMpsfFields { flow, .. },
+                } = ctx;
 
-                Self::state_diffs_present(output, flow, &state_diffs).await?;
+                Self::state_diffs_present(&mut **output, flow, &state_diffs).await?;
 
                 Ok(())
             }

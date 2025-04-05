@@ -1,6 +1,7 @@
+use std::convert::Infallible;
+
 use peace_fmt::Presentable;
 use peace_rt_model_core::{async_trait, output::OutputWrite};
-use peace_value_traits::AppError;
 use peace_webi_model::WebUiUpdate;
 use tokio::sync::mpsc;
 
@@ -50,10 +51,9 @@ impl WebiOutput {
 }
 
 #[async_trait(?Send)]
-impl<AppErrorT> OutputWrite<AppErrorT> for WebiOutput
-where
-    AppErrorT: AppError,
-{
+impl OutputWrite for WebiOutput {
+    type Error = Infallible;
+
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
@@ -113,9 +113,8 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, _presentable: P) -> Result<(), AppErrorT>
+    async fn present<P>(&mut self, _presentable: P) -> Result<(), Self::Error>
     where
-        AppErrorT: std::error::Error,
         P: Presentable,
     {
         // TODO: send rendered / renderable markdown to the channel.
@@ -128,9 +127,18 @@ where
         Ok(())
     }
 
-    async fn write_err(&mut self, _error: &AppErrorT) -> Result<(), AppErrorT>
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<AppErrorT>(&mut self, _error: &AppErrorT) -> Result<(), Self::Error>
     where
         AppErrorT: std::error::Error,
+    {
+        todo!()
+    }
+
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<AppErrorT>(&mut self, _error: &AppErrorT) -> Result<(), Self::Error>
+    where
+        AppErrorT: miette::Diagnostic,
     {
         todo!()
     }

@@ -28,16 +28,22 @@
 
 pub use self::{
     flow_params::FlowParams,
+    flow_params_opt::FlowParamsOpt,
     params_keys::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsKeysUnknown},
     params_type_regs::ParamsTypeRegs,
     params_type_regs_builder::ParamsTypeRegsBuilder,
     profile_params::ProfileParams,
+    profile_params_opt::ProfileParamsOpt,
     workspace_params::WorkspaceParams,
+    workspace_params_opt::WorkspaceParamsOpt,
 };
 
 mod flow_params;
+mod flow_params_opt;
 mod params_keys;
 mod params_type_regs;
 mod params_type_regs_builder;
 mod profile_params;
+mod profile_params_opt;
 mod workspace_params;
+mod workspace_params_opt;

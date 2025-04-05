@@ -24,11 +24,12 @@ async-trait = { workspace = true }
 cfg-if = { workspace = true }
 fn_graph = { workspace = true }
 futures = { workspace = true }
+interruptible = { workspace = true }
 miette = { workspace = true, optional = true }
 own = { workspace = true }
 peace_cfg = { workspace = true }
 peace_cmd_model = { workspace = true }
-peace_cmd = { workspace = true }
+peace_cmd_ctx = { workspace = true }
 peace_cmd_rt = { workspace = true }
 peace_flow_model = { workspace = true }
 peace_flow_rt = { workspace = true }
@@ -43,14 +44,14 @@ peace_state_rt = { workspace = true }
 peace_value_traits = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
 tynm = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { workspace = true, features = ["fs", "io-util"] }
+tokio = { workspace = true, features = ["fs", "io-util", "sync"] }
 tokio-util = { workspace = true, features = ["io", "io-util"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { workspace = true, features = ["sync"] }
 peace_rt_model_web = { workspace = true }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
 web-sys = { workspace = true, features = ["Storage", "Window"] }
@@ -66,7 +67,7 @@ error_reporting = [
 output_progress = [
     "dep:peace_progress_model",
     "peace_cfg/output_progress",
-    "peace_cmd/output_progress",
+    "peace_cmd_ctx/output_progress",
     "peace_flow_rt/output_progress",
     "peace_rt_model/output_progress",
     "peace_rt_model_core/output_progress",

@@ -1,0 +1,22 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "cargo": {
+          "features": [
+            "cli",
+            "error_reporting",
+            "output_progress",
+            "output_in_memory",
+            "item_interactions",
+            "item_state_example"
+          ]
+        }
+      }
+    }
+  }
+}

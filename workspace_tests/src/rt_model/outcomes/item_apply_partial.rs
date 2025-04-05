@@ -17,7 +17,6 @@ fn item_apply_rt_state_current_stored_returns_state_current_stored(
 
     let state_current_stored =
         ItemApplyPartialRt::state_current_stored(&item_apply_partial).unwrap();
-    dbg!(&state_current_stored);
 
     assert_eq!(
         456u32,

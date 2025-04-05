@@ -35,8 +35,7 @@ cfg_if::cfg_if! {
 
 #[tokio::test]
 async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output(OutputFormat::Text);
     let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
@@ -44,22 +43,21 @@ async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         "\
         1. `item_0`: logical, 1.1\n\
         2. `item_1`: 1, true\n\
         ",
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_state_diffs_as_text() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output(OutputFormat::Text);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_id!("item_0"), "need one more server");
@@ -67,37 +65,47 @@ async fn outputs_state_diffs_as_text() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         "\
         1. `item_0`: need one more server\n\
         2. `item_1`: 1\n\
         ",
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output(OutputFormat::Text);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
+    #[cfg(not(feature = "error_reporting"))]
     assert_eq!(
         "CliOutputTest display message.\n",
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
+    );
+
+    #[cfg(feature = "error_reporting")]
+    assert_eq!(
+        r#"workspace_tests::cli::output::cli_output_test
+
+  × CliOutputTest display message.
+  help: Try fixing the test.
+
+"#,
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output_colorized(OutputFormat::Text);
     let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
@@ -105,9 +113,9 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
         \u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75m`item_0`\u{1b}[0m: logical, 1.1\n\
@@ -126,8 +134,7 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
 
 #[tokio::test]
 async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output_colorized(OutputFormat::Text);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_id!("item_0"), "need one more server");
@@ -135,9 +142,9 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
         \u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75m`item_0`\u{1b}[0m: need one more server\n\
@@ -156,23 +163,33 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
 
 #[tokio::test]
 async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
+    let mut cli_output = cli_output_colorized(OutputFormat::Text);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
+    #[cfg(not(feature = "error_reporting"))]
     assert_eq!(
         "CliOutputTest display message.\n",
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
+    );
+
+    #[cfg(feature = "error_reporting")]
+    assert_eq!(
+        concat!(
+            "\u{1b}[31mworkspace_tests::cli::output::cli_output_test\u{1b}[0m\n",
+            "\n",
+            "  \u{1b}[31m×\u{1b}[0m CliOutputTest display message.\n",
+            "\u{1b}[36m  help: \u{1b}[0mTry fixing the test.\n\n"
+        ),
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
+    let mut cli_output = cli_output(OutputFormat::Yaml);
     let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
@@ -180,7 +197,7 @@ async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"item_0:
@@ -190,15 +207,14 @@ item_1:
   logical: 1
   physical: true
 "#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_state_diffs_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
+    let mut cli_output = cli_output(OutputFormat::Yaml);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_id!("item_0"), "need one more server");
@@ -206,37 +222,35 @@ async fn outputs_state_diffs_as_yaml() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         r#"item_0: need one more server
 item_1: 1
 "#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
+    let mut cli_output = cli_output(OutputFormat::Yaml);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         r#"CliOutputTest display message.
 "#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
+    let mut cli_output = cli_output(OutputFormat::Json);
     let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
@@ -244,19 +258,18 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
         StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"{"item_0":{"logical":"logical","physical":1.1},"item_1":{"logical":1,"physical":true}}"#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
+    let mut cli_output = cli_output(OutputFormat::Json);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_id!("item_0"), "need one more server");
@@ -264,26 +277,25 @@ async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>>
         StateDiffs::from(state_diffs_mut)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
+    <CliOutput<_> as OutputWrite>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
         r#"{"item_0":"need one more server","item_1":1}"#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
+    let mut cli_output = cli_output(OutputFormat::Json);
     let error = Error::CliOutputTest;
 
-    <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
         r#""CliOutputTest display message.""#,
-        String::from_utf8(buffer)?
+        String::from_utf8(cli_output.writer().clone())?
     );
     Ok(())
 }
@@ -294,20 +306,14 @@ mod color_always {
 
     #[tokio::test]
     async fn progress_begin_sets_prefix_and_progress_bar_style() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::ProgressBar,
         );
         let (cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -334,20 +340,14 @@ mod color_always {
 
     #[tokio::test]
     async fn progress_update_with_limit_sets_progress_bar_style() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -367,7 +367,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -403,20 +403,14 @@ mod color_always {
 
     #[tokio::test]
     async fn progress_update_with_complete_success_finishes_progress_bar() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -436,7 +430,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -464,7 +458,7 @@ mod color_always {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -484,20 +478,14 @@ mod color_always {
 
     #[tokio::test]
     async fn progress_update_with_complete_fail_abandons_progress_bar() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -517,7 +505,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -545,7 +533,7 @@ mod color_always {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -565,20 +553,14 @@ mod color_always {
 
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_yaml() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::Outcome,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -593,7 +575,7 @@ mod color_always {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -610,7 +592,7 @@ mod color_always {
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -640,20 +622,14 @@ msg_update: NoChange"#,
     #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Json,
             CliColorizeOpt::Always,
             CliProgressFormatOpt::Outcome,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -668,7 +644,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -685,7 +661,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -711,20 +687,14 @@ mod color_never {
 
     #[tokio::test]
     async fn progress_begin_sets_prefix_and_progress_bar_style() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::ProgressBar,
         );
         let (cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -748,20 +718,14 @@ mod color_never {
 
     #[tokio::test]
     async fn progress_update_with_limit_sets_progress_bar_style() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -781,7 +745,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -814,20 +778,14 @@ mod color_never {
 
     #[tokio::test]
     async fn progress_update_with_complete_success_finishes_progress_bar() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -847,7 +805,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -875,7 +833,7 @@ mod color_never {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -895,20 +853,14 @@ mod color_never {
 
     #[tokio::test]
     async fn progress_update_with_complete_fail_abandons_progress_bar() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::ProgressBar,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -928,7 +880,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -956,7 +908,7 @@ mod color_never {
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -976,20 +928,14 @@ mod color_never {
 
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_yaml() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Text,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::Outcome,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -1004,7 +950,7 @@ mod color_never {
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1021,7 +967,7 @@ mod color_never {
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1051,20 +997,14 @@ msg_update: NoChange"#,
     #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
-        let mut buffer = Vec::new();
         let mut cli_output = cli_output_progress(
-            &mut buffer,
             OutputFormat::Json,
             CliColorizeOpt::Never,
             CliProgressFormatOpt::Outcome,
         );
         let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
 
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
+        <CliOutput<_> as OutputWrite>::progress_begin(&mut cli_output, &cmd_progress_tracker).await;
         // Hack: because we enable this in `progress_begin`
         // Remove when we properly tick progress updates in `ApplyCmd`.
         progress_bar.disable_steady_tick();
@@ -1079,7 +1019,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1096,7 +1036,7 @@ msg_update: NoChange"#,
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
+        <CliOutput<_> as OutputWrite>::progress_update(
             &mut cli_output,
             progress_tracker,
             &progress_update_and_id,
@@ -1116,29 +1056,41 @@ msg_update: NoChange"#,
     }
 }
 
+#[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 enum Error {
     /// CliOutputTest display message.
     #[error("CliOutputTest display message.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(workspace_tests::cli::output::cli_output_test),
+            help("Try fixing the test.")
+        )
+    )]
     CliOutputTest,
 
     // Framework errors
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(workspace_tests::cli::output::peace_rt_error),
+            help("Try fixing the test.")
+        )
+    )]
     PeaceRtError(#[from] peace::rt_model::Error),
 }
 
-fn cli_output(buffer: &mut Vec<u8>, outcome_format: OutputFormat) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
+fn cli_output(outcome_format: OutputFormat) -> CliOutput<Vec<u8>> {
+    CliOutputBuilder::new_with_writer(Vec::new())
         .with_outcome_format(outcome_format)
         .build()
 }
 
-fn cli_output_colorized(
-    buffer: &mut Vec<u8>,
-    outcome_format: OutputFormat,
-) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
+fn cli_output_colorized(outcome_format: OutputFormat) -> CliOutput<Vec<u8>> {
+    CliOutputBuilder::new_with_writer(Vec::new())
         .with_outcome_format(outcome_format)
         .with_colorize(CliColorizeOpt::Always)
         .build()
@@ -1146,12 +1098,11 @@ fn cli_output_colorized(
 
 #[cfg(feature = "output_progress")]
 fn cli_output_progress(
-    buffer: &mut Vec<u8>,
     outcome_format: OutputFormat,
     colorize: CliColorizeOpt,
     progress_format: CliProgressFormatOpt,
-) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
+) -> CliOutput<Vec<u8>> {
+    CliOutputBuilder::new_with_writer(Vec::new())
         .with_outcome_format(outcome_format)
         .with_colorize(colorize)
         .with_progress_target(CliOutputTarget::in_memory(50, 120))
@@ -1160,7 +1111,7 @@ fn cli_output_progress(
 }
 
 #[cfg(feature = "output_progress")]
-fn cmd_progress_tracker(cli_output: &CliOutput<&mut Vec<u8>>) -> (CmdProgressTracker, ProgressBar) {
+fn cmd_progress_tracker(cli_output: &CliOutput<Vec<u8>>) -> (CmdProgressTracker, ProgressBar) {
     let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
         unreachable!("This is set in `cli_output_progress`.");
     };

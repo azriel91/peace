@@ -1,10 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
-use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxTypesConstrained},
-    scopes::{MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow},
-};
+use peace_cmd_ctx::{CmdCtxMpsf, CmdCtxMpsfFields, CmdCtxSpsf, CmdCtxTypes};
 use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_flow_rt::Flow;
@@ -41,9 +38,9 @@ impl<CmdCtxTypesT, Scope> Debug for DiffCmd<CmdCtxTypesT, Scope> {
     }
 }
 
-impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>
+impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, CmdCtxSpsf<'ctx, CmdCtxTypesT>>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained + 'ctx,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
@@ -60,10 +57,10 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff_stored(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     > {
         Self::diff::<CurrentStored, GoalStored>(cmd_ctx).await
     }
@@ -79,10 +76,10 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
     pub async fn diff<StatesTs0, StatesTs1>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxSpsf<'ctx, CmdCtxTypesT>,
     ) -> Result<
-        CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
-        <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError,
+        CmdOutcome<StateDiffs, <CmdCtxTypesT as CmdCtxTypes>::AppError>,
+        <CmdCtxTypesT as CmdCtxTypes>::AppError,
     >
     where
         StatesTs0: Debug + DiffCmdBlockStatesTsExt + Send + Sync + Unpin + 'static,
@@ -135,9 +132,9 @@ where
     }
 }
 
-impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, MultiProfileSingleFlow<'ctx, CmdCtxTypesT>>
+impl<'ctx, CmdCtxTypesT> DiffCmd<CmdCtxTypesT, CmdCtxMpsf<'ctx, CmdCtxTypesT>>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns the [`state_diff`]`s between the stored current states of two
     /// profiles.
@@ -148,23 +145,23 @@ where
     /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_current_stored(
-        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'ctx, CmdCtxTypesT>>,
+        cmd_ctx: &mut CmdCtxMpsf<'ctx, CmdCtxTypesT>,
         profile_a: &Profile,
         profile_b: &Profile,
-    ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
-        let MultiProfileSingleFlowView {
+    ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypes>::AppError> {
+        let CmdCtxMpsfFields {
             flow,
             profiles,
             profile_to_params_specs,
             profile_to_states_current_stored,
             resources,
             ..
-        } = cmd_ctx.view();
+        } = cmd_ctx.fields();
 
         let params_specs = profile_to_params_specs
             .get(profile_a)
             .or_else(|| profile_to_params_specs.get(profile_b));
-        let params_specs = if let Some(Some(params_specs)) = params_specs {
+        let params_specs = if let Some(params_specs) = params_specs {
             params_specs
         } else {
             Err(Error::ParamsSpecsNotDefinedForDiff {
@@ -209,28 +206,28 @@ where
 
 impl<CmdCtxTypesT, Scope> DiffCmd<CmdCtxTypesT, Scope>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns the [`state_diff`]` for each [`Item`].
     ///
     /// This does not take in `CmdCtx` as it may be used by both
-    /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
+    /// `CmdCtxSpsf` and `CmdCtxMpsf`
     /// commands.
     ///
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
-        flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        flow: &Flow<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
-    ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<StateDiffs, <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         let state_diffs = {
             let state_diffs_mut = flow
                 .graph()
                 .stream()
-                .map(Result::<_, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>::Ok)
+                .map(Result::<_, <CmdCtxTypesT as CmdCtxTypes>::AppError>::Ok)
                 .try_filter_map(|item| async move {
                     let state_diff_opt = item
                         .state_diff_exec(params_specs, resources, states_a, states_b)

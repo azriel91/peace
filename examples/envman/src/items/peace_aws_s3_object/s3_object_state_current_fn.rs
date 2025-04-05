@@ -102,6 +102,7 @@ where
                     SdkError::ServiceError(service_error) => match service_error.err() {
                         HeadObjectError::NotFound(_) => None,
                         _ => {
+                            let error = Box::new(error);
                             return Err(S3ObjectError::S3ObjectGetError {
                                 object_key: object_key.to_string(),
                                 #[cfg(feature = "error_reporting")]
@@ -113,6 +114,7 @@ where
                         }
                     },
                     _ => {
+                        let error = Box::new(error);
                         return Err(S3ObjectError::S3ObjectGetError {
                             object_key: object_key.to_string(),
                             #[cfg(feature = "error_reporting")]

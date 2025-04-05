@@ -9,9 +9,13 @@
 * Move `ItemId` into `peace_item_model`. ([#187], [#202])
 * Move `FlowId` into `peace_flow_model`. ([#187], [#202])
 * Move `Profile` into `peace_profile_model`. ([#187], [#202])
+* Rewrite command context: replace `CmdCtx<Scope<'_, _>>` with `CmdCtx*<'_, _>`. ([#161], [#205])
+* Reduce sizes of `*Error` enums. ([#161], [#205])
 
 
+[#161]: https://github.com/azriel91/peace/issues/161
 [#202]: https://github.com/azriel91/peace/pull/202
+[#205]: https://github.com/azriel91/peace/pull/205
 
 
 ## 0.0.14 (2025-01-18)

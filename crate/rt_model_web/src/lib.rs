@@ -1,4 +1,6 @@
-// #![cfg(target_arch = "wasm32")]
+// This crate is only developed for WASM targets.
+#![cfg(target_arch = "wasm32")]
+
 //! Web support for the peace automation framework.
 //!
 //! Consumers should depend on the `peace_rt_model` crate, which re-exports

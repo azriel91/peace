@@ -61,6 +61,7 @@ where
             #[cfg(feature = "error_reporting")]
             let (aws_desc, aws_desc_span) = crate::items::aws_error_desc!(&error);
 
+            let error = Box::new(error);
             S3BucketError::S3BucketListError {
                 s3_bucket_name: name.to_string(),
                 #[cfg(feature = "error_reporting")]

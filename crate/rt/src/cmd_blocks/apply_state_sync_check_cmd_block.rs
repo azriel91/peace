@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resource_rt::{
@@ -78,7 +78,7 @@ impl<CmdCtxTypesT, ApplyStoreStateSync> Debug
 
 impl<CmdCtxTypesT> ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncNone>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers current states.
     pub fn none() -> Self {
@@ -88,7 +88,7 @@ where
 
 impl<CmdCtxTypesT> ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncCurrent>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers current states.
     pub fn current() -> Self {
@@ -98,7 +98,7 @@ where
 
 impl<CmdCtxTypesT> ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers goal states.
     pub fn goal() -> Self {
@@ -108,7 +108,7 @@ where
 
 impl<CmdCtxTypesT> ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncCurrentAndGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a block that discovers both current and goal states.
     pub fn current_and_goal() -> Self {
@@ -119,15 +119,15 @@ where
 impl<CmdCtxTypesT, ApplyStoreStateSync>
     ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSync>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
-        cmd_view: &SingleProfileSingleFlowView<'_, CmdCtxTypesT>,
+        cmd_ctx_spsf_fields: &CmdCtxSpsfFields<'_, CmdCtxTypesT>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
-    ) -> Result<ItemsStateStoredStale, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
-        let items_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
+    ) -> Result<ItemsStateStoredStale, <CmdCtxTypesT as CmdCtxTypes>::AppError> {
+        let items_state_stored_stale = cmd_ctx_spsf_fields.flow.graph().iter_insertion().try_fold(
             ItemsStateStoredStale::new(),
             |mut items_state_stored_stale, item_rt| {
                 let item_id = item_rt.id();
@@ -221,7 +221,7 @@ where
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncNone>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -249,11 +249,11 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        _cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        _cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
         outcome_collate(input, OutcomeResult::Ok)
     }
@@ -263,7 +263,7 @@ where
 impl<CmdCtxTypesT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncCurrent>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (StatesCurrentStored, StatesCurrent);
@@ -304,16 +304,16 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
         let (states_current_stored, states_current) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
-            cmd_view,
+            cmd_ctx_spsf_fields,
             states_current_stored,
             states_current,
             #[cfg(feature = "output_progress")]
@@ -342,7 +342,7 @@ where
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (StatesGoalStored, StatesGoal);
@@ -383,16 +383,16 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
         let (states_goal_stored, states_goal) = &mut input;
 
         let state_goal_stale_result = Self::items_state_stored_stale(
-            cmd_view,
+            cmd_ctx_spsf_fields,
             states_goal_stored,
             states_goal,
             #[cfg(feature = "output_progress")]
@@ -422,7 +422,7 @@ where
 impl<CmdCtxTypesT> CmdBlock
     for ApplyStateSyncCheckCmdBlock<CmdCtxTypesT, ApplyStoreStateSyncCurrentAndGoal>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = (
@@ -482,16 +482,16 @@ where
     async fn exec(
         &self,
         mut input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
         let (states_current_stored, states_current, states_goal_stored, states_goal) = &mut input;
 
         let state_current_stale_result = Self::items_state_stored_stale(
-            cmd_view,
+            cmd_ctx_spsf_fields,
             states_current_stored,
             states_current,
             #[cfg(feature = "output_progress")]
@@ -514,7 +514,7 @@ where
         };
 
         let state_goal_stale_result = Self::items_state_stored_stale(
-            cmd_view,
+            cmd_ctx_spsf_fields,
             states_goal_stored,
             states_goal,
             #[cfg(feature = "output_progress")]

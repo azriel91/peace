@@ -12,7 +12,7 @@ use peace_resource_rt::{
     type_reg::untagged::{BoxDtDisplay, TypeMapOpt, TypeReg},
 };
 use peace_rt_model::Storage;
-use peace_rt_model_core::Error;
+use peace_rt_model_core::{Error, StatesDeserializeError};
 
 /// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
 /// from storage.
@@ -174,10 +174,10 @@ where
             .serialized_typemap_read_opt(thread_name, states_type_reg, states_file_path, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
-                    Error::StatesDeserialize {
+                    Error::StatesDeserialize(Box::new(StatesDeserializeError {
                         flow_id: flow_id.clone(),
                         error,
-                    }
+                    }))
                 }
                 #[cfg(feature = "error_reporting")]
                 {
@@ -194,14 +194,14 @@ where
                     let states_file_source =
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
-                    Error::StatesDeserialize {
+                    Error::StatesDeserialize(Box::new(StatesDeserializeError {
                         flow_id: flow_id.clone(),
                         states_file_source,
                         error_span,
                         error_message,
                         context_span,
                         error,
-                    }
+                    }))
                 }
             })
             .await
@@ -245,10 +245,10 @@ where
             .serialized_typemap_read_opt(states_type_reg, states_file_path, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
-                    Error::StatesDeserialize {
+                    Error::StatesDeserialize(Box::new(StatesDeserializeError {
                         flow_id: flow_id.clone(),
                         error,
-                    }
+                    }))
                 }
                 #[cfg(feature = "error_reporting")]
                 {
@@ -265,14 +265,14 @@ where
                     let states_file_source =
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
-                    Error::StatesDeserialize {
+                    Error::StatesDeserialize(Box::new(StatesDeserializeError {
                         flow_id: flow_id.clone(),
                         states_file_source,
                         error_span,
                         error_message,
                         context_span,
                         error,
-                    }
+                    }))
                 }
             })
             .await

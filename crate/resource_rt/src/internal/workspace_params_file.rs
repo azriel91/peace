@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt, path::PathBuf};
 
 use crate::paths::PeaceAppDir;
 
@@ -24,5 +24,11 @@ impl From<&PeaceAppDir> for WorkspaceParamsFile {
         let path = flow_dir.join(Self::NAME);
 
         Self(path)
+    }
+}
+
+impl fmt::Display for WorkspaceParamsFile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.display())
     }
 }

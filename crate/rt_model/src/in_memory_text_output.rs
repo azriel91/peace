@@ -24,6 +24,9 @@ cfg_if::cfg_if! {
 pub struct InMemoryTextOutput {
     /// Buffer to write to.
     buffer: String,
+    /// The `miette::ReportHandler` to format errors nicely.
+    #[cfg(feature = "error_reporting")]
+    pub(crate) report_handler: miette::GraphicalReportHandler,
 }
 
 impl InMemoryTextOutput {
@@ -42,10 +45,9 @@ impl InMemoryTextOutput {
 ///
 /// See <https://github.com/azriel91/peace/issues/28> for further improvements.
 #[async_trait(?Send)]
-impl<E> OutputWrite<E> for InMemoryTextOutput
-where
-    E: std::error::Error + From<Error>,
-{
+impl OutputWrite for InMemoryTextOutput {
+    type Error = Error;
+
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
@@ -75,17 +77,66 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), Error>
     where
         P: Presentable,
     {
-        self.buffer = serde_yaml::to_string(&presentable).map_err(Error::StatesSerialize)?;
+        self.buffer
+            .push_str(&serde_yaml::to_string(&presentable).map_err(Error::StatesSerialize)?);
 
         Ok(())
     }
 
-    async fn write_err(&mut self, error: &E) -> Result<(), E> {
+    #[cfg(not(feature = "error_reporting"))]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: std::error::Error,
+    {
         self.buffer = format!("{error}\n");
+
+        Ok(())
+    }
+
+    #[cfg(feature = "error_reporting")]
+    async fn write_err<E>(&mut self, error: &E) -> Result<(), Error>
+    where
+        E: miette::Diagnostic,
+    {
+        use miette::Diagnostic;
+
+        let mut err_buffer = String::new();
+
+        let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+        while let Some(diagnostic) = diagnostic_opt {
+            if diagnostic.help().is_some()
+                || diagnostic.labels().is_some()
+                || diagnostic.diagnostic_source().is_none()
+            {
+                // Ignore failures when writing errors
+                let (Ok(()) | Err(_)) = self
+                    .report_handler
+                    .render_report(&mut err_buffer, diagnostic);
+                err_buffer.push('\n');
+
+                let err_buffer = err_buffer.lines().fold(
+                    String::with_capacity(err_buffer.len()),
+                    |mut buffer, line| {
+                        if line.trim().is_empty() {
+                            buffer.push('\n');
+                        } else {
+                            buffer.push_str(line);
+                            buffer.push('\n');
+                        }
+                        buffer
+                    },
+                );
+
+                self.buffer.push_str(&err_buffer);
+            }
+
+            diagnostic_opt = diagnostic.diagnostic_source();
+            err_buffer.clear();
+        }
 
         Ok(())
     }

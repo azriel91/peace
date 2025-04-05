@@ -2,20 +2,21 @@ use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
     cfg::AppName,
     flow_model::FlowId,
+    params::ParamsSpecs,
     profile_model::Profile,
     resource_rt::{
         internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-        paths::{FlowDir, ProfileDir},
+        paths::{FlowDir, ParamsSpecsFile, ProfileDir},
         resources::ts::SetUp,
         Resources,
     },
     rt_model::{
         params::{FlowParams, ProfileParams, WorkspaceParams},
-        Error, Storage, Workspace, WorkspaceSpec,
+        Error, ParamsSpecsSerializer, Storage, Workspace, WorkspaceSpec,
     },
 };
 
-pub(crate) fn workspace(
+pub(crate) async fn workspace(
     tempdir: &tempfile::TempDir,
     app_name: AppName,
 ) -> Result<Workspace, Box<dyn std::error::Error>> {
@@ -23,6 +24,10 @@ pub(crate) fn workspace(
         let workspace_spec = WorkspaceSpec::Path(tempdir.path().to_path_buf());
         Workspace::new(app_name, workspace_spec)?
     };
+
+    let peace_app_dir = workspace.dirs().peace_app_dir();
+    tokio::fs::create_dir_all(peace_app_dir).await?;
+
     Ok(workspace)
 }
 
@@ -45,6 +50,7 @@ pub(crate) async fn workspace_with(
     let mut workspace_params = WorkspaceParams::new();
     workspace_params.insert(String::from("profile"), profiles_existing[0].clone());
     workspace_params.insert(String::from("ws_param_1"), String::from("ws_param_1_value"));
+    workspace_params.insert(String::from("ws_param_2"), 1u8);
 
     Storage
         .serialized_write(
@@ -86,7 +92,9 @@ pub(crate) async fn workspace_with(
                 flow_params.insert(String::from("flow_param_0"), true);
                 flow_params.insert(String::from("flow_param_1"), 456u16);
 
-                Storage
+                let storage = Storage;
+
+                storage
                     .serialized_write(
                         crate::fn_name_short!().to_string(),
                         &flow_params_file,
@@ -94,6 +102,16 @@ pub(crate) async fn workspace_with(
                         Error::FlowParamsSerialize,
                     )
                     .await?;
+
+                // Empty item params specs.
+                let params_specs = ParamsSpecs::new();
+                let params_specs_file = ParamsSpecsFile::from(&flow_dir);
+                ParamsSpecsSerializer::<peace::rt_model::Error>::serialize(
+                    &storage,
+                    &params_specs,
+                    &params_specs_file,
+                )
+                .await?;
             }
 
             Ok(())

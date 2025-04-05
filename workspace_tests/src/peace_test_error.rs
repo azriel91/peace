@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 #[cfg(feature = "error_reporting")]
 use peace::miette;
 
@@ -58,4 +60,10 @@ pub enum PeaceTestError {
         #[from]
         peace::rt_model::Error,
     ),
+}
+
+impl From<Infallible> for PeaceTestError {
+    fn from(_infallible: Infallible) -> Self {
+        unreachable!("By definition the `Infallible` error can never be reached.");
+    }
 }

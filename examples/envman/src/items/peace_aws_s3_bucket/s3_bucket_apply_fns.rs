@@ -31,7 +31,7 @@ where
         diff: &S3BucketStateDiff,
     ) -> Result<ApplyCheck, S3BucketError> {
         match diff {
-            S3BucketStateDiff::Added { .. } => {
+            S3BucketStateDiff::Added => {
                 let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
@@ -137,13 +137,13 @@ where
                                 CreateBucketError::BucketAlreadyExists(error) => {
                                     S3BucketError::S3BucketOwnedBySomeoneElseError {
                                         s3_bucket_name,
-                                        error: error.clone(),
+                                        error: Box::new(error.clone()),
                                     }
                                 }
                                 CreateBucketError::BucketAlreadyOwnedByYou(error) => {
                                     S3BucketError::S3BucketOwnedByYouError {
                                         s3_bucket_name,
-                                        error: error.clone(),
+                                        error: Box::new(error.clone()),
                                     }
                                 }
                                 _ => S3BucketError::S3BucketCreateError {
@@ -152,7 +152,7 @@ where
                                     aws_desc,
                                     #[cfg(feature = "error_reporting")]
                                     aws_desc_span,
-                                    error,
+                                    error: Box::new(error),
                                 },
                             },
                             _ => S3BucketError::S3BucketCreateError {
@@ -161,7 +161,7 @@ where
                                 aws_desc,
                                 #[cfg(feature = "error_reporting")]
                                 aws_desc_span,
-                                error,
+                                error: Box::new(error),
                             },
                         }
                     })?;
@@ -220,7 +220,7 @@ where
                                     aws_desc,
                                     #[cfg(feature = "error_reporting")]
                                     aws_desc_span,
-                                    error,
+                                    error: Box::new(error),
                                 })
                             })?;
                         #[cfg(feature = "output_progress")]

@@ -106,6 +106,7 @@ where
                     SdkError::ServiceError(service_error) => match service_error.err() {
                         GetInstanceProfileError::NoSuchEntityException(_) => None,
                         _ => {
+                            let error = Box::new(error);
                             return Err(InstanceProfileError::InstanceProfileGetError {
                                 instance_profile_name: name.to_string(),
                                 instance_profile_path: path.to_string(),
@@ -118,6 +119,7 @@ where
                         }
                     },
                     _ => {
+                        let error = Box::new(error);
                         return Err(InstanceProfileError::InstanceProfileGetError {
                             instance_profile_name: name.to_string(),
                             instance_profile_path: path.to_string(),

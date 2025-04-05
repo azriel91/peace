@@ -6,7 +6,7 @@ use peace::{
         internal::StatesMut, paths::StatesCurrentFile, states::StatesCurrentStored,
         type_reg::untagged::TypeReg,
     },
-    rt_model::{Error, Storage},
+    rt_model::{Error, StatesDeserializeError, Storage},
     state_rt::StatesSerializer,
 };
 use pretty_assertions::assert_eq;
@@ -159,15 +159,15 @@ async fn deserialize_stored_error_maps_byte_indices() -> Result<(), Box<dyn std:
             Some(SourceOffset::from_location(contents, line, column))
         };
 
-        if let PeaceTestError::PeaceRt(Error::StatesDeserialize {
-            flow_id: flow_id_actual,
-            states_file_source: _,
-            error_span,
-            error_message,
-            context_span,
-            error: _,
-        }) = error
-        {
+        if let PeaceTestError::PeaceRt(Error::StatesDeserialize(states_deserialize_error)) = error {
+            let StatesDeserializeError {
+                flow_id: flow_id_actual,
+                states_file_source: _,
+                error_span,
+                error_message,
+                context_span,
+                error: _,
+            } = *states_deserialize_error;
             assert_eq!(flow_id, flow_id_actual);
             assert_eq!(error_span_expected, error_span);
             assert_eq!("a: invalid type: sequence, expected u32", error_message);
@@ -180,11 +180,14 @@ async fn deserialize_stored_error_maps_byte_indices() -> Result<(), Box<dyn std:
     {
         assert!(matches!(
             error,
-            PeaceTestError::PeaceRt(Error::StatesDeserialize {
-                flow_id: flow_id_actual,
-                error: _
-            })
-            if flow_id == flow_id_actual
+            PeaceTestError::PeaceRt(Error::StatesDeserialize(states_deserialize_error))
+            if {
+                let StatesDeserializeError {
+                    flow_id: flow_id_actual,
+                    error: _,
+                } = states_deserialize_error.as_ref();
+                &flow_id == flow_id_actual
+            }
         ));
     }
 

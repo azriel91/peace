@@ -2,10 +2,8 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use fn_graph::{StreamOpts, StreamOutcome};
 use futures::FutureExt;
-use peace_cmd::{
-    ctx::CmdCtxTypesConstrained, interruptible::InterruptibilityState,
-    scopes::SingleProfileSingleFlowView,
-};
+use interruptible::InterruptibilityState;
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_flow_rt::Flow;
@@ -52,24 +50,24 @@ impl<CmdCtxTypesT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypesT, StatesTs0, S
 
 impl<CmdCtxTypesT, StatesTs0, StatesTs1> DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns the [`state_diff`]` for each [`Item`].
     ///
     /// This does not take in `CmdCtx` as it may be used by both
-    /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
+    /// `CmdCtxSpsf` and `CmdCtxMpsf`
     /// commands.
     ///
     /// [`Item`]: peace_cfg::Item
     /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any(
         interruptibility_state: InterruptibilityState<'_, '_>,
-        flow: &Flow<<CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>,
+        flow: &Flow<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
-    ) -> Result<StreamOutcome<StateDiffs>, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<StreamOutcome<StateDiffs>, <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         let stream_outcome_result = flow
             .graph()
             .try_fold_async_with(
@@ -89,9 +87,7 @@ where
                             state_diffs_mut.insert_raw(item.id().clone(), state_diff);
                         }
 
-                        Result::<_, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError>::Ok(
-                            state_diffs_mut,
-                        )
+                        Result::<_, <CmdCtxTypesT as CmdCtxTypes>::AppError>::Ok(state_diffs_mut)
                     }
                     .boxed_local()
                 },
@@ -114,7 +110,7 @@ impl<CmdCtxTypesT, StatesTs0, StatesTs1> Default
 impl<CmdCtxTypesT, StatesTs0, StatesTs1> CmdBlock
     for DiffCmdBlock<CmdCtxTypesT, StatesTs0, StatesTs1>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
     StatesTs0: Debug + Send + Sync + 'static,
     StatesTs1: Debug + Send + Sync + 'static,
 {
@@ -162,19 +158,19 @@ where
     async fn exec(
         &self,
         input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             interruptibility_state,
             flow,
             params_specs,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         let (states_ts0, states_ts1) = input;
 

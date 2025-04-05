@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile},
-    cmd::ctx::CmdCtx,
+    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
     cmd_model::CmdOutcome,
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -9,7 +9,7 @@ use peace::{
 };
 
 use crate::{
-    peace_cmd_ctx_types::PeaceCmdCtxTypes, NoOpOutput, PeaceTestError, VecA, VecCopyItem,
+    peace_cmd_ctx_types::TestCctNoOpOutput, NoOpOutput, PeaceTestError, VecA, VecCopyItem,
     VecCopyState,
 };
 
@@ -29,17 +29,16 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
     let output = &mut NoOpOutput;
 
     // Write goal states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     let CmdOutcome::Complete {
         value: states_goal_from_discover,
         cmd_blocks_processed: _,
@@ -49,17 +48,16 @@ async fn reads_states_goal_from_disk_when_present() -> Result<(), Box<dyn std::e
     };
 
     // Re-read states from disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow::<PeaceTestError, NoOpOutput>(
-        output.into(),
-        (&workspace).into(),
-    )
-    .with_profile(profile!("test_profile"))
-    .with_flow((&flow).into())
-    .with_item_params::<VecCopyItem>(
-        VecCopyItem::ID_DEFAULT.clone(),
-        VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
-    )
-    .await?;
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace((&workspace).into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
+        .with_flow((&flow).into())
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
     let CmdOutcome::Complete {
         value: states_goal_from_read,
         cmd_blocks_processed: _,
@@ -92,8 +90,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let output = NoOpOutput;
 
     // Try and read goal states from disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-        .with_profile(profile!("test_profile"))
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_workspace(workspace.into())
+        .with_output(output.into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
         .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
@@ -111,9 +111,9 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", StatesGoalReadCmd::<PeaceCmdCtxTypes>::default());
+    let debug_str = format!("{:?}", StatesGoalReadCmd::<TestCctNoOpOutput>::default());
     assert_eq!(
-        r#"StatesGoalReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::PeaceCmdCtxTypes>)"#,
+        r#"StatesGoalReadCmd(PhantomData<workspace_tests::peace_cmd_ctx_types::test_cct_no_op_output::TestCctNoOpOutput>)"#,
         debug_str,
     );
 }

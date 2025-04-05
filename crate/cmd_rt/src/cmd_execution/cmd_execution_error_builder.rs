@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use peace_cmd::ctx::CmdCtxTypesConstrained;
-use peace_cmd_model::{CmdBlockDesc, CmdExecutionError};
+use peace_cmd_ctx::CmdCtxTypes;
+use peace_cmd_model::{CmdBlockDesc, CmdExecutionError, InputFetchError};
 use peace_resource_rt::ResourceFetchError;
 
 use crate::CmdBlockRtBox;
@@ -52,7 +52,7 @@ impl CmdExecutionErrorBuilder {
         resource_fetch_error: ResourceFetchError,
     ) -> CmdExecutionError
     where
-        CmdCtxTypesT: CmdCtxTypesConstrained + 'f,
+        CmdCtxTypesT: CmdCtxTypes + 'f,
         ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
         CmdBlockIterator:
             Iterator<Item = &'f CmdBlockRtBox<'types, CmdCtxTypesT, ExecutionOutcome>>,
@@ -75,7 +75,7 @@ impl CmdExecutionErrorBuilder {
         #[cfg(feature = "error_reporting")]
         let full_span = SourceSpan::from((0, cmd_execution_src.len()));
 
-        CmdExecutionError::InputFetch {
+        CmdExecutionError::InputFetch(Box::new(InputFetchError {
             cmd_block_descs,
             cmd_block_index,
             input_name_short,
@@ -86,7 +86,7 @@ impl CmdExecutionErrorBuilder {
             input_span,
             #[cfg(feature = "error_reporting")]
             full_span,
-        }
+        }))
     }
 }
 
@@ -97,7 +97,7 @@ fn cmd_execution_src<ExecutionOutcome, CmdCtxTypesT>(
 ) -> Result<(String, Option<SourceSpan>), fmt::Error>
 where
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     let mut cmd_execution_src = String::with_capacity(2048);
 

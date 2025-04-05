@@ -17,6 +17,9 @@ doctest = false
 test = false
 crate-type = ["cdylib", "rlib"]
 
+[lints.clippy]
+result_large_err = "allow"
+
 [dependencies]
 aws-config = { version = "1.5.15", optional = true }
 aws-sdk-iam = { version = "1.59.0", optional = true }

@@ -51,7 +51,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<ListPoliciesError>,
+        error: Box<SdkError<ListPoliciesError>>,
     },
 
     /// Failed to decode URL-encoded policy document.
@@ -89,7 +89,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<CreatePolicyError>,
+        error: Box<SdkError<CreatePolicyError>>,
     },
 
     /// Failed to discover policy.
@@ -113,7 +113,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<GetPolicyError>,
+        error: Box<SdkError<GetPolicyError>>,
     },
 
     /// Failed to create policy version.
@@ -137,7 +137,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<CreatePolicyVersionError>,
+        error: Box<SdkError<CreatePolicyVersionError>>,
     },
 
     /// Failed to delete policy version.
@@ -163,7 +163,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeletePolicyVersionError>,
+        error: Box<SdkError<DeletePolicyVersionError>>,
     },
 
     /// Failed to get policy version.
@@ -187,7 +187,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<GetPolicyVersionError>,
+        error: Box<SdkError<GetPolicyVersionError>>,
     },
 
     /// Failed to discover policy.
@@ -211,7 +211,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<ListPolicyVersionsError>,
+        error: Box<SdkError<ListPolicyVersionsError>>,
     },
 
     /// Policy existed when listing policies, but did not exist when retrieving
@@ -265,7 +265,7 @@ pub enum IamPolicyError {
         aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
-        error: SdkError<DeletePolicyError>,
+        error: Box<SdkError<DeletePolicyError>>,
     },
 
     /// User changed the policy name or path, but AWS does not support changing

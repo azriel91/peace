@@ -1,0 +1,57 @@
+[package]
+name = "peace_cmd_ctx"
+description = "Information such as which profile or flow a command is run for for the Peace framework."
+documentation = "https://docs.rs/peace_cmd_ctx/"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+futures = { workspace = true }
+indicatif = { workspace = true, optional = true }
+interruptible = { workspace = true }
+own = { workspace = true }
+peace_cfg = { workspace = true }
+peace_flow_model = { workspace = true }
+peace_flow_rt = { workspace = true }
+peace_item_model = { workspace = true }
+peace_params = { workspace = true }
+peace_profile_model = { workspace = true }
+peace_progress_model = { workspace = true, optional = true }
+peace_resource_rt = { workspace = true }
+peace_rt_model = { workspace = true }
+peace_rt_model_core = { workspace = true }
+peace_state_rt = { workspace = true }
+tokio = { workspace = true }
+type_reg = { workspace = true }
+typed-builder = { workspace = true }
+
+[features]
+default = []
+item_state_example = [
+    "peace_cfg/item_state_example",
+    "peace_flow_rt/item_state_example",
+    "peace_params/item_state_example",
+    "peace_rt_model/item_state_example",
+]
+output_progress = [
+    "dep:indicatif",
+    "dep:peace_progress_model",
+    "peace_flow_model/output_progress",
+    "peace_flow_rt/output_progress",
+    "peace_rt_model/output_progress",
+    "peace_rt_model_core/output_progress",
+]

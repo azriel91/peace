@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile},
-    cmd::ctx::CmdCtx,
+    cmd_ctx::{CmdCtxSpsf, ProfileSelection},
     cmd_model::CmdOutcome,
     cmd_rt::{CmdBlockRt, CmdBlockWrapper, CmdExecution},
     flow_model::FlowId,
@@ -17,6 +17,7 @@ use tempfile::TempDir;
 use crate::{
     mock_item::{MockItem, MockSrc},
     no_op_output::NoOpOutput,
+    peace_cmd_ctx_types::TestCctNoOpOutput,
     peace_test_error::PeaceTestError,
     VecA, VecCopyItem,
 };
@@ -25,13 +26,11 @@ mod cmd_execution_error_builder;
 
 #[tokio::test]
 async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
-    let states_discover_cmd_block =
-        CmdBlockWrapper::new(StatesDiscoverCmdBlock::current(), StatesCurrent::from);
+    let states_discover_cmd_block = CmdBlockWrapper::new(
+        StatesDiscoverCmdBlock::<TestCctNoOpOutput, _>::current(),
+        StatesCurrent::from,
+    );
     let states_discover_cmd_block_desc = states_discover_cmd_block.cmd_block_desc();
-
-    let mut cmd_execution = CmdExecution::builder()
-        .with_cmd_block(states_discover_cmd_block)
-        .build();
 
     let TestCtx {
         tempdir: _tempdir,
@@ -39,10 +38,18 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
         flow,
     } = test_ctx_init().await?;
 
+    let mut cmd_execution = CmdExecution::builder()
+        .with_cmd_block(states_discover_cmd_block)
+        .build();
+
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-        .with_profile(profile!("test_profile"))
-        .with_flow((&flow).into())
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into())
+        .with_profile_selection(peace::cmd_ctx::ProfileSelection::Specified(profile!(
+            "test_profile"
+        )))
+        .with_flow(flow.into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
@@ -77,7 +84,13 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
 
 #[tokio::test]
 async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::<StateDiffs, _>::builder()
+    let TestCtx {
+        tempdir: _tempdir,
+        workspace,
+        flow,
+    } = test_ctx_init().await?;
+
+    let mut cmd_execution = CmdExecution::<StateDiffs, TestCctNoOpOutput>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             StatesDiscoverCmdBlock::current_and_goal(),
             // Should we support diffing the accumulated states?
@@ -90,15 +103,11 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
         ))
         .build();
 
-    let TestCtx {
-        tempdir: _tempdir,
-        workspace,
-        flow,
-    } = test_ctx_init().await?;
-
     let output = NoOpOutput;
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(output.into(), workspace.into())
-        .with_profile(profile!("test_profile"))
+    let mut cmd_ctx = CmdCtxSpsf::<TestCctNoOpOutput>::builder()
+        .with_output(output.into())
+        .with_workspace(workspace.into())
+        .with_profile_selection(ProfileSelection::Specified(profile!("test_profile")))
         .with_flow((&flow).into())
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),

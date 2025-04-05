@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtxTypesConstrained, scopes::SingleProfileSingleFlowView};
+use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_flow_model::FlowId;
@@ -34,7 +34,7 @@ pub struct StatesGoalReadCmdBlock<CmdCtxTypesT>(PhantomData<CmdCtxTypesT>);
 
 impl<CmdCtxTypesT> StatesGoalReadCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     /// Returns a new `StatesGoalReadCmdBlock`.
     pub fn new() -> Self {
@@ -44,19 +44,20 @@ where
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-    ) -> Result<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypesConstrained>::AppError> {
+    ) -> Result<StatesGoalStored, <CmdCtxTypesT as CmdCtxTypes>::AppError> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        let states_goal_stored = StatesSerializer::deserialize_goal(
-            &flow_id,
-            &storage,
-            states_type_reg,
-            &states_goal_file,
-        )
-        .await?;
+        let states_goal_stored =
+            StatesSerializer::<<CmdCtxTypesT as CmdCtxTypes>::AppError>::deserialize_goal(
+                &flow_id,
+                &storage,
+                states_type_reg,
+                &states_goal_file,
+            )
+            .await?;
 
         drop(storage);
         drop(flow_dir);
@@ -77,7 +78,7 @@ impl<CmdCtxTypesT> Default for StatesGoalReadCmdBlock<CmdCtxTypesT> {
 #[async_trait(?Send)]
 impl<CmdCtxTypesT> CmdBlock for StatesGoalReadCmdBlock<CmdCtxTypesT>
 where
-    CmdCtxTypesT: CmdCtxTypesConstrained,
+    CmdCtxTypesT: CmdCtxTypes,
 {
     type CmdCtxTypes = CmdCtxTypesT;
     type InputT = ();
@@ -99,17 +100,17 @@ where
     async fn exec(
         &self,
         _input: Self::InputT,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::CmdCtxTypes>,
+        cmd_ctx_spsf_fields: &mut CmdCtxSpsfFields<'_, Self::CmdCtxTypes>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<CmdProgressUpdate>,
     ) -> Result<
-        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError>,
-        <Self::CmdCtxTypes as CmdCtxTypesConstrained>::AppError,
+        CmdBlockOutcome<Self::Outcome, <Self::CmdCtxTypes as CmdCtxTypes>::AppError>,
+        <Self::CmdCtxTypes as CmdCtxTypes>::AppError,
     > {
-        let SingleProfileSingleFlowView {
+        let CmdCtxSpsfFields {
             states_type_reg,
             resources,
             ..
-        } = cmd_view;
+        } = cmd_ctx_spsf_fields;
 
         Self::deserialize_internal(resources, states_type_reg)
             .await

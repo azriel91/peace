@@ -22,15 +22,14 @@ async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std
     ])
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected)| async move {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+        let mut cli_output = cli_output(CliColorizeOpt::Never);
         let mut presenter = CliMdPresenter::new(&mut cli_output);
 
         presenter
             .heading(heading_level, &CodeInline::new("code".into()))
             .await?;
 
-        let output = String::from_utf8(buffer)?;
+        let output = String::from_utf8(cli_output.writer().clone())?;
         assert_eq!(expected, output);
         Ok(())
     })
@@ -73,15 +72,14 @@ async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std:
     ])
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected_colorized, expected)| async move {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+        let mut cli_output = cli_output(CliColorizeOpt::Always);
         let mut presenter = CliMdPresenter::new(&mut cli_output);
 
         presenter
             .heading(heading_level, &CodeInline::new("code".into()))
             .await?;
 
-        let output = String::from_utf8(buffer)?;
+        let output = String::from_utf8(cli_output.writer().clone())?;
         assert_eq!(expected_colorized, output);
         assert_eq!(expected, console::strip_ansi_codes(&output));
         Ok(())
@@ -92,13 +90,12 @@ async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std:
 #[tokio::test]
 async fn presents_bold_with_double_asterisk_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.bold(&String::from("bold")).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("**bold**", output);
     assert_eq!("**bold**", console::strip_ansi_codes(&output));
     Ok(())
@@ -107,13 +104,12 @@ async fn presents_bold_with_double_asterisk_color_disabled(
 #[tokio::test]
 async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dyn std::error::Error>>
 {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.bold(&String::from("bold")).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("**\u{1b}[1mbold\u{1b}[0m**", output);
     assert_eq!("**bold**", console::strip_ansi_codes(&output));
     Ok(())
@@ -122,13 +118,12 @@ async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dy
 #[tokio::test]
 async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.bold(&CodeInline::new("code".into())).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("**`code`**", output);
     assert_eq!("**`code`**", console::strip_ansi_codes(&output));
     Ok(())
@@ -137,13 +132,12 @@ async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_disabled(
 #[tokio::test]
 async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.bold(&CodeInline::new("code".into())).await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("**\u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m**", output);
     assert_eq!("**`code`**", console::strip_ansi_codes(&output));
     Ok(())
@@ -151,26 +145,24 @@ async fn presents_bold_wrapping_code_inline_with_double_asterisk_color_enabled(
 
 #[tokio::test]
 async fn presents_id_as_plain_text_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.id("an_id").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("an_id", output);
     Ok(())
 }
 
 #[tokio::test]
 async fn presents_id_as_blue_text_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.id("an_id").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("\u{1b}[38;5;75man_id\u{1b}[0m", output);
     assert_eq!("an_id", console::strip_ansi_codes(&output));
     Ok(())
@@ -179,13 +171,12 @@ async fn presents_id_as_blue_text_color_enabled() -> Result<(), Box<dyn std::err
 #[tokio::test]
 async fn presents_name_with_double_asterisk_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.name("A Name").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("**A Name**", output);
     Ok(())
 }
@@ -193,13 +184,12 @@ async fn presents_name_with_double_asterisk_color_disabled(
 #[tokio::test]
 async fn presents_name_with_double_asterisk_bold_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.name("A Name").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("\u{1b}[1m**A Name**\u{1b}[0m", output);
     assert_eq!("**A Name**", console::strip_ansi_codes(&output));
     Ok(())
@@ -207,26 +197,24 @@ async fn presents_name_with_double_asterisk_bold_text_color_enabled(
 
 #[tokio::test]
 async fn presents_text_as_plain_text_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.text("hello").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("hello", output);
     Ok(())
 }
 
 #[tokio::test]
 async fn presents_text_as_plain_text_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.text("hello").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("hello", output);
     Ok(())
 }
@@ -234,13 +222,12 @@ async fn presents_text_as_plain_text_color_enabled() -> Result<(), Box<dyn std::
 #[tokio::test]
 async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.tag("tag").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("⦗tag⦘", output);
     Ok(())
 }
@@ -248,13 +235,12 @@ async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled(
 #[tokio::test]
 async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.tag("tag").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("\u{1b}[38;5;219m\u{1b}[1m⦗tag⦘\u{1b}[0m", output);
     assert_eq!("⦗tag⦘", console::strip_ansi_codes(&output));
     Ok(())
@@ -263,13 +249,12 @@ async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled(
 #[tokio::test]
 async fn presents_code_inline_with_backticks_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.code_inline("code_inline").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("`code_inline`", output);
     Ok(())
 }
@@ -277,13 +262,12 @@ async fn presents_code_inline_with_backticks_color_disabled(
 #[tokio::test]
 async fn presents_code_inline_with_backticks_blue_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter.code_inline("code_inline").await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!("\u{1b}[38;5;75m`code_inline`\u{1b}[0m", output);
     assert_eq!("`code_inline`", console::strip_ansi_codes(&output));
     Ok(())
@@ -291,15 +275,14 @@ async fn presents_code_inline_with_backticks_blue_text_color_enabled(
 
 #[tokio::test]
 async fn presents_list_numbered_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_numbered(&[String::from("Item 1"), String::from("Item 2")])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             1. Item 1\n\
@@ -313,15 +296,14 @@ async fn presents_list_numbered_color_disabled() -> Result<(), Box<dyn std::erro
 #[tokio::test]
 async fn presents_list_numbered_white_text_color_enabled() -> Result<(), Box<dyn std::error::Error>>
 {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_numbered(&[String::from("Item 1"), String::from("Item 2")])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
         \u{1b}[38;5;15m1.\u{1b}[0m Item 1\n\
@@ -341,8 +323,7 @@ async fn presents_list_numbered_white_text_color_enabled() -> Result<(), Box<dyn
 
 #[tokio::test]
 async fn presents_list_numbered_padding_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -353,7 +334,7 @@ async fn presents_list_numbered_padding_color_disabled() -> Result<(), Box<dyn s
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         r#" 1. Item 1
  2. Item 2
@@ -374,8 +355,7 @@ async fn presents_list_numbered_padding_color_disabled() -> Result<(), Box<dyn s
 
 #[tokio::test]
 async fn presents_list_numbered_padding_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -386,7 +366,7 @@ async fn presents_list_numbered_padding_color_enabled() -> Result<(), Box<dyn st
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         " \u{1b}[38;5;15m1.\u{1b}[0m Item 1
  \u{1b}[38;5;15m2.\u{1b}[0m Item 2
@@ -422,8 +402,7 @@ async fn presents_list_numbered_padding_color_enabled() -> Result<(), Box<dyn st
 
 #[tokio::test]
 async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -436,7 +415,7 @@ async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std:
         })
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             1. Item 1\n\
@@ -450,8 +429,7 @@ async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std:
 #[tokio::test]
 async fn presents_list_numbered_with_white_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -464,7 +442,7 @@ async fn presents_list_numbered_with_white_text_color_enabled(
         })
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
         \u{1b}[38;5;15m1.\u{1b}[0m Item 1\n\
@@ -485,15 +463,14 @@ async fn presents_list_numbered_with_white_text_color_enabled(
 #[tokio::test]
 async fn presents_list_numbered_with_padding_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_numbered_with(1..=11, |n| format!("Item {n}"))
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         r#" 1. Item 1
  2. Item 2
@@ -515,15 +492,14 @@ async fn presents_list_numbered_with_padding_color_disabled(
 #[tokio::test]
 async fn presents_list_numbered_with_padding_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_numbered_with(1..=11, |n| format!("Item {n}"))
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         " \u{1b}[38;5;15m1.\u{1b}[0m Item 1
  \u{1b}[38;5;15m2.\u{1b}[0m Item 2
@@ -559,8 +535,7 @@ async fn presents_list_numbered_with_padding_color_enabled(
 
 #[tokio::test]
 async fn presents_list_numbered_aligned_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -582,7 +557,7 @@ async fn presents_list_numbered_aligned_color_disabled() -> Result<(), Box<dyn s
         ])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             1. **Short**    : description with `code`\n\
@@ -596,8 +571,7 @@ async fn presents_list_numbered_aligned_color_disabled() -> Result<(), Box<dyn s
 #[tokio::test]
 async fn presents_list_numbered_aligned_white_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -619,7 +593,7 @@ async fn presents_list_numbered_aligned_white_text_color_enabled(
         ])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             \u{1b}[38;5;15m1.\u{1b}[0m **\u{1b}[1mShort\u{1b}[0m**    : description with \u{1b}[38;5;75m`code`\u{1b}[0m\n\
@@ -640,8 +614,7 @@ async fn presents_list_numbered_aligned_white_text_color_enabled(
 #[tokio::test]
 async fn presents_list_numbered_aligned_padding_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -660,7 +633,7 @@ async fn presents_list_numbered_aligned_padding_color_disabled(
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         " 1. **Item 1** : description with `code`
  2. **Item 2** : description with `code`
@@ -682,8 +655,7 @@ async fn presents_list_numbered_aligned_padding_color_disabled(
 #[tokio::test]
 async fn presents_list_numbered_aligned_padding_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -702,7 +674,7 @@ async fn presents_list_numbered_aligned_padding_color_enabled(
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         " \u{1b}[38;5;15m1.\u{1b}[0m **\u{1b}[1mItem 1\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
  \u{1b}[38;5;15m2.\u{1b}[0m **\u{1b}[1mItem 2\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
@@ -738,15 +710,14 @@ async fn presents_list_numbered_aligned_padding_color_enabled(
 
 #[tokio::test]
 async fn presents_list_bulleted_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_bulleted(&[String::from("Item 1"), String::from("Item 2")])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             * Item 1\n\
@@ -760,15 +731,14 @@ async fn presents_list_bulleted_color_disabled() -> Result<(), Box<dyn std::erro
 #[tokio::test]
 async fn presents_list_bulleted_white_text_color_enabled() -> Result<(), Box<dyn std::error::Error>>
 {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
         .list_bulleted(&[String::from("Item 1"), String::from("Item 2")])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             \u{1b}[38;5;15m*\u{1b}[0m Item 1\n\
@@ -788,8 +758,7 @@ async fn presents_list_bulleted_white_text_color_enabled() -> Result<(), Box<dyn
 
 #[tokio::test]
 async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -802,7 +771,7 @@ async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std:
         })
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             * Item 1\n\
@@ -816,8 +785,7 @@ async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std:
 #[tokio::test]
 async fn presents_list_bulleted_with_white_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -830,7 +798,7 @@ async fn presents_list_bulleted_with_white_text_color_enabled(
         })
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             \u{1b}[38;5;15m*\u{1b}[0m Item 1\n\
@@ -850,8 +818,7 @@ async fn presents_list_bulleted_with_white_text_color_enabled(
 
 #[tokio::test]
 async fn presents_list_bulleted_aligned_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -873,7 +840,7 @@ async fn presents_list_bulleted_aligned_color_disabled() -> Result<(), Box<dyn s
         ])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             * **Short**    : description with `code`\n\
@@ -887,8 +854,7 @@ async fn presents_list_bulleted_aligned_color_disabled() -> Result<(), Box<dyn s
 #[tokio::test]
 async fn presents_list_bulleted_aligned_white_text_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -910,7 +876,7 @@ async fn presents_list_bulleted_aligned_white_text_color_enabled(
         ])
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\
             \u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mShort\u{1b}[0m**    : description with \u{1b}[38;5;75m`code`\u{1b}[0m\n\
@@ -931,8 +897,7 @@ async fn presents_list_bulleted_aligned_white_text_color_enabled(
 #[tokio::test]
 async fn presents_list_bulleted_aligned_padding_color_disabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+    let mut cli_output = cli_output(CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -951,7 +916,7 @@ async fn presents_list_bulleted_aligned_padding_color_disabled(
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "* **Item 1** : description with `code`
 * **Item 2** : description with `code`
@@ -973,8 +938,7 @@ async fn presents_list_bulleted_aligned_padding_color_disabled(
 #[tokio::test]
 async fn presents_list_bulleted_aligned_padding_color_enabled(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut cli_output = cli_output(CliColorizeOpt::Always);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
     presenter
@@ -993,7 +957,7 @@ async fn presents_list_bulleted_aligned_padding_color_enabled(
         )
         .await?;
 
-    let output = String::from_utf8(buffer)?;
+    let output = String::from_utf8(cli_output.writer().clone())?;
     assert_eq!(
         "\u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 1\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
 \u{1b}[38;5;15m*\u{1b}[0m **\u{1b}[1mItem 2\u{1b}[0m** : description with \u{1b}[38;5;75m`code`\u{1b}[0m
@@ -1027,8 +991,8 @@ async fn presents_list_bulleted_aligned_padding_color_enabled(
     Ok(())
 }
 
-fn cli_output(buffer: &mut Vec<u8>, colorize: CliColorizeOpt) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
+fn cli_output(colorize: CliColorizeOpt) -> CliOutput<Vec<u8>> {
+    CliOutputBuilder::new_with_writer(Vec::new())
         .with_outcome_format(OutputFormat::Text)
         .with_colorize(colorize)
         .build()
