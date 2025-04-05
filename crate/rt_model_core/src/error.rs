@@ -117,7 +117,7 @@ pub enum Error {
     /// A `Params::Spec` was not present for a given item ID.
     ///
     /// If this happens, this is a bug in the Peace framework.
-    #[error("A `Params::Spec` was not present for item: {item_id}")]
+    #[error("A `Params::Spec` was not present for item: `{item_id}`")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(

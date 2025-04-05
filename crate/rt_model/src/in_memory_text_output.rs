@@ -81,7 +81,8 @@ impl OutputWrite for InMemoryTextOutput {
     where
         P: Presentable,
     {
-        self.buffer = serde_yaml::to_string(&presentable).map_err(Error::StatesSerialize)?;
+        self.buffer
+            .push_str(&serde_yaml::to_string(&presentable).map_err(Error::StatesSerialize)?);
 
         Ok(())
     }
@@ -117,7 +118,7 @@ impl OutputWrite for InMemoryTextOutput {
                     .render_report(&mut err_buffer, diagnostic);
                 err_buffer.push('\n');
 
-                let (Ok(()) | Err(_)) = self.present(&err_buffer).await;
+                self.buffer.push_str(&err_buffer);
             }
 
             diagnostic_opt = diagnostic.diagnostic_source();
