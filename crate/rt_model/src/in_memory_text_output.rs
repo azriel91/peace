@@ -118,6 +118,19 @@ impl OutputWrite for InMemoryTextOutput {
                     .render_report(&mut err_buffer, diagnostic);
                 err_buffer.push('\n');
 
+                let err_buffer = err_buffer.lines().fold(
+                    String::with_capacity(err_buffer.len()),
+                    |mut buffer, line| {
+                        if line.trim().is_empty() {
+                            buffer.push('\n');
+                        } else {
+                            buffer.push_str(line);
+                            buffer.push('\n');
+                        }
+                        buffer
+                    },
+                );
+
                 self.buffer.push_str(&err_buffer);
             }
 

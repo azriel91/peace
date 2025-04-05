@@ -35,10 +35,10 @@ async fn write_err() -> Result<(), Box<dyn std::error::Error>> {
 
   x A `Params::Spec` was not present for item: `test_item`
   help: If you are an end user, please ask for help from the providers of your automation tool.
-        
+
         If you are developing a tool with the Peace framework,
         please open an issue in the Peace repository:
-        
+
         https://github.com/azriel91/peace/
 
 "#,
