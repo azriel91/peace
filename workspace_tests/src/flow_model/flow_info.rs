@@ -1,5 +1,5 @@
 use peace::{
-    data::fn_graph::{daggy2::Dag, Edge, WouldCycle},
+    data::fn_graph::{daggy::Dag, Edge, WouldCycle},
     flow_model::{flow_id, FlowInfo, FlowSpecInfo, GraphInfo, ItemInfo, ItemSpecInfo},
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
     item_model::item_id,

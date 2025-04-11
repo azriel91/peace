@@ -2,7 +2,7 @@ use dot_ix::model::{
     common::{EdgeId, Edges, NodeHierarchy, NodeId, NodeNames},
     info_graph::{GraphDir, GraphStyle, InfoGraph},
 };
-use fn_graph::{daggy2::Walker, Edge, GraphInfo};
+use fn_graph::{daggy::Walker, Edge, GraphInfo};
 use serde::{Deserialize, Serialize};
 
 use crate::{FlowId, ItemSpecInfo};
