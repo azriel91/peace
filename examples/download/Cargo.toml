@@ -1,6 +1,6 @@
 [package]
 name = "download"
-version = "0.0.14"
+version = "0.0.15"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Peace framework file download example"
@@ -22,19 +22,19 @@ result_large_err = "allow"
 
 [dependencies]
 peace_items = { path = "../../items", features = ["file_download"] }
-thiserror = "2.0.11"
+thiserror = "2.0.12"
 url = { version = "2.5.4", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace = { workspace = true, default-features = false, features = ["cli"] }
-clap = { version = "4.5.27", features = ["derive"] }
-tokio = { version = "1.43.0", features = ["net", "time", "rt"] }
+clap = { version = "4.5.36", features = ["derive"] }
+tokio = { version = "1.44.2", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 peace = { workspace = true, default-features = false }
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.6.5"
-tokio = "1.43.0"
+tokio = "1.44.2"
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
 js-sys = "0.3.77"

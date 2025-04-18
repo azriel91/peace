@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.15 (2025-04-18)
 
 * Split `flow_rt` and `state_rt` crates from `rt_model`. ([#187], [#202])
 * Split `peace_core::progress` into `peace_progress_model` crate. ([#187], [#202])

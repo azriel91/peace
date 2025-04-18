@@ -300,6 +300,20 @@ async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[tokio::test]
+async fn coverage_writer_mut() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cli_output = cli_output(OutputFormat::Json);
+    let error = Error::CliOutputTest;
+
+    <CliOutput<_> as OutputWrite>::write_err(&mut cli_output, &error).await?;
+
+    assert_eq!(
+        r#""CliOutputTest display message.""#,
+        String::from_utf8(cli_output.writer_mut().clone())?
+    );
+    Ok(())
+}
+
 #[cfg(feature = "output_progress")]
 mod color_always {
     use super::*;
