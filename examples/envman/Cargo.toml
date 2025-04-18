@@ -1,6 +1,6 @@
 [package]
 name = "envman"
-version = "0.0.14"
+version = "0.0.15"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Peace framework web application lifecycle example"
