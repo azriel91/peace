@@ -27,10 +27,13 @@ aws-sdk-s3 = { version = "1.82.0", optional = true }
 aws-smithy-types = { version = "1.3.0", optional = true } # used to reference error type, otherwise not recommended for direct usage
 base64 = { version = "0.22.1", optional = true }
 cfg-if = "1.0.0"
-chrono = { version = "0.4.40", default-features = false, features = ["clock", "serde"], optional = true }
+chrono = { version = "0.4.40", default-features = false, features = [
+    "clock",
+    "serde",
+], optional = true }
 derivative = { version = "2.2.0", optional = true }
 futures = { version = "0.3.31", optional = true }
-md5-rs = { version = "0.1.5", optional = true }  # WASM compatible, and reads bytes as stream
+md5-rs = { version = "0.1.5", optional = true } # WASM compatible, and reads bytes as stream
 peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download"] }
 semver = { version = "1.0.26", optional = true }
@@ -44,24 +47,28 @@ whoami = { version = "1.6.0", optional = true }
 # ssr
 axum = { version = "0.8.3", optional = true }
 hyper = { version = "1.6.0", optional = true }
-leptos = { version = "0.7.8", default-features = false }
-leptos_axum = { version = "0.7.8", optional = true }
-leptos_meta = { version = "0.7.8", default-features = false }
-leptos_router = { version = "0.7.8", default-features = false }
+leptos = { version = "0.8.0-rc1", default-features = false }
+leptos_axum = { version = "0.8.0-rc1", optional = true }
+leptos_meta = { version = "0.8.0-rc1", default-features = false }
+leptos_router = { version = "0.8.0-rc1", default-features = false }
 tower = { version = "0.5.2", optional = true }
 tower-http = { version = "0.6.2", optional = true, features = ["fs"] }
 tracing = { version = "0.1.41", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.5.35", features = ["derive"], optional = true }
-tokio = { version = "1.44.1", features = ["rt", "rt-multi-thread", "signal"], optional = true }
+clap = { version = "4.5.36", features = ["derive"], optional = true }
+tokio = { version = "1.44.2", features = [
+    "rt",
+    "rt-multi-thread",
+    "signal",
+], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = { version = "1.0.0", features = ["color"] }
 log = "0.4.27"
 serde-wasm-bindgen = "0.6.5"
-tokio = "1.44.1"
+tokio = "1.44.2"
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
 js-sys = "0.3.77"
@@ -107,23 +114,12 @@ ssr = [
     "peace/webi",
     "peace/ssr",
 ]
-csr = [
-    "peace/webi",
-]
+csr = ["peace/webi"]
 
 # === peace passthrough features === #
-error_reporting = [
-    "peace/error_reporting",
-    "peace_items/error_reporting",
-]
-output_progress = [
-    "peace/output_progress",
-    "peace_items/output_progress",
-]
-item_interactions = [
-    "peace/item_interactions",
-    "peace_items/item_interactions",
-]
+error_reporting = ["peace/error_reporting", "peace_items/error_reporting"]
+output_progress = ["peace/output_progress", "peace_items/output_progress"]
+item_interactions = ["peace/item_interactions", "peace_items/item_interactions"]
 item_state_example = [
     "peace/item_state_example",
     "peace_items/item_state_example",
@@ -154,11 +150,7 @@ web_server = [
 ]
 
 # leptos csr
-hydrate = [
-    "dep:tracing",
-    "leptos/hydrate",
-    "peace/webi",
-]
+hydrate = ["dep:tracing", "leptos/hydrate", "peace/webi"]
 
 [package.metadata.cargo-all-features]
 denylist = ["axum", "tower", "tower-http", "tokio", "leptos_axum"]
