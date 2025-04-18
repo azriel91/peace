@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 name: Publish
 
@@ -12,7 +12,28 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rust-lang/audit@v1
+      - name: "Generate Cargo.lock"
+        run: cargo generate-lockfile
+
+      - name: cargo-audit cache restore
+        id: cargo-audit_cache_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: ${{ runner.os }}-cargo-audit
+
+      - run: cargo install cargo-audit
+        if: steps.cargo-audit_cache_restore.outputs.cache-hit != 'true'
+
+      - name: cargo-audit cache save
+        id: cargo-audit_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.cargo-audit_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: ${{ runner.os }}-cargo-audit
+
+      - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,7 +46,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
-      - name: 'Build and test'
+      - name: "Build and test"
         run: cargo nextest run --workspace --all-features
 
   build_and_test_windows:
@@ -40,7 +61,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
-      - name: 'Build and test'
+      - name: "Build and test"
         run: cargo nextest run --workspace --all-features
 
   crates_io_publish:
@@ -56,18 +77,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: cargo-release Cache
-        id: cargo_release_cache
-        uses: actions/cache@v4
+      - name: cargo-release cache restore
+        id: cargo_release_cache_restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-release
           key: ${{ runner.os }}-cargo-release
 
       - run: cargo install cargo-release
-        if: steps.cargo_release_cache.outputs.cache-hit != 'true'
+        if: steps.cargo_release_cache_restore.outputs.cache-hit != 'true'
+
+      - name: cargo-release cache save
+        id: cargo_release_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.cargo_release_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/cargo-release
+          key: ${{ runner.os }}-cargo-release
 
       - name: cargo login
-        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+        run: |-
+          echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
 
       # allow-branch HEAD is because GitHub actions switches
       # to the tag while building, which is a detached head
