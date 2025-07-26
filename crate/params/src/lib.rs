@@ -74,6 +74,7 @@ pub use crate::{
     func::{FromFunc, Func},
     mapping_fn::MappingFn,
     mapping_fn_impl::MappingFnImpl,
+    mapping_fns::MappingFns,
     params::Params,
     params_fieldless::ParamsFieldless,
     params_key::ParamsKey,
@@ -100,6 +101,7 @@ mod field_wise_spec_rt;
 mod func;
 mod mapping_fn;
 mod mapping_fn_impl;
+mod mapping_fns;
 mod params;
 mod params_fieldless;
 mod params_key;

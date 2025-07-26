@@ -426,7 +426,7 @@ fn builder_field_methods(
                     >,
                     #peace_params_path::MappingFnImpl<#field_ty, F, Args>:
                         #peace_params_path::FromFunc<F>
-                        + #peace_params_path::MappingFn<Output = #field_ty>
+                        + #peace_params_path::MappingFn
                 {
                     let spec = {
                         let mapping_fn = <

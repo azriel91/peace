@@ -1,6 +1,8 @@
 use std::fmt::{self, Debug};
 
-use peace_resource_rt::{resources::ts::SetUp, BorrowFail, Resources};
+use peace_resource_rt::{
+    resources::ts::SetUp, type_reg::untagged::BoxDataTypeDowncast, BorrowFail, Resources,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -29,7 +31,7 @@ use crate::{
 /// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T>`
 ///    when resolving values for item params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ParamsSpecFieldlessDe<T>")]
+#[serde(from = "crate::ParamsSpecFieldlessDe<T>", bound = "T: ParamsFieldless")]
 pub enum ParamsSpecFieldless<T>
 where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
@@ -71,7 +73,7 @@ where
     /// deserialization, there is no actual backing function, so
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
-    MappingFn(Box<dyn MappingFn<Output = T>>),
+    MappingFn(Box<dyn MappingFn>),
 }
 
 impl<T> ParamsSpecFieldless<T>
@@ -80,7 +82,7 @@ where
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
-        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn<Output = T>,
+        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn,
     {
         let mapping_fn = MappingFnImpl::from((field_name, f));
         Self::MappingFn(Box::new(mapping_fn))
@@ -138,7 +140,7 @@ where
                 }
             }
             ParamsSpecFieldless::MappingFn(mapping_fn) => {
-                mapping_fn.map(resources, value_resolution_ctx)
+                resolve_t_from_mapping_fn(resources, value_resolution_ctx, mapping_fn)
             }
         }
     }
@@ -163,11 +165,51 @@ where
                     },
                 }
             }
-            ParamsSpecFieldless::MappingFn(mapping_fn) => mapping_fn
-                .try_map(resources, value_resolution_ctx)
-                .map(|t| t.map(T::Partial::from).unwrap_or_default()),
+            ParamsSpecFieldless::MappingFn(mapping_fn) => {
+                let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
+
+                let t_partial = box_dt_params_opt
+                    .map(|box_dt_params| {
+                        BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
+                            .cloned()
+                            .ok_or_else(|| ParamsResolveError::FromMapDowncast {
+                                value_resolution_ctx: value_resolution_ctx.clone(),
+                                to_type_name: tynm::type_name::<T>(),
+                            })
+                            .map(T::Partial::from)
+                    })
+                    .transpose()?
+                    .unwrap_or_default();
+
+                Ok(t_partial)
+            }
         }
     }
+}
+
+/// Returns a `T` by downcasting it from a `BoxDt` resolved by a mapping
+/// function.
+///
+/// # Note
+///
+/// Update `ParamsSpec` as well when updating this code.
+fn resolve_t_from_mapping_fn<T>(
+    resources: &Resources<SetUp>,
+    value_resolution_ctx: &mut ValueResolutionCtx,
+    mapping_fn: &Box<dyn MappingFn>,
+) -> Result<T, ParamsResolveError>
+where
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless,
+{
+    let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
+
+    BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
+        .cloned()
+        .ok_or_else(|| ParamsResolveError::FromMapDowncast {
+            value_resolution_ctx: value_resolution_ctx.clone(),
+            to_type_name: tynm::type_name::<T>(),
+        })
 }
 
 impl<T> AnySpecRt for ParamsSpecFieldless<T>

@@ -1,7 +1,9 @@
 use std::fmt::{self, Debug};
 
-use peace_resource_rt::{resources::ts::SetUp, BorrowFail, Resources};
-use serde::{Deserialize, Serialize};
+use peace_resource_rt::{
+    resources::ts::SetUp, type_reg::untagged::BoxDataTypeDowncast, BorrowFail, Resources,
+};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
     AnySpecDataType, AnySpecRt, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx,
@@ -28,10 +30,13 @@ use crate::{
 /// 4. These `AnySpecRtBoxed`s are downcasted back to `ValueSpec<T>` when
 ///    resolving values for item params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ValueSpecDe<T>")]
+#[serde(
+    from = "crate::ValueSpecDe<T>",
+    bound = "T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static"
+)]
 pub enum ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Loads a stored value spec.
     ///
@@ -70,16 +75,16 @@ where
     /// deserialization, there is no actual backing function, so
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
-    MappingFn(Box<dyn MappingFn<Output = T>>),
+    MappingFn(Box<dyn MappingFn>),
 }
 
 impl<T> ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
-        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn<Output = T>,
+        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn,
     {
         let mapping_fn = MappingFnImpl::from((field_name, f));
         Self::MappingFn(Box::new(mapping_fn))
@@ -88,7 +93,7 @@ where
 
 impl<T> Debug for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -102,7 +107,7 @@ where
 
 impl<T> From<T> for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     fn from(value: T) -> Self {
         Self::Value { value }
@@ -111,7 +116,7 @@ where
 
 impl<T> ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     pub fn resolve(
         &self,
@@ -133,7 +138,9 @@ where
                     }
                 },
             },
-            ValueSpec::MappingFn(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
+            ValueSpec::MappingFn(mapping_fn) => {
+                resolve_t_from_mapping_fn(resources, value_resolution_ctx, mapping_fn)
+            }
         }
     }
 
@@ -155,14 +162,54 @@ where
                     }
                 },
             },
-            ValueSpec::MappingFn(mapping_fn) => mapping_fn.try_map(resources, value_resolution_ctx),
+            ValueSpec::MappingFn(mapping_fn) => {
+                let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
+
+                let t = box_dt_params_opt
+                    .map(|box_dt_params| {
+                        BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
+                            .cloned()
+                            .ok_or_else(|| ParamsResolveError::FromMapDowncast {
+                                value_resolution_ctx: value_resolution_ctx.clone(),
+                                to_type_name: tynm::type_name::<T>(),
+                            })
+                    })
+                    .transpose()?;
+
+                Ok(t)
+            }
         }
     }
 }
 
+/// Returns a `T` by downcasting it from a `BoxDt` resolved by a mapping
+/// function.
+///
+/// # Note
+///
+/// Update `ParamsSpec` and `ParamsSpecFieldless` as well when updating this
+/// code.
+fn resolve_t_from_mapping_fn<T>(
+    resources: &Resources<SetUp>,
+    value_resolution_ctx: &mut ValueResolutionCtx,
+    mapping_fn: &Box<dyn MappingFn>,
+) -> Result<T, ParamsResolveError>
+where
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
+
+    BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
+        .cloned()
+        .ok_or_else(|| ParamsResolveError::FromMapDowncast {
+            value_resolution_ctx: value_resolution_ctx.clone(),
+            to_type_name: tynm::type_name::<T>(),
+        })
+}
+
 impl<T> AnySpecRt for ValueSpec<T>
 where
-    T: Clone + Debug + Serialize + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     fn is_usable(&self) -> bool {
         match self {
@@ -199,7 +246,7 @@ where
 
 impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Clone + Debug + Serialize + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     type ValueType = T;
 

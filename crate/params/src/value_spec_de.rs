@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug};
 
-use serde::Deserialize;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{MappingFnImpl, ValueSpec};
 
@@ -59,7 +59,7 @@ where
 
 impl<T> From<ValueSpecDe<T>> for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     fn from(value_spec_de: ValueSpecDe<T>) -> Self {
         match value_spec_de {

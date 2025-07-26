@@ -4,8 +4,8 @@ use std::{
 };
 
 use peace_data::marker::{ApplyDry, Clean, Current, Goal};
-use peace_resource_rt::{resources::ts::SetUp, BorrowFail, Resources};
-use serde::{Deserialize, Serialize, Serializer};
+use peace_resource_rt::{resources::ts::SetUp, type_reg::untagged::BoxDt, BorrowFail, Resources};
+use serde::{de::DeserializeOwned, Deserialize, Serialize, Serializer};
 
 use crate::{
     FromFunc, Func, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
@@ -103,7 +103,7 @@ macro_rules! impl_mapping_fn_impl {
         // impl<T, F, A0> MappingFnImpl<T, F, (A0,)>
         impl<T, F, $($Arg,)+> MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
@@ -119,7 +119,7 @@ macro_rules! impl_mapping_fn_impl {
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<T, ParamsResolveError> {
+            ) -> Result<BoxDt, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -148,42 +148,52 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Example => {
                         $(arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Clean => {
                         $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Current => {
                         $(arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Goal => {
                         $(arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::ApplyDry => {
                         $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                 }
             }
@@ -192,7 +202,7 @@ macro_rules! impl_mapping_fn_impl {
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<Option<T>, ParamsResolveError> {
+            ) -> Result<Option<BoxDt>, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -221,27 +231,42 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Example => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Clean => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Current => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Goal => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::ApplyDry => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                 }
             }
@@ -249,7 +274,7 @@ macro_rules! impl_mapping_fn_impl {
 
         impl<T, F, $($Arg,)+> FromFunc<F> for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             // Ideally we can do:
             //
             // ```rust
@@ -269,7 +294,7 @@ macro_rules! impl_mapping_fn_impl {
 
         impl<T, F, $($Arg,)+> From<(Option<String>, F)> for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
@@ -280,17 +305,15 @@ macro_rules! impl_mapping_fn_impl {
 
         impl<T, F, $($Arg,)+> MappingFn for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
-            type Output = T;
-
             fn map(
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
+            ) -> Result<BoxDt, ParamsResolveError> {
                 MappingFnImpl::<T, F, ($($Arg,)+)>::map(self, resources, value_resolution_ctx)
             }
 
@@ -298,7 +321,7 @@ macro_rules! impl_mapping_fn_impl {
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
+            ) -> Result<Option<BoxDt>, ParamsResolveError> {
                 MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx)
             }
 

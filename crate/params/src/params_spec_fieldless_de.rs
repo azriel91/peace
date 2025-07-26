@@ -8,6 +8,7 @@ type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
 /// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Deserialize)]
+#[serde(bound = "T: ParamsFieldless")]
 pub enum ParamsSpecFieldlessDe<T>
 where
     T: ParamsFieldless,

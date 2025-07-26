@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use peace_params::ParamsKey;
+use peace_params::{MappingFns, ParamsKey};
 use peace_rt_model::output::OutputWrite;
 use type_reg::untagged::TypeReg;
 
@@ -97,6 +97,18 @@ pub trait CmdCtxTypes: Debug + Unpin + 'static {
     ///
     /// [never_type]: https://doc.rust-lang.org/std/primitive.never.html
     type FlowParamsKey: ParamsKey;
+
+    /// Enum to give names to mapping functions, so that params specs and value
+    /// specs can be serialized.
+    ///
+    /// Item parameters may be mapped from other items' state, and that logic
+    /// exists as code. However, we want the ability to store (remember) those
+    /// mappings across command executions. If a closure is held in the params
+    /// specs and value specs, then they cannot be serialized. However, if we
+    /// place that logic elsewhere (like in the `CmdCtxTypes` implementation),
+    /// and have an intermediate enum to represent the mapping functions, we can
+    /// serialize the enum instead of the closure.
+    type MappingFns: MappingFns;
 
     /// Specifies the data types of the values stored against each key in the
     /// workspace parameters.

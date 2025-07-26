@@ -95,6 +95,24 @@ pub enum ParamsResolveError {
         from_type_name: String,
     },
 
+    #[error(
+        "Failed to downcast resolved `BoxDt` into `{to_type_name}` to populate:\n\
+        \n\
+        ```rust\n\
+        {value_resolution_ctx}\n\
+        ```"
+    )]
+    FromMapDowncast {
+        /// Hierarchy of fields traversed to resolve the value.
+        value_resolution_ctx: ValueResolutionCtx,
+        /// Name of the type that is being resolved.
+        ///
+        /// Usually one of the `Item::Params` types.
+        ///
+        /// Corresponds to `T` in `Fn(&U) -> T`.
+        to_type_name: String,
+    },
+
     /// Failed to borrow a value to map to a field from `resources`.
     #[cfg_attr(
         feature = "error_reporting",
