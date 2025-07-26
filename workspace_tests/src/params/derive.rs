@@ -70,6 +70,7 @@ mod struct_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -152,7 +153,7 @@ mod struct_params {
             && matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
-                if dest_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -269,6 +270,7 @@ mod struct_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -363,7 +365,7 @@ mod struct_with_type_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
-                if dest_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -489,6 +491,7 @@ mod tuple_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -564,7 +567,7 @@ mod tuple_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
-                if dest_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -665,6 +668,7 @@ mod tuple_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -745,7 +749,7 @@ mod tuple_with_type_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
-                if dest_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -866,6 +870,7 @@ mod enum_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -1028,7 +1033,7 @@ mod enum_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
-                if src_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -1062,7 +1067,7 @@ mod enum_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
-                if src_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -1097,7 +1102,7 @@ mod enum_params {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
-                if src_mapped == "b"
+                if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
             )
         ));
     }
@@ -1499,6 +1504,7 @@ mod struct_recursive_value {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resource_rt::{resources::ts::SetUp, Resources},
@@ -1602,7 +1608,7 @@ mod struct_recursive_value {
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
-                if dest_mapped == 456
+                if BoxDataTypeDowncast::<u32>::downcast_ref(&dest_mapped).copied() == Some(456)
             )
         ));
     }

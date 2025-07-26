@@ -541,6 +541,7 @@ pub struct TestCctShCmd;
 impl CmdCtxTypes for TestCctShCmd {
     type AppError = ShCmdError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = InMemoryTextOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();

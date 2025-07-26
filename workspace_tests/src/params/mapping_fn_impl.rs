@@ -40,6 +40,7 @@ macro_rules! mapping_tests {
     ($module_name:ident, $value_resolution_mode:ident) => {
         mod $module_name {
             use peace::{
+                cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
                 data::marker::$value_resolution_mode,
                 item_model::item_id,
                 params::{
@@ -75,7 +76,7 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 )?;
-                assert_eq!(3, sum);
+                assert_eq!(Some(3), BoxDataTypeDowncast::<u16>::downcast_ref(&sum).copied());
 
                 Ok(())
             }
@@ -106,7 +107,7 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 )?;
-                assert_eq!(3, sum);
+                assert_eq!(Some(3), BoxDataTypeDowncast::<u16>::downcast_ref(&sum).copied());
 
                 Ok(())
             }
@@ -254,7 +255,7 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 )?;
-                assert_eq!(Some(3), sum);
+                assert_eq!(Some(3), sum.as_ref().and_then(BoxDataTypeDowncast::<u16>::downcast_ref).copied());
 
                 Ok(())
             }
@@ -285,7 +286,7 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 )?;
-                assert_eq!(None, sum);
+                assert!(sum.is_none(), "Expected `sum` to be `None` but was {sum:?}");
 
                 Ok(())
             }
@@ -316,7 +317,7 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 )?;
-                assert_eq!(None, sum);
+                assert!(sum.is_none(), "Expected `sum` to be `None` but was {sum:?}");
 
                 Ok(())
             }

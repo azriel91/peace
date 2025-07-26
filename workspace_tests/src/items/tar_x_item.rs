@@ -854,6 +854,7 @@ pub struct TestCctTarX;
 impl CmdCtxTypes for TestCctTarX {
     type AppError = TarXError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = InMemoryTextOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();

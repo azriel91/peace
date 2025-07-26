@@ -97,6 +97,7 @@ pub struct TestCctCmdCtxNpnf;
 impl CmdCtxTypes for TestCctCmdCtxNpnf {
     type AppError = PeaceTestError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = NoOpOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = String;
