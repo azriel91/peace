@@ -385,6 +385,12 @@ where
         CmdCtxBuilderSupport::flow_params_insert(flow_params.clone(), &mut resources);
         resources.insert(flow_params_file);
 
+        // Register each mapping function with the `MappingFnRegistry`.
+        MFns::iter().for_each(|m_fn| {
+            let mapping_fn = MappingFn::new(field_name, f);
+            mapping_fn_registry.insert(mapping_fn);
+        });
+
         // Insert resources
         {
             let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();

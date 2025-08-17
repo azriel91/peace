@@ -1,4 +1,4 @@
-use std::fmt::{self, Debug};
+use std::fmt::Debug;
 
 use peace_resource_rt::{
     resources::ts::SetUp, type_reg::untagged::BoxDataTypeDowncast, BorrowFail, Resources,
@@ -6,7 +6,7 @@ use peace_resource_rt::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AnySpecDataType, AnySpecRt, MappingFn, MappingFnImpl, ParamsFieldless, ParamsResolveError,
+    AnySpecDataType, AnySpecRt, MappingFnReg, MappingFns, ParamsFieldless, ParamsResolveError,
     ValueResolutionCtx, ValueSpecRt,
 };
 
@@ -24,17 +24,18 @@ use crate::{
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ParamsSpecFieldlessDe<T>` is mapped into a
-///    `ParamsSpecFieldless<T>`, and subsequently `AnySpecRtBoxed` to be passed
-///    around in a `CmdCtx`.
+/// 3. Each `ParamsSpecFieldlessDe<T, MFns>` is mapped into a
+///    `ParamsSpecFieldless<T, MFns>`, and subsequently `AnySpecRtBoxed` to be
+///    passed around in a `CmdCtx`.
 ///
-/// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T>`
-///    when resolving values for item params and params partials.
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ParamsSpecFieldlessDe<T>", bound = "T: ParamsFieldless")]
-pub enum ParamsSpecFieldless<T>
+/// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T,
+///    MFns>` when resolving values for item params and params partials.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(bound = "T: ParamsFieldless")]
+pub enum ParamsSpecFieldless<T, MFns>
 where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
+    MFns: MappingFns,
 {
     /// Loads a stored value spec.
     ///
@@ -73,52 +74,32 @@ where
     /// deserialization, there is no actual backing function, so
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
-    MappingFn(Box<dyn MappingFn>),
+    MappingFn {
+        /// The name of the mapping function.
+        #[serde(rename = "name")]
+        m_fns: MFns,
+    },
 }
 
-impl<T> ParamsSpecFieldless<T>
+impl<T, MFns> From<T> for ParamsSpecFieldless<T, MFns>
 where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
-{
-    pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
-    where
-        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn,
-    {
-        let mapping_fn = MappingFnImpl::from((field_name, f));
-        Self::MappingFn(Box::new(mapping_fn))
-    }
-}
-
-impl<T> Debug for ParamsSpecFieldless<T>
-where
-    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Stored => f.write_str("Stored"),
-            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::InMemory => f.write_str("InMemory"),
-            Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
-        }
-    }
-}
-
-impl<T> From<T> for ParamsSpecFieldless<T>
-where
-    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
+    MFns: MappingFns,
 {
     fn from(value: T) -> Self {
         Self::Value { value }
     }
 }
 
-impl<T> ParamsSpecFieldless<T>
+impl<T, MFns> ParamsSpecFieldless<T, MFns>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
+    MFns: MappingFns,
 {
     pub fn resolve(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<peace_resource_rt::resources::ts::SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
@@ -139,14 +120,15 @@ where
                     },
                 }
             }
-            ParamsSpecFieldless::MappingFn(mapping_fn) => {
-                resolve_t_from_mapping_fn(resources, value_resolution_ctx, mapping_fn)
+            ParamsSpecFieldless::MappingFn { m_fns } => {
+                resolve_t_from_mapping_fn(mapping_fn_reg, resources, value_resolution_ctx, *m_fns)
             }
         }
     }
 
     pub fn resolve_partial(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
@@ -165,7 +147,10 @@ where
                     },
                 }
             }
-            ParamsSpecFieldless::MappingFn(mapping_fn) => {
+            ParamsSpecFieldless::MappingFn { m_fns } => {
+                let mapping_fn = mapping_fn_reg
+                    .get(*m_fns)
+                    .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
                 let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
 
                 let t_partial = box_dt_params_opt
@@ -193,15 +178,20 @@ where
 /// # Note
 ///
 /// Update `ParamsSpec` as well when updating this code.
-fn resolve_t_from_mapping_fn<T>(
+fn resolve_t_from_mapping_fn<T, MFns>(
+    mapping_fn_reg: &MappingFnReg,
     resources: &Resources<SetUp>,
     value_resolution_ctx: &mut ValueResolutionCtx,
-    mapping_fn: &Box<dyn MappingFn>,
+    m_fns: MFns,
 ) -> Result<T, ParamsResolveError>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>> + Clone + Debug + Send + Sync + 'static,
     T: ParamsFieldless,
+    MFns: MappingFns,
 {
+    let mapping_fn = mapping_fn_reg
+        .get(m_fns)
+        .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
     let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
 
     BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
@@ -212,21 +202,21 @@ where
         })
 }
 
-impl<T> AnySpecRt for ParamsSpecFieldless<T>
+impl<T, MFns> AnySpecRt for ParamsSpecFieldless<T, MFns>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>>
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>>
         + Clone
         + Debug
         + Serialize
         + Send
         + Sync
         + 'static,
+    MFns: MappingFns,
 {
     fn is_usable(&self) -> bool {
         match self {
             Self::Stored => false,
-            Self::Value { .. } | Self::InMemory => true,
-            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+            Self::Value { .. } | Self::InMemory | Self::MappingFn { .. } => true,
         }
     }
 
@@ -250,14 +240,14 @@ where
             Self::Stored => *self = other.clone(),
 
             // Use set value / no change on these variants
-            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
+            Self::Value { .. } | Self::InMemory | Self::MappingFn { .. } => {}
         }
     }
 }
 
-impl<T> ValueSpecRt for ParamsSpecFieldless<T>
+impl<T, MFns> ValueSpecRt for ParamsSpecFieldless<T, MFns>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>>
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>>
         + Clone
         + Debug
         + Serialize
@@ -266,24 +256,37 @@ where
         + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
+    MFns: MappingFns,
 {
     type ValueType = T;
 
     fn resolve(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
-        ParamsSpecFieldless::<T>::resolve(self, resources, value_resolution_ctx)
+        ParamsSpecFieldless::<T, MFns>::resolve(
+            self,
+            mapping_fn_reg,
+            resources,
+            value_resolution_ctx,
+        )
     }
 
     fn try_resolve(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
-        ParamsSpecFieldless::<T>::resolve_partial(self, resources, value_resolution_ctx)
-            .map(T::try_from)
-            .map(Result::ok)
+        ParamsSpecFieldless::<T, MFns>::resolve_partial(
+            self,
+            mapping_fn_reg,
+            resources,
+            value_resolution_ctx,
+        )
+        .map(T::try_from)
+        .map(Result::ok)
     }
 }

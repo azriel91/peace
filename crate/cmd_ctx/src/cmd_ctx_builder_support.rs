@@ -361,11 +361,8 @@ impl CmdCtxBuilderSupport {
                 };
 
                 if let Some((item_id, params_spec_boxed)) = params_spec_to_use {
-                    // `*Spec::MappingFn`s will be present in `params_spec_stored`, but will not
-                    // be valid mapping functions as they cannot be serialized / deserialized.
-                    //
-                    // Also, field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
-                    // which never had specifications, which are also unusable.
+                    // Field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
+                    // which never had specifications, which are unusable.
                     if params_spec_boxed.is_usable() {
                         params_specs.insert_raw(item_id, params_spec_boxed);
                     } else {

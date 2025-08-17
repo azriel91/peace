@@ -136,4 +136,31 @@ pub enum ParamsResolveError {
         /// Corresponds to `U` in `Fn(&U) -> T`.
         from_type_name: String,
     },
+
+    /// Failed to resolve a mapping function from the registry.
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_params::params_resolve_error::mapping_fn_resolve),
+            help(
+                "Mapping function variants are intended to be stable, so if you renamed the mapping function, you may have to edit the stored param spec to use the new name."
+            )
+        )
+    )]
+    #[error(
+        "Failed to resolve mapping function `{mapping_fn:?}` to populate:\n\
+        \n\
+        ```rust\n\
+        {value_resolution_ctx}\n\
+        ```"
+    )]
+    MappingFnResolve {
+        /// Hierarchy of fields traversed to resolve the value.
+        value_resolution_ctx: ValueResolutionCtx,
+        /// String representation of the mapping function.
+        ///
+        /// In practice, this is a YAML serialized string representation of the
+        /// `MappingFns` variant.
+        mapping_fn: String,
+    },
 }

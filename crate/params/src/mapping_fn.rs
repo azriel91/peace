@@ -7,13 +7,30 @@ use peace_resource_rt::{
 };
 use serde::{Serialize, Serializer};
 
-use crate::{ParamsResolveError, ValueResolutionCtx};
+use crate::{MappingFnImpl, ParamsResolveError, ValueResolutionCtx};
 
 /// Type erased mapping function.
 ///
 /// This is used by Peace to hold type-erased mapping functions, and is not
 /// intended to be implemented by users or implementors.
 pub trait MappingFn: Debug + DataType {
+    /// Returns a type-erased `MappingFn` that wraps the given function.
+    ///
+    /// This allows different types of logic to be held as a common type.
+    ///
+    /// # Implementors
+    ///
+    /// This function is not intended to be overwritten -- perhaps it should be
+    /// placed in a sealed trait.
+    fn new<T, F, Args>(field_name: Option<String>, f: F) -> Box<dyn MappingFn>
+    where
+        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn,
+        Self: Sized,
+    {
+        let mapping_fn = MappingFnImpl::from((field_name, f));
+        Box::new(mapping_fn)
+    }
+
     /// Maps data in resources to the output type, used for `Item::Params`.
     ///
     /// The data being accessed is defined by the implementation of this
