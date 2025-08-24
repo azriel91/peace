@@ -6,8 +6,8 @@ use peace_resource_rt::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    AnySpecDataType, AnySpecRt, MappingFnReg, MappingFns, ParamsResolveError, ValueResolutionCtx,
-    ValueSpecRt,
+    AnySpecDataType, AnySpecRt, MappingFnName, MappingFnReg, ParamsResolveError,
+    ValueResolutionCtx, ValueSpecRt,
 };
 
 /// How to populate a field's value in an item's params.
@@ -24,17 +24,16 @@ use crate::{
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ValueSpecDe<T, MFns>` is mapped into a `ValueSpec<T, MFns>`, and
-///    subsequently `AnySpecRtBoxed` to be passed around in a `CmdCtx`.
+/// 3. Each `ValueSpecDe<T>` is mapped into a `ValueSpec<T>`, and subsequently
+///    `AnySpecRtBoxed` to be passed around in a `CmdCtx`.
 ///
-/// 4. These `AnySpecRtBoxed`s are downcasted back to `ValueSpec<T, MFns>` when
+/// 4. These `AnySpecRtBoxed`s are downcasted back to `ValueSpec<T>` when
 ///    resolving values for item params and params partials.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound = "T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static")]
-pub enum ValueSpec<T, MFns>
+pub enum ValueSpec<T>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     /// Loads a stored value spec.
     ///
@@ -75,25 +74,22 @@ where
     /// context builds.
     MappingFn {
         /// The name of the mapping function.
-        #[serde(rename = "name")]
-        m_fns: MFns,
+        mapping_fn_name: MappingFnName,
     },
 }
 
-impl<T, MFns> From<T> for ValueSpec<T, MFns>
+impl<T> From<T> for ValueSpec<T>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     fn from(value: T) -> Self {
         Self::Value { value }
     }
 }
 
-impl<T, MFns> ValueSpec<T, MFns>
+impl<T> ValueSpec<T>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     pub fn resolve(
         &self,
@@ -116,9 +112,12 @@ where
                     }
                 },
             },
-            ValueSpec::MappingFn { m_fns } => {
-                resolve_t_from_mapping_fn(mapping_fn_reg, resources, value_resolution_ctx, *m_fns)
-            }
+            ValueSpec::MappingFn { mapping_fn_name } => resolve_t_from_mapping_fn(
+                mapping_fn_reg,
+                resources,
+                value_resolution_ctx,
+                mapping_fn_name,
+            ),
         }
     }
 
@@ -141,10 +140,10 @@ where
                     }
                 },
             },
-            ValueSpec::MappingFn { m_fns } => {
-                let mapping_fn = mapping_fn_reg
-                    .get(*m_fns)
-                    .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
+            ValueSpec::MappingFn { mapping_fn_name } => {
+                let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
+                    ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+                })?;
                 let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
 
                 let t = box_dt_params_opt
@@ -171,19 +170,18 @@ where
 ///
 /// Update `ParamsSpec` and `ParamsSpecFieldless` as well when updating this
 /// code.
-fn resolve_t_from_mapping_fn<T, MFns>(
+fn resolve_t_from_mapping_fn<T>(
     mapping_fn_reg: &MappingFnReg,
     resources: &Resources<SetUp>,
     value_resolution_ctx: &mut ValueResolutionCtx,
-    m_fns: MFns,
+    mapping_fn_name: &MappingFnName,
 ) -> Result<T, ParamsResolveError>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
-    let mapping_fn = mapping_fn_reg
-        .get(m_fns)
-        .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
+    let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
+        ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+    })?;
     let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
 
     BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
@@ -194,10 +192,9 @@ where
         })
 }
 
-impl<T, MFns> AnySpecRt for ValueSpec<T, MFns>
+impl<T> AnySpecRt for ValueSpec<T>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     fn is_usable(&self) -> bool {
         match self {
@@ -231,10 +228,9 @@ where
     }
 }
 
-impl<T, MFns> ValueSpecRt for ValueSpec<T, MFns>
+impl<T> ValueSpecRt for ValueSpec<T>
 where
     T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     type ValueType = T;
 
@@ -244,7 +240,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
-        ValueSpec::<T, MFns>::resolve(self, mapping_fn_reg, resources, value_resolution_ctx)
+        ValueSpec::<T>::resolve(self, mapping_fn_reg, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
@@ -253,6 +249,6 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
-        ValueSpec::<T, MFns>::resolve_partial(self, mapping_fn_reg, resources, value_resolution_ctx)
+        ValueSpec::<T>::resolve_partial(self, mapping_fn_reg, resources, value_resolution_ctx)
     }
 }

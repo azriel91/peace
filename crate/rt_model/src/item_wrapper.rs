@@ -13,7 +13,8 @@ use peace_data::{
 };
 use peace_item_model::ItemId;
 use peace_params::{
-    Params, ParamsMergeExt, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode,
+    MappingFnReg, Params, ParamsMergeExt, ParamsSpec, ParamsSpecs, ValueResolutionCtx,
+    ValueResolutionMode,
 };
 use peace_resource_rt::{
     resources::ts::{Empty, SetUp},
@@ -367,8 +368,9 @@ where
             item_id.clone(),
             tynm::type_name::<I::Params<'_>>(),
         );
+        let mapping_fn_reg = resources.borrow::<MappingFnReg>();
         Ok(params_spec
-            .resolve_partial(resources, &mut value_resolution_ctx)
+            .resolve_partial(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .map_err(crate::Error::ParamsResolveError)?)
     }
 
@@ -389,8 +391,9 @@ where
             item_id.clone(),
             tynm::type_name::<I::Params<'_>>(),
         );
+        let mapping_fn_reg = resources.borrow::<MappingFnReg>();
         Ok(params_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .map_err(crate::Error::ParamsResolveError)?)
     }
 }

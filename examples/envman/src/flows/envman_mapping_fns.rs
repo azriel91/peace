@@ -16,6 +16,14 @@ pub enum EnvmanMappingFns {
 }
 
 impl MappingFns for EnvmanMappingFns {
+    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
+        [
+            Self::IamRoleManagedPolicyArnFromIamPolicyState,
+            Self::IamRoleNameFromProfile,
+        ]
+        .into_iter()
+    }
+
     fn mapping_fn(self) -> Box<dyn MappingFn> {
         match self {
             Self::IamRoleNameFromProfile => Box::new(MappingFnImpl::from_func(

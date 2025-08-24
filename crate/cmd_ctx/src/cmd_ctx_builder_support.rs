@@ -1,7 +1,7 @@
 use futures::{StreamExt, TryStreamExt};
 use peace_flow_rt::{Flow, ItemGraph};
 use peace_item_model::ItemId;
-use peace_params::{ParamsKey, ParamsSpecs};
+use peace_params::{MappingFnReg, MappingFns, ParamsKey, ParamsSpecs};
 use peace_profile_model::Profile;
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
@@ -416,6 +416,21 @@ impl CmdCtxBuilderSupport {
                 params_specs_not_usable,
             })
         }
+    }
+
+    /// Registers each mapping function with the `MappingFnReg` and inserts it
+    /// into `resources`.
+    ///
+    /// This is also needed whenever flow params need to be deserialized.
+    pub(crate) fn mapping_fn_reg_setup<MFns>(resources: &mut Resources<Empty>)
+    where
+        MFns: MappingFns,
+    {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        MFns::iter().for_each(|m_fn| {
+            mapping_fn_reg.insert(m_fn.name(), m_fn.mapping_fn());
+        });
+        resources.insert(mapping_fn_reg);
     }
 
     pub(crate) async fn item_graph_setup<E>(

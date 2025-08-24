@@ -99,6 +99,7 @@ pub fn impl_value_spec_rt_for_field_wise(
 
             fn resolve(
                 &self,
+                mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
@@ -107,6 +108,7 @@ pub fn impl_value_spec_rt_for_field_wise(
 
             fn try_resolve(
                 &self,
+                mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<Option<#params_name #ty_generics>, #peace_params_path::ParamsResolveError> {
@@ -420,11 +422,11 @@ impl ResolveMode {
         match self {
             Self::Resolve => quote! {
                 let #field_name = <#field_spec_ty as #peace_params_path::ValueSpecRt>
-                    ::resolve(#field_name, resources, value_resolution_ctx)?.into();
+                    ::resolve(#field_name, mapping_fn_reg, resources, value_resolution_ctx)?.into();
             },
             Self::TryResolve => quote! {
                 let #field_name = <#field_spec_ty as #peace_params_path::ValueSpecRt>
-                    ::try_resolve(#field_name, resources, value_resolution_ctx)?
+                    ::try_resolve(#field_name, mapping_fn_reg, resources, value_resolution_ctx)?
                     .map(::std::convert::TryFrom::try_from)
                     .and_then(::std::result::Result::ok);
 

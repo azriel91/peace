@@ -101,6 +101,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
 
             fn resolve(
                 &self,
+                mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
@@ -109,6 +110,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
 
             fn resolve_partial(
                 &self,
+                mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
@@ -419,6 +421,7 @@ impl<'name> ResolveMode<'name> {
             Self::Full { .. } => quote! {
                 let #field_name = #field_spec_ty_path::resolve(
                     #field_name,
+                    mapping_fn_reg,
                     resources,
                     value_resolution_ctx,
                 )?;
@@ -426,6 +429,7 @@ impl<'name> ResolveMode<'name> {
             Self::Partial { .. } => quote! {
                 let #field_name = #field_spec_ty_path::resolve_partial(
                     #field_name,
+                    mapping_fn_reg,
                     resources,
                     value_resolution_ctx,
                 )?;

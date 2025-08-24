@@ -385,11 +385,8 @@ where
         CmdCtxBuilderSupport::flow_params_insert(flow_params.clone(), &mut resources);
         resources.insert(flow_params_file);
 
-        // Register each mapping function with the `MappingFnRegistry`.
-        MFns::iter().for_each(|m_fn| {
-            let mapping_fn = MappingFn::new(field_name, f);
-            mapping_fn_registry.insert(mapping_fn);
-        });
+        // Register each mapping function with the `MappingFnReg`.
+        CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>(&mut resources);
 
         // Insert resources
         {

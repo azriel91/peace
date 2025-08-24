@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{MappingFn, ParamsResolveError, ValueResolutionCtx};
+use crate::{MappingFn, MappingFnName};
 
 /// Enum to give names to mapping functions, so that params specs and value
 /// specs can be serialized.
@@ -20,25 +20,24 @@ pub trait MappingFns:
     /// Returns an iterator over all variants of these mapping functions.
     fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator;
 
+    /// Returns a string representation of the mapping function name.
+    ///
+    /// # Implementors
+    ///
+    /// The returned name is considered API, and should be stable.
+    fn name(&self) -> MappingFnName;
+
     /// Returns the mapping function corresponding to the given variant.
     fn mapping_fn(self) -> Box<dyn MappingFn>;
-
-    /// Returns an error indicating that the mapping function could not be
-    /// resolved.
-    fn into_params_resolve_error(
-        &self,
-        value_resolution_ctx: ValueResolutionCtx,
-    ) -> ParamsResolveError {
-        ParamsResolveError::MappingFnResolve {
-            value_resolution_ctx,
-            mapping_fn: serde_yaml::to_string(self).unwrap_or_else(|_| format!("{self:?}")),
-        }
-    }
 }
 
 impl MappingFns for () {
     fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
         std::iter::empty()
+    }
+
+    fn name(&self) -> MappingFnName {
+        unreachable!("`()` is not intended to be used as a mapping function name, but an indicator that no mapping functions are used.")
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

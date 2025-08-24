@@ -6,7 +6,7 @@ use peace_resource_rt::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AnySpecDataType, AnySpecRt, MappingFnReg, MappingFns, ParamsFieldless, ParamsResolveError,
+    AnySpecDataType, AnySpecRt, MappingFnName, MappingFnReg, ParamsFieldless, ParamsResolveError,
     ValueResolutionCtx, ValueSpecRt,
 };
 
@@ -24,18 +24,17 @@ use crate::{
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ParamsSpecFieldlessDe<T, MFns>` is mapped into a
-///    `ParamsSpecFieldless<T, MFns>`, and subsequently `AnySpecRtBoxed` to be
-///    passed around in a `CmdCtx`.
+/// 3. Each `ParamsSpecFieldlessDe<T>` is mapped into a
+///    `ParamsSpecFieldless<T>`, and subsequently `AnySpecRtBoxed` to be passed
+///    around in a `CmdCtx`.
 ///
 /// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T,
 ///    MFns>` when resolving values for item params and params partials.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound = "T: ParamsFieldless")]
-pub enum ParamsSpecFieldless<T, MFns>
+pub enum ParamsSpecFieldless<T>
 where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     /// Loads a stored value spec.
     ///
@@ -76,26 +75,23 @@ where
     /// context builds.
     MappingFn {
         /// The name of the mapping function.
-        #[serde(rename = "name")]
-        m_fns: MFns,
+        mapping_fn_name: MappingFnName,
     },
 }
 
-impl<T, MFns> From<T> for ParamsSpecFieldless<T, MFns>
+impl<T> From<T> for ParamsSpecFieldless<T>
 where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
-    MFns: MappingFns,
 {
     fn from(value: T) -> Self {
         Self::Value { value }
     }
 }
 
-impl<T, MFns> ParamsSpecFieldless<T, MFns>
+impl<T> ParamsSpecFieldless<T>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
-    MFns: MappingFns,
 {
     pub fn resolve(
         &self,
@@ -120,9 +116,12 @@ where
                     },
                 }
             }
-            ParamsSpecFieldless::MappingFn { m_fns } => {
-                resolve_t_from_mapping_fn(mapping_fn_reg, resources, value_resolution_ctx, *m_fns)
-            }
+            ParamsSpecFieldless::MappingFn { mapping_fn_name } => resolve_t_from_mapping_fn(
+                mapping_fn_reg,
+                resources,
+                value_resolution_ctx,
+                mapping_fn_name,
+            ),
         }
     }
 
@@ -147,10 +146,10 @@ where
                     },
                 }
             }
-            ParamsSpecFieldless::MappingFn { m_fns } => {
-                let mapping_fn = mapping_fn_reg
-                    .get(*m_fns)
-                    .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
+            ParamsSpecFieldless::MappingFn { mapping_fn_name } => {
+                let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
+                    ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+                })?;
                 let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
 
                 let t_partial = box_dt_params_opt
@@ -178,20 +177,19 @@ where
 /// # Note
 ///
 /// Update `ParamsSpec` as well when updating this code.
-fn resolve_t_from_mapping_fn<T, MFns>(
+fn resolve_t_from_mapping_fn<T>(
     mapping_fn_reg: &MappingFnReg,
     resources: &Resources<SetUp>,
     value_resolution_ctx: &mut ValueResolutionCtx,
-    m_fns: MFns,
+    mapping_fn_name: &MappingFnName,
 ) -> Result<T, ParamsResolveError>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T: ParamsFieldless,
-    MFns: MappingFns,
 {
-    let mapping_fn = mapping_fn_reg
-        .get(m_fns)
-        .ok_or_else(|| m_fns.into_params_resolve_error(value_resolution_ctx.clone()))?;
+    let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
+        ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+    })?;
     let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
 
     BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
@@ -202,16 +200,15 @@ where
         })
 }
 
-impl<T, MFns> AnySpecRt for ParamsSpecFieldless<T, MFns>
+impl<T> AnySpecRt for ParamsSpecFieldless<T>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>>
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>>
         + Clone
         + Debug
         + Serialize
         + Send
         + Sync
         + 'static,
-    MFns: MappingFns,
 {
     fn is_usable(&self) -> bool {
         match self {
@@ -245,9 +242,9 @@ where
     }
 }
 
-impl<T, MFns> ValueSpecRt for ParamsSpecFieldless<T, MFns>
+impl<T> ValueSpecRt for ParamsSpecFieldless<T>
 where
-    T: ParamsFieldless<Spec = ParamsSpecFieldless<T, MFns>>
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>>
         + Clone
         + Debug
         + Serialize
@@ -256,7 +253,6 @@ where
         + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
-    MFns: MappingFns,
 {
     type ValueType = T;
 
@@ -266,12 +262,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
-        ParamsSpecFieldless::<T, MFns>::resolve(
-            self,
-            mapping_fn_reg,
-            resources,
-            value_resolution_ctx,
-        )
+        ParamsSpecFieldless::<T>::resolve(self, mapping_fn_reg, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
@@ -280,7 +271,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
-        ParamsSpecFieldless::<T, MFns>::resolve_partial(
+        ParamsSpecFieldless::<T>::resolve_partial(
             self,
             mapping_fn_reg,
             resources,

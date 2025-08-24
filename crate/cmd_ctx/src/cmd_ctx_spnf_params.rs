@@ -270,6 +270,9 @@ where
         CmdCtxBuilderSupport::profile_params_insert(profile_params.clone(), &mut resources);
         resources.insert(profile_params_file);
 
+        // Register each mapping function with the `MappingFnReg`.
+        CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>(&mut resources);
+
         // Insert resources
         {
             let (app_name, workspace_dirs, storage) = (*workspace).clone().into_inner();
