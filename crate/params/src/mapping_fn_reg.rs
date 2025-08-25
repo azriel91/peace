@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{MappingFn, MappingFnName};
+use crate::{MappingFn, MappingFnName, MappingFns};
 
 /// Map of serializable [`MappingFns`] to each [`MappingFn`] logic.
 ///
@@ -21,6 +21,28 @@ impl MappingFnReg {
     /// Returns a new `MappingFnRegistry` with the specified capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         MappingFnReg(HashMap::with_capacity(capacity))
+    }
+
+    /// Registers a single `MappingFns` variant with this registry.
+    ///
+    /// This is a convenience function for `mapping_fn_reg.insert(m_fns.name(),
+    /// m_fns.mapping_fn());`
+    pub fn register<MFns>(&mut self, m_fns: MFns)
+    where
+        MFns: MappingFns,
+    {
+        self.insert(m_fns.name(), m_fns.mapping_fn());
+    }
+
+    /// Registers all `MappingFns` from `MFns` with this registry.
+    ///
+    /// This is a convenience function for `MFns::iter().for_each(|m_fns|
+    /// mapping_fn_reg.register::<MFns>());`
+    pub fn register_all<MFns>(&mut self)
+    where
+        MFns: MappingFns,
+    {
+        MFns::iter().for_each(|m_fns| self.register(m_fns));
     }
 }
 

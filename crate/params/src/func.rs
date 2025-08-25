@@ -1,3 +1,5 @@
+use crate::MappingFn;
+
 /// Provides a simpler constraint for the compiler to report to the developer.
 ///
 /// Implemented for up to five arguments.
@@ -43,13 +45,11 @@ impl_func_for_f!(A0, A1, A2, A3, A4);
 /// Instead of the detailed error message from the `From` trait:
 ///
 /// ```md
-/// the trait `From<(
-///     std::option::Option<std::string::String>,
-///     [closure@examples/envman/src/flows/app_upload_flow.rs:101:40: 101:73],
-/// )>`
+/// the trait `From<
+///     [closure@examples/envman/src/flows/app_upload_flow.rs:101:40: 101:73]
+/// >`
 /// is not implemented for
 /// `MappingFnImpl<
-///     std::string::String,
 ///     [closure@examples/envman/src/flows/app_upload_flow.rs:101:40: 101:73],
 ///     _,
 /// >`
@@ -60,11 +60,10 @@ impl_func_for_f!(A0, A1, A2, A3, A4);
 /// ```md
 /// the trait `FromFunc<[closure@examples/envman/src/flows/app_upload_flow.rs:101:40: 101:73]>`
 /// is not implemented for `MappingFnImpl<
-///     std::string::String,
 ///     [closure@examples/envman/src/flows/app_upload_flow.rs:101:40: 101:73],
 ///     _,
 /// >`
 /// ```
 pub trait FromFunc<F> {
-    fn from_func(field_name: Option<String>, f: F) -> Self;
+    fn from_func(f: F) -> Box<dyn MappingFn>;
 }

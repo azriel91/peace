@@ -11,11 +11,8 @@ use peace::{
 
 use crate::{
     cmds::CmdOpts,
-    flows::EnvDeployFlow,
-    items::{
-        peace_aws_iam_policy::IamPolicyState,
-        peace_aws_iam_role::{IamRoleItem, IamRoleParams},
-    },
+    flows::{EnvDeployFlow, EnvmanMappingFns},
+    items::peace_aws_iam_role::{IamRoleItem, IamRoleParams},
     model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
     rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
 };
@@ -42,9 +39,11 @@ impl EnvCmd {
         let profile_key = WorkspaceParamsKey::Profile;
         let iam_role_path = String::from("/");
         let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
-            .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
+            .with_name_from_mapping_fn(EnvmanMappingFns::IamRoleNameFromProfile)
             .with_path(iam_role_path)
-            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
+            .with_managed_policy_arn_from_mapping_fn(
+                EnvmanMappingFns::IamRoleManagedPolicyArnFromIamPolicyState,
+            )
             .build();
         let cmd_ctx = {
             let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
@@ -130,9 +129,9 @@ impl EnvCmd {
             // ```rust
             // let iam_role_path = String::from("/");
             // let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
-            //     .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
+            //     .with_name_from_mapping_fn(|profile: &Profile| Some(profile.to_string()))
             //     .with_path(iam_role_path)
-            //     .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
+            //     .with_managed_policy_arn_from_mapping_fn(IamPolicyState::policy_id_arn_version)
             //     .build();
             // ```
 

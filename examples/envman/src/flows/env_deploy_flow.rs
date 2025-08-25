@@ -13,8 +13,9 @@ use semver::Version;
 use url::Url;
 
 use crate::{
+    flows::EnvmanMappingFns,
     items::{
-        peace_aws_iam_policy::{IamPolicyItem, IamPolicyParams, IamPolicyState},
+        peace_aws_iam_policy::{IamPolicyItem, IamPolicyParams},
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItem, InstanceProfileParams},
         peace_aws_s3_bucket::{S3BucketItem, S3BucketParams},
@@ -114,7 +115,9 @@ impl EnvDeployFlow {
         let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
             .with_name(iam_role_name)
             .with_path(path.clone())
-            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
+            .with_managed_policy_arn_from_mapping_fn(
+                EnvmanMappingFns::IamRoleManagedPolicyArnFromIamPolicyState,
+            )
             .build();
         let instance_profile_params_spec = InstanceProfileParams::<WebApp>::field_wise_spec()
             .with_name(instance_profile_name)

@@ -25,7 +25,7 @@ pub trait MappingFns:
     /// # Implementors
     ///
     /// The returned name is considered API, and should be stable.
-    fn name(&self) -> MappingFnName;
+    fn name(self) -> MappingFnName;
 
     /// Returns the mapping function corresponding to the given variant.
     fn mapping_fn(self) -> Box<dyn MappingFn>;
@@ -36,7 +36,7 @@ impl MappingFns for () {
         std::iter::empty()
     }
 
-    fn name(&self) -> MappingFnName {
+    fn name(self) -> MappingFnName {
         unreachable!("`()` is not intended to be used as a mapping function name, but an indicator that no mapping functions are used.")
     }
 

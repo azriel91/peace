@@ -6,7 +6,7 @@ use peace_resource_rt::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFnName, MappingFnReg, Params,
+    AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFnName, MappingFnReg, MappingFns, Params,
     ParamsResolveError, ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
 };
 
@@ -77,6 +77,9 @@ where
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
     MappingFn {
+        /// Name of the field to be mapped. `None` if this is the top level
+        /// object.
+        field_name: Option<String>,
         /// The name of the mapping function.
         mapping_fn_name: MappingFnName,
     },
@@ -116,6 +119,23 @@ where
     T: Params<Spec = ParamsSpec<T>>,
     T::Partial: From<T>,
 {
+    /// Returns the `ParamsSpec::MappingFn` variant with the passed in values.
+    ///
+    /// This is a convenience method for creating a `ParamsSpec::MappingFn`
+    /// variant where the mapping function name is retrieved from
+    /// `mapping_fns.name()`.
+    pub fn mapping_fn<MFns>(field_name: Option<String>, mapping_fns: MFns) -> Self
+    where
+        MFns: MappingFns,
+    {
+        Self::MappingFn {
+            field_name,
+            mapping_fn_name: mapping_fns.name(),
+        }
+    }
+
+    /// Returns the value of `T` by applying this spec to the passed in
+    /// `resources`.
     pub fn resolve(
         &self,
         mapping_fn_reg: &MappingFnReg,
@@ -166,10 +186,14 @@ where
                     }
                 })
             }
-            ParamsSpec::MappingFn { mapping_fn_name } => resolve_t_from_mapping_fn(
+            ParamsSpec::MappingFn {
+                field_name,
+                mapping_fn_name,
+            } => resolve_t_from_mapping_fn(
                 mapping_fn_reg,
                 resources,
                 value_resolution_ctx,
+                field_name.as_deref(),
                 mapping_fn_name,
             ),
             ParamsSpec::FieldWise { field_wise_spec } => {
@@ -223,11 +247,15 @@ where
                     }
                 })
             }
-            ParamsSpec::MappingFn { mapping_fn_name } => {
+            ParamsSpec::MappingFn {
+                field_name,
+                mapping_fn_name,
+            } => {
                 let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
                     ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
                 })?;
-                let box_dt_params_opt = mapping_fn.try_map(resources, value_resolution_ctx)?;
+                let box_dt_params_opt =
+                    mapping_fn.try_map(resources, value_resolution_ctx, field_name.as_deref())?;
 
                 let t_partial = box_dt_params_opt
                     .map(|box_dt_params| {
@@ -262,6 +290,7 @@ fn resolve_t_from_mapping_fn<T>(
     mapping_fn_reg: &MappingFnReg,
     resources: &Resources<SetUp>,
     value_resolution_ctx: &mut ValueResolutionCtx,
+    field_name: Option<&str>,
     mapping_fn_name: &MappingFnName,
 ) -> Result<T, ParamsResolveError>
 where
@@ -270,7 +299,7 @@ where
     let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
         ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
     })?;
-    let box_dt_params = mapping_fn.map(resources, value_resolution_ctx)?;
+    let box_dt_params = mapping_fn.map(resources, value_resolution_ctx, field_name)?;
 
     BoxDataTypeDowncast::<T>::downcast_ref(&box_dt_params)
         .cloned()

@@ -44,6 +44,7 @@ pub trait MappingFn: Debug + DataType {
         &self,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
+        field_name: Option<&str>,
     ) -> Result<BoxDt, ParamsResolveError>;
 
     /// Maps data in resources to the output type, used for `Item::Params`.
@@ -59,6 +60,7 @@ pub trait MappingFn: Debug + DataType {
         &self,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
+        field_name: Option<&str>,
     ) -> Result<Option<BoxDt>, ParamsResolveError>;
 
     /// Returns whether this mapping function actually holds the function logic.
