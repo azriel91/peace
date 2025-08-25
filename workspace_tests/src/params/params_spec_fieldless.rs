@@ -40,7 +40,7 @@ fn debug() {
         })",
         format!(
             "{:?}",
-            ParamsSpecFieldless::<MockSrc>::from_map(
+            ParamsSpecFieldless::<MockSrc>::from_mapping_fn(
                 Some(String::from("field")),
                 #[cfg_attr(coverage_nightly, coverage(off))]
                 |_: &u8| None
@@ -87,9 +87,9 @@ fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn serialize_from_map() -> Result<(), serde_yaml::Error> {
+fn serialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let u8_spec: <u8 as ParamsFieldless>::Spec =
-        ParamsSpecFieldless::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
+        ParamsSpecFieldless::<u8>::from_mapping_fn(None, |_: &bool, _: &u16| Some(1u8));
     assert_eq!(
         r#"!MappingFn
 field_name: null
@@ -151,7 +151,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
+fn deserialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
@@ -190,7 +190,7 @@ fn is_usable_returns_true_for_value_and_in_memory() {
 
 #[test]
 fn is_usable_returns_true_when_mapping_fn_is_some() {
-    assert!(ParamsSpecFieldless::<u8>::from_map(None, |_: &u8| None).is_usable());
+    assert!(ParamsSpecFieldless::<u8>::from_mapping_fn(None, |_: &u8| None).is_usable());
 }
 
 #[test]
@@ -350,7 +350,8 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ParamsSpecFieldless::<MockSrc>::from_mapping_fn(None, |n: &u8| Some(MockSrc(*n)));
 
     let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
 
@@ -372,7 +373,7 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
         tynm::type_name::<MockSrc>(),
     );
     let mock_src_spec =
-        ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+        ParamsSpecFieldless::<MockSrc>::from_mapping_fn(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
@@ -528,7 +529,8 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("try_resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ParamsSpecFieldless::<MockSrc>::from_mapping_fn(None, |n: &u8| Some(MockSrc(*n)));
 
     let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
 
@@ -550,7 +552,7 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         tynm::type_name::<MockSrc>(),
     );
     let mock_src_spec =
-        ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+        ParamsSpecFieldless::<MockSrc>::from_mapping_fn(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
@@ -597,11 +599,12 @@ fn merge_stored_with_other_uses_other() {
 #[test]
 fn merge_value_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
-    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
-        None,
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        |_: &u8| None,
-    ));
+    let params_spec_fieldless_b =
+        AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_mapping_fn(
+            None,
+            #[cfg_attr(coverage_nightly, coverage(off))]
+            |_: &u8| None,
+        ));
 
     params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
 
@@ -613,11 +616,12 @@ fn merge_value_with_other_no_change() {
 #[test]
 fn merge_in_memory_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::InMemory;
-    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
-        None,
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        |_: &u8| None,
-    ));
+    let params_spec_fieldless_b =
+        AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_mapping_fn(
+            None,
+            #[cfg_attr(coverage_nightly, coverage(off))]
+            |_: &u8| None,
+        ));
 
     params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
 
@@ -629,7 +633,7 @@ fn merge_in_memory_with_other_no_change() {
 
 #[test]
 fn merge_mapping_fn_with_other_no_change() {
-    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::from_map(
+    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::from_mapping_fn(
         None,
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,

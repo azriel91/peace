@@ -2,28 +2,24 @@ use peace::params::MappingFnImpl;
 
 #[test]
 fn debug() {
-    let mapping_fn_impl = MappingFnImpl::from((
-        Some(String::from("field_name")),
+    let mapping_fn_impl = MappingFnImpl::from(
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &bool| None::<Option<u16>>,
-    ));
+    );
     assert_eq!(
         "MappingFnImpl { \
-            field_name: Some(\"field_name\"), \
             fn_map: \"Some(Fn(&bool,) -> Option<Option<u16>>)\", \
             marker: PhantomData<(core::option::Option<u16>, (bool,))> \
         }",
         format!("{mapping_fn_impl:?}")
     );
 
-    let mapping_fn_impl = MappingFnImpl::from((
-        Some(String::from("field_name")),
+    let mapping_fn_impl = MappingFnImpl::from(
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u32, _: &u64| None::<Option<u16>>,
-    ));
+    );
     assert_eq!(
         "MappingFnImpl { \
-            field_name: Some(\"field_name\"), \
             fn_map: \"Some(Fn(&u32, &u64) -> Option<Option<u16>>)\", \
             marker: PhantomData<(core::option::Option<u16>, (u32, u64))> \
         }",
@@ -54,11 +50,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_map_returns_ok_when_referenced_values_are_present_directly()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert(1u32);
@@ -75,6 +71,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 )?;
                 assert_eq!(Some(3), BoxDataTypeDowncast::<u16>::downcast_ref(&sum).copied());
 
@@ -85,11 +82,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_map_returns_ok_when_referenced_values_are_present_through_data_marker()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -106,6 +103,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 )?;
                 assert_eq!(Some(3), BoxDataTypeDowncast::<u16>::downcast_ref(&sum).copied());
 
@@ -116,11 +114,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_map_returns_err_when_referenced_value_is_none()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -137,6 +135,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 );
                 ({
                     #[cfg_attr(coverage_nightly, coverage(off))]
@@ -174,11 +173,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_map_returns_err_when_referenced_value_is_absent()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -195,6 +194,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 );
 
                 ({
@@ -233,11 +233,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_try_map_returns_ok_some_when_referenced_values_are_present()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -254,6 +254,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 )?;
                 assert_eq!(Some(3), sum.as_ref().and_then(BoxDataTypeDowncast::<u16>::downcast_ref).copied());
 
@@ -264,11 +265,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_none()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -285,6 +286,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 )?;
                 assert!(sum.is_none(), "Expected `sum` to be `None` but was {sum:?}");
 
@@ -295,11 +297,11 @@ macro_rules! mapping_tests {
             fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_absent()
             -> Result<(), ParamsResolveError> {
                 let mapping_fn_impl =
-                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                    MappingFnImpl::from(|a: &u32, b: &u64| {
                         let a = u16::try_from(*a).ok()?;
                         let b = u16::try_from(*b).ok()?;
                         a.checked_add(b)
-                    }));
+                    });
                 let resources = {
                     let mut resources = Resources::new();
                     resources.insert($value_resolution_mode(Some(1u32)));
@@ -316,6 +318,7 @@ macro_rules! mapping_tests {
                     &mapping_fn_impl,
                     &resources,
                     &mut value_resolution_ctx,
+                    Some("field_name"),
                 )?;
                 assert!(sum.is_none(), "Expected `sum` to be `None` but was {sum:?}");
 

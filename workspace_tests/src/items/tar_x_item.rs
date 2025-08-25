@@ -10,7 +10,7 @@ use peace::{
     flow_model::FlowId,
     flow_rt::{Flow, ItemGraph, ItemGraphBuilder},
     item_model::{item_id, ItemId},
-    params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
+    params::{MappingFnReg, ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     profile_model::{profile, Profile},
     resource_rt::paths::{FlowDir, ProfileDir},
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
@@ -603,8 +603,9 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync(
         TarXTest::ID.clone(),
         tynm::type_name::<TarXParams<TarXTest>>(),
     );
+    let mapping_fn_reg = resources.borrow::<MappingFnReg>();
     let tar_x_params = tar_x_params_spec
-        .resolve(resources, &mut value_resolution_ctx)
+        .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
         .unwrap();
     assert_eq!(
         ApplyCheck::ExecNotRequired,

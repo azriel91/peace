@@ -30,7 +30,7 @@ fn debug() {
         })",
         format!(
             "{:?}",
-            ValueSpec::<MockSrc>::from_map(
+            ValueSpec::<MockSrc>::from_mapping_fn(
                 Some(String::from("field")),
                 #[cfg_attr(coverage_nightly, coverage(off))]
                 |_: &u8| None
@@ -77,8 +77,9 @@ fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn serialize_from_map() -> Result<(), serde_yaml::Error> {
-    let u8_spec: ValueSpec<u8> = ValueSpec::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
+fn serialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
+    let u8_spec: ValueSpec<u8> =
+        ValueSpec::<u8>::from_mapping_fn(None, |_: &bool, _: &u16| Some(1u8));
     assert_eq!(
         r#"!MappingFn
 field_name: null
@@ -140,7 +141,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
+fn deserialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
@@ -179,7 +180,7 @@ fn is_usable_returns_true_for_value_and_in_memory() {
 
 #[test]
 fn is_usable_returns_true_when_mapping_fn_is_some() {
-    assert!(ValueSpec::<u8>::from_map(None, |_: &u8| None).is_usable());
+    assert!(ValueSpec::<u8>::from_mapping_fn(None, |_: &u8| None).is_usable());
 }
 
 #[test]
@@ -339,7 +340,7 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ValueSpec::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec = ValueSpec::<MockSrc>::from_mapping_fn(None, |n: &u8| Some(MockSrc(*n)));
 
     let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
 
@@ -360,7 +361,8 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
         item_id!("resolve_mapping_fn_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ValueSpec::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ValueSpec::<MockSrc>::from_mapping_fn(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
@@ -516,7 +518,7 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("try_resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ValueSpec::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec = ValueSpec::<MockSrc>::from_mapping_fn(None, |n: &u8| Some(MockSrc(*n)));
 
     let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
 
@@ -537,7 +539,8 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         item_id!("try_resolve_mapping_fn_returns_err_when_mutably_borrowed"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ValueSpec::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ValueSpec::<MockSrc>::from_mapping_fn(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
@@ -581,7 +584,7 @@ fn merge_stored_with_other_uses_other() {
 #[test]
 fn merge_value_with_other_no_change() {
     let mut value_spec_a = ValueSpec::<MockSrc>::Value { value: MockSrc(1) };
-    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_map(
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_mapping_fn(
         None,
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,
@@ -595,7 +598,7 @@ fn merge_value_with_other_no_change() {
 #[test]
 fn merge_in_memory_with_other_no_change() {
     let mut value_spec_a = ValueSpec::<MockSrc>::InMemory;
-    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_map(
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_mapping_fn(
         None,
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,
@@ -608,7 +611,7 @@ fn merge_in_memory_with_other_no_change() {
 
 #[test]
 fn merge_mapping_fn_with_other_no_change() {
-    let mut value_spec_a = ValueSpec::<MockSrc>::from_map(
+    let mut value_spec_a = ValueSpec::<MockSrc>::from_mapping_fn(
         None,
         #[cfg_attr(coverage_nightly, coverage(off))]
         |_: &u8| None,

@@ -4,7 +4,10 @@ use peace::{
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
-    params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+    params::{
+        FromFunc, MappingFn, MappingFnImpl, MappingFnName, MappingFnReg, MappingFns, Params,
+        ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+    },
     profile_model::{profile, Profile},
     resource_rt::{
         internal::WorkspaceParamsFile,
@@ -12,6 +15,7 @@ use peace::{
         type_reg::untagged::BoxDataTypeDowncast,
     },
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     no_op_output::NoOpOutput,
@@ -537,6 +541,7 @@ async fn build_with_item_params_returns_ok_when_params_provided(
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let mapping_fn_reg = MappingFnReg::new();
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -564,7 +569,7 @@ async fn build_with_item_params_returns_ok_when_params_provided(
     assert_eq!(
         Some(VecA(vec![1u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .ok()),
     );
 
@@ -634,6 +639,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let mapping_fn_reg = MappingFnReg::new();
 
     let mut output = NoOpOutput;
     let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -668,7 +674,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
     assert_eq!(
         Some(VecA(vec![1u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .ok()),
     );
 
@@ -688,6 +694,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let mapping_fn_reg = MappingFnReg::new();
 
     let mut output = NoOpOutput;
     let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -723,7 +730,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
     assert_eq!(
         Some(VecA(vec![2u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .ok()),
     );
 
@@ -887,6 +894,9 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
+    let mapping_fn_vec1u8 = TestMappingFns::Vec1u8;
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.insert(mapping_fn_vec1u8.name(), mapping_fn_vec1u8.mapping_fn());
 
     let mut output = NoOpOutput;
     let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -898,7 +908,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
-                .with_0_from_map(|_: &u8| Some(vec![1u8]))
+                .with_0_from_mapping_fn(mapping_fn_vec1u8)
                 .build(),
         )
         .await?;
@@ -917,7 +927,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
-                .with_0_from_map(|_: &u8| Some(vec![1u8]))
+                .with_0_from_mapping_fn(TestMappingFns::Vec1u8)
                 .build(),
         )
         .with_flow_param(String::from("for_item_mapping"), Some(1u8))
@@ -939,9 +949,13 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
             assert!(
                 matches!(vec_a_spec,
                     Some(ParamsSpec::FieldWise {
-                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn)),
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
+                            field_name: Some(field_name),
+                            mapping_fn_name,
+                        }),
                     })
-                    if mapping_fn.is_valued()
+                    if field_name == "_0" &&
+                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
                 ),
                 "was {vec_a_spec:?}"
             );
@@ -950,7 +964,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
     assert_eq!(
         Some(VecA(vec![1u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .ok()),
     );
 
@@ -981,7 +995,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
-                .with_0_from_map(|_: &u8| Some(vec![1u8]))
+                .with_0_from_mapping_fn(TestMappingFns::Vec1u8)
                 .build(),
         )
         .await?;
@@ -1056,7 +1070,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
-                .with_0_from_map(|_: &u8| Some(vec![1u8]))
+                .with_0_from_mapping_fn(TestMappingFns::Vec1u8)
                 .build(),
         )
         .await?;
@@ -1203,6 +1217,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     // Build first `cmd_ctx` without item.
     let item_graph = ItemGraphBuilder::new().build();
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
+    let mapping_fn_reg = MappingFnReg::new();
 
     let mut output = NoOpOutput;
     let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -1244,7 +1259,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
     assert_eq!(
         Some(VecA(vec![1u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
-            .resolve(resources, &mut value_resolution_ctx)
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .ok()),
     );
 
@@ -1276,5 +1291,28 @@ impl CmdCtxTypes for TestCctCmdCtxSpsf {
     fn flow_params_register(type_reg: &mut TypeReg<Self::FlowParamsKey>) {
         type_reg.register::<bool>(String::from("flow_param_0"));
         type_reg.register::<u16>(String::from("flow_param_1"));
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum TestMappingFns {
+    Vec1u8,
+}
+
+impl MappingFns for TestMappingFns {
+    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
+        [Self::Vec1u8].into_iter()
+    }
+
+    fn name(self) -> MappingFnName {
+        match self {
+            Self::Vec1u8 => MappingFnName::new("Vec1u8".into()),
+        }
+    }
+
+    fn mapping_fn(self) -> Box<dyn MappingFn> {
+        match self {
+            Self::Vec1u8 => MappingFnImpl::from_func(|_: &u8| Some(vec![1u8])),
+        }
     }
 }

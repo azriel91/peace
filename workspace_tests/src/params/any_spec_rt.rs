@@ -3,7 +3,7 @@ use peace::params::{AnySpecRt, AnySpecRtBoxed, ParamsSpec};
 use crate::mock_item::MockSrc;
 
 #[test]
-fn is_usable_returns_false_for_non_valued_from_map() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_false_for_non_valued_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpec<MockSrc> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
