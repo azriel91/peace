@@ -177,7 +177,7 @@ mod struct_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructParamsFieldWise { src: Value("a"), dest: Value("b") }"#,
+            r#"StructParamsFieldWise { src: Value { value: "a" }, dest: Value { value: "b" } }"#,
             format!(
                 "{:?}",
                 StructParamsFieldWise {
@@ -402,7 +402,7 @@ mod struct_with_type_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructWithTypeParamsFieldWise { src: Value("a"), dest: Value("b"), marker: PhantomData<()> }"#,
+            r#"StructWithTypeParamsFieldWise { src: Value { value: "a" }, dest: Value { value: "b" }, marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 StructWithTypeParamsFieldWise::<()> {
@@ -617,7 +617,7 @@ mod tuple_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleParamsFieldWise(Value("a"), Value("b"))"#,
+            r#"TupleParamsFieldWise(Value { value: "a" }, Value { value: "b" })"#,
             format!(
                 "{:?}",
                 TupleParamsFieldWise(
@@ -812,7 +812,7 @@ mod tuple_with_type_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleWithTypeParamsFieldWise(Value("a"), Value("b"), PhantomData<()>)"#,
+            r#"TupleWithTypeParamsFieldWise(Value { value: "a" }, Value { value: "b" }, PhantomData<()>)"#,
             format!(
                 "{:?}",
                 TupleWithTypeParamsFieldWise::<()>(
@@ -1271,7 +1271,7 @@ mod enum_params {
     #[test]
     fn spec_debug_named() {
         assert_eq!(
-            r#"Named { src: Value("a"), marker: PhantomData<()> }"#,
+            r#"Named { src: Value { value: "a" }, marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::Named {
@@ -1287,7 +1287,7 @@ mod enum_params {
     #[test]
     fn spec_debug_tuple() {
         assert_eq!(
-            r#"Tuple(Value("a"))"#,
+            r#"Tuple(Value { value: "a" })"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value {
@@ -1300,7 +1300,7 @@ mod enum_params {
     #[test]
     fn spec_debug_tuple_marker() {
         assert_eq!(
-            r#"TupleMarker(Value("a"), PhantomData<()>)"#,
+            r#"TupleMarker(Value { value: "a" }, PhantomData<()>)"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::TupleMarker(
@@ -1690,33 +1690,41 @@ mod struct_recursive_value {
             String::from("StructRecursiveValue<()>"),
         );
 
-        assert!(matches!(
-            field_wise,
-            ParamsSpec::FieldWise {
-                field_wise_spec: StructRecursiveValueFieldWise {
-                    src: ValueSpec::InMemory,
-                    dest: ValueSpec::MappingFn {
-                        field_name,
-                        mapping_fn_name,
-                    },
+        assert!(
+            matches!(
+                &field_wise,
+                ParamsSpec::FieldWise {
+                    field_wise_spec: StructRecursiveValueFieldWise {
+                        src: ValueSpec::InMemory,
+                        dest: ValueSpec::MappingFn {
+                            field_name,
+                            mapping_fn_name,
+                        },
+                    }
                 }
-            }
-            if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                if {
+                    let mapping_fn = mapping_fn_reg.get(mapping_fn_name).unwrap();
+                    let mapped_value = mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref());
 
-                matches!(
-                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
-                    Ok(dest_mapped)
-                    if BoxDataTypeDowncast::<u32>::downcast_ref(&dest_mapped).copied() == Some(456)
-                )
-            }
-        ));
+                    let matches = matches!(
+                        &mapped_value,
+                        Ok(dest_mapped)
+                        if BoxDataTypeDowncast::<u32>::downcast_ref(dest_mapped).copied() == Some(456)
+                    );
+
+                    assert!(matches, "mapped_value was: {mapped_value:?}");
+
+                    matches
+                }
+            ),
+            "was: {field_wise:?}"
+        );
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructRecursiveValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
+            r#"StructRecursiveValueFieldWise { src: Value { value: InnerValue(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructRecursiveValueFieldWise::<u16> {
@@ -1902,7 +1910,7 @@ mod struct_recursive_value_no_bounds {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructRecursiveValueNoBoundsFieldWise { src: Value(InnerValue { inner: 123, marker: PhantomData<()> }), dest: Value(456) }"#,
+            r#"StructRecursiveValueNoBoundsFieldWise { src: Value { value: InnerValue { inner: 123, marker: PhantomData<()> } }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructRecursiveValueNoBoundsFieldWise::<()> {
@@ -2101,7 +2109,7 @@ mod enum_recursive_value {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"Named { src: Value(Tuple(123)), dest: Value(456) }"#,
+            r#"Named { src: Value { value: Tuple(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 EnumRecursiveValueFieldWise::Named::<u16> {
@@ -2365,7 +2373,7 @@ mod enum_recursive_marker_no_bounds {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"Named { src: Value(Tuple(PhantomData<u16>)), dest: Value(456) }"#,
+            r#"Named { src: Value { value: Tuple(PhantomData<u16>) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 EnumRecursiveNoBoundsFieldWise::Named::<u16> {
@@ -2594,7 +2602,7 @@ mod external_fields {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructExternalValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
+            r#"StructExternalValueFieldWise { src: Value { value: InnerValue(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructExternalValueFieldWise {
@@ -2745,7 +2753,7 @@ impl MappingFns for TestMappingFns {
             TestMappingFns::StringBFromU32 => {
                 MappingFnImpl::from_func(|_: &u32| Some(String::from("b")))
             }
-            TestMappingFns::U32_456FromU32 => MappingFnImpl::from_func(|_: &u32| Some(456)),
+            TestMappingFns::U32_456FromU32 => MappingFnImpl::from_func(|_: &u32| Some(456u32)),
         }
     }
 }

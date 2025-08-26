@@ -20,16 +20,15 @@ fn clone() {
 fn debug() {
     assert_eq!("Stored", format!("{:?}", ValueSpec::<MockSrc>::Stored));
     assert_eq!(
-        "Value(MockSrc(1))",
+        "Value { value: MockSrc(1) }",
         format!("{:?}", ValueSpec::<MockSrc>::Value { value: MockSrc(1) })
     );
     assert_eq!("InMemory", format!("{:?}", ValueSpec::<MockSrc>::InMemory));
     assert_eq!(
-        "MappingFn(MappingFnImpl { \
+        "MappingFn { \
             field_name: Some(\"field\"), \
-            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
-            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
-        })",
+            mapping_fn_name: MappingFnName(\"MockSrcFromU8\") \
+        }",
         format!(
             "{:?}",
             ValueSpec::<MockSrc>::mapping_fn(
@@ -82,8 +81,8 @@ fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     let u8_spec: ValueSpec<u8> = ValueSpec::<u8>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
     assert_eq!(
         r#"!MappingFn
-fn_map: Some(Fn(&u8) -> Option<MockSrc>)
-marker: null
+field_name: null
+mapping_fn_name: MockSrcFromU8
 "#,
         serde_yaml::to_string(&u8_spec)?,
     );
@@ -186,16 +185,15 @@ fn is_usable_returns_true_when_mapping_fn_is_some() {
 }
 
 #[test]
-fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_when_mapping_fn_is_deserialized() -> Result<(), serde_yaml::Error> {
     let params_spec: ValueSpec<u8> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
-marker: null
+mapping_fn_name: U8NoneFromU8
 "#,
     )?;
 
-    assert!(!params_spec.is_usable());
+    assert!(params_spec.is_usable());
     Ok(())
 }
 

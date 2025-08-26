@@ -24,7 +24,7 @@ fn debug() {
         format!("{:?}", ParamsSpecFieldless::<MockSrc>::Stored)
     );
     assert_eq!(
-        "Value(MockSrc(1))",
+        "Value { value: MockSrc(1) }",
         format!(
             "{:?}",
             ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) }
@@ -35,10 +35,10 @@ fn debug() {
         format!("{:?}", ParamsSpecFieldless::<MockSrc>::InMemory)
     );
     assert_eq!(
-        "MappingFn(MappingFnImpl { \
-            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
-            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
-        })",
+        "MappingFn { \
+            field_name: Some(\"field\"), \
+            mapping_fn_name: MappingFnName(\"MockSrcFromU8\") \
+        }",
         format!(
             "{:?}",
             ParamsSpecFieldless::<MockSrc>::mapping_fn(
@@ -92,8 +92,8 @@ fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
         ParamsSpecFieldless::<u8>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
     assert_eq!(
         r#"!MappingFn
-fn_map: Some(Fn(&u8) -> Option<MockSrc>)
-marker: null
+field_name: null
+mapping_fn_name: MockSrcFromU8
 "#,
         serde_yaml::to_string(&u8_spec)?,
     );
@@ -196,16 +196,15 @@ fn is_usable_returns_true_when_mapping_fn_is_some() {
 }
 
 #[test]
-fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_when_mapping_fn_is_deserialized() -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpecFieldless<u8> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
-marker: null
+mapping_fn_name: U8NoneFromU8
 "#,
     )?;
 
-    assert!(!params_spec.is_usable());
+    assert!(params_spec.is_usable());
     Ok(())
 }
 
@@ -370,7 +369,8 @@ fn resolve_value() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
-    let mapping_fn_reg = MappingFnReg::new();
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.register_all::<TestMappingFns>();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);

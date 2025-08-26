@@ -23,25 +23,25 @@ fn clone() {
 fn debug() {
     assert_eq!("Stored", format!("{:?}", ParamsSpec::<MockSrc>::Stored));
     assert_eq!(
-        "Value(MockSrc(1))",
+        "Value { value: MockSrc(1) }",
         format!("{:?}", ParamsSpec::<MockSrc>::Value { value: MockSrc(1) })
     );
     assert_eq!("InMemory", format!("{:?}", ParamsSpec::<MockSrc>::InMemory));
     assert_eq!(
-        "MappingFn(MappingFnImpl { \
+        "MappingFn { \
             field_name: Some(\"field\"), \
-            mapping_fn_name: \"VecU8FromBoolAndU16\" \
-        })",
+            mapping_fn_name: MappingFnName(\"MockSrcFromU8\") \
+        }",
         format!(
             "{:?}",
             ParamsSpec::<MockSrc>::mapping_fn(
                 Some(String::from("field")),
-                TestMappingFns::VecU8FromBoolAndU16
+                TestMappingFns::MockSrcFromU8
             )
         )
     );
     assert_eq!(
-        "FieldWise(MockSrcFieldWise(Stored))",
+        "FieldWise { field_wise_spec: MockSrcFieldWise(Stored) }",
         format!("{:?}", <MockSrc as Params>::field_wise_spec().build())
     );
 }
@@ -85,13 +85,13 @@ fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn serialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
+fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     let vec_a_spec: <VecA as Params>::Spec =
-        ParamsSpec::<VecA>::mapping_fn(None, TestMappingFns::VecU8FromBoolAndU16);
+        ParamsSpec::<VecA>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
     assert_eq!(
         r#"!MappingFn
 field_name: null
-mapping_fn_name: VecU8FromBoolAndU16
+mapping_fn_name: MockSrcFromU8
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -141,17 +141,15 @@ field_wise_spec: InMemory
 }
 
 #[test]
-fn serialize_field_wise_from_mapping_fn() -> Result<(), serde_yaml::Error> {
+fn serialize_field_wise_mapping_fn() -> Result<(), serde_yaml::Error> {
     let vec_a_spec: <VecA as Params>::Spec = VecA::field_wise_spec()
         .with_0_from_mapping_fn(TestMappingFns::VecU8FromBoolAndU16)
         .build();
     assert_eq!(
         r#"!FieldWise
 field_wise_spec: !MappingFn
-  fn_map:
-    field_name: !Some serialized_field_name
-    mapping_fn_name: VecU8FromBoolAndU16
-  marker: null
+  field_name: _0
+  mapping_fn_name: VecU8FromBoolAndU16
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -214,7 +212,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 fn deserialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
-field_name: !Some serialized_field_name
+field_name: serialized_field_name
 mapping_fn_name: VecU8FromBoolAndU16
 "#,
     )?;
@@ -315,14 +313,12 @@ field_wise_spec: InMemory
 }
 
 #[test]
-fn deserialize_field_wise_from_mapping_fn() -> Result<(), serde_yaml::Error> {
+fn deserialize_field_wise_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!FieldWise
 field_wise_spec: !MappingFn
-  fn_map:
-    field_name: serialized_field_name
-    mapping_fn_name: VecU8FromBoolAndU16
-  marker: null
+  field_name: serialized_field_name
+  mapping_fn_name: VecU8FromBoolAndU16
 "#,
     )?;
 
@@ -373,15 +369,15 @@ fn is_usable_returns_true_when_mapping_fn_is_some() {
 }
 
 #[test]
-fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_for_deserialized_mapping_fn() -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
         r#"!MappingFn
-field_name: !None null
+field_name: null
 mapping_fn_name: VecU8FromBoolAndU16
 "#,
     )?;
 
-    assert!(!params_spec.is_usable());
+    assert!(params_spec.is_usable());
     Ok(())
 }
 
@@ -398,16 +394,17 @@ field_wise_spec: InMemory
 }
 
 #[test]
-fn is_usable_returns_false_when_field_wise_is_not_usable() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_when_field_wise_with_mapping_fn_is_deserialized(
+) -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
         r#"!FieldWise
 field_wise_spec: !MappingFn
-  field_name: !Some field_name
+  field_name: field_name
   mapping_fn_name: VecU8FromBoolAndU16
 "#,
     )?;
 
-    assert!(!params_spec.is_usable());
+    assert!(params_spec.is_usable());
     Ok(())
 }
 
