@@ -409,6 +409,16 @@ field_wise_spec: !MappingFn
 }
 
 #[test]
+fn is_usable_returns_false_when_field_wise_contains_stored() -> Result<(), serde_yaml::Error> {
+    let params_spec = ParamsSpec::<VecA>::FieldWise {
+        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::Stored),
+    };
+
+    assert!(!params_spec.is_usable());
+    Ok(())
+}
+
+#[test]
 fn resolve_stored_param() -> Result<(), ParamsResolveError> {
     let mapping_fn_reg = MappingFnReg::new();
     let resources = {

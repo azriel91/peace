@@ -8,9 +8,12 @@ use crate::AnySpecDataType;
 pub trait AnySpecRt {
     /// Whether this `Spec` is usable to resolve values.
     ///
-    /// This is only `false` for `*Spec::MappingFn`s that have been
-    /// deserialized, as mapping functions cannot be deserialized back into
-    /// logic without embedding a script interpreter or compiler.
+    /// This is only `false` for `*Spec::Stored`.
+    ///
+    /// After merging, `*Spec::Stored` will be replaced with whatever the
+    /// `other` `*Spec` is. If after merging, the `*Spec` is `Stored`, then the
+    /// `*Spec` will not be usable as there *wasn't* anything stored in the
+    /// first place.
     fn is_usable(&self) -> bool;
     /// Deep merges the provided `AnySpecRt` with `self`, where `self` takes
     /// priority, except for `Self::Stored`.
