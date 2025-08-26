@@ -84,10 +84,16 @@ where
     fn state_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<I::State, E> {
         let state_example = {
-            let params = self.params(params_specs, resources, ValueResolutionMode::Example)?;
+            let params = self.params(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+                ValueResolutionMode::Example,
+            )?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_example(&params, data)
         };
@@ -99,11 +105,16 @@ where
     async fn state_clean(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<I::State, E> {
         let state_clean = {
-            let params_partial =
-                self.params_partial(params_specs, resources, ValueResolutionMode::Clean)?;
+            let params_partial = self.params_partial(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+                ValueResolutionMode::Clean,
+            )?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_clean(&params_partial, data).await?
         };
@@ -115,12 +126,17 @@ where
     async fn state_current_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<I::State>, E> {
         let state_current = {
-            let params_partial =
-                self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
+            let params_partial = self.params_partial(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+                ValueResolutionMode::Current,
+            )?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::try_state_current(fn_ctx, &params_partial, data).await?
         };
@@ -139,11 +155,17 @@ where
     async fn state_current_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<I::State, E> {
         let state_current = {
-            let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
+            let params = self.params(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+                ValueResolutionMode::Current,
+            )?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_current(fn_ctx, &params, data).await?
         };
@@ -160,11 +182,16 @@ where
     async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<I::State>, E> {
-        let params_partial =
-            self.params_partial(params_specs, resources, ValueResolutionMode::Goal)?;
+        let params_partial = self.params_partial(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::Goal,
+        )?;
 
         // If a predecessor's goal state is the same as current, then a successor's
         // `state_goal_try_exec` should kind of use `ValueResolutionMode::Current`.
@@ -200,10 +227,16 @@ where
         &self,
         value_resolution_mode: ValueResolutionMode,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<I::State, E> {
-        let params = self.params(params_specs, resources, value_resolution_mode)?;
+        let params = self.params(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            value_resolution_mode,
+        )?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_goal = I::state_goal(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Goal<I::State>>().0 = Some(state_goal.clone());
@@ -214,6 +247,7 @@ where
     async fn state_diff_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
@@ -224,7 +258,13 @@ where
 
         if let Some((state_base, state_goal)) = state_base.zip(state_goal) {
             let state_diff: I::StateDiff = self
-                .state_diff_exec_with(params_specs, resources, state_base, state_goal)
+                .state_diff_exec_with(
+                    params_specs,
+                    mapping_fn_reg,
+                    resources,
+                    state_base,
+                    state_goal,
+                )
                 .await?;
             Ok(Some(state_diff))
         } else {
@@ -243,6 +283,7 @@ where
     async fn state_diff_exec_with(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         state_a: &I::State,
         state_b: &I::State,
@@ -261,8 +302,12 @@ where
             //
             // Running `diff` for multiple profiles will likely be between two profiles'
             // current states.
-            let params_partial =
-                self.params_partial(params_specs, resources, ValueResolutionMode::Goal)?;
+            let params_partial = self.params_partial(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+                ValueResolutionMode::Goal,
+            )?;
             let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
             I::state_diff(&params_partial, data, state_a, state_b)
                 .await
@@ -275,6 +320,7 @@ where
     async fn apply_check(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         state_current: &I::State,
         state_target: &I::State,
@@ -288,7 +334,12 @@ where
         // parameters to be used. Note that during an apply, the goal state is
         // resolved as execution happens -- values that rely on predecessors' applied
         // state will be fed into successors' goal state.
-        let params_partial = self.params_partial(params_specs, resources, value_resolution_mode)?;
+        let params_partial = self.params_partial(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            value_resolution_mode,
+        )?;
 
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         if let Ok(params) = params_partial.try_into() {
@@ -308,13 +359,19 @@ where
     async fn apply_exec_dry(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         state_current: &I::State,
         state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
-        let params = self.params(params_specs, resources, ValueResolutionMode::ApplyDry)?;
+        let params = self.params(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::ApplyDry,
+        )?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry =
             I::apply_dry(fn_ctx, &params, data, state_current, state_goal, state_diff)
@@ -329,13 +386,19 @@ where
     async fn apply_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         state_current: &I::State,
         state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
-        let params = self.params(params_specs, resources, ValueResolutionMode::Current)?;
+        let params = self.params(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::Current,
+        )?;
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = I::apply(fn_ctx, &params, data, state_current, state_goal, state_diff)
             .await
@@ -354,6 +417,7 @@ where
     fn params_partial(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_mode: ValueResolutionMode,
     ) -> Result<<<I as Item>::Params<'_> as Params>::Partial, E> {
@@ -368,7 +432,6 @@ where
             item_id.clone(),
             tynm::type_name::<I::Params<'_>>(),
         );
-        let mapping_fn_reg = resources.borrow::<MappingFnReg>();
         Ok(params_spec
             .resolve_partial(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .map_err(crate::Error::ParamsResolveError)?)
@@ -377,6 +440,7 @@ where
     fn params(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_mode: ValueResolutionMode,
     ) -> Result<<I as Item>::Params<'_>, E> {
@@ -391,7 +455,6 @@ where
             item_id.clone(),
             tynm::type_name::<I::Params<'_>>(),
         );
-        let mapping_fn_reg = resources.borrow::<MappingFnReg>();
         Ok(params_spec
             .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
             .map_err(crate::Error::ParamsResolveError)?)
@@ -561,18 +624,20 @@ where
     fn state_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_example(params_specs, resources)
+        self.state_example(params_specs, mapping_fn_reg, resources)
             .map(BoxDtDisplay::new)
     }
 
     async fn state_clean(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_clean(params_specs, resources)
+        self.state_clean(params_specs, mapping_fn_reg, resources)
             .await
             .map(BoxDtDisplay::new)
     }
@@ -580,10 +645,11 @@ where
     async fn state_current_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_current_try_exec(params_specs, resources, fn_ctx)
+        self.state_current_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
     }
@@ -591,10 +657,11 @@ where
     async fn state_current_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_current_exec(params_specs, resources, fn_ctx)
+        self.state_current_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await
             .map(BoxDtDisplay::new)
     }
@@ -602,10 +669,11 @@ where
     async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_goal_try_exec(params_specs, resources, fn_ctx)
+        self.state_goal_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await
             .map(|state_goal| state_goal.map(BoxDtDisplay::new))
     }
@@ -613,6 +681,7 @@ where
     async fn state_goal_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
@@ -626,6 +695,7 @@ where
             // predecessor's current state.
             ValueResolutionMode::Goal,
             params_specs,
+            mapping_fn_reg,
             resources,
             fn_ctx,
         )
@@ -636,11 +706,12 @@ where
     async fn state_diff_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(params_specs, resources, states_a, states_b)
+        self.state_diff_exec(params_specs, mapping_fn_reg, resources, states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
     }
@@ -648,13 +719,14 @@ where
     async fn ensure_prepare(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
 
         match self
-            .state_current_exec(params_specs, resources, fn_ctx)
+            .state_current_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await
         {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
@@ -667,6 +739,7 @@ where
                 // Use current state of predecessor to discover goal state.
                 ValueResolutionMode::Current,
                 params_specs,
+                mapping_fn_reg,
                 resources,
                 fn_ctx,
             )
@@ -680,6 +753,7 @@ where
         match self
             .state_diff_exec_with(
                 params_specs,
+                mapping_fn_reg,
                 resources,
                 item_apply_partial
                     .state_current
@@ -707,6 +781,7 @@ where
         let apply_check = self
             .apply_check(
                 params_specs,
+                mapping_fn_reg,
                 resources,
                 state_current,
                 state_goal,
@@ -739,6 +814,7 @@ where
     async fn apply_exec_dry(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
@@ -784,6 +860,7 @@ where
                 let state_applied_dry = self
                     .apply_exec_dry(
                         params_specs,
+                        mapping_fn_reg,
                         resources,
                         fn_ctx,
                         state_current,
@@ -804,6 +881,7 @@ where
         &self,
         states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
@@ -816,12 +894,18 @@ where
             // none can be discovered.
             //
             // This may not necessarily be a hack.
-            match self.state_clean(params_specs, resources).await {
+            match self
+                .state_clean(params_specs, mapping_fn_reg, resources)
+                .await
+            {
                 Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
                 Err(error) => return Err((error, item_apply_partial.into())),
             }
         }
-        match self.state_clean(params_specs, resources).await {
+        match self
+            .state_clean(params_specs, mapping_fn_reg, resources)
+            .await
+        {
             Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
@@ -829,6 +913,7 @@ where
         match self
             .state_diff_exec_with(
                 params_specs,
+                mapping_fn_reg,
                 resources,
                 item_apply_partial
                     .state_current
@@ -856,6 +941,7 @@ where
         let apply_check = self
             .apply_check(
                 params_specs,
+                mapping_fn_reg,
                 resources,
                 state_current,
                 state_clean,
@@ -889,6 +975,7 @@ where
     async fn apply_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
@@ -934,6 +1021,7 @@ where
                 let state_applied_next = self
                     .apply_exec(
                         params_specs,
+                        mapping_fn_reg,
                         resources,
                         fn_ctx,
                         state_current,
@@ -954,9 +1042,15 @@ where
     fn interactions_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<peace_item_interaction_model::ItemInteractionsExample, E> {
-        let params = self.params(params_specs, resources, ValueResolutionMode::Example)?;
+        let params = self.params(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::Example,
+        )?;
 
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
 
@@ -971,12 +1065,21 @@ where
     fn interactions_try_current<'params>(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<peace_item_interaction_model::ItemInteractionsCurrentOrExample, E> {
-        let params_partial_current =
-            self.params_partial(params_specs, resources, ValueResolutionMode::Current)?;
-        let mut params_example =
-            self.params(params_specs, resources, ValueResolutionMode::Example)?;
+        let params_partial_current = self.params_partial(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::Current,
+        )?;
+        let mut params_example = self.params(
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            ValueResolutionMode::Example,
+        )?;
         let params_current_result: Result<I::Params<'_>, _> =
             TryFrom::<_>::try_from(params_partial_current);
 

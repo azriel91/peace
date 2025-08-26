@@ -1,5 +1,6 @@
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
+use peace_params::MappingFnReg;
 use peace_profile_model::Profile;
 use peace_resource_rt::paths::{
     PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir,
@@ -96,6 +97,16 @@ where
     pub profile_params_type_reg: TypeReg<CmdCtxTypesT::ProfileParamsKey, BoxDt>,
     /// Profile params for the profile.
     pub profile_params: ProfileParams<CmdCtxTypesT::ProfileParamsKey>,
+    /// Mapping function registry for each item's [`Params`]`::Spec`.
+    ///
+    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// [`MappingFn`] logic.
+    ///
+    /// [`MappingFn`]: peace_params::MappingFn
+    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
+    pub mapping_fn_reg: MappingFnReg,
 }
 
 impl<'ctx, CmdCtxTypesT> CmdCtxSpnf<'ctx, CmdCtxTypesT>
@@ -222,5 +233,19 @@ where
     /// Returns the profile params.
     pub fn profile_params_mut(&mut self) -> &mut ProfileParams<CmdCtxTypesT::ProfileParamsKey> {
         &mut self.profile_params
+    }
+
+    /// Returns the mapping function registry for each item's
+    /// [`Params`]`::Spec`.
+    ///
+    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// [`MappingFn`] logic.
+    ///
+    /// [`MappingFn`]: peace_params::MappingFn
+    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
+    pub fn mapping_fn_reg(&self) -> &MappingFnReg {
+        &self.mapping_fn_reg
     }
 }

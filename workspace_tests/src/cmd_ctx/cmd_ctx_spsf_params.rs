@@ -894,9 +894,6 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
-    let mapping_fn_vec1u8 = TestMappingFns::Vec1u8;
-    let mut mapping_fn_reg = MappingFnReg::new();
-    mapping_fn_reg.insert(mapping_fn_vec1u8.name(), mapping_fn_vec1u8.mapping_fn());
 
     let mut output = NoOpOutput;
     let _cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
@@ -908,7 +905,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
-                .with_0_from_mapping_fn(mapping_fn_vec1u8)
+                .with_0_from_mapping_fn(TestMappingFns::Vec1u8)
                 .build(),
         )
         .await?;
@@ -918,6 +915,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         item_graph_builder.add_fn(VecCopyItem::new(VecCopyItem::ID_DEFAULT.clone()).into());
         item_graph_builder.build()
     };
+
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
     let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
@@ -935,6 +933,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 
     let fields = cmd_ctx.fields();
     let params_specs = fields.params_specs();
+    let mapping_fn_reg = fields.mapping_fn_reg();
     let resources = fields.resources();
     let vec_a_spec = params_specs
         .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
@@ -972,7 +971,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_previous_mapping_fn(
+async fn build_with_item_params_returns_ok_when_spec_fully_not_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
@@ -1006,48 +1005,91 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
         .with_flow((&flow).into())
+        .with_resource(0u8) // We need this so the mapping function for `state_example` can resolve the vec value.
         // Note: no item_params for `VecCopyItem`
         .build()
-        .await;
+        .await?;
 
+    let fields = cmd_ctx.fields();
+    let params_specs = fields.params_specs();
+    let mapping_fn_reg = fields.mapping_fn_reg();
+    let resources = fields.resources();
+    let vec_a_spec = params_specs
+        .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        VecCopyItem::ID_DEFAULT.clone(),
+        tynm::type_name::<VecA>(),
+    );
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
-                matches!(
-                    &cmd_ctx_result,
-                    Err(PeaceTestError::PeaceRt(
-                        peace::rt_model::Error::ParamsSpecsMismatch {
-                            item_ids_with_no_params_specs,
-                            params_specs_provided_mismatches,
-                            params_specs_stored_mismatches,
-                            params_specs_not_usable,
-                        }
-                    ))
-                    if item_ids_with_no_params_specs.is_empty()
-                    && params_specs_provided_mismatches.is_empty()
-                    && matches!(
-                        params_specs_stored_mismatches.as_ref(),
-                        Some(params_specs_stored_mismatches)
-                        if params_specs_stored_mismatches.is_empty()
-                    )
-                    && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
+                matches!(vec_a_spec,
+                    Some(ParamsSpec::FieldWise {
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
+                            field_name: Some(field_name),
+                            mapping_fn_name,
+                        }),
+                    })
+                    if field_name == "_0" &&
+                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
                 ),
-                "was {cmd_ctx_result:#?}"
+                "was {vec_a_spec:?}"
             );
         }
     })();
+    assert_eq!(
+        Some(VecA(vec![1u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
+            .ok()),
+    );
+
+    // TODO: without the `u8` resource, we get the following error.
+    // The `ParamsResolveError::FromMap` error actually gives us a hint that the
+    // `u8` resource may be missing. We may need to change the test runner to render
+    // the `miette` graphical report.
+    //
+    // ```
+    // ({
+    //     #[cfg_attr(coverage_nightly, coverage(off))]
+    //     || {
+    //         assert!(
+    //             matches!(
+    //                 &cmd_ctx_result,
+    //                 Err(
+    //                     PeaceTestError::PeaceRt(
+    //                         PeaceRtError::ParamsResolveError(
+    //                             ParamsResolveError::FromMap {
+    //                                 value_resolution_ctx,
+    //                                 from_type_name,
+    //                             },
+    //                         ),
+    //                     )
+    //                 )
+    //                 if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Example
+    //                 && value_resolution_ctx.item_id() == VecCopyItem::ID_DEFAULT
+    //                 && value_resolution_ctx.params_type_name() == "VecA"
+    //                 && value_resolution_ctx.resolution_chain() == &[FieldNameAndType::new(String::from("0a"), String::from("Vec<u8>"))]
+    //                 && from_type_name == "u8"
+    //             ),
+    //             "was {cmd_ctx_result:#?}"
+    //         );
+    //     }
+    // })();
+    // ```
 
     Ok(())
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_previous_mapping_fn(
+async fn build_with_item_params_returns_ok_when_empty_field_wise_spec_provided_for_previous_mapping_fn(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_cmd_ctx_spsf_params")).await?;
@@ -1081,46 +1123,57 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         item_graph_builder.build()
     };
     let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
-    let cmd_ctx_result = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
+    let cmd_ctx = CmdCtxSpsf::<TestCctCmdCtxSpsf>::builder()
         .with_output((&mut output).into())
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
         .with_flow((&flow).into())
+        .with_resource(0u8) // We need this so the mapping function for `state_example` can resolve the vec value.
         // Note: item_params provided, but not enough to replace mapping function.
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
+            // Up for debate, but current implementation is to merge each `ValueSpec` per field
+            // (`ParamsSpec` recurses into `ValueSpec`).
             VecA::field_wise_spec().build(),
         )
         .build()
-        .await;
+        .await?;
 
+    let fields = cmd_ctx.fields();
+    let params_specs = fields.params_specs();
+    let mapping_fn_reg = fields.mapping_fn_reg();
+    let resources = fields.resources();
+    let vec_a_spec = params_specs
+        .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        VecCopyItem::ID_DEFAULT.clone(),
+        tynm::type_name::<VecA>(),
+    );
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
         || {
             assert!(
-                matches!(
-                    &cmd_ctx_result,
-                    Err(PeaceTestError::PeaceRt(
-                        peace::rt_model::Error::ParamsSpecsMismatch {
-                            item_ids_with_no_params_specs,
-                            params_specs_provided_mismatches,
-                            params_specs_stored_mismatches,
-                            params_specs_not_usable,
-                        }
-                    ))
-                    if item_ids_with_no_params_specs.is_empty()
-                    && params_specs_provided_mismatches.is_empty()
-                    && matches!(
-                        params_specs_stored_mismatches.as_ref(),
-                        Some(params_specs_stored_mismatches)
-                        if params_specs_stored_mismatches.is_empty()
-                    )
-                    && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
+                matches!(vec_a_spec,
+                    Some(ParamsSpec::FieldWise {
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
+                            field_name: Some(field_name),
+                            mapping_fn_name,
+                        }),
+                    })
+                    if field_name == "_0" &&
+                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
                 ),
-                "was {cmd_ctx_result:#?}"
+                "was {vec_a_spec:?}"
             );
         }
     })();
+    assert_eq!(
+        Some(VecA(vec![1u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec
+            .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
+            .ok()),
+    );
 
     Ok(())
 }
@@ -1272,7 +1325,7 @@ pub struct TestCctCmdCtxSpsf;
 impl CmdCtxTypes for TestCctCmdCtxSpsf {
     type AppError = PeaceTestError;
     type FlowParamsKey = String;
-    type MappingFns = ();
+    type MappingFns = TestMappingFns;
     type Output = NoOpOutput;
     type ProfileParamsKey = String;
     type WorkspaceParamsKey = String;

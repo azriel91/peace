@@ -78,11 +78,13 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
 
         let params_specs = &*params_specs;
+        let mapping_fn_reg = &*mapping_fn_reg;
         let resources = &*resources;
         let (stream_outcome, errors) = flow
             .graph()
@@ -94,8 +96,9 @@ where
                 |(mut states_clean_mut, mut errors), item_rt| {
                     async move {
                         let item_id = item_rt.id().clone();
-                        let state_clean_boxed_result =
-                            item_rt.state_clean(params_specs, resources).await;
+                        let state_clean_boxed_result = item_rt
+                            .state_clean(params_specs, mapping_fn_reg, resources)
+                            .await;
 
                         match state_clean_boxed_result {
                             Ok(state_clean_boxed) => {

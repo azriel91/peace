@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, fmt::Debug};
 use interruptible::InterruptibilityState;
 use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_flow_rt::Flow;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_profile_model::Profile;
 use peace_resource_rt::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
@@ -148,6 +148,16 @@ where
     pub params_specs_type_reg: ParamsSpecsTypeReg,
     /// Item params specs for each profile for the selected flow.
     pub profile_to_params_specs: BTreeMap<Profile, ParamsSpecs>,
+    /// Mapping function registry for each item's [`Params`]`::Spec`.
+    ///
+    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// [`MappingFn`] logic.
+    ///
+    /// [`MappingFn`]: peace_params::MappingFn
+    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
+    pub mapping_fn_reg: MappingFnReg,
     /// Type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesCurrentFile`] and
@@ -343,6 +353,20 @@ where
     /// flow.
     pub fn profile_to_params_specs(&self) -> &BTreeMap<Profile, ParamsSpecs> {
         &self.profile_to_params_specs
+    }
+
+    /// Returns the mapping function registry for each item's
+    /// [`Params`]`::Spec`.
+    ///
+    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// [`MappingFn`] logic.
+    ///
+    /// [`MappingFn`]: peace_params::MappingFn
+    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
+    pub fn mapping_fn_reg(&self) -> &MappingFnReg {
+        &self.mapping_fn_reg
     }
 
     /// Returns the type registry for each item's `State`.

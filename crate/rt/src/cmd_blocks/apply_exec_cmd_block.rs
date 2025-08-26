@@ -7,7 +7,7 @@ use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_resource_rt::{
     internal::StatesMut,
     resources::ts::SetUp,
@@ -139,6 +139,7 @@ where
     ) -> Result<(), ()> {
         let ItemApplyExecCtx {
             params_specs,
+            mapping_fn_reg,
             resources,
             apply_for_internal,
             #[cfg(feature = "output_progress")]
@@ -173,10 +174,18 @@ where
         );
         let item_apply = match apply_for_internal {
             ApplyForInternal::Ensure => {
-                ItemRt::ensure_prepare(&**item, params_specs, resources, fn_ctx).await
+                ItemRt::ensure_prepare(&**item, params_specs, mapping_fn_reg, resources, fn_ctx)
+                    .await
             }
             ApplyForInternal::Clean { states_current } => {
-                ItemRt::clean_prepare(&**item, states_current, params_specs, resources).await
+                ItemRt::clean_prepare(
+                    &**item,
+                    states_current,
+                    params_specs,
+                    mapping_fn_reg,
+                    resources,
+                )
+                .await
             }
         };
 
@@ -225,7 +234,16 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(&**item, params_specs, resources, fn_ctx, &mut item_apply).await {
+                match apply_fn(
+                    &**item,
+                    params_specs,
+                    mapping_fn_reg,
+                    resources,
+                    fn_ctx,
+                    &mut item_apply,
+                )
+                .await
+                {
                     Ok(()) => {
                         // apply succeeded
 
@@ -489,6 +507,7 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
@@ -521,6 +540,7 @@ where
                     .try_for_each_concurrent_with(BUFFERED_FUTURES_MAX, stream_opts, |item| {
                         let item_apply_exec_ctx = ItemApplyExecCtx {
                             params_specs,
+                            mapping_fn_reg,
                             resources: resources_ref,
                             apply_for_internal: &apply_for_internal,
                             #[cfg(feature = "output_progress")]
@@ -576,6 +596,8 @@ enum ApplyForInternal {
 struct ItemApplyExecCtx<'f, E> {
     /// Map of item ID to its params' specs.
     params_specs: &'f ParamsSpecs,
+    /// Map of `MappingFnName` to its `MappingFn` logic.
+    mapping_fn_reg: &'f MappingFnReg,
     /// Map of all types at runtime.
     resources: &'f Resources<SetUp>,
     /// Whether the `ApplyCmd` is for `Ensure` or `Clean`.

@@ -3,7 +3,7 @@ use std::fmt::{self, Debug};
 use dot_ix_model::info_graph::InfoGraph;
 use futures::future::LocalBoxFuture;
 use peace_flow_rt::Flow;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_resource_rt::{resources::ts::SetUp, Resources};
 
 use crate::{CmdExecSpawnCtx, WebiOutput};
@@ -25,7 +25,7 @@ pub struct FlowWebiFns<E, CmdExecReqT> {
     pub outcome_info_graph_fn: Box<
         dyn Fn(
             &mut WebiOutput,
-            Box<dyn Fn(&Flow<E>, &ParamsSpecs, &Resources<SetUp>) -> InfoGraph>,
+            Box<dyn Fn(&Flow<E>, &ParamsSpecs, &MappingFnReg, &Resources<SetUp>) -> InfoGraph>,
         ) -> LocalBoxFuture<InfoGraph>,
     >,
     /// Function to spawn a `CmdExecution`.

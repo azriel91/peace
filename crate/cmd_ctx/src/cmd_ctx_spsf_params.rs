@@ -386,7 +386,8 @@ where
         resources.insert(flow_params_file);
 
         // Register each mapping function with the `MappingFnReg`.
-        CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>(&mut resources);
+        let mapping_fn_reg =
+            CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>();
 
         // Insert resources
         {
@@ -478,7 +479,8 @@ where
         #[cfg(feature = "item_state_example")]
         {
             let () = flow.graph().iter().try_for_each(|item| {
-                let _state_example = item.state_example(&params_specs, &resources)?;
+                let _state_example =
+                    item.state_example(&params_specs, &mapping_fn_reg, &resources)?;
                 Ok::<_, CmdCtxTypesT::AppError>(())
             })?;
         }
@@ -503,6 +505,7 @@ where
                 flow_params,
                 params_specs_type_reg,
                 params_specs,
+                mapping_fn_reg,
                 states_type_reg,
                 resources,
             },

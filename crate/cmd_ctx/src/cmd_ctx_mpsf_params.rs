@@ -467,7 +467,8 @@ where
         // `flow_params_insert` is not supported for multi-profile `CmdCtx`s.
 
         // Register each mapping function with the `MappingFnReg`.
-        CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>(&mut resources);
+        let mapping_fn_reg =
+            CmdCtxBuilderSupport::mapping_fn_reg_setup::<CmdCtxTypesT::MappingFns>();
 
         // Insert resources
         {
@@ -535,6 +536,7 @@ where
                 profile_to_states_current_stored,
                 params_specs_type_reg,
                 profile_to_params_specs,
+                mapping_fn_reg,
                 states_type_reg,
                 resources,
             },

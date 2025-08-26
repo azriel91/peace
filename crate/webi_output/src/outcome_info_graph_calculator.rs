@@ -16,7 +16,7 @@ use peace_item_interaction_model::{
     ItemLocationTree, ItemLocationType, ItemLocationsAndInteractions,
 };
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_resource_rt::{resources::ts::SetUp, Resources};
 use peace_webi_model::OutcomeInfoGraphVariant;
 use smallvec::SmallVec;
@@ -38,6 +38,7 @@ impl OutcomeInfoGraphCalculator {
     pub fn calculate<E>(
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         outcome_info_graph_variant: OutcomeInfoGraphVariant,
     ) -> InfoGraph
@@ -45,12 +46,13 @@ impl OutcomeInfoGraphCalculator {
         E: 'static,
     {
         let item_locations_and_interactions = match &outcome_info_graph_variant {
-            OutcomeInfoGraphVariant::Example => {
-                flow.item_locations_and_interactions_example(params_specs, resources)
-            }
-            OutcomeInfoGraphVariant::Current { .. } => {
-                flow.item_locations_and_interactions_current(params_specs, resources)
-            }
+            OutcomeInfoGraphVariant::Example => flow.item_locations_and_interactions_example(
+                params_specs,
+                mapping_fn_reg,
+                resources,
+            ),
+            OutcomeInfoGraphVariant::Current { .. } => flow
+                .item_locations_and_interactions_current(params_specs, mapping_fn_reg, resources),
         };
 
         calculate_info_graph(

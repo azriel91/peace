@@ -16,7 +16,7 @@ cfg_if::cfg_if! {
             ItemLocationTree,
         };
         use peace_item_model::ItemId;
-        use peace_params::ParamsSpecs;
+        use peace_params::{MappingFnReg, ParamsSpecs};
         use peace_resource_rt::{resources::ts::SetUp, Resources};
     }
 }
@@ -105,6 +105,7 @@ impl<E> Flow<E> {
     pub fn item_locations_and_interactions_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> ItemLocationsAndInteractions
     where
@@ -139,7 +140,7 @@ impl<E> Flow<E> {
             // Note: This will silently drop the item locations if `interactions_example` fails to
             // return.
             .filter_map(|item| {
-                item.interactions_example(params_specs, resources)
+                item.interactions_example(params_specs, mapping_fn_reg, resources)
                     .ok()
                     .map(|item_interactions_example| (item.id(), item_interactions_example))
             })
@@ -276,6 +277,7 @@ impl<E> Flow<E> {
     pub fn item_locations_and_interactions_current(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> ItemLocationsAndInteractions
     where
@@ -310,7 +312,7 @@ impl<E> Flow<E> {
             // Note: This will silently drop the item locations if `interactions_try_current` fails
             // to return.
             .filter_map(|item| {
-                item.interactions_try_current(params_specs, resources)
+                item.interactions_try_current(params_specs, mapping_fn_reg, resources)
                     .ok()
                     .map(|item_interactions_current_or_example| {
                         (item.id(), item_interactions_current_or_example)

@@ -3,7 +3,7 @@ use peace::{
     cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Goal},
     item_model::item_id,
-    params::{ParamsSpec, ParamsSpecs},
+    params::{MappingFnReg, ParamsSpec, ParamsSpecs},
     resource_rt::{
         internal::StatesMut,
         resources::ts::SetUp,
@@ -233,7 +233,7 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(&item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -250,7 +250,7 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let state = item_wrapper
-        .state_current_try_exec(&params_specs, &resources, fn_ctx)
+        .state_current_try_exec(&params_specs, &mapping_fn_reg, &resources, fn_ctx)
         .await?
         .unwrap();
 
@@ -271,7 +271,7 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 async fn state_goal_try_exec() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(&item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -288,7 +288,7 @@ async fn state_goal_try_exec() -> Result<(), VecCopyError> {
     );
 
     let state_goal = item_wrapper
-        .state_goal_try_exec(&params_specs, &resources, fn_ctx)
+        .state_goal_try_exec(&params_specs, &mapping_fn_reg, &resources, fn_ctx)
         .await?
         .unwrap();
 
@@ -310,12 +310,13 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
 
-    let (params_specs, resources, states_current_stored, states_goal) =
+    let (params_specs, mapping_fn_reg, resources, states_current_stored, states_goal) =
         resources_and_states_current_stored_and_goal(&item_wrapper).await?;
 
     let state_diff = item_wrapper
         .state_diff_exec(
             &params_specs,
+            &mapping_fn_reg,
             &resources,
             &states_current_stored,
             &states_goal,
@@ -341,7 +342,7 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
 async fn ensure_prepare() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(&item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -357,7 +358,15 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    match <dyn ItemRt<_>>::ensure_prepare(&item_wrapper, &params_specs, &resources, fn_ctx).await {
+    match <dyn ItemRt<_>>::ensure_prepare(
+        &item_wrapper,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+        fn_ctx,
+    )
+    .await
+    {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
             assert_eq!(ApplyCheck::ExecRequired, item_apply.apply_check());
@@ -379,7 +388,7 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(&item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -395,10 +404,15 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    let mut item_apply_boxed =
-        <dyn ItemRt<_>>::ensure_prepare(&item_wrapper, &params_specs, &resources, fn_ctx)
-            .await
-            .map_err(|(error, _)| error)?;
+    let mut item_apply_boxed = <dyn ItemRt<_>>::ensure_prepare(
+        &item_wrapper,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+        fn_ctx,
+    )
+    .await
+    .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -417,6 +431,7 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
     <dyn ItemRt<_>>::apply_exec_dry(
         &item_wrapper,
         &params_specs,
+        &mapping_fn_reg,
         &resources,
         fn_ctx,
         &mut item_apply_boxed,
@@ -449,7 +464,7 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
 async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(&item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -465,10 +480,15 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    let mut item_apply_boxed =
-        <dyn ItemRt<_>>::ensure_prepare(&item_wrapper, &params_specs, &resources, fn_ctx)
-            .await
-            .map_err(|(error, _)| error)?;
+    let mut item_apply_boxed = <dyn ItemRt<_>>::ensure_prepare(
+        &item_wrapper,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+        fn_ctx,
+    )
+    .await
+    .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -487,6 +507,7 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
     <dyn ItemRt<_>>::apply_exec(
         &item_wrapper,
         &params_specs,
+        &mapping_fn_reg,
         &resources,
         fn_ctx,
         &mut item_apply_boxed,
@@ -514,11 +535,17 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
 async fn clean_prepare() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources, states_current) =
+    let (params_specs, mapping_fn_reg, resources, states_current) =
         resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
-    match <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
-        .await
+    match <dyn ItemRt<_>>::clean_prepare(
+        &item_wrapper,
+        &states_current,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+    )
+    .await
     {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
@@ -541,13 +568,18 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
 async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources, states_current) =
+    let (params_specs, mapping_fn_reg, resources, states_current) =
         resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
-    let mut item_apply_boxed =
-        <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
-            .await
-            .map_err(|(error, _)| error)?;
+    let mut item_apply_boxed = <dyn ItemRt<_>>::clean_prepare(
+        &item_wrapper,
+        &states_current,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+    )
+    .await
+    .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -566,6 +598,7 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
     <dyn ItemRt<_>>::apply_exec_dry(
         &item_wrapper,
         &params_specs,
+        &mapping_fn_reg,
         &resources,
         fn_ctx,
         &mut item_apply_boxed,
@@ -593,13 +626,18 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
 async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
-    let (params_specs, resources, states_current) =
+    let (params_specs, mapping_fn_reg, resources, states_current) =
         resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
-    let mut item_apply_boxed =
-        <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
-            .await
-            .map_err(|(error, _)| error)?;
+    let mut item_apply_boxed = <dyn ItemRt<_>>::clean_prepare(
+        &item_wrapper,
+        &states_current,
+        &params_specs,
+        &mapping_fn_reg,
+        &resources,
+    )
+    .await
+    .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -618,6 +656,7 @@ async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
     <dyn ItemRt<_>>::apply_exec(
         &item_wrapper,
         &params_specs,
+        &mapping_fn_reg,
         &resources,
         fn_ctx,
         &mut item_apply_boxed,
@@ -643,7 +682,7 @@ async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
 
 async fn resources_set_up(
     item_wrapper: &VecCopyItemWrapper,
-) -> Result<(ParamsSpecs, Resources<SetUp>), VecCopyError> {
+) -> Result<(ParamsSpecs, MappingFnReg, Resources<SetUp>), VecCopyError> {
     let mut params_specs = ParamsSpecs::new();
     params_specs.insert(
         VecCopyItem::ID_DEFAULT.clone(),
@@ -652,17 +691,19 @@ async fn resources_set_up(
         },
     );
 
+    let mapping_fn_reg = MappingFnReg::new();
+
     let mut resources = Resources::new();
     <dyn ItemRt<_>>::setup(item_wrapper, &mut resources).await?;
     let resources = Resources::<SetUp>::from(resources);
 
-    Ok((params_specs, resources))
+    Ok((params_specs, mapping_fn_reg, resources))
 }
 
 async fn resources_set_up_with_pre_stored_state(
     item_wrapper: &VecCopyItemWrapper,
-) -> Result<(ParamsSpecs, Resources<SetUp>, StatesCurrent), VecCopyError> {
-    let (params_specs, mut resources) = resources_set_up(item_wrapper).await?;
+) -> Result<(ParamsSpecs, MappingFnReg, Resources<SetUp>, StatesCurrent), VecCopyError> {
+    let (params_specs, mapping_fn_reg, mut resources) = resources_set_up(item_wrapper).await?;
     let stored_state = vec![0, 1, 2, 3, 4, 5, 6, 7];
     resources.insert(VecB(stored_state.clone()));
     resources.insert(Current(Some(VecCopyState::from(stored_state.clone()))));
@@ -675,7 +716,7 @@ async fn resources_set_up_with_pre_stored_state(
         StatesCurrent::from(states_mut)
     };
 
-    Ok((params_specs, resources, states_current))
+    Ok((params_specs, mapping_fn_reg, resources, states_current))
 }
 
 async fn resources_and_states_current_stored_and_goal(
@@ -683,13 +724,14 @@ async fn resources_and_states_current_stored_and_goal(
 ) -> Result<
     (
         ParamsSpecs,
+        MappingFnReg,
         Resources<SetUp>,
         StatesCurrentStored,
         StatesGoal,
     ),
     VecCopyError,
 > {
-    let (params_specs, resources) = resources_set_up(item_wrapper).await?;
+    let (params_specs, mapping_fn_reg, resources) = resources_set_up(item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
@@ -710,6 +752,7 @@ async fn resources_and_states_current_stored_and_goal(
         let state = <dyn ItemRt<_>>::state_current_try_exec(
             item_wrapper,
             &params_specs,
+            &mapping_fn_reg,
             &resources,
             fn_ctx,
         )
@@ -723,12 +766,18 @@ async fn resources_and_states_current_stored_and_goal(
     let states_goal = {
         let mut states_goal_mut = StatesMut::<states::ts::Goal>::new();
         let state_goal = item_wrapper
-            .state_goal_try_exec(&params_specs, &resources, fn_ctx)
+            .state_goal_try_exec(&params_specs, &mapping_fn_reg, &resources, fn_ctx)
             .await?
             .unwrap();
         states_goal_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state_goal);
 
         StatesGoal::from(states_goal_mut)
     };
-    Ok((params_specs, resources, states_current_stored, states_goal))
+    Ok((
+        params_specs,
+        mapping_fn_reg,
+        resources,
+        states_current_stored,
+        states_goal,
+    ))
 }

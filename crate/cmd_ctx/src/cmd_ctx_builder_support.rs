@@ -422,15 +422,15 @@ impl CmdCtxBuilderSupport {
     /// into `resources`.
     ///
     /// This is also needed whenever flow params need to be deserialized.
-    pub(crate) fn mapping_fn_reg_setup<MFns>(resources: &mut Resources<Empty>)
+    #[must_use]
+    pub(crate) fn mapping_fn_reg_setup<MFns>() -> MappingFnReg
     where
         MFns: MappingFns,
     {
         let mut mapping_fn_reg = MappingFnReg::new();
-        MFns::iter().for_each(|m_fn| {
-            mapping_fn_reg.insert(m_fn.name(), m_fn.mapping_fn());
-        });
-        resources.insert(mapping_fn_reg);
+        mapping_fn_reg.register_all::<MFns>();
+
+        mapping_fn_reg
     }
 
     pub(crate) async fn item_graph_setup<E>(

@@ -6,6 +6,7 @@ use peace_cmd_ctx::{CmdCtxSpsfFields, CmdCtxTypes};
 use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_item_model::ItemId;
+use peace_params::MappingFnReg;
 use peace_resource_rt::{
     internal::StatesMut,
     resources::ts::SetUp,
@@ -133,6 +134,7 @@ where
         #[cfg(feature = "output_progress")] progress_tx: &Sender<CmdProgressUpdate>,
         #[cfg(feature = "output_progress")] progress_complete_on_success: bool,
         params_specs: &peace_params::ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         outcomes_tx: &tokio::sync::mpsc::Sender<
             ItemDiscoverOutcome<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
@@ -147,7 +149,7 @@ where
         );
 
         let (states_current_result, states_goal_result) =
-            DiscoverFor::discover(item, params_specs, resources, fn_ctx).await;
+            DiscoverFor::discover(item, params_specs, mapping_fn_reg, resources, fn_ctx).await;
 
         // Send progress update.
         #[cfg(feature = "output_progress")]
@@ -292,6 +294,7 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
@@ -318,6 +321,7 @@ where
                                 #[cfg(feature = "output_progress")]
                                 self.progress_complete_on_success,
                                 params_specs,
+                                mapping_fn_reg,
                                 resources,
                                 &outcomes_tx,
                                 item,
@@ -438,6 +442,7 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
@@ -464,6 +469,7 @@ where
                                 #[cfg(feature = "output_progress")]
                                 self.progress_complete_on_success,
                                 params_specs,
+                                mapping_fn_reg,
                                 resources,
                                 &outcomes_tx,
                                 item,
@@ -597,6 +603,7 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
@@ -624,6 +631,7 @@ where
                                 #[cfg(feature = "output_progress")]
                                 self.progress_complete_on_success,
                                 params_specs,
+                                mapping_fn_reg,
                                 resources,
                                 &outcomes_tx,
                                 item,
@@ -731,6 +739,7 @@ pub trait Discover {
     async fn discover<AppErrorT>(
         item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
@@ -755,6 +764,7 @@ impl Discover for DiscoverForCurrent {
     async fn discover<AppErrorT>(
         item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
@@ -765,7 +775,7 @@ impl Discover for DiscoverForCurrent {
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_current_result = item
-            .state_current_try_exec(params_specs, resources, fn_ctx)
+            .state_current_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await;
 
         (Some(states_current_result), None)
@@ -803,6 +813,7 @@ impl Discover for DiscoverForGoal {
     async fn discover<AppErrorT>(
         item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
@@ -813,7 +824,7 @@ impl Discover for DiscoverForGoal {
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_goal_result = item
-            .state_goal_try_exec(params_specs, resources, fn_ctx)
+            .state_goal_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await;
 
         (None, Some(states_goal_result))
@@ -851,6 +862,7 @@ impl Discover for DiscoverForCurrentAndGoal {
     async fn discover<AppErrorT>(
         item: &ItemBoxed<AppErrorT>,
         params_specs: &peace_params::ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> (
@@ -861,10 +873,10 @@ impl Discover for DiscoverForCurrentAndGoal {
         AppErrorT: peace_value_traits::AppError + From<peace_rt_model::Error>,
     {
         let states_current_result = item
-            .state_current_try_exec(params_specs, resources, fn_ctx)
+            .state_current_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await;
         let states_goal_result = item
-            .state_goal_try_exec(params_specs, resources, fn_ctx)
+            .state_goal_try_exec(params_specs, mapping_fn_reg, resources, fn_ctx)
             .await;
 
         (Some(states_current_result), Some(states_goal_result))
