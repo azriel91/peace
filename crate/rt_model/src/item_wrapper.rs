@@ -845,6 +845,7 @@ where
                 let state_applied_dry = self
                     .apply_exec_dry(
                         params_specs,
+                        mapping_fn_reg,
                         resources,
                         fn_ctx,
                         state_current,
@@ -1006,6 +1007,7 @@ where
                 let state_applied_next = self
                     .apply_exec(
                         params_specs,
+                        mapping_fn_reg,
                         resources,
                         fn_ctx,
                         state_current,
