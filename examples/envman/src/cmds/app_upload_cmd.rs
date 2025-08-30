@@ -3,17 +3,14 @@ use peace::{
     cfg::app_name,
     cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxSpsfFields, ProfileSelection},
     fmt::presentln,
-    item_model::item_id,
-    params::Params,
     profile_model::Profile,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
 use crate::{
     cmds::CmdOpts,
-    flows::{AppUploadFlow, EnvmanMappingFns},
-    items::peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
-    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
+    flows::AppUploadFlow,
+    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey},
     rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
 };
 
@@ -47,16 +44,11 @@ impl AppUploadCmd {
         let flow = AppUploadFlow::flow().await?;
         let profile_key = WorkspaceParamsKey::Profile;
 
-        let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
-            .with_bucket_name_from_mapping_fn(EnvmanMappingFns::S3BucketNameFromS3BucketState)
-            .build();
-
         let mut cmd_ctx = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
             .with_output(output.into())
             .with_workspace(workspace.into())
             .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
             .with_flow((&flow).into())
-            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
             .await?;
 
         let CmdOpts { profile_print } = cmd_opts;
@@ -93,25 +85,12 @@ impl AppUploadCmd {
         )?;
         let flow = AppUploadFlow::flow().await?;
 
-        // TODO: We don't yet know the profiles at this point, so we can't insert
-        // profile params.
-        //
-        // ```rust
-        // let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
-        //     .with_bucket_name_from_mapping_fn(EnvmanMappingFns::S3BucketNameFromS3BucketState)
-        //     .build();
-        // ```
-
         let mut cmd_ctx = CmdCtxMpsf::<EnvmanCmdCtxTypes<O>>::builder()
             .with_output(output.into())
             .with_workspace((&workspace).into())
             .with_flow((&flow).into())
             .with_workspace_param::<Profile>(WorkspaceParamsKey::Profile, None)
             .with_workspace_param::<EnvManFlow>(WorkspaceParamsKey::Flow, None)
-            // ```rust
-            // .with_profile_param::<EnvType>(ProfileParamsKey::EnvType, None);
-            // .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
-            // ```
             .await?;
 
         let t = f(&mut cmd_ctx).await?;
