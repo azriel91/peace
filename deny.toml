@@ -98,8 +98,9 @@ version = 2
 allow = [
     "Apache-2.0",
     "BSD-2-Clause",
-    "BSD-3-Clause", # wasm
+    "BSD-3-Clause",     # wasm
     "BSL-1.0",
+    "CC0-1.0",          # base16
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
@@ -137,8 +138,8 @@ exceptions = [
 # and the crate will be checked normally, which may produce warnings or errors
 # depending on the rest of your configuration
 #license-files = [
-    # Each entry is a crate relative path, and the (opaque) hash of its contents
-    #{ path = "LICENSE", hash = 0xbd0eed23 }
+# Each entry is a crate relative path, and the (opaque) hash of its contents
+#{ path = "LICENSE", hash = 0xbd0eed23 }
 #]
 
 [licenses.private]

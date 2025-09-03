@@ -3,6 +3,7 @@ accepted = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "BSL-1.0",
+    "CC0-1.0",          # base16
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
@@ -24,7 +25,7 @@ ignore-build-dependencies = true
 #     │
 # 171 │ license = "((ISC AND (OpenSSL AND ISC)) AND (MIT AND OpenSSL) AND OpenSSL AND OpenSSL-standalone AND (SSLeay-standalone AND ISC AND MIT) AND MIT) AND (ISC) AND (ISC AND (ISC AND (OpenSSL AND ISC) AND MIT AND OpenSSL AND OpenSSL-standalone AND SSLeay-standalone)) AND (ISC AND (OpenSSL AND ISC) AND MIT AND OpenSSL AND OpenSSL-standalone AND SSLeay-standalone) AND (ISC AND LicenseRef-scancode-public-domain) AND (LicenseRef-scancode-unknown-license-reference) AND (MIT) AND (OpenSSL) AND (OpenSSL AND ((OpenSSL OR BSD-3-Clause) AND GPL-1.0-or-later)) AND (OpenSSL AND (OpenSSL OR BSD-3-Clause OR GPL-1.0-or-later OR GPL-2.0-only)) AND (OpenSSL AND (OpenSSL OR BSD-3-Clause OR GPL-1.0-or-later)) AND (OpenSSL AND (OpenSSL OR BSD-3-Clause)) AND (OpenSSL-standalone) AND (SSLeay-standalone) AND (SSLeay-standalone AND OpenSSL-standalone)"
 #     │                                                                               ------------------      -----------------                                                                                                     ------------------     -----------------                                                          ------------------     -----------------               ---------------------------------       ---------------------------------------------                                                                          ----------------                                                ----------------    ------------                                                ----------------                                                    ------------------       -----------------       -----------------     ------------------
-# 
+#
 # 2025-01-17 5:30:42.442908775 +00:00:00 [ERROR] encountered 1 errors resolving licenses, unable to generate output
 # Error: Process completed with exit code 1.
 # ```
