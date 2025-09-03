@@ -16,7 +16,7 @@ use crate::{
         AppUploadCmd, CmdOpts, EnvCmd,
     },
     model::{EnvManError, EnvManFlow},
-    rt_model::EnvManCmdCtx,
+    rt_model::EnvmanCmdCtxTypes,
 };
 
 /// Shows the goal state of the environment.
@@ -55,7 +55,10 @@ macro_rules! run {
     }};
 }
 
-async fn run_with_ctx<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>, debug: bool) -> Result<(), EnvManError>
+async fn run_with_ctx<O>(
+    cmd_ctx: &mut CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>,
+    debug: bool,
+) -> Result<(), EnvManError>
 where
     O: OutputWrite,
     EnvManError: From<<O as OutputWrite>::Error>,

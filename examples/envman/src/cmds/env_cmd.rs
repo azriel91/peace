@@ -1,17 +1,16 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::app_name,
     cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxSpsfFields, ProfileSelection},
     fmt::presentln,
     profile_model::Profile,
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
-    cmds::CmdOpts,
+    cmds::{common::workspace, CmdOpts},
     flows::EnvDeployFlow,
     model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey},
-    rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
+    rt_model::EnvmanCmdCtxTypes,
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -20,24 +19,19 @@ pub struct EnvCmd;
 
 impl EnvCmd {
     /// Returns the `CmdCtx` for the `EnvDeployFlow`.
-    pub async fn cmd_ctx<O>(output: &mut O) -> Result<EnvManCmdCtx<'_, O>, EnvManError>
+    pub async fn cmd_ctx<O>(
+        output: &mut O,
+    ) -> Result<CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>, EnvManError>
     where
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = WorkspaceParamsKey::Profile;
         let cmd_ctx = {
             let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
                 .with_output(output.into())
-                .with_workspace(workspace.into());
+                .with_workspace(workspace()?.into());
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
@@ -60,7 +54,7 @@ impl EnvCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut EnvManCmdCtx<'_, O>,
+            &'fn_once mut CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let mut cmd_ctx = Self::cmd_ctx(output).await?;
@@ -90,19 +84,12 @@ impl EnvCmd {
             &'fn_once mut CmdCtxMpsf<EnvmanCmdCtxTypes<O>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
         let flow = EnvDeployFlow::flow().await?;
 
         let mut cmd_ctx = {
             let cmd_ctx_builder = CmdCtxMpsf::<EnvmanCmdCtxTypes<O>>::builder()
                 .with_output(output.into())
-                .with_workspace((&workspace).into())
+                .with_workspace(workspace()?.into())
                 .with_workspace_param::<peace::profile_model::Profile>(
                     WorkspaceParamsKey::Profile,
                     None,
@@ -118,7 +105,9 @@ impl EnvCmd {
         Ok(t)
     }
 
-    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
+    async fn profile_print<O>(
+        cmd_ctx: &mut CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>,
+    ) -> Result<(), EnvManError>
     where
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,

@@ -1,12 +1,12 @@
 use peace::{
-    cfg::app_name,
     cmd_ctx::{CmdCtxSpnf, CmdCtxSpnfFields, ProfileSelection},
     fmt::presentln,
     profile_model::Profile,
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
+    cmds::common::workspace,
     model::{EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey},
     rt_model::EnvmanCmdCtxTypes,
 };
@@ -28,17 +28,9 @@ impl ProfileShowCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
-
         let cmd_ctx_builder = CmdCtxSpnf::<EnvmanCmdCtxTypes<O>>::builder()
             .with_output(output.into())
-            .with_workspace((&workspace).into());
+            .with_workspace(workspace()?.into());
 
         let profile_key = WorkspaceParamsKey::Profile;
         let mut cmd_ctx = cmd_ctx_builder
