@@ -1,5 +1,5 @@
 use peace::{
-    params::{FromFunc, MappingFn, MappingFnImpl, MappingFnName, MappingFns},
+    params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns},
     profile_model::Profile,
 };
 use serde::{Deserialize, Serialize};
@@ -27,7 +27,7 @@ impl MappingFns for EnvmanMappingFns {
         .into_iter()
     }
 
-    fn name(self) -> MappingFnName {
+    fn id(self) -> MappingFnId {
         let name = match self {
             Self::IamRoleNameFromProfile => "IamRoleNameFromProfile",
             Self::IamRoleManagedPolicyArnFromIamPolicyState => {
@@ -35,7 +35,7 @@ impl MappingFns for EnvmanMappingFns {
             }
             Self::S3BucketNameFromS3BucketState => "S3BucketNameFromS3BucketState",
         };
-        MappingFnName::new(name.to_string())
+        MappingFnId::new(name.to_string())
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

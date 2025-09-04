@@ -2,7 +2,7 @@ use peace::{
     item_model::item_id,
     params::{
         AnySpecRt, AnySpecRtBoxed, FieldNameAndType, FieldWiseSpecRt, FromFunc, MappingFn,
-        MappingFnImpl, MappingFnName, MappingFnReg, MappingFns, Params, ParamsResolveError,
+        MappingFnId, MappingFnImpl, MappingFnReg, MappingFns, Params, ParamsResolveError,
         ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec, ValueSpecRt,
     },
     resource_rt::{resources::ts::SetUp, Resources},
@@ -30,7 +30,7 @@ fn debug() {
     assert_eq!(
         "MappingFn { \
             field_name: Some(\"field\"), \
-            mapping_fn_name: MappingFnName(\"MockSrcFromU8\") \
+            mapping_fn_id: MappingFnId(\"MockSrcFromU8\") \
         }",
         format!(
             "{:?}",
@@ -91,7 +91,7 @@ fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     assert_eq!(
         r#"!MappingFn
 field_name: null
-mapping_fn_name: MockSrcFromU8
+mapping_fn_id: MockSrcFromU8
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -149,7 +149,7 @@ fn serialize_field_wise_mapping_fn() -> Result<(), serde_yaml::Error> {
         r#"!FieldWise
 field_wise_spec: !MappingFn
   field_name: _0
-  mapping_fn_name: VecU8FromBoolAndU16
+  mapping_fn_id: VecU8FromBoolAndU16
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -213,7 +213,7 @@ fn deserialize_from_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
 field_name: serialized_field_name
-mapping_fn_name: VecU8FromBoolAndU16
+mapping_fn_id: VecU8FromBoolAndU16
 "#,
     )?;
 
@@ -225,10 +225,10 @@ mapping_fn_name: VecU8FromBoolAndU16
                     &deserialized,
                     ParamsSpec::<VecA>::MappingFn {
                         field_name: Some(field_name),
-                        mapping_fn_name,
+                        mapping_fn_id,
                     }
                     if field_name == "serialized_field_name" &&
-                    mapping_fn_name == &TestMappingFns::VecU8FromBoolAndU16.name()
+                    mapping_fn_id == &TestMappingFns::VecU8FromBoolAndU16.id()
                 ),
                 "was {deserialized:?}"
             );
@@ -318,7 +318,7 @@ fn deserialize_field_wise_mapping_fn() -> Result<(), serde_yaml::Error> {
         r#"!FieldWise
 field_wise_spec: !MappingFn
   field_name: serialized_field_name
-  mapping_fn_name: VecU8FromBoolAndU16
+  mapping_fn_id: VecU8FromBoolAndU16
 "#,
     )?;
 
@@ -331,11 +331,11 @@ field_wise_spec: !MappingFn
                     ParamsSpec::<VecA>::FieldWise {
                         field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
                             field_name: Some(field_name),
-                            mapping_fn_name,
+                            mapping_fn_id,
                         })
                     }
                     if field_name == "serialized_field_name" &&
-                    mapping_fn_name == &TestMappingFns::VecU8FromBoolAndU16.name()
+                    mapping_fn_id == &TestMappingFns::VecU8FromBoolAndU16.id()
                 ),
                 "was {deserialized:?}"
             );
@@ -363,7 +363,7 @@ fn is_usable_returns_true_for_value_and_in_memory() {
 fn is_usable_returns_true_when_mapping_fn_is_some() {
     assert!(ParamsSpec::<VecA>::MappingFn {
         field_name: None,
-        mapping_fn_name: TestMappingFns::VecU8FromBoolAndU16.name()
+        mapping_fn_id: TestMappingFns::VecU8FromBoolAndU16.id()
     }
     .is_usable());
 }
@@ -373,7 +373,7 @@ fn is_usable_returns_true_for_deserialized_mapping_fn() -> Result<(), serde_yaml
     let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-mapping_fn_name: VecU8FromBoolAndU16
+mapping_fn_id: VecU8FromBoolAndU16
 "#,
     )?;
 
@@ -400,7 +400,7 @@ fn is_usable_returns_true_when_field_wise_with_mapping_fn_is_deserialized(
         r#"!FieldWise
 field_wise_spec: !MappingFn
   field_name: field_name
-  mapping_fn_name: VecU8FromBoolAndU16
+  mapping_fn_id: VecU8FromBoolAndU16
 "#,
     )?;
 
@@ -581,7 +581,7 @@ fn resolve_value() -> Result<(), ParamsResolveError> {
 fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
     let test_mapping_fn = TestMappingFns::MockSrcFromU8;
     let mut mapping_fn_reg = MappingFnReg::new();
-    mapping_fn_reg.insert(test_mapping_fn.name(), test_mapping_fn.mapping_fn());
+    mapping_fn_reg.insert(test_mapping_fn.id(), test_mapping_fn.mapping_fn());
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -609,7 +609,7 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
     let test_mapping_fn = TestMappingFns::MockSrcFromU8AndU16;
     let mut mapping_fn_reg = MappingFnReg::new();
-    mapping_fn_reg.insert(test_mapping_fn.name(), test_mapping_fn.mapping_fn());
+    mapping_fn_reg.insert(test_mapping_fn.id(), test_mapping_fn.mapping_fn());
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -876,7 +876,7 @@ fn try_resolve_value() -> Result<(), ParamsResolveError> {
 fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
     let test_mapping_fn = TestMappingFns::MockSrcFromU8;
     let mut mapping_fn_reg = MappingFnReg::new();
-    mapping_fn_reg.insert(test_mapping_fn.name(), test_mapping_fn.mapping_fn());
+    mapping_fn_reg.insert(test_mapping_fn.id(), test_mapping_fn.mapping_fn());
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -904,7 +904,7 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
     let test_mapping_fn = TestMappingFns::MockSrcFromU8AndU16;
     let mut mapping_fn_reg = MappingFnReg::new();
-    mapping_fn_reg.insert(test_mapping_fn.name(), test_mapping_fn.mapping_fn());
+    mapping_fn_reg.insert(test_mapping_fn.id(), test_mapping_fn.mapping_fn());
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -1073,8 +1073,8 @@ fn merge_mapping_fn_with_other_no_change() {
 
     assert!(matches!(
         &params_spec_a,
-        ParamsSpec::<MockSrc>::MappingFn { field_name: None, mapping_fn_name }
-        if mapping_fn_name == &TestMappingFns::MockSrcFromU8.name(),
+        ParamsSpec::<MockSrc>::MappingFn { field_name: None, mapping_fn_id }
+        if mapping_fn_id == &TestMappingFns::MockSrcFromU8.id(),
     ));
 }
 
@@ -1168,13 +1168,13 @@ impl MappingFns for TestMappingFns {
         .into_iter()
     }
 
-    fn name(self) -> MappingFnName {
+    fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::MockSrcFromU8 => "MockSrcFromU8",
             TestMappingFns::MockSrcFromU8AndU16 => "MockSrcFromU8AndU16",
             TestMappingFns::VecU8FromBoolAndU16 => "VecU8FromBoolAndU16",
         };
-        MappingFnName::new(name.into())
+        MappingFnId::new(name.into())
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

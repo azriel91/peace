@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{MappingFn, MappingFnName};
+use crate::{MappingFn, MappingFnId};
 
 /// Enum to give names to mapping functions, so that params specs and value
 /// specs can be serialized.
@@ -24,8 +24,15 @@ pub trait MappingFns:
     ///
     /// # Implementors
     ///
-    /// The returned name is considered API, and should be stable.
-    fn name(self) -> MappingFnName;
+    /// The returned ID is considered API, and should be stable. This means
+    /// you should name each variant with a version number, and never remove
+    /// that variant, e.g. `MappingFnId::new("ServerNameFromProfile_V1_0_0"
+    /// )`.
+    ///
+    /// That way, previously stored mapping function IDs can still be
+    /// deserialized, and tool developers can opt-in to upgrading to the newer
+    /// mapping functions when ready.
+    fn id(self) -> MappingFnId;
 
     /// Returns the mapping function corresponding to the given variant.
     fn mapping_fn(self) -> Box<dyn MappingFn>;
@@ -36,8 +43,8 @@ impl MappingFns for () {
         std::iter::empty()
     }
 
-    fn name(self) -> MappingFnName {
-        unreachable!("`()` is not intended to be used as a mapping function name, but an indicator that no mapping functions are used.")
+    fn id(self) -> MappingFnId {
+        unreachable!("`()` is not intended to be used as a mapping function ID, but an indicator that no mapping functions are used.")
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

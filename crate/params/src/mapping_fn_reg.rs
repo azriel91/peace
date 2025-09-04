@@ -3,14 +3,14 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{MappingFn, MappingFnName, MappingFns};
+use crate::{MappingFn, MappingFnId, MappingFns};
 
 /// Map of serializable [`MappingFns`] to each [`MappingFn`] logic.
 ///
 /// This is intended to be called by the Peace framework for each tool
 /// implementor's [`MappingFns`] implementation.
 #[derive(Debug)]
-pub struct MappingFnReg(HashMap<MappingFnName, Box<dyn MappingFn>>);
+pub struct MappingFnReg(HashMap<MappingFnId, Box<dyn MappingFn>>);
 
 impl MappingFnReg {
     /// Returns a new `MappingFnRegistry`.
@@ -31,7 +31,7 @@ impl MappingFnReg {
     where
         MFns: MappingFns,
     {
-        self.insert(m_fns.name(), m_fns.mapping_fn());
+        self.insert(m_fns.id(), m_fns.mapping_fn());
     }
 
     /// Registers all `MappingFns` from `MFns` with this registry.
@@ -47,7 +47,7 @@ impl MappingFnReg {
 }
 
 impl Deref for MappingFnReg {
-    type Target = HashMap<MappingFnName, Box<dyn MappingFn>>;
+    type Target = HashMap<MappingFnId, Box<dyn MappingFn>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

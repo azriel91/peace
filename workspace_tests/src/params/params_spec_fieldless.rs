@@ -1,7 +1,7 @@
 use peace::{
     item_model::item_id,
     params::{
-        AnySpecRt, AnySpecRtBoxed, FromFunc, MappingFn, MappingFnImpl, MappingFnName, MappingFnReg,
+        AnySpecRt, AnySpecRtBoxed, FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFnReg,
         MappingFns, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless, ValueResolutionCtx,
         ValueResolutionMode, ValueSpecRt,
     },
@@ -37,7 +37,7 @@ fn debug() {
     assert_eq!(
         "MappingFn { \
             field_name: Some(\"field\"), \
-            mapping_fn_name: MappingFnName(\"MockSrcFromU8\") \
+            mapping_fn_id: MappingFnId(\"MockSrcFromU8\") \
         }",
         format!(
             "{:?}",
@@ -93,7 +93,7 @@ fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     assert_eq!(
         r#"!MappingFn
 field_name: null
-mapping_fn_name: MockSrcFromU8
+mapping_fn_id: MockSrcFromU8
 "#,
         serde_yaml::to_string(&u8_spec)?,
     );
@@ -154,7 +154,7 @@ fn deserialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
 field_name: "serialized_field_name"
-mapping_fn_name: "U8NoneFromU8"
+mapping_fn_id: "U8NoneFromU8"
 "#,
     )?;
 
@@ -166,10 +166,10 @@ mapping_fn_name: "U8NoneFromU8"
                     &deserialized,
                     ParamsSpecFieldless::<u8>::MappingFn {
                         field_name: Some(field_name),
-                        mapping_fn_name,
+                        mapping_fn_id,
                     }
                     if field_name == "serialized_field_name"
-                    && mapping_fn_name == &TestMappingFns::U8NoneFromU8.name()
+                    && mapping_fn_id == &TestMappingFns::U8NoneFromU8.id()
                 ),
                 "was {deserialized:?}"
             );
@@ -200,7 +200,7 @@ fn is_usable_returns_true_when_mapping_fn_is_deserialized() -> Result<(), serde_
     let params_spec: ParamsSpecFieldless<u8> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-mapping_fn_name: U8NoneFromU8
+mapping_fn_id: U8NoneFromU8
 "#,
     )?;
 
@@ -723,9 +723,9 @@ fn merge_mapping_fn_with_other_no_change() {
         &params_spec_fieldless_a,
         ParamsSpecFieldless::<MockSrc>::MappingFn {
             field_name: None,
-            mapping_fn_name,
+            mapping_fn_id,
         }
-        if mapping_fn_name == &TestMappingFns::MockSrcFromU8.name()
+        if mapping_fn_id == &TestMappingFns::MockSrcFromU8.id()
     ));
 }
 
@@ -746,13 +746,13 @@ impl MappingFns for TestMappingFns {
         .into_iter()
     }
 
-    fn name(self) -> MappingFnName {
+    fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::MockSrcFromU8 => "MockSrcFromU8",
             TestMappingFns::MockSrcFromU8AndU16 => "MockSrcFromU8AndU16",
             TestMappingFns::U8NoneFromU8 => "U8NoneFromU8",
         };
-        MappingFnName::new(name.into())
+        MappingFnId::new(name.into())
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

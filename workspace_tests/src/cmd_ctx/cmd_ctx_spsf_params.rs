@@ -5,7 +5,7 @@ use peace::{
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
     params::{
-        FromFunc, MappingFn, MappingFnImpl, MappingFnName, MappingFnReg, MappingFns, Params,
+        FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFnReg, MappingFns, Params,
         ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
     },
     profile_model::{profile, Profile},
@@ -950,11 +950,11 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
                     Some(ParamsSpec::FieldWise {
                         field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
                             field_name: Some(field_name),
-                            mapping_fn_name,
+                            mapping_fn_id,
                         }),
                     })
                     if field_name == "_0" &&
-                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
+                    mapping_fn_id == &TestMappingFns::Vec1u8.id()
                 ),
                 "was {vec_a_spec:?}"
             );
@@ -1034,11 +1034,11 @@ async fn build_with_item_params_returns_ok_when_spec_fully_not_provided_for_prev
                     Some(ParamsSpec::FieldWise {
                         field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
                             field_name: Some(field_name),
-                            mapping_fn_name,
+                            mapping_fn_id,
                         }),
                     })
                     if field_name == "_0" &&
-                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
+                    mapping_fn_id == &TestMappingFns::Vec1u8.id()
                 ),
                 "was {vec_a_spec:?}"
             );
@@ -1158,11 +1158,11 @@ async fn build_with_item_params_returns_ok_when_empty_field_wise_spec_provided_f
                     Some(ParamsSpec::FieldWise {
                         field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn {
                             field_name: Some(field_name),
-                            mapping_fn_name,
+                            mapping_fn_id,
                         }),
                     })
                     if field_name == "_0" &&
-                    mapping_fn_name == &TestMappingFns::Vec1u8.name()
+                    mapping_fn_id == &TestMappingFns::Vec1u8.id()
                 ),
                 "was {vec_a_spec:?}"
             );
@@ -1357,9 +1357,9 @@ impl MappingFns for TestMappingFns {
         [Self::Vec1u8].into_iter()
     }
 
-    fn name(self) -> MappingFnName {
+    fn id(self) -> MappingFnId {
         match self {
-            Self::Vec1u8 => MappingFnName::new("Vec1u8".into()),
+            Self::Vec1u8 => MappingFnId::new("Vec1u8".into()),
         }
     }
 

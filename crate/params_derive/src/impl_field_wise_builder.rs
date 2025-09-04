@@ -424,7 +424,7 @@ fn builder_field_methods(
                 {
                     self #proxy_call.#self_field_name = Some(#field_spec_ty_path::MappingFn {
                         field_name: Some(String::from(stringify!(#field_name))),
-                        mapping_fn_name: mapping_fn.name(),
+                        mapping_fn_id: mapping_fn.id(),
                     });
                     self
                 }

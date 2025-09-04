@@ -1,4 +1,4 @@
-use peace::params::{FromFunc, MappingFn, MappingFnImpl, MappingFnName, MappingFns};
+use peace::params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns};
 use serde::{Deserialize, Serialize};
 
 mod unit {
@@ -157,13 +157,13 @@ mod struct_params {
                     src: ValueSpec::Value { value: src_value },
                     dest: ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                 }
             }
             if src_value == "a"
             && {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -382,13 +382,13 @@ mod struct_with_type_params {
                     src: ValueSpec::InMemory,
                     dest: ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                     marker: PhantomData,
                 }
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -598,12 +598,12 @@ mod tuple_params {
                     ValueSpec::InMemory,
                     ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                 )
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -792,13 +792,13 @@ mod tuple_with_type_params {
                     ValueSpec::InMemory,
                     ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                     PhantomData,
                 )
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -1089,13 +1089,13 @@ mod enum_params {
                 field_wise_spec: EnumParamsFieldWise::Named {
                     src: ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                     marker: PhantomData,
                 }
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -1133,12 +1133,12 @@ mod enum_params {
                 field_wise_spec: EnumParamsFieldWise::Tuple(
                     ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                 )
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -1176,13 +1176,13 @@ mod enum_params {
                 field_wise_spec: EnumParamsFieldWise::TupleMarker(
                     ValueSpec::MappingFn {
                         field_name,
-                        mapping_fn_name,
+                        mapping_fn_id,
                     },
                     PhantomData,
                 )
             }
             if {
-                let mapping_fn = mapping_fn_reg.get(&mapping_fn_name).unwrap();
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
 
                 matches!(
                     mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
@@ -1698,12 +1698,12 @@ mod struct_recursive_value {
                         src: ValueSpec::InMemory,
                         dest: ValueSpec::MappingFn {
                             field_name,
-                            mapping_fn_name,
+                            mapping_fn_id,
                         },
                     }
                 }
                 if {
-                    let mapping_fn = mapping_fn_reg.get(mapping_fn_name).unwrap();
+                    let mapping_fn = mapping_fn_reg.get(mapping_fn_id).unwrap();
                     let mapped_value = mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref());
 
                     let matches = matches!(
@@ -2740,12 +2740,12 @@ impl MappingFns for TestMappingFns {
         [Self::StringBFromU32, Self::U32_456FromU32].into_iter()
     }
 
-    fn name(self) -> MappingFnName {
+    fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::StringBFromU32 => "StringBFromU32",
             TestMappingFns::U32_456FromU32 => "U32_456FromU32",
         };
-        MappingFnName::new(name.into())
+        MappingFnId::new(name.into())
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {

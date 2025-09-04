@@ -6,7 +6,7 @@ use peace_resource_rt::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFnName, MappingFnReg, MappingFns, Params,
+    AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFnId, MappingFnReg, MappingFns, Params,
     ParamsResolveError, ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
 };
 
@@ -81,7 +81,7 @@ where
         /// object.
         field_name: Option<String>,
         /// The name of the mapping function.
-        mapping_fn_name: MappingFnName,
+        mapping_fn_id: MappingFnId,
     },
     /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
@@ -130,7 +130,7 @@ where
     {
         Self::MappingFn {
             field_name,
-            mapping_fn_name: mapping_fns.name(),
+            mapping_fn_id: mapping_fns.id(),
         }
     }
 
@@ -188,13 +188,13 @@ where
             }
             ParamsSpec::MappingFn {
                 field_name,
-                mapping_fn_name,
+                mapping_fn_id,
             } => resolve_t_from_mapping_fn(
                 mapping_fn_reg,
                 resources,
                 value_resolution_ctx,
                 field_name.as_deref(),
-                mapping_fn_name,
+                mapping_fn_id,
             ),
             ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve(mapping_fn_reg, resources, value_resolution_ctx)
@@ -249,10 +249,10 @@ where
             }
             ParamsSpec::MappingFn {
                 field_name,
-                mapping_fn_name,
+                mapping_fn_id,
             } => {
-                let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
-                    ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+                let mapping_fn = mapping_fn_reg.get(mapping_fn_id).ok_or_else(|| {
+                    ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_id)
                 })?;
                 let box_dt_params_opt =
                     mapping_fn.try_map(resources, value_resolution_ctx, field_name.as_deref())?;
@@ -291,13 +291,13 @@ fn resolve_t_from_mapping_fn<T>(
     resources: &Resources<SetUp>,
     value_resolution_ctx: &mut ValueResolutionCtx,
     field_name: Option<&str>,
-    mapping_fn_name: &MappingFnName,
+    mapping_fn_id: &MappingFnId,
 ) -> Result<T, ParamsResolveError>
 where
     T: Params<Spec = ParamsSpec<T>> + Clone + Debug + Send + Sync + 'static,
 {
-    let mapping_fn = mapping_fn_reg.get(mapping_fn_name).ok_or_else(|| {
-        ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_name)
+    let mapping_fn = mapping_fn_reg.get(mapping_fn_id).ok_or_else(|| {
+        ParamsResolveError::mapping_fn_resolve(value_resolution_ctx, mapping_fn_id)
     })?;
     let box_dt_params = mapping_fn.map(resources, value_resolution_ctx, field_name)?;
 

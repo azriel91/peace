@@ -73,8 +73,8 @@ pub use crate::{
     field_wise_spec_rt::FieldWiseSpecRt,
     func::{FromFunc, Func},
     mapping_fn::MappingFn,
+    mapping_fn_id::MappingFnId,
     mapping_fn_impl::MappingFnImpl,
-    mapping_fn_name::MappingFnName,
     mapping_fn_reg::MappingFnReg,
     mapping_fns::MappingFns,
     params::Params,
@@ -99,8 +99,8 @@ mod field_name_and_type;
 mod field_wise_spec_rt;
 mod func;
 mod mapping_fn;
+mod mapping_fn_id;
 mod mapping_fn_impl;
-mod mapping_fn_name;
 mod mapping_fn_reg;
 mod mapping_fns;
 mod params;

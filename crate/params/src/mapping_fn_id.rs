@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Name of a mapping function. `String` newtype.
+/// ID of a mapping function. `String` newtype.
 ///
 /// This is a string representation of a [`MappingFns`] variant, which allows
 /// `*Spec`s to be serialized and deserialized and avoid:
@@ -10,14 +10,24 @@ use serde::{Deserialize, Serialize};
 /// * creating an object-safe trait corresponding to `MappingFns`, increasing
 ///   the maintenance burden.
 ///
+/// # Implementors
+///
+/// The ID is considered API, and should be stable. This means you should name
+/// each variant with a version number, and never remove that variant, e.g.
+/// `MappingFnId::new("ServerNameFromProfile_V1_0_0" )`.
+///
+/// That way, previously stored mapping function IDs can still be
+/// deserialized, and tool developers can opt-in to upgrading to the newer
+/// mapping functions when ready.
+///
 /// [`MappingFns`]: crate::MappingFns
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MappingFnName(String);
+pub struct MappingFnId(String);
 
-impl MappingFnName {
-    /// Returns a new `MappingFnName`.
+impl MappingFnId {
+    /// Returns a new `MappingFnId`.
     pub fn new(name: String) -> Self {
-        MappingFnName(name)
+        MappingFnId(name)
     }
 
     /// Returns the inner string.
@@ -46,14 +56,14 @@ impl MappingFnName {
     }
 }
 
-impl AsRef<str> for MappingFnName {
+impl AsRef<str> for MappingFnId {
     fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-impl From<String> for MappingFnName {
+impl From<String> for MappingFnId {
     fn from(name: String) -> Self {
-        MappingFnName(name)
+        MappingFnId(name)
     }
 }

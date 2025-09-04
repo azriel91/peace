@@ -596,7 +596,7 @@ enum ApplyForInternal {
 struct ItemApplyExecCtx<'f, E> {
     /// Map of item ID to its params' specs.
     params_specs: &'f ParamsSpecs,
-    /// Map of `MappingFnName` to its `MappingFn` logic.
+    /// Map of `MappingFnId` to its `MappingFn` logic.
     mapping_fn_reg: &'f MappingFnReg,
     /// Map of all types at runtime.
     resources: &'f Resources<SetUp>,

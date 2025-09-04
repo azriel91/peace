@@ -7,7 +7,7 @@ fn is_usable_returns_true_for_deserialized_mapping_fn() -> Result<(), serde_yaml
     let params_spec: ParamsSpec<MockSrc> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: !Some "field_name"
-mapping_fn_name: "mapping_fn_name"
+mapping_fn_id: "mapping_fn_id"
 "#,
     )?;
 

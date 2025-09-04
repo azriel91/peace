@@ -150,11 +150,11 @@ where
     pub profile_to_params_specs: BTreeMap<Profile, ParamsSpecs>,
     /// Mapping function registry for each item's [`Params`]`::Spec`.
     ///
-    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// This maps the [`MappingFnId`] stored in [`ParamsSpecsFile`] to the
     /// [`MappingFn`] logic.
     ///
     /// [`MappingFn`]: peace_params::MappingFn
-    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`MappingFnId`]: peace_params::MappingFnId
     /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
     pub mapping_fn_reg: MappingFnReg,
@@ -358,11 +358,11 @@ where
     /// Returns the mapping function registry for each item's
     /// [`Params`]`::Spec`.
     ///
-    /// This maps the [`MappingFnName`] stored in [`ParamsSpecsFile`] to the
+    /// This maps the [`MappingFnId`] stored in [`ParamsSpecsFile`] to the
     /// [`MappingFn`] logic.
     ///
     /// [`MappingFn`]: peace_params::MappingFn
-    /// [`MappingFnName`]: peace_params::MappingFnName
+    /// [`MappingFnId`]: peace_params::MappingFnId
     /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resource_rt::paths::ParamsSpecsFile
     pub fn mapping_fn_reg(&self) -> &MappingFnReg {

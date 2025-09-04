@@ -1,4 +1,4 @@
-use crate::{FieldNameAndType, MappingFnName, ValueResolutionCtx};
+use crate::{FieldNameAndType, MappingFnId, ValueResolutionCtx};
 
 /// Failed to resolve values for a `Params` object from `resources`.
 //
@@ -148,7 +148,7 @@ pub enum ParamsResolveError {
         )
     )]
     #[error(
-        "Failed to resolve mapping function `{mapping_fn_name:?}` to populate:\n\
+        "Failed to resolve mapping function `{mapping_fn_id:?}` to populate:\n\
         \n\
         ```rust\n\
         {value_resolution_ctx}\n\
@@ -161,7 +161,7 @@ pub enum ParamsResolveError {
         ///
         /// In practice, this is a YAML serialized string representation of the
         /// `MappingFns` variant.
-        mapping_fn_name: MappingFnName,
+        mapping_fn_id: MappingFnId,
     },
 }
 
@@ -170,11 +170,11 @@ impl ParamsResolveError {
     /// provided context.
     pub fn mapping_fn_resolve(
         value_resolution_ctx: &ValueResolutionCtx,
-        mapping_fn_name: &MappingFnName,
+        mapping_fn_id: &MappingFnId,
     ) -> ParamsResolveError {
         ParamsResolveError::MappingFnResolve {
             value_resolution_ctx: value_resolution_ctx.clone(),
-            mapping_fn_name: mapping_fn_name.clone(),
+            mapping_fn_id: mapping_fn_id.clone(),
         }
     }
 }
