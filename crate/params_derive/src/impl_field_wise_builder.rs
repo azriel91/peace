@@ -383,8 +383,8 @@ fn builder_field_methods(
                 &format!("with_{self_field_name}_in_memory"),
                 Span::call_site(),
             );
-            let with_field_name_from_map = Ident::new(
-                &format!("with_{self_field_name}_from_map"),
+            let with_field_name_from_mapping_fn = Ident::new(
+                &format!("with_{self_field_name}_from_mapping_fn"),
                 Span::call_site(),
             );
 
@@ -398,7 +398,7 @@ fn builder_field_methods(
             // ```rust,ignore
             // let params_spec = FileDownloadParams::field_wise()
             //     .with_src(Url::parse("https://../web_app.tar")) // direct value
-            //     .with_dest_from_map(|workspace_dir: &WorkspaceDir| {
+            //     .with_dest_from_mapping_fn(|workspace_dir: &WorkspaceDir| {
             //         workspace.dir.join("web_app.tar")
             //     })
             //     .build();
@@ -418,27 +418,14 @@ fn builder_field_methods(
                     self
                 }
 
-                pub fn #with_field_name_from_map<F, Args>(mut self, f: F) -> Self
+                pub fn #with_field_name_from_mapping_fn<MFns>(mut self, mapping_fn: MFns) -> Self
                 where
-                    F: #peace_params_path::Func<
-                        Option<#field_ty>,
-                        Args,
-                    >,
-                    #peace_params_path::MappingFnImpl<#field_ty, F, Args>:
-                        #peace_params_path::FromFunc<F>
-                        + #peace_params_path::MappingFn<Output = #field_ty>
+                    MFns: #peace_params_path::MappingFns,
                 {
-                    let spec = {
-                        let mapping_fn = <
-                                #peace_params_path::MappingFnImpl<#field_ty, F, Args>
-                                as #peace_params_path::FromFunc<F>
-                            >::from_func(
-                            Some(String::from(stringify!(#field_name))),
-                            f,
-                        );
-                        #field_spec_ty_path::MappingFn(Box::new(mapping_fn))
-                    };
-                    self #proxy_call.#self_field_name = Some(spec);
+                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::MappingFn {
+                        field_name: Some(String::from(stringify!(#field_name))),
+                        mapping_fn_id: mapping_fn.id(),
+                    });
                     self
                 }
             }

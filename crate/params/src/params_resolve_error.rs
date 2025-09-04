@@ -1,4 +1,4 @@
-use crate::{FieldNameAndType, ValueResolutionCtx};
+use crate::{FieldNameAndType, MappingFnId, ValueResolutionCtx};
 
 /// Failed to resolve values for a `Params` object from `resources`.
 //
@@ -95,6 +95,24 @@ pub enum ParamsResolveError {
         from_type_name: String,
     },
 
+    #[error(
+        "Failed to downcast resolved `BoxDt` into `{to_type_name}` to populate:\n\
+        \n\
+        ```rust\n\
+        {value_resolution_ctx}\n\
+        ```"
+    )]
+    FromMapDowncast {
+        /// Hierarchy of fields traversed to resolve the value.
+        value_resolution_ctx: ValueResolutionCtx,
+        /// Name of the type that is being resolved.
+        ///
+        /// Usually one of the `Item::Params` types.
+        ///
+        /// Corresponds to `T` in `Fn(&U) -> T`.
+        to_type_name: String,
+    },
+
     /// Failed to borrow a value to map to a field from `resources`.
     #[cfg_attr(
         feature = "error_reporting",
@@ -118,4 +136,45 @@ pub enum ParamsResolveError {
         /// Corresponds to `U` in `Fn(&U) -> T`.
         from_type_name: String,
     },
+
+    /// Failed to resolve a mapping function from the registry.
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_params::params_resolve_error::mapping_fn_resolve),
+            help(
+                "Mapping function variants are intended to be stable, so if you renamed the mapping function, you may have to edit the stored param spec to use the new name."
+            )
+        )
+    )]
+    #[error(
+        "Failed to resolve mapping function `{mapping_fn_id:?}` to populate:\n\
+        \n\
+        ```rust\n\
+        {value_resolution_ctx}\n\
+        ```"
+    )]
+    MappingFnResolve {
+        /// Hierarchy of fields traversed to resolve the value.
+        value_resolution_ctx: ValueResolutionCtx,
+        /// String representation of the mapping function.
+        ///
+        /// In practice, this is a YAML serialized string representation of the
+        /// `MappingFns` variant.
+        mapping_fn_id: MappingFnId,
+    },
+}
+
+impl ParamsResolveError {
+    /// Returns a new `ParamsResolveError::MappingFnResolve` variant from the
+    /// provided context.
+    pub fn mapping_fn_resolve(
+        value_resolution_ctx: &ValueResolutionCtx,
+        mapping_fn_id: &MappingFnId,
+    ) -> ParamsResolveError {
+        ParamsResolveError::MappingFnResolve {
+            value_resolution_ctx: value_resolution_ctx.clone(),
+            mapping_fn_id: mapping_fn_id.clone(),
+        }
+    }
 }

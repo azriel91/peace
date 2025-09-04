@@ -29,6 +29,7 @@ peace_item_model = { workspace = true }
 peace_params_derive = { workspace = true }
 peace_resource_rt = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+serde_yaml = { workspace = true }
 thiserror = { workspace = true }
 tynm = { workspace = true }
 

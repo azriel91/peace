@@ -1,7 +1,7 @@
 use futures::{StreamExt, TryStreamExt};
 use peace_flow_rt::{Flow, ItemGraph};
 use peace_item_model::ItemId;
-use peace_params::{ParamsKey, ParamsSpecs};
+use peace_params::{MappingFnReg, MappingFns, ParamsKey, ParamsSpecs};
 use peace_profile_model::Profile;
 use peace_resource_rt::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
@@ -361,11 +361,8 @@ impl CmdCtxBuilderSupport {
                 };
 
                 if let Some((item_id, params_spec_boxed)) = params_spec_to_use {
-                    // `*Spec::MappingFn`s will be present in `params_spec_stored`, but will not
-                    // be valid mapping functions as they cannot be serialized / deserialized.
-                    //
-                    // Also, field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
-                    // which never had specifications, which are also unusable.
+                    // Field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
+                    // which never had specifications, which are unusable.
                     if params_spec_boxed.is_usable() {
                         params_specs.insert_raw(item_id, params_spec_boxed);
                     } else {
@@ -419,6 +416,21 @@ impl CmdCtxBuilderSupport {
                 params_specs_not_usable,
             })
         }
+    }
+
+    /// Registers each mapping function with the `MappingFnReg` and inserts it
+    /// into `resources`.
+    ///
+    /// This is also needed whenever flow params need to be deserialized.
+    #[must_use]
+    pub(crate) fn mapping_fn_reg_setup<MFns>() -> MappingFnReg
+    where
+        MFns: MappingFns,
+    {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<MFns>();
+
+        mapping_fn_reg
     }
 
     pub(crate) async fn item_graph_setup<E>(

@@ -90,3 +90,62 @@ What we need:
 * Item params spec must be serialized before executing a command.
 * Item params must be serialized as execution happens.
 * Item params partials do not need to be serialized, only presented, as they can be re-calculated from state for each discover / read command execution.
+
+## Mapping Function Names
+
+Implemented in [#208](https://github.com/azriel91/peace/issues/208)/[#209](https://github.com/azriel91/peace/pull/209).
+
+A common workflow is to initialize a project, and subsequently run commands against that project.
+
+Because running commands requires instantiating a `CmdCtx`, and because rust code cannot be serialized and deserialized (or, we'd have to ship a rust compiler), the above `with_*_from_map` builder would have to be passed in to every `CmdCtx*` instantiation, which is a poor development experience -- it would be a lot of duplication, and it would be duplication per mapped item parameter / field.
+
+Instead, we add one layer of indirection, with a serializable name that serves as a function name / identifier:
+
+```rust ,ignore
+let file_upload_params_spec = FileUploadParams::spec()
+    // ..
+    .with_dest_from_mapping_fn(AppMappingFns::AddressFromServer)
+    .build();
+
+cmd_ctx_builder
+    .with_item_params(file_upload_params_spec)
+    .await?;
+
+
+// Trait provided by Peace framework
+pub trait MappingFns:
+    Clone + Copy + Debug + Hash + PartialEq + Eq + Serialize + DeserializeOwned + Send + Sync + 'static
+{
+    /// Returns an iterator over all variants of these mapping functions.
+    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator;
+
+    /// Returns a string representation of the mapping function name.
+    ///
+    /// # Implementors
+    ///
+    /// The returned name is considered API, and should be stable.
+    fn name(self) -> MappingFnName;
+
+    /// Returns the mapping function corresponding to the given variant.
+    fn mapping_fn(self) -> Box<dyn MappingFn>;
+}
+
+// Usage
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub enum AppMappingFns {
+    AddressFromServer,
+}
+
+impl MappingFns for AppMappingFns {
+    fn mapping_fn(self) -> Box<dyn MappingFn> {
+        match self {
+            Self::AppMappingFns => {
+                MappingFnImpl::from_func(|server| {
+                    let ip = server.ip();
+                    format!("user@${ip}:/path/to/dest")
+                })
+            }
+        }
+    }
+}
+```

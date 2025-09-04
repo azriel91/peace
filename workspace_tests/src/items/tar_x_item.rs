@@ -592,6 +592,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync(
 
     let CmdCtxSpsfFields {
         params_specs,
+        mapping_fn_reg,
         resources,
         ..
     } = cmd_ctx.fields();
@@ -604,7 +605,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync(
         tynm::type_name::<TarXParams<TarXTest>>(),
     );
     let tar_x_params = tar_x_params_spec
-        .resolve(resources, &mut value_resolution_ctx)
+        .resolve(&mapping_fn_reg, resources, &mut value_resolution_ctx)
         .unwrap();
     assert_eq!(
         ApplyCheck::ExecNotRequired,
@@ -854,6 +855,7 @@ pub struct TestCctTarX;
 impl CmdCtxTypes for TestCctTarX {
     type AppError = TarXError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = InMemoryTextOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();

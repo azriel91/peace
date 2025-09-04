@@ -180,6 +180,9 @@ where
         )
         .await?;
 
+        // No mapping function registration because there are no flow params to
+        // deserialize.
+
         let cmd_ctx_npnf = CmdCtxNpnf {
             output,
             fields: CmdCtxNpnfFields {

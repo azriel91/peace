@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use peace_resource_rt::{resources::ts::SetUp, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{AnySpecRt, ParamsResolveError, ValueResolutionCtx};
+use crate::{AnySpecRt, MappingFnReg, ParamsResolveError, ValueResolutionCtx};
 
 /// Runtime logic of how to look up values for each field in this struct.
 ///
@@ -26,6 +26,7 @@ pub trait FieldWiseSpecRt: AnySpecRt {
     /// [`resolve_partial`]: Self::resolve_partial
     fn resolve(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::ValueType, ParamsResolveError>;
@@ -34,6 +35,7 @@ pub trait FieldWiseSpecRt: AnySpecRt {
     /// Values that are not present in `Resources` will be `None`.
     fn resolve_partial(
         &self,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::Partial, ParamsResolveError>;

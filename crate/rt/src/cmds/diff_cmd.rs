@@ -6,7 +6,7 @@ use peace_cmd_model::CmdOutcome;
 use peace_cmd_rt::{CmdBlockWrapper, CmdExecution, CmdExecutionBuilder};
 use peace_flow_rt::Flow;
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_profile_model::Profile;
 use peace_resource_rt::{
     internal::StateDiffsMut,
@@ -154,6 +154,7 @@ where
             profiles,
             profile_to_params_specs,
             profile_to_states_current_stored,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx.fields();
@@ -200,7 +201,15 @@ where
                 Error::ProfileStatesCurrentNotDiscovered { profile }
             })?;
 
-        Self::diff_any(flow, params_specs, resources, states_a, states_b).await
+        Self::diff_any(
+            flow,
+            params_specs,
+            mapping_fn_reg,
+            resources,
+            states_a,
+            states_b,
+        )
+        .await
     }
 }
 
@@ -219,6 +228,7 @@ where
     pub async fn diff_any(
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
@@ -230,7 +240,13 @@ where
                 .map(Result::<_, <CmdCtxTypesT as CmdCtxTypes>::AppError>::Ok)
                 .try_filter_map(|item| async move {
                     let state_diff_opt = item
-                        .state_diff_exec(params_specs, resources, states_a, states_b)
+                        .state_diff_exec(
+                            params_specs,
+                            mapping_fn_reg,
+                            resources,
+                            states_a,
+                            states_b,
+                        )
                         .await?;
 
                     Ok(state_diff_opt.map(|state_diff| (item.id().clone(), state_diff)))

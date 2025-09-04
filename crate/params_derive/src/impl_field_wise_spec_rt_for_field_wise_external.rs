@@ -22,6 +22,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
 
             fn resolve(
                 &self,
+                _mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
@@ -49,6 +50,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
 
             fn resolve_partial(
                 &self,
+                _mapping_fn_reg: &#peace_params_path::MappingFnReg,
                 resources: &#peace_resource_rt_path::Resources<#peace_resource_rt_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {

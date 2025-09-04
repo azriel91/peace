@@ -8,7 +8,7 @@ use peace_cmd_model::CmdBlockOutcome;
 use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_flow_rt::Flow;
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_resource_rt::{
     internal::StateDiffsMut,
     resources::ts::SetUp,
@@ -64,6 +64,7 @@ where
         interruptibility_state: InterruptibilityState<'_, '_>,
         flow: &Flow<<CmdCtxTypesT as CmdCtxTypes>::AppError>,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
@@ -80,7 +81,13 @@ where
                         let _params_specs = &params_specs;
 
                         let state_diff_opt = item
-                            .state_diff_exec(params_specs, resources, states_a, states_b)
+                            .state_diff_exec(
+                                params_specs,
+                                mapping_fn_reg,
+                                resources,
+                                states_a,
+                                states_b,
+                            )
                             .await?;
 
                         if let Some(state_diff) = state_diff_opt {
@@ -168,6 +175,7 @@ where
             interruptibility_state,
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             ..
         } = cmd_ctx_spsf_fields;
@@ -178,6 +186,7 @@ where
             interruptibility_state.reborrow(),
             flow,
             params_specs,
+            mapping_fn_reg,
             resources,
             &states_ts0,
             &states_ts1,

@@ -3,16 +3,15 @@ use peace::params::{AnySpecRt, AnySpecRtBoxed, ParamsSpec};
 use crate::mock_item::MockSrc;
 
 #[test]
-fn is_usable_returns_false_for_non_valued_from_map() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_for_deserialized_mapping_fn() -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpec<MockSrc> = serde_yaml::from_str(
         r#"!MappingFn
-field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
-marker: null
+field_name: !Some "field_name"
+mapping_fn_id: "mapping_fn_id"
 "#,
     )?;
 
-    assert!(!AnySpecRt::is_usable(&Box::new(params_spec)));
+    assert!(AnySpecRt::is_usable(&Box::new(params_spec)));
     Ok(())
 }
 

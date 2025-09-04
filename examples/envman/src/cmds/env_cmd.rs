@@ -1,23 +1,16 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::app_name,
     cmd_ctx::{CmdCtxMpsf, CmdCtxSpsf, CmdCtxSpsfFields, ProfileSelection},
     fmt::presentln,
-    item_model::item_id,
-    params::Params,
     profile_model::Profile,
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
-    cmds::CmdOpts,
+    cmds::{common::workspace, CmdOpts},
     flows::EnvDeployFlow,
-    items::{
-        peace_aws_iam_policy::IamPolicyState,
-        peace_aws_iam_role::{IamRoleItem, IamRoleParams},
-    },
-    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
-    rt_model::{EnvManCmdCtx, EnvmanCmdCtxTypes},
+    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey},
+    rt_model::EnvmanCmdCtxTypes,
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -26,36 +19,24 @@ pub struct EnvCmd;
 
 impl EnvCmd {
     /// Returns the `CmdCtx` for the `EnvDeployFlow`.
-    pub async fn cmd_ctx<O>(output: &mut O) -> Result<EnvManCmdCtx<'_, O>, EnvManError>
+    pub async fn cmd_ctx<O>(
+        output: &mut O,
+    ) -> Result<CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>, EnvManError>
     where
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = WorkspaceParamsKey::Profile;
-        let iam_role_path = String::from("/");
-        let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
-            .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
-            .with_path(iam_role_path)
-            .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
-            .build();
         let cmd_ctx = {
             let cmd_ctx_builder = CmdCtxSpsf::<EnvmanCmdCtxTypes<O>>::builder()
                 .with_output(output.into())
-                .with_workspace(workspace.into());
+                .with_workspace(workspace()?.into());
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
                 .with_profile_selection(ProfileSelection::FromWorkspaceParam(profile_key.into()))
                 .with_flow(flow.into())
-                .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
                 .await?
         };
         Ok(cmd_ctx)
@@ -73,7 +54,7 @@ impl EnvCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut EnvManCmdCtx<'_, O>,
+            &'fn_once mut CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         let mut cmd_ctx = Self::cmd_ctx(output).await?;
@@ -103,45 +84,20 @@ impl EnvCmd {
             &'fn_once mut CmdCtxMpsf<EnvmanCmdCtxTypes<O>>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
         let flow = EnvDeployFlow::flow().await?;
 
         let mut cmd_ctx = {
             let cmd_ctx_builder = CmdCtxMpsf::<EnvmanCmdCtxTypes<O>>::builder()
                 .with_output(output.into())
-                .with_workspace((&workspace).into())
+                .with_workspace(workspace()?.into())
                 .with_workspace_param::<peace::profile_model::Profile>(
                     WorkspaceParamsKey::Profile,
                     None,
                 )
                 .with_workspace_param::<EnvManFlow>(WorkspaceParamsKey::Flow, None);
-            // .with_profile_param::<EnvType>(ProfileParamsKey::EnvType, None);
             crate::cmds::interruptibility_augment!(cmd_ctx_builder);
 
-            // TODO: We don't yet know the profiles at this point, so we can't insert
-            // profile params.
-            //
-            // ```rust
-            // let iam_role_path = String::from("/");
-            // let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
-            //     .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
-            //     .with_path(iam_role_path)
-            //     .with_managed_policy_arn_from_map(IamPolicyState::policy_id_arn_version)
-            //     .build();
-            // ```
-
-            cmd_ctx_builder
-                .with_flow((&flow).into())
-                // ```rust
-                // .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
-                // ```
-                .await?
+            cmd_ctx_builder.with_flow((&flow).into()).await?
         };
 
         let t = f(&mut cmd_ctx).await?;
@@ -149,7 +105,9 @@ impl EnvCmd {
         Ok(t)
     }
 
-    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O>) -> Result<(), EnvManError>
+    async fn profile_print<O>(
+        cmd_ctx: &mut CmdCtxSpsf<'_, EnvmanCmdCtxTypes<O>>,
+    ) -> Result<(), EnvManError>
     where
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,

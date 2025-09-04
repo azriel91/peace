@@ -1,11 +1,12 @@
 # Mapping Functions
 
-> Github Issue: [#156][#156]
+> Github Issues: [#156][#156], [#208][#208]
 
 Mapping functions could be passed to a `Params`'s `FieldWiseSpec`. There are implications whether or not it is implemented.
 
 
 [#156]: https://github.com/azriel91/peace/issues/156
+[#208]: https://github.com/azriel91/peace/issues/208
 
 
 ### Summary

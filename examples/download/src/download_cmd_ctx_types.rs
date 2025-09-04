@@ -17,6 +17,7 @@ where
 {
     type AppError = DownloadError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = Output;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();

@@ -6,7 +6,10 @@ use peace::{
     rt_model::output::OutputWrite,
 };
 
-use crate::model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey};
+use crate::{
+    flows::EnvmanMappingFns,
+    model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey},
+};
 
 #[derive(Debug)]
 pub struct EnvmanCmdCtxTypes<Output>(PhantomData<Output>);
@@ -18,6 +21,7 @@ where
 {
     type AppError = EnvManError;
     type FlowParamsKey = ();
+    type MappingFns = EnvmanMappingFns;
     type Output = Output;
     type ProfileParamsKey = ProfileParamsKey;
     type WorkspaceParamsKey = WorkspaceParamsKey;

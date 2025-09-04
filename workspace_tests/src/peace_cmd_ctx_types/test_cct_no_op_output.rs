@@ -8,6 +8,7 @@ pub struct TestCctNoOpOutput;
 impl CmdCtxTypes for TestCctNoOpOutput {
     type AppError = PeaceTestError;
     type FlowParamsKey = String;
+    type MappingFns = ();
     type Output = NoOpOutput;
     type ProfileParamsKey = String;
     type WorkspaceParamsKey = String;

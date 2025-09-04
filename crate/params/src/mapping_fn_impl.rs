@@ -4,8 +4,8 @@ use std::{
 };
 
 use peace_data::marker::{ApplyDry, Clean, Current, Goal};
-use peace_resource_rt::{resources::ts::SetUp, BorrowFail, Resources};
-use serde::{Deserialize, Serialize, Serializer};
+use peace_resource_rt::{resources::ts::SetUp, type_reg::untagged::BoxDt, BorrowFail, Resources};
+use serde::{de::DeserializeOwned, Deserialize, Serialize, Serializer};
 
 use crate::{
     FromFunc, Func, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
@@ -17,10 +17,6 @@ use peace_data::marker::Example;
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MappingFnImpl<T, F, Args> {
-    /// This field's name within its parent struct.
-    ///
-    /// `None` if this is the top level value type.
-    field_name: Option<String>,
     #[serde(
         default = "MappingFnImpl::<T, F, Args>::fn_map_none",
         skip_deserializing,
@@ -37,7 +33,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MappingFnImpl")
-            .field("field_name", &self.field_name)
             .field("fn_map", &Self::fn_map_stringify(&self.fn_map))
             .field("marker", &self.marker)
             .finish()
@@ -103,23 +98,53 @@ macro_rules! impl_mapping_fn_impl {
         // impl<T, F, A0> MappingFnImpl<T, F, (A0,)>
         impl<T, F, $($Arg,)+> MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
-            pub fn new(field_name: Option<String>, fn_map: F) -> Self {
+            /// Returns a new `MappingFnImpl` that tracks the types of the mapping fn logic.
+            ///
+            /// # Developers
+            ///
+            /// Developers should use the [`MappingFnImpl::from_func`] function, which returns the type erased `Box<dyn MappingFn>`.
+            ///
+            /// # Maintainers
+            ///
+            /// When we provide the following inherent function:
+            ///
+            /// ```rust,ignore
+            /// /// Returns a new `MappingFnImpl` that tracks the /// types of the mapping fn logic.
+            /// pub fn new_erased(f: F) -> Box<dyn MappingFn> {
+            ///     Box::new(Self::new(f))
+            /// }
+            /// ```
+            ///
+            /// For some reason Rust cannot infer the `Args` type parameter as `(&u8,)` when users call:
+            ///
+            /// ```rust,ignore
+            /// MappingFnImpl::new_erased(|_: &u8| Some(vec![1u8]))
+            /// ```
+            ///
+            /// But somehow it works with the `FromFunc` trait.
+            pub fn new(fn_map: F) -> Self {
                 Self {
-                    fn_map: Some(fn_map),
-                    field_name,
-                    marker: PhantomData,
+                    fn_map: Some(fn_map),                    marker: PhantomData,
                 }
             }
 
+            /// Maps the values in resources into the value for this parameter.
+            ///
+            /// # Parameters
+            ///
+            /// * `resources`: Resources to resolve values from.
+            /// * `value_resolution_ctx`: Fields traversed during this value resolution.
+            /// * `field_name`: This field's name within its parent struct. `None` if this is the top level value type.
             pub fn map(
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<T, ParamsResolveError> {
+                field_name: Option<&str>,
+            ) -> Result<BoxDt, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -132,8 +157,7 @@ macro_rules! impl_mapping_fn_impl {
                             * `T`: {t}\n\
                             * `Args`: ({Args})\n\
                             ",
-                            for_field_name = self.field_name
-                                .as_ref()
+                            for_field_name = field_name
                                 .map(|field_name| format!(" for field: `{field_name}`"))
                                 .unwrap_or("".to_string()),
                             t = tynm::type_name::<T>(),
@@ -148,51 +172,69 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Example => {
                         $(arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Clean => {
                         $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Current => {
                         $(arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::Goal => {
                         $(arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                     ValueResolutionMode::ApplyDry => {
                         $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                        let t_result = fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                        })
+                        });
+
+                        t_result.map(BoxDt::new)
                     }
                 }
             }
 
+            /// Maps the values in resources into the value for this parameter.
+            ///
+            /// # Parameters
+            ///
+            /// * `resources`: Resources to resolve values from.
+            /// * `value_resolution_ctx`: Fields traversed during this value resolution.
+            /// * `field_name`: This field's name within its parent struct. `None` if this is the top level value type.
             pub fn try_map(
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<Option<T>, ParamsResolveError> {
+                field_name: Option<&str>,
+            ) -> Result<Option<BoxDt>, ParamsResolveError> {
                 let fn_map = self.fn_map.as_ref().unwrap_or_else(
                     #[cfg_attr(coverage_nightly, coverage(off))]
                     || {
@@ -205,8 +247,7 @@ macro_rules! impl_mapping_fn_impl {
                             * `T`: {t}\n\
                             * `Args`: ({Args})\n\
                             ",
-                            for_field_name = self.field_name
-                                .as_ref()
+                            for_field_name = field_name
                                 .map(|field_name| format!(" for field: `{field_name}`"))
                                 .unwrap_or("".to_string()),
                             t = tynm::type_name::<T>(),
@@ -221,27 +262,42 @@ macro_rules! impl_mapping_fn_impl {
                     ValueResolutionMode::Example => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Example, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Clean => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Current => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::Goal => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                     ValueResolutionMode::ApplyDry => {
                         $(try_arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                        Ok(fn_map($(&$var,)+))
+                        let t_params_opt = fn_map($(&$var,)+);
+                        let box_dt_opt = t_params_opt.map(BoxDt::new);
+
+                        Ok(box_dt_opt)
                     }
                 }
             }
@@ -249,7 +305,7 @@ macro_rules! impl_mapping_fn_impl {
 
         impl<T, F, $($Arg,)+> FromFunc<F> for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             // Ideally we can do:
             //
             // ```rust
@@ -262,44 +318,44 @@ macro_rules! impl_mapping_fn_impl {
                 + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
-            fn from_func(field_name: Option<String>, f: F) -> Self {
-                Self::new(field_name, f)
+            fn from_func(f: F) -> Box<dyn MappingFn> {
+                Box::new(Self::new(f))
             }
         }
 
-        impl<T, F, $($Arg,)+> From<(Option<String>, F)> for MappingFnImpl<T, F, ($($Arg,)+)>
+        impl<T, F, $($Arg,)+> From<F> for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
-            fn from((field_name, f): (Option<String>, F)) -> Self {
-                Self::new(field_name, f)
+            fn from(f: F) -> Self {
+                Self::new(f)
             }
         }
 
         impl<T, F, $($Arg,)+> MappingFn for MappingFnImpl<T, F, ($($Arg,)+)>
         where
-            T: Clone + Debug + Send + Sync + 'static,
+            T: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
             F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
             $($Arg: Clone + Debug + Send + Sync + 'static,)+
         {
-            type Output = T;
-
             fn map(
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
-                MappingFnImpl::<T, F, ($($Arg,)+)>::map(self, resources, value_resolution_ctx)
+                field_name: Option<&str>,
+            ) -> Result<BoxDt, ParamsResolveError> {
+                MappingFnImpl::<T, F, ($($Arg,)+)>::map(self, resources, value_resolution_ctx, field_name)
             }
 
             fn try_map(
                 &self,
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
-            ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
-                MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx)
+                field_name: Option<&str>,
+            ) -> Result<Option<BoxDt>, ParamsResolveError> {
+                MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx, field_name)
             }
 
             fn is_valued(&self) -> bool {

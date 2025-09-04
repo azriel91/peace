@@ -1,11 +1,11 @@
 use peace::{
-    cfg::app_name,
     cmd_ctx::{CmdCtxMpnf, CmdCtxMpnfFields},
     fmt::presentable::{Heading, HeadingLevel},
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
+    cmds::common::workspace,
     model::{EnvManError, EnvManFlow, EnvType, ProfileParamsKey, WorkspaceParamsKey},
     rt_model::EnvmanCmdCtxTypes,
 };
@@ -25,23 +25,14 @@ impl ProfileListCmd {
         O: OutputWrite,
         EnvManError: From<<O as OutputWrite>::Error>,
     {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
-
         let cmd_ctx_builder = CmdCtxMpnf::<EnvmanCmdCtxTypes<O>>::builder()
             .with_output(output.into())
-            .with_workspace((&workspace).into())
+            .with_workspace(workspace()?.into())
             .with_workspace_param::<peace::profile_model::Profile>(
                 WorkspaceParamsKey::Profile,
                 None,
             )
             .with_workspace_param::<EnvManFlow>(WorkspaceParamsKey::Flow, None);
-        // .with_profile_param::<EnvType>(ProfileParamsKey::EnvType, None);
 
         let mut cmd_ctx = cmd_ctx_builder.await?;
         let CmdCtxMpnf {

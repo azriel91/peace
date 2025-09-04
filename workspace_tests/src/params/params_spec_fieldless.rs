@@ -1,11 +1,13 @@
 use peace::{
     item_model::item_id,
     params::{
-        AnySpecRt, AnySpecRtBoxed, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless,
-        ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
+        AnySpecRt, AnySpecRtBoxed, FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFnReg,
+        MappingFns, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless, ValueResolutionCtx,
+        ValueResolutionMode, ValueSpecRt,
     },
     resource_rt::{resources::ts::SetUp, Resources},
 };
+use serde::{Deserialize, Serialize};
 
 use crate::mock_item::MockSrc;
 
@@ -22,7 +24,7 @@ fn debug() {
         format!("{:?}", ParamsSpecFieldless::<MockSrc>::Stored)
     );
     assert_eq!(
-        "Value(MockSrc(1))",
+        "Value { value: MockSrc(1) }",
         format!(
             "{:?}",
             ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) }
@@ -33,17 +35,15 @@ fn debug() {
         format!("{:?}", ParamsSpecFieldless::<MockSrc>::InMemory)
     );
     assert_eq!(
-        "MappingFn(MappingFnImpl { \
+        "MappingFn { \
             field_name: Some(\"field\"), \
-            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
-            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
-        })",
+            mapping_fn_id: MappingFnId(\"MockSrcFromU8\") \
+        }",
         format!(
             "{:?}",
-            ParamsSpecFieldless::<MockSrc>::from_map(
+            ParamsSpecFieldless::<MockSrc>::mapping_fn(
                 Some(String::from("field")),
-                #[cfg_attr(coverage_nightly, coverage(off))]
-                |_: &u8| None
+                TestMappingFns::MockSrcFromU8
             )
         )
     );
@@ -87,14 +87,13 @@ fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn serialize_from_map() -> Result<(), serde_yaml::Error> {
+fn serialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     let u8_spec: <u8 as ParamsFieldless>::Spec =
-        ParamsSpecFieldless::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
+        ParamsSpecFieldless::<u8>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
     assert_eq!(
         r#"!MappingFn
 field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
-marker: null
+mapping_fn_id: MockSrcFromU8
 "#,
         serde_yaml::to_string(&u8_spec)?,
     );
@@ -151,12 +150,11 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 }
 
 #[test]
-fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
+fn deserialize_mapping_fn() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
-field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
-marker: null
+field_name: "serialized_field_name"
+mapping_fn_id: "U8NoneFromU8"
 "#,
     )?;
 
@@ -166,8 +164,12 @@ marker: null
             assert!(
                 matches!(
                     &deserialized,
-                    ParamsSpecFieldless::<u8>::MappingFn(mapping_fn)
-                    if !mapping_fn.is_valued()
+                    ParamsSpecFieldless::<u8>::MappingFn {
+                        field_name: Some(field_name),
+                        mapping_fn_id,
+                    }
+                    if field_name == "serialized_field_name"
+                    && mapping_fn_id == &TestMappingFns::U8NoneFromU8.id()
                 ),
                 "was {deserialized:?}"
             );
@@ -190,25 +192,25 @@ fn is_usable_returns_true_for_value_and_in_memory() {
 
 #[test]
 fn is_usable_returns_true_when_mapping_fn_is_some() {
-    assert!(ParamsSpecFieldless::<u8>::from_map(None, |_: &u8| None).is_usable());
+    assert!(ParamsSpecFieldless::<u8>::mapping_fn(None, TestMappingFns::U8NoneFromU8).is_usable());
 }
 
 #[test]
-fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+fn is_usable_returns_true_when_mapping_fn_is_deserialized() -> Result<(), serde_yaml::Error> {
     let params_spec: ParamsSpecFieldless<u8> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
-marker: null
+mapping_fn_id: U8NoneFromU8
 "#,
     )?;
 
-    assert!(!params_spec.is_usable());
+    assert!(params_spec.is_usable());
     Ok(())
 }
 
 #[test]
 fn resolve_stored_param() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -221,7 +223,12 @@ fn resolve_stored_param() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::Stored;
 
-    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(MockSrc(1), mock_src);
     Ok(())
@@ -229,6 +236,7 @@ fn resolve_stored_param() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn resolve_in_memory() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -241,7 +249,12 @@ fn resolve_in_memory() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
-    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(MockSrc(1), mock_src);
     Ok(())
@@ -249,6 +262,7 @@ fn resolve_in_memory() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = Resources::<SetUp>::from(Resources::new());
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
@@ -257,8 +271,12 @@ fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveErr
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
-    let mock_src_result =
-        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+    let mock_src_result = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    );
 
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
@@ -283,6 +301,7 @@ fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveErr
 
 #[test]
 fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -296,8 +315,12 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
     let _mock_src_mut_borrowed = resources.borrow_mut::<MockSrc>();
-    let mock_src_result =
-        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+    let mock_src_result = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    );
 
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
@@ -324,6 +347,7 @@ fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsRes
 
 #[test]
 fn resolve_value() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = Resources::<SetUp>::from(Resources::new());
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
@@ -332,7 +356,12 @@ fn resolve_value() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
 
-    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(MockSrc(1), mock_src);
     Ok(())
@@ -340,6 +369,8 @@ fn resolve_value() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.register_all::<TestMappingFns>();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -350,9 +381,15 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ParamsSpecFieldless::<MockSrc>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
 
-    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(MockSrc(1), mock_src);
     Ok(())
@@ -360,6 +397,8 @@ fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.register_all::<TestMappingFns>();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -372,12 +411,16 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
         tynm::type_name::<MockSrc>(),
     );
     let mock_src_spec =
-        ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+        ParamsSpecFieldless::<MockSrc>::mapping_fn(None, TestMappingFns::MockSrcFromU8AndU16);
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
-    let mock_src_result =
-        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+    let mock_src_result = ValueSpecRt::resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    );
 
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
@@ -405,6 +448,7 @@ fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsRe
 
 #[test]
 fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -417,7 +461,12 @@ fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::Stored;
 
-    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(Some(MockSrc(1)), mock_src);
     Ok(())
@@ -425,6 +474,7 @@ fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -437,7 +487,12 @@ fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
-    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(Some(MockSrc(1)), mock_src);
     Ok(())
@@ -445,6 +500,7 @@ fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = Resources::<SetUp>::from(Resources::new());
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
@@ -453,7 +509,12 @@ fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResol
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
-    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(None, mock_src);
     Ok(())
@@ -461,6 +522,7 @@ fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResol
 
 #[test]
 fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(MockSrc(1));
@@ -474,8 +536,12 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::InMemory;
 
     let _mock_src_mut_borrowed = resources.borrow_mut::<MockSrc>();
-    let mock_src_result =
-        ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+    let mock_src_result = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    );
 
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
@@ -502,6 +568,7 @@ fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), Param
 
 #[test]
 fn try_resolve_value() -> Result<(), ParamsResolveError> {
+    let mapping_fn_reg = MappingFnReg::new();
     let resources = Resources::<SetUp>::from(Resources::new());
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
@@ -510,7 +577,12 @@ fn try_resolve_value() -> Result<(), ParamsResolveError> {
     );
     let mock_src_spec = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
 
-    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(Some(MockSrc(1)), mock_src);
     Ok(())
@@ -518,6 +590,8 @@ fn try_resolve_value() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.register_all::<TestMappingFns>();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -528,9 +602,15 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
         item_id!("try_resolve_mapping_fn"),
         tynm::type_name::<MockSrc>(),
     );
-    let mock_src_spec = ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+    let mock_src_spec =
+        ParamsSpecFieldless::<MockSrc>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
 
-    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+    let mock_src = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    )?;
 
     assert_eq!(Some(MockSrc(1)), mock_src);
     Ok(())
@@ -538,6 +618,8 @@ fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
 
 #[test]
 fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let mut mapping_fn_reg = MappingFnReg::new();
+    mapping_fn_reg.register_all::<TestMappingFns>();
     let resources = {
         let mut resources = Resources::new();
         resources.insert(1u8);
@@ -550,12 +632,16 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         tynm::type_name::<MockSrc>(),
     );
     let mock_src_spec =
-        ParamsSpecFieldless::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+        ParamsSpecFieldless::<MockSrc>::mapping_fn(None, TestMappingFns::MockSrcFromU8AndU16);
 
     let _u8_borrowed = resources.borrow::<u8>();
     let _u16_mut_borrowed = resources.borrow_mut::<u16>();
-    let mock_src_result =
-        ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+    let mock_src_result = ValueSpecRt::try_resolve(
+        &mock_src_spec,
+        &mapping_fn_reg,
+        &resources,
+        &mut value_resolution_ctx,
+    );
 
     ({
         #[cfg_attr(coverage_nightly, coverage(off))]
@@ -597,10 +683,9 @@ fn merge_stored_with_other_uses_other() {
 #[test]
 fn merge_value_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
-    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::mapping_fn(
         None,
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        |_: &u8| None,
+        TestMappingFns::MockSrcFromU8,
     ));
 
     params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
@@ -613,10 +698,9 @@ fn merge_value_with_other_no_change() {
 #[test]
 fn merge_in_memory_with_other_no_change() {
     let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::InMemory;
-    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::mapping_fn(
         None,
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        |_: &u8| None,
+        TestMappingFns::MockSrcFromU8,
     ));
 
     params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
@@ -629,17 +713,55 @@ fn merge_in_memory_with_other_no_change() {
 
 #[test]
 fn merge_mapping_fn_with_other_no_change() {
-    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::from_map(
-        None,
-        #[cfg_attr(coverage_nightly, coverage(off))]
-        |_: &u8| None,
-    );
+    let mut params_spec_fieldless_a =
+        ParamsSpecFieldless::<MockSrc>::mapping_fn(None, TestMappingFns::MockSrcFromU8);
     let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::InMemory);
 
     params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
 
     assert!(matches!(
         &params_spec_fieldless_a,
-        ParamsSpecFieldless::<MockSrc>::MappingFn(_)
+        ParamsSpecFieldless::<MockSrc>::MappingFn {
+            field_name: None,
+            mapping_fn_id,
+        }
+        if mapping_fn_id == &TestMappingFns::MockSrcFromU8.id()
     ));
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+enum TestMappingFns {
+    MockSrcFromU8,
+    MockSrcFromU8AndU16,
+    U8NoneFromU8,
+}
+
+impl MappingFns for TestMappingFns {
+    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
+        [
+            Self::MockSrcFromU8,
+            Self::MockSrcFromU8AndU16,
+            Self::U8NoneFromU8,
+        ]
+        .into_iter()
+    }
+
+    fn id(self) -> MappingFnId {
+        let name = match self {
+            TestMappingFns::MockSrcFromU8 => "MockSrcFromU8",
+            TestMappingFns::MockSrcFromU8AndU16 => "MockSrcFromU8AndU16",
+            TestMappingFns::U8NoneFromU8 => "U8NoneFromU8",
+        };
+        MappingFnId::new(name.into())
+    }
+
+    fn mapping_fn(self) -> Box<dyn MappingFn> {
+        match self {
+            TestMappingFns::MockSrcFromU8 => MappingFnImpl::from_func(|n: &u8| Some(MockSrc(*n))),
+            TestMappingFns::MockSrcFromU8AndU16 => {
+                MappingFnImpl::from_func(|n: &u8, _: &u16| Some(MockSrc(*n)))
+            }
+            TestMappingFns::U8NoneFromU8 => MappingFnImpl::from_func(|_: &u8| Option::<u8>::None),
+        }
+    }
 }

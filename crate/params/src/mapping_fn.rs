@@ -1,19 +1,37 @@
 use std::fmt::Debug;
 
-use peace_resource_rt::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
+use peace_resource_rt::{
+    resources::ts::SetUp,
+    type_reg::untagged::{BoxDt, DataType},
+    Resources,
+};
 use serde::{Serialize, Serializer};
 
-use crate::{ParamsResolveError, ValueResolutionCtx};
+use crate::{MappingFnImpl, ParamsResolveError, ValueResolutionCtx};
 
 /// Type erased mapping function.
 ///
 /// This is used by Peace to hold type-erased mapping functions, and is not
 /// intended to be implemented by users or implementors.
 pub trait MappingFn: Debug + DataType {
-    /// Type that is output by the function.
-    type Output;
+    /// Returns a type-erased `MappingFn` that wraps the given function.
+    ///
+    /// This allows different types of logic to be held as a common type.
+    ///
+    /// # Implementors
+    ///
+    /// This function is not intended to be overwritten -- perhaps it should be
+    /// placed in a sealed trait.
+    fn new<T, F, Args>(field_name: Option<String>, f: F) -> Box<dyn MappingFn>
+    where
+        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn,
+        Self: Sized,
+    {
+        let mapping_fn = MappingFnImpl::from((field_name, f));
+        Box::new(mapping_fn)
+    }
 
-    /// Maps data in resources to the output type.
+    /// Maps data in resources to the output type, used for `Item::Params`.
     ///
     /// The data being accessed is defined by the implementation of this
     /// function.
@@ -26,9 +44,10 @@ pub trait MappingFn: Debug + DataType {
         &self,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Self::Output, ParamsResolveError>;
+        field_name: Option<&str>,
+    ) -> Result<BoxDt, ParamsResolveError>;
 
-    /// Maps data in resources to the output type.
+    /// Maps data in resources to the output type, used for `Item::Params`.
     ///
     /// The data being accessed is defined by the implementation of this
     /// function.
@@ -41,7 +60,8 @@ pub trait MappingFn: Debug + DataType {
         &self,
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Option<Self::Output>, ParamsResolveError>;
+        field_name: Option<&str>,
+    ) -> Result<Option<BoxDt>, ParamsResolveError>;
 
     /// Returns whether this mapping function actually holds the function logic.
     ///
@@ -50,13 +70,13 @@ pub trait MappingFn: Debug + DataType {
     fn is_valued(&self) -> bool;
 }
 
-impl<T> Clone for Box<dyn MappingFn<Output = T>> {
+impl Clone for Box<dyn MappingFn> {
     fn clone(&self) -> Self {
         dyn_clone::clone_box(&**self)
     }
 }
 
-impl<T> Serialize for dyn MappingFn<Output = T> + '_ {
+impl Serialize for dyn MappingFn + '_ {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

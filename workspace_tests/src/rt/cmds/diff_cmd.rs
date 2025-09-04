@@ -763,6 +763,7 @@ pub struct TestCctCliBuffer;
 impl CmdCtxTypes for TestCctCliBuffer {
     type AppError = PeaceTestError;
     type FlowParamsKey = ();
+    type MappingFns = ();
     type Output = CliOutput<Vec<u8>>;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();

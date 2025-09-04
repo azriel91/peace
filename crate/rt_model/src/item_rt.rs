@@ -4,7 +4,7 @@ use dyn_clone::DynClone;
 use peace_cfg::{async_trait, FnCtx};
 use peace_data::fn_graph::{DataAccess, DataAccessDyn};
 use peace_item_model::ItemId;
-use peace_params::ParamsSpecs;
+use peace_params::{MappingFnReg, ParamsSpecs};
 use peace_resource_rt::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -116,6 +116,7 @@ pub trait ItemRt<E>:
     fn state_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E>
     where
@@ -127,6 +128,7 @@ pub trait ItemRt<E>:
     async fn state_clean(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E>
     where
@@ -139,6 +141,7 @@ pub trait ItemRt<E>:
     async fn state_current_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E>
@@ -152,6 +155,7 @@ pub trait ItemRt<E>:
     async fn state_current_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E>
@@ -165,6 +169,7 @@ pub trait ItemRt<E>:
     async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E>
@@ -178,6 +183,7 @@ pub trait ItemRt<E>:
     async fn state_goal_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E>
@@ -200,6 +206,7 @@ pub trait ItemRt<E>:
     async fn state_diff_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemId, BoxDtDisplay>,
         states_b: &TypeMap<ItemId, BoxDtDisplay>,
@@ -223,6 +230,7 @@ pub trait ItemRt<E>:
     async fn ensure_prepare(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
@@ -246,6 +254,7 @@ pub trait ItemRt<E>:
         &self,
         states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
@@ -267,6 +276,7 @@ pub trait ItemRt<E>:
     async fn apply_exec_dry(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         item_apply: &mut ItemApplyBoxed,
@@ -290,6 +300,7 @@ pub trait ItemRt<E>:
     async fn apply_exec(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         item_apply: &mut ItemApplyBoxed,
@@ -317,6 +328,7 @@ pub trait ItemRt<E>:
     fn interactions_example(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<peace_item_interaction_model::ItemInteractionsExample, E>;
 
@@ -351,6 +363,7 @@ pub trait ItemRt<E>:
     fn interactions_try_current(
         &self,
         params_specs: &ParamsSpecs,
+        mapping_fn_reg: &MappingFnReg,
         resources: &Resources<SetUp>,
     ) -> Result<peace_item_interaction_model::ItemInteractionsCurrentOrExample, E>;
 

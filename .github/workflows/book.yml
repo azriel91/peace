@@ -4,7 +4,7 @@ on:
       - main
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 name: Book
 
@@ -17,10 +17,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: 'Install `wasm-pack`'
+      - name: "Install `wasm-pack`"
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: 'v0.13.0'
+          # specify exact version to work around
+          # <https://github.com/jetli/wasm-pack-action/issues/23>
+          version: "v0.13.1"
 
       - name: mdbook Cache
         id: mdbook_cache
@@ -43,7 +45,7 @@ jobs:
         if: steps.mdbook_graphviz_cache.outputs.cache-hit != 'true'
 
       # When updating this, also update ci.yml
-      - name: 'Example: download (WASM)'
+      - name: "Example: download (WASM)"
         # The following no longer works, because the AWS SDK uses tokio with UDP features enabled:
         # for example in $(ls examples)
         run: |

@@ -1,3 +1,6 @@
+use peace::params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns};
+use serde::{Deserialize, Serialize};
+
 mod unit {
     use std::any::TypeId;
 
@@ -70,10 +73,15 @@ mod struct_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
@@ -125,9 +133,11 @@ mod struct_params {
 
     #[test]
     fn field_wise_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = StructParams::field_wise_spec()
             .with_src(String::from("a"))
-            .with_dest_from_map(|_: &u32| Some(String::from("b")))
+            .with_dest_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -145,22 +155,29 @@ mod struct_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: StructParamsFieldWise {
                     src: ValueSpec::Value { value: src_value },
-                    dest: ValueSpec::MappingFn(mapping_fn),
+                    dest: ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                 }
             }
             if src_value == "a"
-            && matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == "b"
-            )
+            && {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(dest_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructParamsFieldWise { src: Value("a"), dest: Value("b") }"#,
+            r#"StructParamsFieldWise { src: Value { value: "a" }, dest: Value { value: "b" } }"#,
             format!(
                 "{:?}",
                 StructParamsFieldWise {
@@ -269,10 +286,15 @@ mod struct_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -336,9 +358,11 @@ mod struct_with_type_params {
 
     #[test]
     fn field_wise_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = StructWithTypeParams::<()>::field_wise_spec()
             .with_src_in_memory()
-            .with_dest_from_map(|_: &u32| Some(String::from("b")))
+            .with_dest_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -356,22 +380,29 @@ mod struct_with_type_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: StructWithTypeParamsFieldWise {
                     src: ValueSpec::InMemory,
-                    dest: ValueSpec::MappingFn(mapping_fn),
+                    dest: ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                     marker: PhantomData,
                 }
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(dest_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructWithTypeParamsFieldWise { src: Value("a"), dest: Value("b"), marker: PhantomData<()> }"#,
+            r#"StructWithTypeParamsFieldWise { src: Value { value: "a" }, dest: Value { value: "b" }, marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 StructWithTypeParamsFieldWise::<()> {
@@ -489,10 +520,15 @@ mod tuple_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
@@ -538,9 +574,11 @@ mod tuple_params {
 
     #[test]
     fn field_wise_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = TupleParams::field_wise_spec()
             .with_0_in_memory()
-            .with_1_from_map(|_: &u32| Some(String::from("b")))
+            .with_1_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -558,21 +596,28 @@ mod tuple_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleParamsFieldWise(
                     ValueSpec::InMemory,
-                    ValueSpec::MappingFn(mapping_fn),
+                    ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                 )
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(dest_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleParamsFieldWise(Value("a"), Value("b"))"#,
+            r#"TupleParamsFieldWise(Value { value: "a" }, Value { value: "b" })"#,
             format!(
                 "{:?}",
                 TupleParamsFieldWise(
@@ -665,10 +710,15 @@ mod tuple_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
@@ -718,9 +768,11 @@ mod tuple_with_type_params {
 
     #[test]
     fn field_wise_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = TupleWithTypeParams::<()>::field_wise_spec()
             .with_0_in_memory()
-            .with_1_from_map(|_: &u32| Some(String::from("b")))
+            .with_1_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -738,22 +790,29 @@ mod tuple_with_type_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleWithTypeParamsFieldWise(
                     ValueSpec::InMemory,
-                    ValueSpec::MappingFn(mapping_fn),
+                    ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                     PhantomData,
                 )
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(dest_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&dest_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleWithTypeParamsFieldWise(Value("a"), Value("b"), PhantomData<()>)"#,
+            r#"TupleWithTypeParamsFieldWise(Value { value: "a" }, Value { value: "b" }, PhantomData<()>)"#,
             format!(
                 "{:?}",
                 TupleWithTypeParamsFieldWise::<()>(
@@ -866,10 +925,15 @@ mod enum_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -1000,11 +1064,13 @@ mod enum_params {
 
     #[test]
     fn field_wise_named_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = EnumParams::<()>::field_wise_spec()
             .named()
             .with_src(String::from("a"))
             .with_src_in_memory()
-            .with_src_from_map(|_: &u32| Some(String::from("b")))
+            .with_src_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -1021,25 +1087,34 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::Named {
-                    src: ValueSpec::MappingFn(mapping_fn),
+                    src: ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                     marker: PhantomData,
                 }
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(src_mapped)
-                if src_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(src_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn field_wise_tuple_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = EnumParams::<()>::field_wise_spec()
             .tuple()
             .with_0(String::from("a"))
             .with_0_in_memory()
-            .with_0_from_map(|_: &u32| Some(String::from("b")))
+            .with_0_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -1056,24 +1131,33 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::Tuple(
-                    ValueSpec::MappingFn(mapping_fn),
+                    ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                 )
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(src_mapped)
-                if src_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(src_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
     #[test]
     fn field_wise_tuple_marker_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
         let field_wise = EnumParams::<()>::field_wise_spec()
             .tuple_marker()
             .with_0(String::from("a"))
             .with_0_in_memory()
-            .with_0_from_map(|_: &u32| Some(String::from("b")))
+            .with_0_from_mapping_fn(TestMappingFns::StringBFromU32)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -1090,15 +1174,22 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::TupleMarker(
-                    ValueSpec::MappingFn(mapping_fn),
+                    ValueSpec::MappingFn {
+                        field_name,
+                        mapping_fn_id,
+                    },
                     PhantomData,
                 )
             }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(src_mapped)
-                if src_mapped == "b"
-            )
+            if {
+                let mapping_fn = mapping_fn_reg.get(&mapping_fn_id).unwrap();
+
+                matches!(
+                    mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref()),
+                    Ok(src_mapped)
+                    if BoxDataTypeDowncast::<String>::downcast_ref(&src_mapped).map(String::as_str) == Some("b")
+                )
+            }
         ));
     }
 
@@ -1180,7 +1271,7 @@ mod enum_params {
     #[test]
     fn spec_debug_named() {
         assert_eq!(
-            r#"Named { src: Value("a"), marker: PhantomData<()> }"#,
+            r#"Named { src: Value { value: "a" }, marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::Named {
@@ -1196,7 +1287,7 @@ mod enum_params {
     #[test]
     fn spec_debug_tuple() {
         assert_eq!(
-            r#"Tuple(Value("a"))"#,
+            r#"Tuple(Value { value: "a" })"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value {
@@ -1209,7 +1300,7 @@ mod enum_params {
     #[test]
     fn spec_debug_tuple_marker() {
         assert_eq!(
-            r#"TupleMarker(Value("a"), PhantomData<()>)"#,
+            r#"TupleMarker(Value { value: "a" }, PhantomData<()>)"#,
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::TupleMarker(
@@ -1499,10 +1590,15 @@ mod struct_recursive_value {
     use serde::{Deserialize, Serialize};
 
     use peace::{
+        cmd_ctx::type_reg::untagged::BoxDataTypeDowncast,
         item_model::item_id,
-        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        params::{
+            MappingFnReg, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        },
         resource_rt::{resources::ts::SetUp, Resources},
     };
+
+    use super::TestMappingFns;
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub struct InnerValue<T>(T)
@@ -1576,9 +1672,12 @@ mod struct_recursive_value {
 
     #[test]
     fn field_wise_from_field_wise_builder() {
+        let mut mapping_fn_reg = MappingFnReg::new();
+        mapping_fn_reg.register_all::<TestMappingFns>();
+        let test_mapping_fn = TestMappingFns::U32_456FromU32;
         let field_wise = StructRecursiveValue::<()>::field_wise_spec()
             .with_src_in_memory()
-            .with_dest_from_map(|_: &u32| Some(456))
+            .with_dest_from_mapping_fn(test_mapping_fn)
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -1591,26 +1690,41 @@ mod struct_recursive_value {
             String::from("StructRecursiveValue<()>"),
         );
 
-        assert!(matches!(
-            field_wise,
-            ParamsSpec::FieldWise {
-                field_wise_spec: StructRecursiveValueFieldWise {
-                    src: ValueSpec::InMemory,
-                    dest: ValueSpec::MappingFn(mapping_fn),
+        assert!(
+            matches!(
+                &field_wise,
+                ParamsSpec::FieldWise {
+                    field_wise_spec: StructRecursiveValueFieldWise {
+                        src: ValueSpec::InMemory,
+                        dest: ValueSpec::MappingFn {
+                            field_name,
+                            mapping_fn_id,
+                        },
+                    }
                 }
-            }
-            if matches!(
-                mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == 456
-            )
-        ));
+                if {
+                    let mapping_fn = mapping_fn_reg.get(mapping_fn_id).unwrap();
+                    let mapped_value = mapping_fn.map(&resources, &mut value_resolution_ctx, field_name.as_deref());
+
+                    let matches = matches!(
+                        &mapped_value,
+                        Ok(dest_mapped)
+                        if BoxDataTypeDowncast::<u32>::downcast_ref(dest_mapped).copied() == Some(456)
+                    );
+
+                    assert!(matches, "mapped_value was: {mapped_value:?}");
+
+                    matches
+                }
+            ),
+            "was: {field_wise:?}"
+        );
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructRecursiveValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
+            r#"StructRecursiveValueFieldWise { src: Value { value: InnerValue(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructRecursiveValueFieldWise::<u16> {
@@ -1796,7 +1910,7 @@ mod struct_recursive_value_no_bounds {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructRecursiveValueNoBoundsFieldWise { src: Value(InnerValue { inner: 123, marker: PhantomData<()> }), dest: Value(456) }"#,
+            r#"StructRecursiveValueNoBoundsFieldWise { src: Value { value: InnerValue { inner: 123, marker: PhantomData<()> } }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructRecursiveValueNoBoundsFieldWise::<()> {
@@ -1995,7 +2109,7 @@ mod enum_recursive_value {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"Named { src: Value(Tuple(123)), dest: Value(456) }"#,
+            r#"Named { src: Value { value: Tuple(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 EnumRecursiveValueFieldWise::Named::<u16> {
@@ -2259,7 +2373,7 @@ mod enum_recursive_marker_no_bounds {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"Named { src: Value(Tuple(PhantomData<u16>)), dest: Value(456) }"#,
+            r#"Named { src: Value { value: Tuple(PhantomData<u16>) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 EnumRecursiveNoBoundsFieldWise::Named::<u16> {
@@ -2488,7 +2602,7 @@ mod external_fields {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructExternalValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
+            r#"StructExternalValueFieldWise { src: Value { value: InnerValue(123) }, dest: Value { value: 456 } }"#,
             format!(
                 "{:?}",
                 StructExternalValueFieldWise {
@@ -2614,3 +2728,32 @@ macro_rules! params_tests {
 }
 
 pub(crate) use params_tests;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+enum TestMappingFns {
+    StringBFromU32,
+    U32_456FromU32,
+}
+
+impl MappingFns for TestMappingFns {
+    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
+        [Self::StringBFromU32, Self::U32_456FromU32].into_iter()
+    }
+
+    fn id(self) -> MappingFnId {
+        let name = match self {
+            TestMappingFns::StringBFromU32 => "StringBFromU32",
+            TestMappingFns::U32_456FromU32 => "U32_456FromU32",
+        };
+        MappingFnId::new(name.into())
+    }
+
+    fn mapping_fn(self) -> Box<dyn MappingFn> {
+        match self {
+            TestMappingFns::StringBFromU32 => {
+                MappingFnImpl::from_func(|_: &u32| Some(String::from("b")))
+            }
+            TestMappingFns::U32_456FromU32 => MappingFnImpl::from_func(|_: &u32| Some(456u32)),
+        }
+    }
+}

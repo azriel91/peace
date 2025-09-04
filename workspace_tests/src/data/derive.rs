@@ -75,6 +75,17 @@ fn data_unnamed_fields_borrow_muts() {
 }
 
 #[test]
+fn data_mut_fields_borrow_muts() {
+    let mut type_ids_expected = TypeIds::new();
+    type_ids_expected.push(TypeId::of::<A>());
+    type_ids_expected.push(TypeId::of::<B>());
+
+    let type_ids_actual = <DataMutFields<'_> as DataAccess>::borrow_muts();
+
+    assert_eq!(type_ids_expected, type_ids_actual);
+}
+
+#[test]
 fn data_mix_fields_borrow_muts() {
     let mut type_ids_expected = TypeIds::new();
     type_ids_expected.push(TypeId::of::<B>());

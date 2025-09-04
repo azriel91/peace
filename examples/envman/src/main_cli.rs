@@ -164,11 +164,12 @@ async fn run_command(
                         let CmdCtxSpsfFields {
                             flow,
                             params_specs,
+                            mapping_fn_reg,
                             resources,
                             ..
                         } = cmd_ctx.fields();
 
-                        outcome_info_graph_gen(flow, params_specs, resources)
+                        outcome_info_graph_gen(flow, params_specs, mapping_fn_reg, resources)
                     }
                     .boxed_local()
                 }),

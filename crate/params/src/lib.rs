@@ -73,22 +73,22 @@ pub use crate::{
     field_wise_spec_rt::FieldWiseSpecRt,
     func::{FromFunc, Func},
     mapping_fn::MappingFn,
+    mapping_fn_id::MappingFnId,
     mapping_fn_impl::MappingFnImpl,
+    mapping_fn_reg::MappingFnReg,
+    mapping_fns::MappingFns,
     params::Params,
     params_fieldless::ParamsFieldless,
     params_key::ParamsKey,
     params_merge_ext::ParamsMergeExt,
     params_resolve_error::ParamsResolveError,
     params_spec::ParamsSpec,
-    params_spec_de::ParamsSpecDe,
     params_spec_fieldless::ParamsSpecFieldless,
-    params_spec_fieldless_de::ParamsSpecFieldlessDe,
     params_specs::ParamsSpecs,
     params_value::ParamsValue,
     value_resolution_ctx::ValueResolutionCtx,
     value_resolution_mode::ValueResolutionMode,
     value_spec::ValueSpec,
-    value_spec_de::ValueSpecDe,
     value_spec_rt::ValueSpecRt,
 };
 
@@ -99,21 +99,21 @@ mod field_name_and_type;
 mod field_wise_spec_rt;
 mod func;
 mod mapping_fn;
+mod mapping_fn_id;
 mod mapping_fn_impl;
+mod mapping_fn_reg;
+mod mapping_fns;
 mod params;
 mod params_fieldless;
 mod params_key;
 mod params_merge_ext;
 mod params_resolve_error;
 mod params_spec;
-mod params_spec_de;
 mod params_spec_fieldless;
-mod params_spec_fieldless_de;
 mod params_specs;
 mod params_value;
 mod std_impl;
 mod value_resolution_ctx;
 mod value_resolution_mode;
 mod value_spec;
-mod value_spec_de;
 mod value_spec_rt;

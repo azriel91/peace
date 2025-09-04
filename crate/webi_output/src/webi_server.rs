@@ -117,12 +117,13 @@ impl WebiServer {
         let flow_progress_example_info_graph = flow_spec_info.to_progress_info_graph();
         let flow_outcome_example_info_graph = outcome_info_graph_fn(
             &mut webi_output_mock,
-            Box::new(|flow, params_specs, resources| {
+            Box::new(|flow, params_specs, mapping_fn_reg, resources| {
                 #[cfg(all(feature = "item_interactions", feature = "item_state_example"))]
                 {
                     OutcomeInfoGraphCalculator::calculate::<E>(
                         flow,
                         params_specs,
+                        mapping_fn_reg,
                         resources,
                         OutcomeInfoGraphVariant::Example,
                     )
@@ -134,6 +135,7 @@ impl WebiServer {
 
                     let _flow = flow;
                     let _params_specs = params_specs;
+                    let _mapping_fn_reg = mapping_fn_reg;
                     let _resources = resources;
 
                     InfoGraph::default()
@@ -286,7 +288,7 @@ impl WebiServer {
 
                         let flow_outcome_actual_info_graph = outcome_info_graph_fn(
                             &mut webi_output,
-                            Box::new(move |flow, params_specs, resources| {
+                            Box::new(move |flow, params_specs, mapping_fn_reg, resources| {
                                 #[cfg(feature = "output_progress")]
                                 let item_location_states = item_location_states_snapshot.clone();
                                 #[cfg(feature = "output_progress")]
@@ -298,6 +300,7 @@ impl WebiServer {
                                     OutcomeInfoGraphCalculator::calculate::<E>(
                                         flow,
                                         params_specs,
+                                        mapping_fn_reg,
                                         resources,
                                         OutcomeInfoGraphVariant::Current {
                                             #[cfg(feature = "output_progress")]
