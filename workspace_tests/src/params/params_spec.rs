@@ -1,4 +1,5 @@
 use peace::{
+    enum_iterator::Sequence,
     item_model::item_id,
     params::{
         AnySpecRt, AnySpecRtBoxed, FieldNameAndType, FieldWiseSpecRt, FromFunc, MappingFn,
@@ -1151,7 +1152,8 @@ fn merge_field_wise_with_field_wise_deep_merges() {
     ));
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[enum_iterator(crate = peace::enum_iterator)]
 enum TestMappingFns {
     MockSrcFromU8,
     MockSrcFromU8AndU16,
@@ -1159,15 +1161,6 @@ enum TestMappingFns {
 }
 
 impl MappingFns for TestMappingFns {
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
-        [
-            Self::MockSrcFromU8,
-            Self::MockSrcFromU8AndU16,
-            Self::VecU8FromBoolAndU16,
-        ]
-        .into_iter()
-    }
-
     fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::MockSrcFromU8 => "MockSrcFromU8",

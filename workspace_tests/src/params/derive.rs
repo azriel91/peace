@@ -1,4 +1,7 @@
-use peace::params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns};
+use peace::{
+    enum_iterator::Sequence,
+    params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns},
+};
 use serde::{Deserialize, Serialize};
 
 mod unit {
@@ -2729,17 +2732,14 @@ macro_rules! params_tests {
 
 pub(crate) use params_tests;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[enum_iterator(crate = peace::enum_iterator)]
 enum TestMappingFns {
     StringBFromU32,
     U32_456FromU32,
 }
 
 impl MappingFns for TestMappingFns {
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
-        [Self::StringBFromU32, Self::U32_456FromU32].into_iter()
-    }
-
     fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::StringBFromU32 => "StringBFromU32",

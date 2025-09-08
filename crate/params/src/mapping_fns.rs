@@ -1,11 +1,12 @@
 use std::{fmt::Debug, hash::Hash};
 
+use enum_iterator::Sequence;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{MappingFn, MappingFnId};
+use crate::{MappingFn, MappingFnId, MappingFnImpl};
 
-/// Enum to give names to mapping functions, so that params specs and value
-/// specs can be serialized.
+/// Enum to give versioned IDs to mapping functions, so that params specs and
+/// value specs can be serialized.
 ///
 /// Item parameters may be mapped from other items' state, and that logic
 /// exists as code. However, we want the ability to store (remember) those
@@ -14,12 +15,75 @@ use crate::{MappingFn, MappingFnId};
 /// place that logic elsewhere (like in the `CmdCtxTypes` implementation),
 /// and have an intermediate enum to represent the mapping functions, we can
 /// serialize the enum instead of the closure.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use peace::{
+///     enum_iterator::Sequence,
+///     params::{FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFns},
+///     profile_model::Profile,
+/// };
+/// use serde::{Deserialize, Serialize};
+///
+/// use crate::items::{peace_aws_iam_policy::IamPolicyState, peace_aws_s3_bucket::S3BucketState};
+///
+/// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize, Sequence)]
+/// #[allow(non_camel_case_types)]
+/// #[enum_iterator(crate = peace::enum_iterator)]
+/// pub enum EnvmanMappingFns {
+///     /// Returns the `IamRole` name from profile.
+///     IamRoleNameFromProfile_v0_1_0,
+///     /// Returns the `IamRole` Managed Policy ARN from the `IamPolicyState`'s
+///     /// `policy_id_arn_version`.
+///     IamRoleManagedPolicyArnFromIamPolicyState_v0_1_0,
+///     /// Returns the `S3Bucket` name from the `S3BucketState`.
+///     S3BucketNameFromS3BucketState_v0_1_0,
+/// }
+///
+/// impl MappingFns for EnvmanMappingFns {
+///     fn id(self) -> MappingFnId {
+///         let name = match self {
+///             Self::IamRoleNameFromProfile_v0_1_0 => "IamRoleNameFromProfile_v0_1_0",
+///             Self::IamRoleManagedPolicyArnFromIamPolicyState_v0_1_0 => {
+///                 "IamRoleManagedPolicyArnFromIamPolicyState_v0_1_0"
+///             }
+///             Self::S3BucketNameFromS3BucketState_v0_1_0 => {
+///                 "S3BucketNameFromS3BucketState_v0_1_0"
+///             }
+///         };
+///         MappingFnId::new(name.to_string())
+///     }
+///
+///     fn mapping_fn(self) -> Box<dyn MappingFn> {
+///         match self {
+///             Self::IamRoleNameFromProfile_v0_1_0 => {
+///                 MappingFnImpl::from_func(|profile: &Profile| Some(profile.to_string()))
+///             }
+///             Self::IamRoleManagedPolicyArnFromIamPolicyState_v0_1_0 => {
+///                 MappingFnImpl::from_func(IamPolicyState::policy_id_arn_version)
+///             }
+///             Self::S3BucketNameFromS3BucketState_v0_1_0 => {
+///                 MappingFnImpl::from_func(S3BucketState::bucket_name)
+///             }
+///         }
+///     }
+/// }
+/// ```
 pub trait MappingFns:
-    Clone + Copy + Debug + Hash + PartialEq + Eq + Serialize + DeserializeOwned + Send + Sync + 'static
+    Clone
+    + Copy
+    + Debug
+    + Hash
+    + PartialEq
+    + Eq
+    + Serialize
+    + DeserializeOwned
+    + Sequence
+    + Send
+    + Sync
+    + 'static
 {
-    /// Returns an iterator over all variants of these mapping functions.
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator;
-
     /// Returns a string representation of the mapping function name.
     ///
     /// # Implementors
@@ -39,15 +103,11 @@ pub trait MappingFns:
 }
 
 impl MappingFns for () {
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
-        std::iter::empty()
-    }
-
     fn id(self) -> MappingFnId {
-        unreachable!("`()` is not intended to be used as a mapping function ID, but an indicator that no mapping functions are used.")
+        MappingFnId::new(String::from(""))
     }
 
     fn mapping_fn(self) -> Box<dyn MappingFn> {
-        unreachable!("`()` is not intended to be used as a mapping function name, but an indicator that no mapping functions are used.")
+        Box::new(MappingFnImpl::<(), _, ()>::empty())
     }
 }

@@ -116,7 +116,7 @@ impl EnvDeployFlow {
             .with_name(iam_role_name)
             .with_path(path.clone())
             .with_managed_policy_arn_from_mapping_fn(
-                EnvmanMappingFns::IamRoleManagedPolicyArnFromIamPolicyState,
+                EnvmanMappingFns::IamRoleManagedPolicyArnFromIamPolicyState_v0_1_0,
             )
             .build();
         let instance_profile_params_spec = InstanceProfileParams::<WebApp>::field_wise_spec()

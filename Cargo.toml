@@ -21,6 +21,7 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+enum-iterator = { workspace = true }
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
 peace_cli = { workspace = true, optional = true }
@@ -180,6 +181,7 @@ dot_ix_model = "0.10.0"
 downcast-rs = "2.0.1"
 dyn-clone = "1.0.19"
 enser = "0.1.4"
+enum-iterator = "2.3.0"
 erased-serde = "0.4.6"
 fn_graph = { version = "0.18.0", features = [
     "async",

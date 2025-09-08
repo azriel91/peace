@@ -1,6 +1,7 @@
 use peace::{
     cfg::{app_name, Item},
     cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
+    enum_iterator::Sequence,
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     item_model::item_id,
@@ -1347,16 +1348,13 @@ impl CmdCtxTypes for TestCctCmdCtxSpsf {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[enum_iterator(crate = peace::enum_iterator)]
 pub enum TestMappingFns {
     Vec1u8,
 }
 
 impl MappingFns for TestMappingFns {
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
-        [Self::Vec1u8].into_iter()
-    }
-
     fn id(self) -> MappingFnId {
         match self {
             Self::Vec1u8 => MappingFnId::new("Vec1u8".into()),
