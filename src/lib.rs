@@ -1,6 +1,7 @@
 //! 🕊️ peace -- zero stress automation
 
 // Re-exports so consumers don't need to depend on crates individually.
+pub use enum_iterator;
 #[cfg(feature = "error_reporting")]
 pub use miette;
 

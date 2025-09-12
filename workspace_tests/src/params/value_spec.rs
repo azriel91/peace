@@ -1,4 +1,5 @@
 use peace::{
+    enum_iterator::Sequence,
     item_model::item_id,
     params::{
         AnySpecRt, AnySpecRtBoxed, FromFunc, MappingFn, MappingFnId, MappingFnImpl, MappingFnReg,
@@ -702,7 +703,8 @@ fn merge_mapping_fn_with_other_no_change() {
     if mapping_fn_id == &TestMappingFns::MockSrcFromU8.id()));
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[enum_iterator(crate = peace::enum_iterator)]
 enum TestMappingFns {
     MockSrcFromU8,
     MockSrcFromU8AndU16,
@@ -710,15 +712,6 @@ enum TestMappingFns {
 }
 
 impl MappingFns for TestMappingFns {
-    fn iter() -> impl Iterator<Item = Self> + ExactSizeIterator {
-        [
-            Self::MockSrcFromU8,
-            Self::MockSrcFromU8AndU16,
-            Self::U8NoneFromU8,
-        ]
-        .into_iter()
-    }
-
     fn id(self) -> MappingFnId {
         let name = match self {
             TestMappingFns::MockSrcFromU8 => "MockSrcFromU8",

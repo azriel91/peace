@@ -13,6 +13,8 @@ use peace::{
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
 
+use super::{ProfileParamsKey, WorkspaceParamsKey};
+
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
@@ -78,9 +80,9 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let cmd_ctx = CmdCtxMpnf::<TestCctCmdCtxMpnf>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some("ws_param_1_value".to_string()),
         )
         .await?;
@@ -112,10 +114,13 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(&[profile.clone(), profile_other], fields.profiles());
     assert_eq!(&profile_dirs, fields.profile_dirs());
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
     Ok(())
 }
@@ -137,8 +142,8 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = CmdCtxMpnf::<TestCctCmdCtxMpnf>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), None)
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_profile_param::<u32>(&profile, ProfileParamsKey::U32Param, None)
+        .with_profile_param::<u64>(&profile, ProfileParamsKey::U64Param, None)
         .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
@@ -189,14 +194,14 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
         .with_output(output.into())
         .with_workspace((&workspace).into())
         // Overwrite existing value
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u32>(&profile, ProfileParamsKey::U32Param, Some(3u32))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         // Erase existing value
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_profile_param::<u64>(&profile, ProfileParamsKey::U64Param, None)
         // Add new value
-        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
+        .with_profile_param::<i64>(&profile, ProfileParamsKey::I64Param, Some(-4i64))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some("ws_param_1_value".to_string()),
         )
         .await?;
@@ -232,14 +237,23 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     assert_eq!(&[profile.clone(), profile_other], fields.profiles());
     assert_eq!(&profile_dirs, fields.profile_dirs());
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
-    assert_eq!(Some(&3u32), profile_params.get("profile_param_0"));
-    assert_eq!(None::<&u64>, profile_params.get("profile_param_1"));
-    assert_eq!(Some(&-4i64), profile_params.get("profile_param_2"));
+    assert_eq!(Some(&3u32), profile_params.get(&ProfileParamsKey::U32Param));
+    assert_eq!(
+        None::<&u64>,
+        profile_params.get(&ProfileParamsKey::U64Param)
+    );
+    assert_eq!(
+        Some(&-4i64),
+        profile_params.get(&ProfileParamsKey::I64Param)
+    );
     Ok(())
 }
 
@@ -261,9 +275,9 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     let cmd_ctx = CmdCtxMpnf::<TestCctCmdCtxMpnf>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some("ws_param_1_value".to_string()),
         )
         .with_profile_filter_fn(|profile| **profile == "test_profile")
@@ -291,10 +305,13 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     assert_eq!(&[profile.clone()], fields.profiles());
     assert_eq!(&profile_dirs, fields.profile_dirs());
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
     Ok(())
 }
@@ -318,14 +335,14 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
         .with_output(output.into())
         .with_workspace((&workspace).into())
         // Overwrite existing value
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u32>(&profile, ProfileParamsKey::U32Param, Some(3u32))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         // Erase existing value
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_profile_param::<u64>(&profile, ProfileParamsKey::U64Param, None)
         // Add new value
-        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
+        .with_profile_param::<i64>(&profile, ProfileParamsKey::I64Param, Some(-4i64))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some("ws_param_1_value".to_string()),
         )
         .with_profile_filter_fn(|profile| **profile == "test_profile")
@@ -357,14 +374,23 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter(
     assert_eq!(&[profile.clone()], fields.profiles());
     assert_eq!(&profile_dirs, fields.profile_dirs());
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
-    assert_eq!(Some(&3u32), profile_params.get("profile_param_0"));
-    assert_eq!(None::<&u64>, profile_params.get("profile_param_1"));
-    assert_eq!(Some(&-4i64), profile_params.get("profile_param_2"));
+    assert_eq!(Some(&3u32), profile_params.get(&ProfileParamsKey::U32Param));
+    assert_eq!(
+        None::<&u64>,
+        profile_params.get(&ProfileParamsKey::U64Param)
+    );
+    assert_eq!(
+        Some(&-4i64),
+        profile_params.get(&ProfileParamsKey::I64Param)
+    );
     Ok(())
 }
 
@@ -387,18 +413,18 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter_non
         .with_output(output.into())
         .with_workspace((&workspace).into())
         .with_profile_filter_fn(|profile| **profile == "test_profile")
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some(String::from("ws_param_1_value")),
         )
-        .with_workspace_param(String::from("ws_param_2"), None::<u8>)
+        .with_workspace_param(WorkspaceParamsKey::U8Param, None::<u8>)
         // Overwrite existing value
-        .with_profile_param::<u32>(&profile, String::from("profile_param_0"), Some(3u32))
+        .with_profile_param::<u32>(&profile, ProfileParamsKey::U32Param, Some(3u32))
         // Erase existing value
-        .with_profile_param::<u64>(&profile, String::from("profile_param_1"), None)
+        .with_profile_param::<u64>(&profile, ProfileParamsKey::U64Param, None)
         // Add new value
-        .with_profile_param::<i64>(&profile, String::from("profile_param_2"), Some(-4i64))
+        .with_profile_param::<i64>(&profile, ProfileParamsKey::I64Param, Some(-4i64))
         .await?;
     drop(cmd_ctx_save);
 
@@ -435,15 +461,27 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter_non
     assert_eq!(&[profile.clone()], fields.profiles());
     assert_eq!(&profile_dirs, fields.profile_dirs());
     assert_eq!(&profile_history_dirs, fields.profile_history_dirs());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&String::from("ws_param_1_value")),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
-    assert_eq!(None::<u8>, workspace_params.get("ws_param_2").copied());
-    assert_eq!(Some(&3u32), profile_params.get("profile_param_0"));
-    assert_eq!(None::<&u64>, profile_params.get("profile_param_1"));
-    assert_eq!(Some(&-4i64), profile_params.get("profile_param_2"));
+    assert_eq!(
+        None::<u8>,
+        workspace_params.get(&WorkspaceParamsKey::U8Param).copied()
+    );
+    assert_eq!(Some(&3u32), profile_params.get(&ProfileParamsKey::U32Param));
+    assert_eq!(
+        None::<&u64>,
+        profile_params.get(&ProfileParamsKey::U64Param)
+    );
+    assert_eq!(
+        Some(&-4i64),
+        profile_params.get(&ProfileParamsKey::I64Param)
+    );
     Ok(())
 }
 
@@ -564,20 +602,6 @@ impl CmdCtxTypes for TestCctCmdCtxMpnf {
     type FlowParamsKey = ();
     type MappingFns = ();
     type Output = NoOpOutput;
-    type ProfileParamsKey = String;
-    type WorkspaceParamsKey = String;
-
-    fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
-        type_reg.register::<Profile>(String::from("profile"));
-        type_reg.register::<String>(String::from("ws_param_1"));
-        type_reg.register::<u8>(String::from("ws_param_2"));
-    }
-
-    fn profile_params_register(type_reg: &mut TypeReg<Self::ProfileParamsKey>) {
-        type_reg.register::<u32>(String::from("profile_param_0"));
-        type_reg.register::<u64>(String::from("profile_param_1"));
-        type_reg.register::<i64>(String::from("profile_param_2"));
-    }
-
-    fn flow_params_register(_type_reg: &mut TypeReg<Self::FlowParamsKey>) {}
+    type ProfileParamsKey = ProfileParamsKey;
+    type WorkspaceParamsKey = WorkspaceParamsKey;
 }

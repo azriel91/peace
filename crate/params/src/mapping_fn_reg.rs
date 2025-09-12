@@ -42,7 +42,7 @@ impl MappingFnReg {
     where
         MFns: MappingFns,
     {
-        MFns::iter().for_each(|m_fns| self.register(m_fns));
+        enum_iterator::all::<MFns>().for_each(|m_fns| self.register(m_fns));
     }
 }
 

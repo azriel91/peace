@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile},
-    cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
+    cmd_ctx::{CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
     cmd_model::CmdOutcome,
     data::marker::Clean,
     flow_model::FlowId,
@@ -545,10 +545,4 @@ impl CmdCtxTypes for TestCctShCmd {
     type Output = InMemoryTextOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = ();
-
-    fn workspace_params_register(_type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {}
-
-    fn profile_params_register(_type_reg: &mut TypeReg<Self::ProfileParamsKey>) {}
-
-    fn flow_params_register(_type_reg: &mut TypeReg<Self::FlowParamsKey>) {}
 }

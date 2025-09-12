@@ -68,6 +68,18 @@ impl CmdCtxBuilderSupport {
         }
     }
 
+    /// Returns a [`TypeReg`] to deserialize workspace, profile, or flow params.
+    pub(crate) fn params_type_reg_initialize<PKeys>() -> TypeReg<PKeys, BoxDt>
+    where
+        PKeys: ParamsKey,
+    {
+        let mut params_type_reg = TypeReg::new();
+        enum_iterator::all::<PKeys>().for_each(|params_key| {
+            params_key.register_value_type(&mut params_type_reg);
+        });
+        params_type_reg
+    }
+
     /// Merges workspace params provided by the caller with the workspace params
     /// on disk.
     ///

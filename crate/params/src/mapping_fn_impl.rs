@@ -27,6 +27,40 @@ pub struct MappingFnImpl<T, F, Args> {
     marker: PhantomData<(T, Args)>,
 }
 
+impl MappingFnImpl<(), fn(), ()> {
+    /// Returns an empty mapping function, used for `()`.
+    pub fn empty() -> Self {
+        Self {
+            fn_map: Some(|| ()),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl MappingFn for MappingFnImpl<(), fn(), ()> {
+    fn map(
+        &self,
+        _resources: &Resources<SetUp>,
+        _value_resolution_ctx: &mut ValueResolutionCtx,
+        _field_name: Option<&str>,
+    ) -> Result<BoxDt, ParamsResolveError> {
+        Ok(BoxDt::new(()))
+    }
+
+    fn try_map(
+        &self,
+        _resources: &Resources<SetUp>,
+        _value_resolution_ctx: &mut ValueResolutionCtx,
+        _field_name: Option<&str>,
+    ) -> Result<Option<BoxDt>, ParamsResolveError> {
+        Ok(Some(BoxDt::new(())))
+    }
+
+    fn is_valued(&self) -> bool {
+        true
+    }
+}
+
 impl<T, F, Args> Debug for MappingFnImpl<T, F, Args>
 where
     T: Debug,
@@ -128,7 +162,8 @@ macro_rules! impl_mapping_fn_impl {
             /// But somehow it works with the `FromFunc` trait.
             pub fn new(fn_map: F) -> Self {
                 Self {
-                    fn_map: Some(fn_map),                    marker: PhantomData,
+                    fn_map: Some(fn_map),
+                    marker: PhantomData,
                 }
             }
 
