@@ -16,6 +16,8 @@ use peace::{
     },
 };
 
+use crate::cmd_ctx::{FlowParamsKey, ProfileParamsKey, WorkspaceParamsKey};
+
 pub(crate) async fn workspace(
     tempdir: &tempfile::TempDir,
     app_name: AppName,
@@ -48,9 +50,12 @@ pub(crate) async fn workspace_with(
 
     let workspace_params_file = WorkspaceParamsFile::from(peace_app_dir);
     let mut workspace_params = WorkspaceParams::new();
-    workspace_params.insert(String::from("profile"), profiles_existing[0].clone());
-    workspace_params.insert(String::from("ws_param_1"), String::from("ws_param_1_value"));
-    workspace_params.insert(String::from("ws_param_2"), 1u8);
+    workspace_params.insert(WorkspaceParamsKey::Profile, profiles_existing[0].clone());
+    workspace_params.insert(
+        WorkspaceParamsKey::StringParam,
+        String::from("ws_param_1_value"),
+    );
+    workspace_params.insert(WorkspaceParamsKey::U8Param, 1u8);
 
     Storage
         .serialized_write(
@@ -71,8 +76,8 @@ pub(crate) async fn workspace_with(
 
             let profile_params_file = ProfileParamsFile::from(&profile_dir);
             let mut profile_params = ProfileParams::new();
-            profile_params.insert(String::from("profile_param_0"), 1u32);
-            profile_params.insert(String::from("profile_param_1"), 2u64);
+            profile_params.insert(ProfileParamsKey::U32Param, 1u32);
+            profile_params.insert(ProfileParamsKey::U64Param, 2u64);
 
             Storage
                 .serialized_write(
@@ -89,8 +94,8 @@ pub(crate) async fn workspace_with(
 
                 let flow_params_file = FlowParamsFile::from(&flow_dir);
                 let mut flow_params = FlowParams::new();
-                flow_params.insert(String::from("flow_param_0"), true);
-                flow_params.insert(String::from("flow_param_1"), 456u16);
+                flow_params.insert(FlowParamsKey::BoolParam, true);
+                flow_params.insert(FlowParamsKey::U16Param, 456u16);
 
                 let storage = Storage;
 
@@ -129,7 +134,7 @@ pub(crate) async fn assert_workspace_params(
     assert!(workspace_params_file.exists());
     assert_eq!(
         "profile: test_profile\n\
-        ws_param_1: ws_param_1_value\n",
+        string_param: ws_param_1_value\n",
         tokio::fs::read_to_string(&*workspace_params_file).await?
     );
     assert_eq!("ws_param_1_value", res_ws_param_1.as_str());
@@ -145,8 +150,8 @@ pub(crate) async fn assert_profile_params(
     let res_profile_param_1 = resources.borrow::<u64>();
     assert!(profile_params_file.exists());
     assert_eq!(
-        "profile_param_0: 1\n\
-        profile_param_1: 2\n",
+        "u32_param: 1\n\
+        u64_param: 2\n",
         tokio::fs::read_to_string(&*profile_params_file).await?
     );
     assert_eq!(1u32, *res_profile_param_0);
@@ -161,8 +166,8 @@ pub(crate) async fn assert_flow_params(resources: &Resources<SetUp>) -> Result<(
     let res_flow_param_1 = resources.borrow::<u16>();
     assert!(flow_params_file.exists());
     assert_eq!(
-        "flow_param_0: true\n\
-        flow_param_1: 456\n",
+        "bool_param: true\n\
+        u16_param: 456\n",
         tokio::fs::read_to_string(&*flow_params_file).await?
     );
     assert!(*res_flow_param_0);

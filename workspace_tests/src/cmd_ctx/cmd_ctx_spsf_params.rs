@@ -958,6 +958,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         .with_workspace((&workspace).into())
         .with_profile_selection(ProfileSelection::Specified(profile.clone()))
         .with_flow((&flow).into())
+        .with_resource(0u8)
         .with_item_params::<VecCopyItem>(
             VecCopyItem::ID_DEFAULT.clone(),
             VecA::field_wise_spec()
