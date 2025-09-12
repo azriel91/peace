@@ -1,5 +1,16 @@
 # Changelog
 
+## unreleased
+
+* Take in `peace_params::MappingFns` type and serializable `MappingFnId` so that subsequent `CmdCtx`s don't need mapping functions to be passed in. ([#208], [#209])
+* Update `peace_params::ParamsKey` to require `enum_iterator::Sequence` for compile-time safety of registering parameter value types. ([#210], [#211])
+
+[#208]: https://github.com/azriel91/peace/issues/208
+[#209]: https://github.com/azriel91/peace/pull/209
+[#210]: https://github.com/azriel91/peace/issues/210
+[#211]: https://github.com/azriel91/peace/pull/211
+
+
 ## 0.0.15 (2025-04-18)
 
 * Split `flow_rt` and `state_rt` crates from `rt_model`. ([#187], [#202])
