@@ -7,11 +7,11 @@ pub struct TestCctNoOpOutput;
 
 impl CmdCtxTypes for TestCctNoOpOutput {
     type AppError = PeaceTestError;
-    type FlowParamsKey = String;
+    type FlowParamsKey = ();
     type MappingFns = ();
     type Output = NoOpOutput;
-    type ProfileParamsKey = String;
-    type WorkspaceParamsKey = String;
+    type ProfileParamsKey = ();
+    type WorkspaceParamsKey = ();
 
     fn workspace_params_register(_type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {}
 

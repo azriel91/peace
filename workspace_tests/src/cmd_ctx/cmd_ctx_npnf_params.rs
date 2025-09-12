@@ -6,6 +6,8 @@ use peace::{
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};
 
+use super::WorkspaceParamsKey;
+
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
@@ -31,9 +33,9 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let cmd_ctx = CmdCtxNpnf::<TestCctCmdCtxNpnf>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some("ws_param_1_value".to_string()),
         )
         .await?;
@@ -44,10 +46,13 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace_params = fields.workspace_params();
     assert!(std::ptr::eq(&workspace, fields.workspace()));
     assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&"ws_param_1_value".to_string()),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
     Ok(())
 }
@@ -62,12 +67,12 @@ async fn build_with_workspace_params_none_specified() -> Result<(), Box<dyn std:
     let cmd_ctx_save = CmdCtxNpnf::<TestCctCmdCtxNpnf>::builder()
         .with_output(output.into())
         .with_workspace((&workspace).into())
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(WorkspaceParamsKey::Profile, Some(profile.clone()))
         .with_workspace_param(
-            String::from("ws_param_1"),
+            WorkspaceParamsKey::StringParam,
             Some(String::from("ws_param_1_value")),
         )
-        .with_workspace_param(String::from("ws_param_2"), None::<u8>)
+        .with_workspace_param(WorkspaceParamsKey::U8Param, None::<u8>)
         .await?;
     drop(cmd_ctx_save);
 
@@ -82,12 +87,18 @@ async fn build_with_workspace_params_none_specified() -> Result<(), Box<dyn std:
     let workspace_params = fields.workspace_params();
     assert!(std::ptr::eq(&workspace, fields.workspace()));
     assert_eq!(peace_app_dir, fields.workspace().dirs().peace_app_dir());
-    assert_eq!(Some(&profile), workspace_params.get("profile"));
+    assert_eq!(
+        Some(&profile),
+        workspace_params.get(&WorkspaceParamsKey::Profile)
+    );
     assert_eq!(
         Some(&String::from("ws_param_1_value")),
-        workspace_params.get("ws_param_1")
+        workspace_params.get(&WorkspaceParamsKey::StringParam)
     );
-    assert_eq!(None::<u8>, workspace_params.get("ws_param_2").copied());
+    assert_eq!(
+        None::<u8>,
+        workspace_params.get(&WorkspaceParamsKey::U8Param).copied()
+    );
     Ok(())
 }
 
@@ -100,12 +111,12 @@ impl CmdCtxTypes for TestCctCmdCtxNpnf {
     type MappingFns = ();
     type Output = NoOpOutput;
     type ProfileParamsKey = ();
-    type WorkspaceParamsKey = String;
+    type WorkspaceParamsKey = WorkspaceParamsKey;
 
     fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
-        type_reg.register::<Profile>(String::from("profile"));
-        type_reg.register::<String>(String::from("ws_param_1"));
-        type_reg.register::<u8>(String::from("ws_param_2"));
+        type_reg.register::<Profile>(WorkspaceParamsKey::Profile);
+        type_reg.register::<String>(WorkspaceParamsKey::StringParam);
+        type_reg.register::<u8>(WorkspaceParamsKey::U8Param);
     }
 
     fn profile_params_register(_type_reg: &mut TypeReg<Self::ProfileParamsKey>) {}

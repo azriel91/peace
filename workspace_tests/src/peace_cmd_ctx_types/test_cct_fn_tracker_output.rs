@@ -7,11 +7,11 @@ pub struct TestCctFnTrackerOutput;
 
 impl CmdCtxTypes for TestCctFnTrackerOutput {
     type AppError = PeaceTestError;
-    type FlowParamsKey = String;
+    type FlowParamsKey = ();
     type MappingFns = ();
     type Output = FnTrackerOutput;
-    type ProfileParamsKey = String;
-    type WorkspaceParamsKey = String;
+    type ProfileParamsKey = ();
+    type WorkspaceParamsKey = ();
 
     fn workspace_params_register(_type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {}
 
