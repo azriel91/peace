@@ -17,7 +17,6 @@ use peace_rt_model::{
     ParamsSpecsSerializer, Workspace, WorkspaceInitializer,
 };
 use peace_state_rt::StatesSerializer;
-use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
 use crate::{CmdCtxBuilderSupport, CmdCtxSpsf, CmdCtxSpsfFields, CmdCtxTypes, ProfileSelection};
@@ -268,12 +267,12 @@ where
             resources: resources_override,
         } = self.build_partial();
 
-        let mut workspace_params_type_reg = TypeReg::new();
-        CmdCtxTypesT::workspace_params_register(&mut workspace_params_type_reg);
-        let mut profile_params_type_reg = TypeReg::new();
-        CmdCtxTypesT::profile_params_register(&mut profile_params_type_reg);
-        let mut flow_params_type_reg = TypeReg::new();
-        CmdCtxTypesT::flow_params_register(&mut flow_params_type_reg);
+        let workspace_params_type_reg =
+            CmdCtxBuilderSupport::params_type_reg_initialize::<CmdCtxTypesT::WorkspaceParamsKey>();
+        let profile_params_type_reg =
+            CmdCtxBuilderSupport::params_type_reg_initialize::<CmdCtxTypesT::ProfileParamsKey>();
+        let flow_params_type_reg =
+            CmdCtxBuilderSupport::params_type_reg_initialize::<CmdCtxTypesT::FlowParamsKey>();
 
         let workspace_dirs = workspace.dirs();
         let storage = workspace.storage();

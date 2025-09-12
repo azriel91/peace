@@ -6,7 +6,6 @@ use peace::{
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
     params::ParamsSpec,
-    profile_model::Profile,
     resource_rt::{
         paths::{FlowDir, ParamsSpecsFile, ProfileDir, ProfileHistoryDir},
         type_reg::untagged::TypeReg,
@@ -1057,22 +1056,4 @@ impl CmdCtxTypes for TestCctCmdCtxMpsf {
     type Output = NoOpOutput;
     type ProfileParamsKey = ProfileParamsKey;
     type WorkspaceParamsKey = WorkspaceParamsKey;
-
-    fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
-        type_reg.register::<Profile>(WorkspaceParamsKey::Profile);
-        type_reg.register::<String>(WorkspaceParamsKey::StringParam);
-        type_reg.register::<u8>(WorkspaceParamsKey::U8Param);
-    }
-
-    fn profile_params_register(type_reg: &mut TypeReg<Self::ProfileParamsKey>) {
-        type_reg.register::<u32>(ProfileParamsKey::U32Param);
-        type_reg.register::<u64>(ProfileParamsKey::U64Param);
-        type_reg.register::<i64>(ProfileParamsKey::I64Param);
-    }
-
-    fn flow_params_register(type_reg: &mut TypeReg<Self::FlowParamsKey>) {
-        type_reg.register::<bool>(FlowParamsKey::BoolParam);
-        type_reg.register::<u16>(FlowParamsKey::U16Param);
-        type_reg.register::<i16>(FlowParamsKey::I16Param);
-    }
 }

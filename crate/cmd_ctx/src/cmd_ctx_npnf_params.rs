@@ -6,7 +6,6 @@ use own::{OwnedOrMutRef, OwnedOrRef};
 use peace_params::ParamsValue;
 use peace_resource_rt::internal::WorkspaceParamsFile;
 use peace_rt_model::{params::WorkspaceParamsOpt, Workspace, WorkspaceInitializer};
-use type_reg::untagged::TypeReg;
 use typed_builder::TypedBuilder;
 
 use crate::{CmdCtxBuilderSupport, CmdCtxNpnf, CmdCtxNpnfFields, CmdCtxTypes};
@@ -128,8 +127,8 @@ where
             workspace_params: workspace_params_provided,
         } = self.build_partial();
 
-        let mut workspace_params_type_reg = TypeReg::new();
-        CmdCtxTypesT::workspace_params_register(&mut workspace_params_type_reg);
+        let workspace_params_type_reg =
+            CmdCtxBuilderSupport::params_type_reg_initialize::<CmdCtxTypesT::WorkspaceParamsKey>();
 
         let workspace_dirs = workspace.dirs();
         let storage = workspace.storage();

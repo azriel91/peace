@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, Item},
-    cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
+    cmd_ctx::{CmdCtxSpsf, CmdCtxTypes, ProfileSelection},
     enum_iterator::Sequence,
     flow_model::flow_id,
     flow_rt::{Flow, ItemGraphBuilder},
@@ -1365,22 +1365,6 @@ impl CmdCtxTypes for TestCctCmdCtxSpsf {
     type Output = NoOpOutput;
     type ProfileParamsKey = ProfileParamsKey;
     type WorkspaceParamsKey = WorkspaceParamsKey;
-
-    fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
-        type_reg.register::<Profile>(WorkspaceParamsKey::Profile);
-        type_reg.register::<String>(WorkspaceParamsKey::StringParam);
-        type_reg.register::<u8>(WorkspaceParamsKey::U8Param);
-    }
-
-    fn profile_params_register(type_reg: &mut TypeReg<Self::ProfileParamsKey>) {
-        type_reg.register::<u32>(ProfileParamsKey::U32Param);
-        type_reg.register::<u64>(ProfileParamsKey::U64Param);
-    }
-
-    fn flow_params_register(type_reg: &mut TypeReg<Self::FlowParamsKey>) {
-        type_reg.register::<bool>(FlowParamsKey::BoolParam);
-        type_reg.register::<u16>(FlowParamsKey::U16Param);
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]

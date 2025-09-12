@@ -1,7 +1,6 @@
 use peace::{
     cfg::{app_name, profile},
-    cmd_ctx::{type_reg::untagged::TypeReg, CmdCtxNpnf, CmdCtxTypes},
-    profile_model::Profile,
+    cmd_ctx::{CmdCtxNpnf, CmdCtxTypes},
 };
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};
@@ -112,14 +111,4 @@ impl CmdCtxTypes for TestCctCmdCtxNpnf {
     type Output = NoOpOutput;
     type ProfileParamsKey = ();
     type WorkspaceParamsKey = WorkspaceParamsKey;
-
-    fn workspace_params_register(type_reg: &mut TypeReg<Self::WorkspaceParamsKey>) {
-        type_reg.register::<Profile>(WorkspaceParamsKey::Profile);
-        type_reg.register::<String>(WorkspaceParamsKey::StringParam);
-        type_reg.register::<u8>(WorkspaceParamsKey::U8Param);
-    }
-
-    fn profile_params_register(_type_reg: &mut TypeReg<Self::ProfileParamsKey>) {}
-
-    fn flow_params_register(_type_reg: &mut TypeReg<Self::FlowParamsKey>) {}
 }
