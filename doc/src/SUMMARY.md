@@ -73,6 +73,7 @@
 
 - [Side Projects](side_projects.md)
     - [✒️ Dot IX](side_projects/dot_ix.md)
+    - [📐 disposition](side_projects/disposition.md)
 
 ---
 
