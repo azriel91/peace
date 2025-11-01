@@ -22,7 +22,7 @@ pub struct ItemApply<State, StateDiff> {
     pub state_diff: StateDiff,
     /// Whether item execution was required.
     pub apply_check: ApplyCheck,
-    /// The state that was applyd, `None` if execution was not required.
+    /// The state that was applied, `None` if execution was not required.
     pub state_applied: Option<State>,
 }
 
