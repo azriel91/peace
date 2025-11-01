@@ -71,6 +71,9 @@
         - [Seamless Execution](technical_concepts/flow_versioning/seamless_execution.md)
         - [Upgrade Actions](technical_concepts/flow_versioning/upgrade_actions.md)
 
+- [Side Projects](side_projects.md)
+    - [✒️ Dot IX](side_projects/dot_ix.md)
+    - [📐 disposition](side_projects/disposition.md)
 
 ---
 

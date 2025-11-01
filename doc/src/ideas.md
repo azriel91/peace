@@ -315,6 +315,28 @@ This trades
 </div>
 </details>
 
+<details>
+<summary>19. Web app URL stores all render information.</summary>
+<div>
+
+When a URL is shared with someone, it should contain everything to inform the app on which elements to expand, highlight, etcetera.
+
+This means the whole web app state must be stored in a single object, and serialized into the URL (as the URL fragment).
+
+</div>
+</details>
+
+<details>
+<summary>19. HTML with SVG arrows and flexbox instead of <code>dot</code>.</summary>
+<div>
+
+Instead of using `dot`, we just use flexbox and generate arrows between HTML `div`s.
+
+This trades 
+
+</div>
+</details>
+
 
 ## Notes
 
