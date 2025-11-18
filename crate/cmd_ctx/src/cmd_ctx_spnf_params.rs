@@ -135,7 +135,7 @@ where
 // Use one of the following to obtain the generated type signature:
 //
 // ```sh
-// cargo expand -p peace_cmd_ctx cmd_ctx_spnf_builder
+// cargo expand -p peace_cmd_ctx cmd_ctx_spnf_params
 // ```
 //
 // Sublime text command:
@@ -143,11 +143,7 @@ where
 // **LSP-rust-analyzer: Expand Macro Recursively** while the caret is on the
 // `TypedBuilder` derive.
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-    >
+impl<'ctx, CmdCtxTypesT, __interruptibility>
     CmdCtxSpnfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -156,12 +152,20 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
-            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxSpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
 {
     pub async fn build(self) -> Result<CmdCtxSpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
         let CmdCtxSpnfParams {
@@ -309,11 +313,7 @@ where
 }
 
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
-    > IntoFuture
+impl<'ctx, CmdCtxTypesT, __interruptibility> IntoFuture
     for CmdCtxSpnfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -322,12 +322,21 @@ impl<
             __interruptibility,
             (OwnedOrRef<'ctx, Workspace>,),
             (ProfileSelection<'ctx, CmdCtxTypesT::WorkspaceParamsKey>,),
-            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxSpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
+    __interruptibility: 'ctx,
 {
     /// Future that returns the `CmdCtxSpnf`.
     ///
