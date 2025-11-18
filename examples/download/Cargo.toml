@@ -22,23 +22,23 @@ result_large_err = "allow"
 
 [dependencies]
 peace_items = { path = "../../items", features = ["file_download"] }
-thiserror = "2.0.12"
-url = { version = "2.5.4", features = ["serde"] }
+thiserror = "2.0.17"
+url = { version = "2.5.7", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace = { workspace = true, default-features = false, features = ["cli"] }
-clap = { version = "4.5.36", features = ["derive"] }
-tokio = { version = "1.44.2", features = ["net", "time", "rt"] }
+clap = { version = "4.5.52", features = ["derive"] }
+tokio = { version = "1.48.0", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 peace = { workspace = true, default-features = false }
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.6.5"
-tokio = "1.44.2"
-wasm-bindgen = "0.2.100"
-wasm-bindgen-futures = "0.4.50"
-js-sys = "0.3.77"
-web-sys = "0.3.77"
+tokio = "1.48.0"
+wasm-bindgen = "0.2.105"
+wasm-bindgen-futures = "0.4.55"
+js-sys = "0.3.82"
+web-sys = "0.3.82"
 
 [features]
 default = []

@@ -164,25 +164,25 @@ peace_item_tar_x = { path = "items/tar_x", version = "0.0.15" }
 #
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.
-async-trait = "0.1.88"
-axum = "0.8.3"
+async-trait = "0.1.89"
+axum = "0.8.7"
 base64 = "0.22.1"
-bytes = "1.10.1"
-cfg-if = "1.0.0"
-chrono = { version = "0.4.40", default-features = false, features = [
+bytes = "1.11.0"
+cfg-if = "1.0.4"
+chrono = { version = "0.4.42", default-features = false, features = [
     "clock",
     "serde",
 ] }
-console = "0.15.11"
+console = "0.16.1"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
 dot_ix = { version = "0.10.0", default-features = false }
 dot_ix_model = "0.10.0"
-downcast-rs = "2.0.1"
-dyn-clone = "1.0.19"
+downcast-rs = "2.0.2"
+dyn-clone = "1.0.20"
 enser = "0.1.4"
 enum-iterator = "2.3.0"
-erased-serde = "0.4.6"
+erased-serde = "0.4.9"
 fn_graph = { version = "0.18.0", features = [
     "async",
     "graph_info",
@@ -192,42 +192,42 @@ fn_graph = { version = "0.18.0", features = [
 futures = "0.3.31"
 gloo-timers = "0.3.0"
 heck = "0.5.0"
-id_newtype = "0.1.0"
-indexmap = "2.9.0"
-indicatif = "0.17.11"
+id_newtype = "0.2.0"
+indexmap = "2.12.0"
+indicatif = "0.18.3"
 interruptible = "0.2.4"
-leptos = { version = "0.8.0-rc1" }
-leptos_axum = "0.8.0-rc1"
-leptos_config = "0.8.0-rc1"
-leptos_meta = { version = "0.8.0-rc1" }
-leptos_router = { version = "0.8.0-rc1" }
-libc = "0.2.172"
-miette = "7.5.0"
+leptos = { version = "0.8.12" }
+leptos_axum = "0.8.6"
+leptos_config = "0.8.7"
+leptos_meta = { version = "0.8.5" }
+leptos_router = { version = "0.8.9" }
+libc = "0.2.177"
+miette = "7.6.0"
 own = "0.1.3"
 pretty_assertions = "1.4.1"
-proc-macro2 = "1.0.95"
-quote = "1.0.40"
+proc-macro2 = "1.0.103"
+quote = "1.0.42"
 raw_tty = "0.1.0"
-reqwest = "0.12.15"
+reqwest = "0.12.24"
 resman = "0.19.0"
-serde = "1.0.219"
+serde = "1.0.228"
 serde-wasm-bindgen = "0.6.5"
-serde_json = "1.0.140"
+serde_json = "1.0.145"
 serde_yaml = "0.9.34"
-smallvec = "1.15.0"
-syn = "2.0.100"
+smallvec = "1.15.1"
+syn = "2.0.110"
 tar = "0.4.44"
-tempfile = "3.19.1"
-thiserror = "2.0.12"
-tokio = "1.44"
-tokio-util = "0.7.14"
-tower-http = "0.6.2"
+tempfile = "3.23.0"
+thiserror = "2.0.17"
+tokio = "1.48"
+tokio-util = "0.7.17"
+tower-http = "0.6.6"
 tynm = "0.2.0"
 type_reg = { version = "0.9.0", features = ["debug", "untagged", "ordered"] }
-typed-builder = "0.21.0"
-url = "2.5.4"
-wasm-bindgen = "0.2.100"
-web-sys = "0.3.77"
+typed-builder = "0.23.1"
+url = "2.5.7"
+wasm-bindgen = "0.2.105"
+web-sys = "0.3.82"
 yaml_error_context_hack = "0.1.0"
 
 [workspace.metadata.release]
