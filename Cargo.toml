@@ -236,3 +236,8 @@ rate-limit = { new-packages = 10, existing-packages = 50 }
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
+
+# False positive on `miette::Diagnostic` types.
+#
+# See <https://github.com/rust-lang/rust/issues/147648>
+unused_assignments = "allow"
