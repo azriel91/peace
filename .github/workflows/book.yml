@@ -24,25 +24,26 @@ jobs:
           # <https://github.com/jetli/wasm-pack-action/issues/23>
           version: "v0.13.1"
 
-      - name: mdbook Cache
-        id: mdbook_cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/mdbook
-          key: ${{ runner.os }}-mdbook
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-      - name: mdbook-graphviz Cache
-        id: mdbook_graphviz_cache
-        uses: actions/cache@v4
+      - name: mdbook-graphviz cache restore
+        id: mdbook_graphviz_cache_restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/mdbook-graphviz
           key: ${{ runner.os }}-mdbook-graphviz
 
-      - name: Setup Graphviz
-        uses: ts-graphviz/setup-graphviz@v2
+      - run: cargo install --locked mdbook-graphviz
+        if: steps.mdbook_graphviz_cache_restore.outputs.cache-hit != 'true'
 
-      - run: cargo install mdbook-graphviz
-        if: steps.mdbook_graphviz_cache.outputs.cache-hit != 'true'
+      - name: mdbook-graphviz cache save
+        id: mdbook_graphviz_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.mdbook_graphviz_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/mdbook-graphviz
+          key: ${{ runner.os }}-mdbook-graphviz
 
       # When updating this, also update ci.yml
       - name: "Example: download (WASM)"
@@ -58,10 +59,25 @@ jobs:
             --features 'error_reporting'
           done
 
+      - name: mdbook cache restore
+        id: mdbook_cache_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cargo/bin/mdbook
+          key: ${{ runner.os }}-mdbook
+
       # use custom version of mdbook for now
       - name: Install `mdbook`
         run: cargo install mdbook --git https://github.com/azriel91/mdBook.git --branch improvement/code-blocks
-        if: steps.mdbook_cache.outputs.cache-hit != 'true'
+        if: steps.mdbook_cache_restore.outputs.cache-hit != 'true'
+
+      - name: mdbook cache save
+        id: mdbook_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.mdbook_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/mdbook
+          key: ${{ runner.os }}-mdbook
 
       - run: mdbook build doc
 
