@@ -232,6 +232,13 @@ thing_copy_text:
   localhost_repo_target_file_zip: "~/work/web_app/target/file.zip"
   localhost_repo_target_dist_dir: "~/work/web_app/target/dist"
 
+# This defines the nesting, but perhaps we should use it to define the relative positioning as well.
+#
+# Do we want users to have control, e.g. placing the things in a grid?
+#
+# Other question, the positioning for a software dependency tree is different to the positioning
+# for deployment topology. Maybe we allow the user to specify either "rank" based layout or "flow"
+# based layout.
 thing_hierarchy:
   aws:
     aws_iam:
