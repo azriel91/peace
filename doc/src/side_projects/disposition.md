@@ -134,7 +134,7 @@ Because we want node descriptions to be markdown, we need to convert them to an 
 
 #### 3.2. Images
 
-Images can be inlined in markdown, and based on the image data or a provided value, we can pass that to `taffy` to calculate the position. If we use [`comrak`][`comrak`], then we need to wait for [comrak#586][comrak#586] to be resolved to get the passed in dimensions of the image.
+Images can be inlined in markdown, and based on the image data or a provided value, we can pass that to `taffy` to calculate the position. If we use [`comrak`][`comrak`], then we need to wait for [`comrak#586`][`comrak#586`] to be resolved to get the passed in dimensions of the image.
 
 
 ### 4. Full Document Object Model (DOM)
@@ -166,7 +166,7 @@ Probably:
 1. Define diagram structure based on `dot_ix`'s learnings.
 2. Map the structure to [`taffy`][`taffy`]'s elements.
 3. Use [`taffy`][`taffy`] to lay out the diagram.
-4. Convert to SVG, adding edges and attributes from the input structure.
+4. Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
 5. Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
 
 
@@ -193,8 +193,9 @@ Probably:
 
 [`blitz`]: https://github.com/DioxusLabs/blitz
 [`comrak`]: https://github.com/kivikakk/comrak
-[comrak#586]: https://github.com/kivikakk/comrak/issues/586
+[`comrak#586`]: https://github.com/kivikakk/comrak/issues/586
 [`dot_ix`]: https://azriel.im/dot_ix/
+[`kurbo`]: https://github.com/linebender/kurbo
 [`taffy`]: https://github.com/DioxusLabs/taffy
 
 
