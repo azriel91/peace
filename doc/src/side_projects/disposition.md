@@ -191,6 +191,9 @@ Probably:
 
     e.g. when an element is clicked on, it becomes the `:target` element in the document, and the css selector `#element-id:target ~ #other` allows you to style `#other` when `#element-id` was clicked, presumably when the focus is changed from  `#element-id` to something else.
 
+5. Use [`async-lsp`][`async-lsp`] to provide context-aware completions.
+
+[`async-lsp`]: https://github.com/oxalica/async-lsp
 [`blitz`]: https://github.com/DioxusLabs/blitz
 [`comrak`]: https://github.com/kivikakk/comrak
 [`comrak#586`]: https://github.com/kivikakk/comrak/issues/586
@@ -198,11 +201,13 @@ Probably:
 [`kurbo`]: https://github.com/linebender/kurbo
 [`taffy`]: https://github.com/DioxusLabs/taffy
 
-
 ## Example Input
 
 ````yaml
 ---
+# Things in the diagram.
+#
+# This map defines the `ThingId`s and their display names.
 things: &things
   aws: "☁️ Amazon Web Services"
   aws_iam: "🖊️ Identity and Access Management"
@@ -223,8 +228,7 @@ things: &things
   localhost_repo_target_file_zip: "📝 file.zip"
   localhost_repo_target_dist_dir: "📁 dist"
 
-# Render a copy text button, and, when clicked,
-# what text to place on the clipboard.
+# Render a copy text button, and, when clicked, what text to place on the clipboard.
 thing_copy_text:
   <<: *things
   localhost_repo: "~/work/web_app"
@@ -233,6 +237,10 @@ thing_copy_text:
   localhost_repo_target_file_zip: "~/work/web_app/target/file.zip"
   localhost_repo_target_dist_dir: "~/work/web_app/target/dist"
 
+# Hierarchy of `thing`s.
+#
+# The `ThingHierarchy` is a tree structure stored as a map of `ThingId` to `ThingHierarchy`. This structure is strictly unidirectional.
+#
 # This defines the nesting, but perhaps we should use it to define the relative positioning as well.
 #
 # Do we want users to have control, e.g. placing the things in a grid?
@@ -258,6 +266,22 @@ thing_hierarchy:
       localhost_repo_target:
         localhost_repo_target_file_zip: {}
         localhost_repo_target_dist_dir: {}
+
+# How to position things on the diagram.
+#
+# Not sure if this is the right approach yet, but ideas:
+#
+# * `rank`: `thing_dependencies`' edges affect how far a `thing` is from the beginning position.
+# * `flex`: `thing_hierarchy` alternates between horizontal and vertical flex axes.
+#
+# ```yaml
+# thing_layout:
+#   # one of:
+#   flex: "row"
+#   # flex: "column"
+#   # rank: "horizontal"
+#   # rank: "vertical"
+# ```
 
 # Dependencies between things can be one way, or cyclic.
 #
@@ -302,9 +326,14 @@ thing_dependencies: &thing_dependencies
       - aws_ecr_repo
       - aws_ecs_service
 
+# Descriptions to render next to each arrow.
+#
+# This is intended to take markdown text.
 thing_dependencies_descs:
-  edge_localhost__github_user_repo__pull: ~
-  edge_localhost__github_user_repo__push: ~
+  edge_localhost__github_user_repo__pull: |-
+    `git pull`
+  edge_localhost__github_user_repo__push: |-
+    `git push`
   edge_localhost__localhost__within: ~
   edge_github_user_repo__github_user_repo__within: ~
   edge_github_user_repo__aws_ecr_repo__push: ~
@@ -326,6 +355,11 @@ thing_dependencies_descs:
 # We want to make it easy to define interactions between chains of things.
 thing_interactions: *thing_dependencies # cheat and use yaml reference
 
+# Processes are groupings of interactions between things sequenced over time.
+#
+# We want to make it easy to see which things are involved (in each step of) a process. By
+# highlighting the things / edges when a user focuses on a step in a process, it brings clarity to
+# the user.
 processes:
   proc_app_dev:
     name: "App Development"
