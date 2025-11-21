@@ -46,12 +46,12 @@ There are multiple parts to generating a diagram:
 5. **Rendering:** Producing the visual representation from the full DOM elements.
 
 
-### 1. Diagram Structure / Capturing Information
+### 1. High Level Diagram Structure / Capturing Information
 
 Capturing the information for the diagram, in a structure that is easy to reason about and work with. Ideally easy for both humans and computers to read and write.
 
 * **Input:** Input formats, e.g. JSON, YAML, in-memory objects, etc.
-* **Output:** Diagram data structure.
+* **Output:** High Level diagram data structure.
 
 
 #### 1.1. Nodes / Clusters
@@ -80,7 +80,17 @@ We don't want to use the names "entity diagram" or "sequence diagram", because i
 5. Edges on the correct point (north, south, east, west) on the node.
 
 
-### 2. Document Object Model (DOM)
+### 2. Intermediate Representation (IR) Diagram Structure
+
+* **Input:** High Level Diagram Structure, or serialized IR, e.g. JSON, YAML.
+* **Output:** IR Diagram data structure.
+
+Similar to 1., except we want to define everything in terms of nodes and edges.
+
+Technically we can begin at this step instead of 1., and define the high level diagram structure later, as long as we can represent the complex diagram in this intermediate representation.
+
+
+### 3. Document Object Model (DOM)
 
 Turn the diagram data structure into DOM elements.
 
@@ -95,7 +105,7 @@ We need to choose one or a combination of:
 ℹ️ **Note:** we also need to consider edge descriptions -- how do we place these in the DOM? `taffy` will be used for flex / grid layout, but where would we place edge DOM elements?
 
 
-### 3. Layout
+### 4. Layout
 
 Placement of nodes, padding, reflowing text, etc.
 
@@ -111,12 +121,12 @@ If we use:
 ℹ️ **Note:** we also need to consider edge descriptions -- if there is a lot of text, should we have spacing for those labels?
 
 
-#### 3.1. DOM representation
+#### 4.1. DOM representation
 
 Because we want node descriptions to be markdown, we need to convert them to an appropriate DOM structure that can represent the rendered markdown, as well as encode the layout and styling information.
 
 
-##### 3.1.1. Option 1: SVG
+##### 4.1.1. Option 1: SVG
 
 1. We have to calculate the positions of nodes and text ourselves, including padding etc.
 2. Markdown is converted to HTML, then we use those to position the text.
@@ -126,26 +136,34 @@ Because we want node descriptions to be markdown, we need to convert them to an 
 6. See the [`cosmic_text` example](https://github.com/DioxusLabs/taffy/blob/v0.9.1/examples/cosmic_text/src/main.rs) -- you need font metrics to know how text renders.
 
 
-##### 3.1.2. Option 2: HTML + HTML to SVG
+##### 4.1.2. Option 2: HTML + HTML to SVG
 
 1. HTML rendering engine does the layout of text positioning for us.
 2. Markdown will easily be supported here, because we can convert to HTML, then the rendering engine takes care of the rest.
 
 
-#### 3.2. Images
+#### 4.2. Images
 
 Images can be inlined in markdown, and based on the image data or a provided value, we can pass that to `taffy` to calculate the position. If we use [`comrak`][`comrak`], then we need to wait for [`comrak#586`][`comrak#586`] to be resolved to get the passed in dimensions of the image.
 
 
-### 4. Full Document Object Model (DOM)
+### 5. Full Document Object Model (DOM)
 
 Adding edges after the elements are positioned, and adding the attributes that the layout DOM doesn't have.
 
 * **Input:** Layout DOM elements with fixed coordinates.
 * **Output:** Render DOM elements (including text) with XY coordinates in a fixed viewport, with tailwind classes.
 
+#### 5.1. Edges
 
-### 5. Rendering
+For flex type layouts / non-rank layouts, edges are intended to be hidden until a process / a step in a process is selected. This means there is no need to consider edges crossing each other, and they should generally have their start and end points in the middle of a `thing`'s border. Multiple edges may be offset from the middle by a few points so that it's clear there are multiple edges.
+
+For rank type layouts, edges *may* be always visible, and are highlighted when a `thing` is focused. The highlighting makes it clearer when things are related, and layout stability is a goal of this tool, so edge crossing minimization will not be done at the expense of stable node positions.
+
+[`kurbo`][`kurbo`] may be useful to calculate the coordinates along the curve for the path. Check how SVG paths take in input for curved lines -- we might not need to use `kurbo` if the SVG renderer calculates the curves.
+
+
+### 6. Rendering
 
 Rendering of the DOM into a visual and interactive format.
 
@@ -163,11 +181,12 @@ Any browser could render HTML / SVG. If we want a non-browser solution, look at:
 
 Probably:
 
-1. Define diagram structure based on `dot_ix`'s learnings.
-2. Map the structure to [`taffy`][`taffy`]'s elements.
-3. Use [`taffy`][`taffy`] to lay out the diagram.
-4. Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
-5. Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
+1. Define high level diagram structure based on concepts we want to display.
+2. Define intermediate diagram structure based on `dot_ix`'s learnings.
+3. Map the structure to [`taffy`][`taffy`]'s elements.
+4. Use [`taffy`][`taffy`] to lay out the diagram.
+5. Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
+6. Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
 
 
 ## Ideas / Learnings from `dot_ix`
