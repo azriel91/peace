@@ -47,16 +47,23 @@ jobs:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
 
-      - name: cargo-about cache
-        id: cargo-about-cache
-        uses: actions/cache@v4
+      - name: cargo-about cache restore
+        id: cargo_about_cache_restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-about
-          key: cargo-about-${{ runner.os }}
+          key: ${{ runner.os }}-cargo-about
 
-      - name: cargo-about install
-        if: steps.cargo-about-cache.outputs.cache-hit != 'true'
-        run: cargo install --locked cargo-about
+      - run: cargo install --locked cargo-about
+        if: steps.cargo_about_cache_restore.outputs.cache-hit != 'true'
+
+      - name: cargo-about cache save
+        id: cargo_about_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.cargo_about_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/cargo-about
+          key: ${{ runner.os }}-cargo-about
 
       - name: cargo-about generate licenses
         run: cargo about generate --workspace --all-features about.hbs > doc/src/licenses.html
@@ -220,16 +227,42 @@ jobs:
           # <https://github.com/jetli/wasm-pack-action/issues/23>
           version: "v0.13.1"
 
-      - name: cargo-leptos cache
-        id: cargo-leptos-cache
-        uses: actions/cache@v4
+      # Since cargo-leptos 0.2.47, an external `wasm-bindgen` is used.
+      - name: wasm-bindgen cache restore
+        id: wasm_bindgen_cache_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: ${{ runner.os }}-wasm-bindgen-0-2-105
+
+      - run: cargo install --locked wasm-bindgen-cli --version="=0.2.105"
+        if: steps.wasm_bindgen_cache_restore.outputs.cache-hit != 'true'
+
+      - name: wasm-bindgen cache save
+        id: wasm_bindgen_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.wasm_bindgen_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: ${{ runner.os }}-wasm-bindgen-0-2-105
+
+      - name: cargo-leptos cache restore
+        id: cargo_leptos_cache_restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-leptos
-          key: cargo-leptos-${{ runner.os }}
+          key: ${{ runner.os }}-cargo-leptos
 
-      - name: cargo-leptos install
-        if: steps.cargo-leptos-cache.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
+      - run: cargo install --locked cargo-leptos
+        if: steps.cargo_leptos_cache_restore.outputs.cache-hit != 'true'
+
+      - name: cargo-leptos cache save
+        id: cargo_leptos_cache_save
+        uses: actions/cache/save@v4
+        if: always() && steps.cargo_leptos_cache_restore.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cargo/bin/cargo-leptos
+          key: ${{ runner.os }}-cargo-leptos
 
       - name: "Example: envman (leptos)"
         run: cargo envman_build_debug

@@ -158,7 +158,7 @@ where
 // Use one of the following to obtain the generated type signature:
 //
 // ```sh
-// cargo expand -p peace_cmd_ctx cmd_ctx_mpnf_builder
+// cargo expand -p peace_cmd_ctx cmd_ctx_mpnf_params
 // ```
 //
 // Sublime text command:
@@ -166,12 +166,7 @@ where
 // **LSP-rust-analyzer: Expand Macro Recursively** while the caret is on the
 // `TypedBuilder` derive.
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>>,
-    >
+impl<'ctx, CmdCtxTypesT, __interruptibility, __profile_filter_fn>
     CmdCtxMpnfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -181,11 +176,34 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
             (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
-            (BTreeMap<Profile, ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>>,),
+            (
+                BTreeMap<
+                    Profile,
+                    ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+                >,
+            ),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxMpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
+    CmdCtxMpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                &'__typed_builder_lifetime_for_default Interruptibility<'static>,
+                &'__typed_builder_lifetime_for_default OwnedOrRef<'ctx, Workspace>,
+                __profile_filter_fn,
+            ),
+            Output = Option<ProfileFilterFn>,
+        >,
 {
     pub async fn build(self) -> Result<CmdCtxMpnf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
         let CmdCtxMpnfParams {
@@ -314,12 +332,7 @@ where
 }
 
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
-        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>> + 'ctx,
-    > IntoFuture
+impl<'ctx, CmdCtxTypesT, __interruptibility, __profile_filter_fn> IntoFuture
     for CmdCtxMpnfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -329,11 +342,36 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
             (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
-            (BTreeMap<Profile, ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>>,),
+            (
+                BTreeMap<
+                    Profile,
+                    ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+                >,
+            ),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxMpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
+    CmdCtxMpnfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                &'__typed_builder_lifetime_for_default Interruptibility<'static>,
+                &'__typed_builder_lifetime_for_default OwnedOrRef<'ctx, Workspace>,
+                __profile_filter_fn,
+            ),
+            Output = Option<ProfileFilterFn>,
+        >,
+    __interruptibility: 'ctx,
+    __profile_filter_fn: 'ctx,
 {
     /// Future that returns the `CmdCtxMpnf`.
     ///

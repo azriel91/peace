@@ -290,7 +290,7 @@ where
 // Use one of the following to obtain the generated type signature:
 //
 // ```sh
-// cargo expand -p peace_cmd_ctx cmd_ctx_mpsf_builder
+// cargo expand -p peace_cmd_ctx cmd_ctx_mpsf_params
 // ```
 //
 // Sublime text command:
@@ -298,12 +298,7 @@ where
 // **LSP-rust-analyzer: Expand Macro Recursively** while the caret is on the
 // `TypedBuilder` derive.
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>>,
-        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>>,
-    >
+impl<'ctx, CmdCtxTypesT, __interruptibility, __profile_filter_fn>
     CmdCtxMpsfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -313,15 +308,38 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (BTreeMap<Profile, ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>>,),
-            (BTreeMap<Profile, FlowParamsOpt<CmdCtxTypesT::FlowParamsKey>>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (
+                BTreeMap<
+                    Profile,
+                    ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+                >,
+            ),
+            (BTreeMap<Profile, FlowParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>>,),
             (BTreeMap<Profile, ParamsSpecs>,),
             (Resources<Empty>,),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxMpsfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
+    CmdCtxMpsfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                &'__typed_builder_lifetime_for_default Interruptibility<'static>,
+                &'__typed_builder_lifetime_for_default OwnedOrRef<'ctx, Workspace>,
+                __profile_filter_fn,
+            ),
+            Output = Option<ProfileFilterFn>,
+        >,
 {
     pub async fn build(self) -> Result<CmdCtxMpsf<'ctx, CmdCtxTypesT>, CmdCtxTypesT::AppError> {
         let CmdCtxMpsfParams {
@@ -546,12 +564,7 @@ where
 }
 
 #[allow(non_camel_case_types)]
-impl<
-        'ctx,
-        CmdCtxTypesT,
-        __interruptibility: ::typed_builder::Optional<Interruptibility<'static>> + 'ctx,
-        __profile_filter_fn: ::typed_builder::Optional<Option<ProfileFilterFn>> + 'ctx,
-    > IntoFuture
+impl<'ctx, CmdCtxTypesT, __interruptibility, __profile_filter_fn> IntoFuture
     for CmdCtxMpsfParamsBuilder<
         'ctx,
         CmdCtxTypesT,
@@ -561,15 +574,40 @@ impl<
             (OwnedOrRef<'ctx, Workspace>,),
             __profile_filter_fn,
             (OwnedOrRef<'ctx, Flow<CmdCtxTypesT::AppError>>,),
-            (WorkspaceParamsOpt<CmdCtxTypesT::WorkspaceParamsKey>,),
-            (BTreeMap<Profile, ProfileParamsOpt<CmdCtxTypesT::ProfileParamsKey>>,),
-            (BTreeMap<Profile, FlowParamsOpt<CmdCtxTypesT::FlowParamsKey>>,),
+            (WorkspaceParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::WorkspaceParamsKey>,),
+            (
+                BTreeMap<
+                    Profile,
+                    ProfileParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::ProfileParamsKey>,
+                >,
+            ),
+            (BTreeMap<Profile, FlowParamsOpt<<CmdCtxTypesT as CmdCtxTypes>::FlowParamsKey>>,),
             (BTreeMap<Profile, ParamsSpecs>,),
             (Resources<Empty>,),
         ),
     >
 where
     CmdCtxTypesT: CmdCtxTypes,
+    CmdCtxMpsfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                __interruptibility,
+            ),
+            Output = Interruptibility<'static>,
+        >,
+    CmdCtxMpsfParams<'ctx, CmdCtxTypesT>:
+        for<'__typed_builder_lifetime_for_default> ::typed_builder::NextFieldDefault<
+            (
+                &'__typed_builder_lifetime_for_default OwnedOrMutRef<'ctx, CmdCtxTypesT::Output>,
+                &'__typed_builder_lifetime_for_default Interruptibility<'static>,
+                &'__typed_builder_lifetime_for_default OwnedOrRef<'ctx, Workspace>,
+                __profile_filter_fn,
+            ),
+            Output = Option<ProfileFilterFn>,
+        >,
+    __interruptibility: 'ctx,
+    __profile_filter_fn: 'ctx,
 {
     /// Future that returns the `CmdCtxMpsf`.
     ///
