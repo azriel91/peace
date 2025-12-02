@@ -193,7 +193,7 @@ edge_groups:
       to: t_aws_ecr_repo
   edge_t_aws_ecr_repo__t_aws_ecs_service__push:
     - from: t_aws_ecr_repo
-      to: t_aws_ecs_cluster_app_task
+      to: t_aws_ecs_service
 
 # Text placed next to the edges.
 #
@@ -285,10 +285,43 @@ entity_types:
 tailwind_classes:
   # Processes - act as group containers for their steps
   proc_app_dev: >-
+    stroke-1
+    visible
+    hover:fill-blue-200
+    fill-blue-300
+    focus:fill-blue-400
+    active:fill-blue-500
+    hover:stroke-blue-300
+    stroke-blue-400
+    focus:stroke-blue-500
+    active:stroke-blue-600
+
     group/proc_app_dev
   proc_app_release: >-
+    stroke-1
+    visible
+    hover:fill-blue-200
+    fill-blue-300
+    focus:fill-blue-400
+    active:fill-blue-500
+    hover:stroke-blue-300
+    stroke-blue-400
+    focus:stroke-blue-500
+    active:stroke-blue-600
+
     group/proc_app_release
   proc_i12e_region_tier_app_deploy: >-
+    stroke-1
+    visible
+    hover:fill-blue-200
+    fill-blue-300
+    focus:fill-blue-400
+    active:fill-blue-500
+    hover:stroke-blue-300
+    stroke-blue-400
+    focus:stroke-blue-500
+    active:stroke-blue-600
+
     group/proc_i12e_region_tier_app_deploy
 
   # Process steps - visible when parent process has focus, act as peers for edges
@@ -380,191 +413,196 @@ tailwind_classes:
   # because they are part of the stroke and fill colors -- we have to choose between duplication
   # either here, or in animations.
   t_aws: >-
+    [stroke-dasharray:2]
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-50
+    fill-yellow-100
+    focus:fill-yellow-200
+    active:fill-yellow-300
+    hover:stroke-yellow-100
+    stroke-yellow-200
+    focus:stroke-yellow-300
+    active:stroke-yellow-400
+    [&>text]:fill-yellow-800
   t_aws_iam: >-
+    [stroke-dasharray:3]
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_aws_iam_ecs_policy: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_aws_ecr: >-
+    [stroke-dasharray:3]
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_aws_ecr_repo: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
 
     peer-focus/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_release_step_gh_actions_publish:stroke-slate-500
-    peer-focus/proc_app_release_step_gh_actions_publish:fill-slate-100
+    peer-focus/proc_app_release_step_gh_actions_publish:stroke-yellow-500
+    peer-focus/proc_app_release_step_gh_actions_publish:fill-yellow-100
 
     peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-slate-500
-    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:fill-slate-100
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-yellow-500
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:fill-yellow-100
 
   t_aws_ecr_repo_image_1: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+    [&>text]:fill-sky-900
   t_aws_ecr_repo_image_2: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+    [&>text]:fill-sky-900
   t_aws_ecs: >-
+    [stroke-dasharray:3]
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_aws_ecs_cluster_app: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_aws_ecs_cluster_app_task: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-yellow-200
+    fill-yellow-300
+    focus:fill-yellow-400
+    active:fill-yellow-500
+    hover:stroke-yellow-300
+    stroke-yellow-400
+    focus:stroke-yellow-500
+    active:stroke-yellow-600
+    [&>text]:fill-yellow-900
   t_github: >-
+    [stroke-dasharray:3]
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-neutral-50
+    fill-neutral-100
+    focus:fill-neutral-200
+    active:fill-neutral-300
+    hover:stroke-neutral-100
+    stroke-neutral-200
+    focus:stroke-neutral-300
+    active:stroke-neutral-400
+    [&>text]:fill-neutral-800
   t_github_user_repo: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
-    hover:fill-slate-200
-    fill-slate-300
-    focus:fill-slate-400
-    active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:fill-neutral-200
+    fill-neutral-300
+    focus:fill-neutral-400
+    active:fill-neutral-500
+    hover:stroke-neutral-300
+    stroke-neutral-400
+    focus:stroke-neutral-500
+    active:stroke-neutral-600
+    [&>text]:fill-neutral-900
 
     peer-focus/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_dev_step_repository_clone:stroke-slate-500
-    peer-focus/proc_app_dev_step_repository_clone:fill-slate-100
+    peer-focus/proc_app_dev_step_repository_clone:stroke-neutral-500
+    peer-focus/proc_app_dev_step_repository_clone:fill-neutral-100
 
     peer-focus/proc_app_release_step_pull_request_open:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_release_step_pull_request_open:stroke-slate-500
-    peer-focus/proc_app_release_step_pull_request_open:fill-slate-100
+    peer-focus/proc_app_release_step_pull_request_open:stroke-neutral-500
+    peer-focus/proc_app_release_step_pull_request_open:fill-neutral-100
 
     peer-focus/proc_app_release_step_tag_and_push:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_release_step_tag_and_push:stroke-slate-500
-    peer-focus/proc_app_release_step_tag_and_push:fill-slate-100
+    peer-focus/proc_app_release_step_tag_and_push:stroke-neutral-500
+    peer-focus/proc_app_release_step_tag_and_push:fill-neutral-100
 
     peer-focus/proc_app_release_step_gh_actions_build:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_release_step_gh_actions_build:stroke-slate-500
-    peer-focus/proc_app_release_step_gh_actions_build:fill-slate-100
+    peer-focus/proc_app_release_step_gh_actions_build:stroke-neutral-500
+    peer-focus/proc_app_release_step_gh_actions_build:fill-neutral-100
 
     peer-focus/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move_2s_linear_infinite]
-    peer-focus/proc_app_release_step_gh_actions_publish:stroke-slate-500
-    peer-focus/proc_app_release_step_gh_actions_publish:fill-slate-100
+    peer-focus/proc_app_release_step_gh_actions_publish:stroke-neutral-500
+    peer-focus/proc_app_release_step_gh_actions_publish:fill-neutral-100
 
   t_localhost: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
 
     peer-focus/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/proc_app_dev_step_repository_clone:stroke-slate-500
@@ -589,63 +627,94 @@ tailwind_classes:
   t_localhost_repo: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
   t_localhost_repo_src: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
   t_localhost_repo_target: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
   t_localhost_repo_target_file_zip: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
   t_localhost_repo_target_dist_dir: >-
     stroke-1
     visible
-    hover:stroke-slate-300
-    stroke-slate-400
-    focus:stroke-slate-500
-    active:stroke-slate-600
     hover:fill-slate-200
     fill-slate-300
     focus:fill-slate-400
     active:fill-slate-500
-    [&>text]:fill-slate-950
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&>text]:fill-slate-900
+
+  # Tags - act as group containers for highlighting associated things
+  tag_app_development: >-
+    stroke-1
+    visible
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&>text]:fill-emerald-950
+
+    peer/tag_app_development
+
+  tag_deployment: >-
+    stroke-1
+    visible
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&>text]:fill-emerald-950
+
+    peer/tag_deployment
 
 # Layout configuration for each node.
 #

@@ -275,15 +275,15 @@ tag_things:
 # ```yaml
 # types:
 #   - type_thing_default
+#   - type_tag_default
+#   - type_process_default
+#   - type_process_step_default
 #   - type_edge_dependency_sequence_request_default
 #   - type_edge_dependency_sequence_response_default
 #   - type_edge_dependency_cyclic_default
 #   - type_edge_interaction_sequence_request_default
 #   - type_edge_interaction_sequence_response_default
 #   - type_edge_interaction_cyclic_default
-#   - type_tag_default
-#   - type_process_default
-#   - type_process_step_default
 # ```
 
 # Additional `type`s we attach to `things` / `thing_dependencies` / `tags`, so they can be styled
@@ -362,6 +362,7 @@ theme_default:
       stroke_shade_normal: "200"
       stroke_shade_focus: "300"
       stroke_shade_active: "400"
+      text_shade: "800"
     shade_light:
       fill_shade_hover: "200"
       fill_shade_normal: "300"
@@ -371,6 +372,7 @@ theme_default:
       stroke_shade_normal: "400"
       stroke_shade_focus: "500"
       stroke_shade_active: "600"
+      text_shade: "900"
     shade_medium:
       fill_shade_hover: "400"
       fill_shade_normal: "500"
@@ -380,6 +382,7 @@ theme_default:
       stroke_shade_normal: "600"
       stroke_shade_focus: "700"
       stroke_shade_active: "800"
+      text_shade: "950"
     shade_dark:
       fill_shade_hover: "600"
       fill_shade_normal: "700"
@@ -389,6 +392,7 @@ theme_default:
       stroke_shade_normal: "800"
       stroke_shade_focus: "900"
       stroke_shade_active: "950"
+      text_shade: "50"
     stroke_dashed_animated:
       stroke_style: "dashed"
       stroke_width: "2"
@@ -396,13 +400,13 @@ theme_default:
 
   # The keys in this map can be:
   #
-  # * `thing_defaults`: Applies to all things.
+  # * `node_defaults`: Applies to all things.
   # * `edge_defaults`: Applies to all edges.
   # * `thing_id`: Applies to the particular thing.
   # * `edge_id`: Applies to the particular edge.
   # * `tag_id`: Applies to the tag.
   base_styles:
-    thing_defaults:
+    node_defaults:
       # Vector of style aliases to apply.
       style_aliases_applied: [shade_light]
       # Used for both fill and stroke colors.
@@ -416,17 +420,88 @@ theme_default:
     edge_t_localhost__t_github_user_repo__pull:
       style_aliases_applied: [shade_light]
       shape_color: "blue"
+    t_aws:
+      shape_color: "yellow"
+    t_github:
+      shape_color: "neutral"
 
 # Styles applied to things / edges of a particular `type` specified in `thing_types`.
 theme_types_styles:
+  # These are default styles that are built into `disposition`, but may be overridden by users.
+  type_thing_default:
+    node_defaults:
+      style_aliases_applied: [shade_light]
+      stroke_style: "solid"
+      shape_color: "slate"
+      stroke_width: "1"
+  type_tag_default:
+    node_defaults:
+      style_aliases_applied: [shade_medium]
+      stroke_style: "solid"
+      shape_color: "emerald"
+      stroke_width: "1"
+  type_process_default:
+    node_defaults:
+      style_aliases_applied: [shade_medium]
+      stroke_style: "solid"
+      shape_color: "blue"
+      stroke_width: "1"
+  type_process_step_default:
+    node_defaults:
+      style_aliases_applied: [shade_medium]
+      stroke_style: "solid"
+      shape_color: "sky"
+      stroke_width: "1"
+  type_edge_dependency_sequence_request_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      shape_color: "violet"
+      stroke_width: "2"
+  type_edge_dependency_sequence_response_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80"
+      shape_color: "violet"
+      stroke_width: "2"
+  type_edge_dependency_cyclic_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      shape_color: "violet"
+      stroke_width: "2"
+  type_edge_interaction_sequence_request_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      shape_color: "violet"
+      stroke_width: "2"
+  type_edge_interaction_sequence_response_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80"
+      shape_color: "violet"
+      stroke_width: "2"
+  type_edge_interaction_cyclic_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      shape_color: "violet"
+      stroke_width: "2"
+
+
+  # custom styles that users can provide
   type_organisation:
-    thing_defaults:
-      stroke_style: "dotted"
+    node_defaults:
       style_aliases_applied: [shade_pale]
+      stroke_style: "dotted"
+  type_service:
+    node_defaults:
+      stroke_style: "dashed"
 
   type_docker_image:
-    thing_defaults:
-      shape_color: "blue"
+    node_defaults:
+      shape_color: "sky"
 
 # Styles when a `thing` is focused.
 #
@@ -437,12 +512,12 @@ theme_types_styles:
 # * Immediate dependencies vs transitive (maybe closest `n` neighbours).
 theme_thing_dependencies_styles:
   things_excluded_styles:
-    thing_defaults:
+    node_defaults:
       visibility: "hidden"
     edge_defaults:
       visibility: "hidden
   things_included_styles:
-    thing_defaults:
+    node_defaults:
       visibility: "visible"
 
 # When a tag is focused, things and edges associated with the tag are highlighted.
@@ -456,15 +531,15 @@ theme_thing_dependencies_styles:
 # `theme_tag_things_focus_specific` map.
 theme_tag_things_focus:
   things_included_styles:
-    thing_defaults:
+    node_defaults:
       opacity: "0.5"
   things_excluded_styles:
-    thing_defaults:
+    node_defaults:
       style_aliases_applied: [stroke_dashed_animated]
 
 theme_tag_things_focus_specific:
   tag_app_development:
-    thing_defaults:
+    node_defaults:
       style_aliases_applied: [stroke_dashed_animated]
 
 # Additional CSS to place in the SVG's inline `<styles>` section.
