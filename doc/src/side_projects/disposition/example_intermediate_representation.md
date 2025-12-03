@@ -283,6 +283,37 @@ entity_types:
 #
 # * `[stroke-dasharray:2]` in an SVG approximates `border-dotted` on HTML elements.
 tailwind_classes:
+  # Tags - act as group containers for highlighting associated things
+  tag_app_development: >-
+    stroke-1
+    visible
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&>text]:fill-emerald-950
+
+    peer/tag_app_development
+
+  tag_deployment: >-
+    stroke-1
+    visible
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&>text]:fill-emerald-950
+
+    peer/tag_deployment
+
   # Processes - act as group containers for their steps
   proc_app_dev: >-
     stroke-1
@@ -720,6 +751,16 @@ tailwind_classes:
     active:stroke-yellow-600
     [&>text]:fill-yellow-900
 
+    peer-focus/tag_deployment:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-focus/tag_deployment:hover:fill-yellow-50
+    peer-focus/tag_deployment:fill-yellow-100
+    peer-focus/tag_deployment:focus:fill-yellow-200
+    peer-focus/tag_deployment:active:fill-yellow-300
+    peer-focus/tag_deployment:hover:stroke-yellow-100
+    peer-focus/tag_deployment:stroke-yellow-200
+    peer-focus/tag_deployment:focus:stroke-yellow-300
+    peer-focus/tag_deployment:active:stroke-yellow-400
+
     peer-focus/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/proc_app_release_step_gh_actions_publish:stroke-yellow-500
     peer-focus/proc_app_release_step_gh_actions_publish:fill-yellow-100
@@ -815,6 +856,26 @@ tailwind_classes:
     active:stroke-neutral-600
     [&>text]:fill-neutral-900
 
+    peer-focus/tag_app_development:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-focus/tag_app_development:hover:fill-neutral-50
+    peer-focus/tag_app_development:fill-neutral-100
+    peer-focus/tag_app_development:focus:fill-neutral-200
+    peer-focus/tag_app_development:active:fill-neutral-300
+    peer-focus/tag_app_development:hover:stroke-neutral-100
+    peer-focus/tag_app_development:stroke-neutral-200
+    peer-focus/tag_app_development:focus:stroke-neutral-300
+    peer-focus/tag_app_development:active:stroke-neutral-400
+
+    peer-focus/tag_deployment:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-focus/tag_deployment:hover:fill-neutral-50
+    peer-focus/tag_deployment:fill-neutral-100
+    peer-focus/tag_deployment:focus:fill-neutral-200
+    peer-focus/tag_deployment:active:fill-neutral-300
+    peer-focus/tag_deployment:hover:stroke-neutral-100
+    peer-focus/tag_deployment:stroke-neutral-200
+    peer-focus/tag_deployment:focus:stroke-neutral-300
+    peer-focus/tag_deployment:active:stroke-neutral-400
+
     peer-focus/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/proc_app_dev_step_repository_clone:stroke-neutral-500
     peer-focus/proc_app_dev_step_repository_clone:fill-neutral-100
@@ -847,6 +908,16 @@ tailwind_classes:
     focus:stroke-slate-500
     active:stroke-slate-600
     [&>text]:fill-slate-900
+
+    peer-focus/tag_app_development:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-focus/tag_app_development:hover:fill-slate-50
+    peer-focus/tag_app_development:fill-slate-100
+    peer-focus/tag_app_development:focus:fill-slate-200
+    peer-focus/tag_app_development:active:fill-slate-300
+    peer-focus/tag_app_development:hover:stroke-slate-100
+    peer-focus/tag_app_development:stroke-slate-200
+    peer-focus/tag_app_development:focus:stroke-slate-300
+    peer-focus/tag_app_development:active:stroke-slate-400
 
     peer-focus/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/proc_app_dev_step_repository_clone:stroke-slate-500
@@ -929,36 +1000,6 @@ tailwind_classes:
     active:stroke-slate-600
     [&>text]:fill-slate-900
 
-  # Tags - act as group containers for highlighting associated things
-  tag_app_development: >-
-    stroke-1
-    visible
-    hover:fill-emerald-400
-    fill-emerald-500
-    focus:fill-emerald-600
-    active:fill-emerald-700
-    hover:stroke-emerald-500
-    stroke-emerald-600
-    focus:stroke-emerald-700
-    active:stroke-emerald-800
-    [&>text]:fill-emerald-950
-
-    peer/tag_app_development
-
-  tag_deployment: >-
-    stroke-1
-    visible
-    hover:fill-emerald-400
-    fill-emerald-500
-    focus:fill-emerald-600
-    active:fill-emerald-700
-    hover:stroke-emerald-500
-    stroke-emerald-600
-    focus:stroke-emerald-700
-    active:stroke-emerald-800
-    [&>text]:fill-emerald-950
-
-    peer/tag_deployment
 
 # Layout configuration for each node.
 #
