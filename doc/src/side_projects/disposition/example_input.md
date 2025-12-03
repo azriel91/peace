@@ -248,7 +248,7 @@ tags:
   tag_app_development: "Application Development"
   tag_deployment: "Deployment"
 
-# Things and edges that are associated with each tag.
+# Things associated with each tag.
 #
 # It probably makes sense to specify the `things` for each tag, than the tags associated with each
 # thing. i.e. the key being the tag, instead of the key being the `thing` IDs.
@@ -257,7 +257,8 @@ tag_things:
     - t_github_user_repo
     - t_localhost
   tag_deployment:
-    - edge_t_aws_ecr_repo__t_aws_ecs_service__push
+    - t_aws_ecr_repo
+    - t_github_user_repo
 
 # `Type`s that are automatically attached to each entity:
 #
@@ -455,21 +456,21 @@ theme_types_styles:
   type_edge_dependency_sequence_request_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
-      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
-      shape_color: "violet"
-      stroke_width: "2"
+      stroke_style: solid
+      shape_color: "neutral"
+      stroke_width: "1"
   type_edge_dependency_sequence_response_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
-      stroke_style: "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80"
-      shape_color: "violet"
-      stroke_width: "2"
+      stroke_style: solid
+      shape_color: "neutral"
+      stroke_width: "1"
   type_edge_dependency_cyclic_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
-      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
-      shape_color: "violet"
-      stroke_width: "2"
+      stroke_style: solid
+      shape_color: "neutral"
+      stroke_width: "1"
   type_edge_interaction_sequence_request_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]

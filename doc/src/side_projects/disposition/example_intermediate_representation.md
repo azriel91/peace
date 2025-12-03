@@ -326,62 +326,306 @@ tailwind_classes:
 
   # Process steps - visible when parent process has focus, act as peers for edges
   proc_app_dev_step_repository_clone: >-
-    peer/proc_app_dev_step_repository_clone
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_dev_step_repository_clone
     group-focus-within/proc_app_dev:visible
   proc_app_dev_step_project_build: >-
-    peer/proc_app_dev_step_project_build
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_dev_step_project_build
     group-focus-within/proc_app_dev:visible
 
   proc_app_release_step_crate_version_update: >-
-    peer/proc_app_release_step_crate_version_update
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_release_step_crate_version_update
     group-focus-within/proc_app_release:visible
   proc_app_release_step_pull_request_open: >-
-    peer/proc_app_release_step_pull_request_open
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_release_step_pull_request_open
     group-focus-within/proc_app_release:visible
   proc_app_release_step_tag_and_push: >-
-    peer/proc_app_release_step_tag_and_push
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_release_step_tag_and_push
     group-focus-within/proc_app_release:visible
   proc_app_release_step_gh_actions_build: >-
-    peer/proc_app_release_step_gh_actions_build
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_release_step_gh_actions_build
     group-focus-within/proc_app_release:visible
   proc_app_release_step_gh_actions_publish: >-
-    peer/proc_app_release_step_gh_actions_publish
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_app_release_step_gh_actions_publish
     group-focus-within/proc_app_release:visible
 
   proc_i12e_region_tier_app_deploy_step_ecs_service_update: >-
-    peer/proc_i12e_region_tier_app_deploy_step_ecs_service_update
+    stroke-1
     invisible
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+
+    peer/proc_i12e_region_tier_app_deploy_step_ecs_service_update
     group-focus-within/proc_i12e_region_tier_app_deploy:visible
 
   # Edges - visible when their associated step has focus
-  # Maps edge_id -> list of step_ids that trigger visibility
+  #
+  # If an edge is used as a dependency, then the `dependency` set of tailwind classes are applied,
+  # and the edge is `visible` by default.
+  # If it is also used as an interaction, then the `interaction` set of tailwind classes are
+  # generated as peer classes to override the first set.
+  #
+  # If an edge is only used as an interaction, then the `interaction` set of tailwind classes are
+  # generated as regular tailwind classes, and the edge is `invisible` by default.
+  # The only peer class needed then is making the edge `visible` when the peer has focus.
   edge_t_localhost__t_github_user_repo__pull: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_dev_step_repository_clone:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_dev_step_repository_clone:stroke-[2px]
     peer-focus/proc_app_dev_step_repository_clone:visible
+    peer-focus/proc_app_dev_step_repository_clone:hover:fill-violet-600
+    peer-focus/proc_app_dev_step_repository_clone:fill-violet-700
+    peer-focus/proc_app_dev_step_repository_clone:focus:fill-violet-800
+    peer-focus/proc_app_dev_step_repository_clone:active:fill-violet-900
+    peer-focus/proc_app_dev_step_repository_clone:hover:stroke-violet-700
+    peer-focus/proc_app_dev_step_repository_clone:stroke-violet-800
+    peer-focus/proc_app_dev_step_repository_clone:focus:stroke-violet-900
+    peer-focus/proc_app_dev_step_repository_clone:active:stroke-violet-950
+
+    peer-focus/proc_app_release_step_pull_request_open:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_release_step_pull_request_open:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_release_step_pull_request_open:stroke-[2px]
     peer-focus/proc_app_release_step_pull_request_open:visible
+    peer-focus/proc_app_release_step_pull_request_open:hover:fill-violet-600
+    peer-focus/proc_app_release_step_pull_request_open:fill-violet-700
+    peer-focus/proc_app_release_step_pull_request_open:focus:fill-violet-800
+    peer-focus/proc_app_release_step_pull_request_open:active:fill-violet-900
+    peer-focus/proc_app_release_step_pull_request_open:hover:stroke-violet-700
+    peer-focus/proc_app_release_step_pull_request_open:stroke-violet-800
+    peer-focus/proc_app_release_step_pull_request_open:focus:stroke-violet-900
+    peer-focus/proc_app_release_step_pull_request_open:active:stroke-violet-950
   edge_t_localhost__t_github_user_repo__push: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_app_release_step_tag_and_push:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_release_step_tag_and_push:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_release_step_tag_and_push:stroke-[2px]
     peer-focus/proc_app_release_step_tag_and_push:visible
+    peer-focus/proc_app_release_step_tag_and_push:hover:fill-violet-600
+    peer-focus/proc_app_release_step_tag_and_push:fill-violet-700
+    peer-focus/proc_app_release_step_tag_and_push:focus:fill-violet-800
+    peer-focus/proc_app_release_step_tag_and_push:active:fill-violet-900
+    peer-focus/proc_app_release_step_tag_and_push:hover:stroke-violet-700
+    peer-focus/proc_app_release_step_tag_and_push:stroke-violet-800
+    peer-focus/proc_app_release_step_tag_and_push:focus:stroke-violet-900
+    peer-focus/proc_app_release_step_tag_and_push:active:stroke-violet-950
   edge_t_localhost__t_localhost__within: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_app_dev_step_project_build:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_dev_step_project_build:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_dev_step_project_build:stroke-[2px]
     peer-focus/proc_app_dev_step_project_build:visible
+    peer-focus/proc_app_dev_step_project_build:hover:fill-violet-600
+    peer-focus/proc_app_dev_step_project_build:fill-violet-700
+    peer-focus/proc_app_dev_step_project_build:focus:fill-violet-800
+    peer-focus/proc_app_dev_step_project_build:active:fill-violet-900
+    peer-focus/proc_app_dev_step_project_build:hover:stroke-violet-700
+    peer-focus/proc_app_dev_step_project_build:stroke-violet-800
+    peer-focus/proc_app_dev_step_project_build:focus:stroke-violet-900
+    peer-focus/proc_app_dev_step_project_build:active:stroke-violet-950
+
+    peer-focus/proc_app_release_step_crate_version_update:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_release_step_crate_version_update:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_release_step_crate_version_update:stroke-[2px]
     peer-focus/proc_app_release_step_crate_version_update:visible
+    peer-focus/proc_app_release_step_crate_version_update:hover:fill-violet-600
+    peer-focus/proc_app_release_step_crate_version_update:fill-violet-700
+    peer-focus/proc_app_release_step_crate_version_update:focus:fill-violet-800
+    peer-focus/proc_app_release_step_crate_version_update:active:fill-violet-900
+    peer-focus/proc_app_release_step_crate_version_update:hover:stroke-violet-700
+    peer-focus/proc_app_release_step_crate_version_update:stroke-violet-800
+    peer-focus/proc_app_release_step_crate_version_update:focus:stroke-violet-900
+    peer-focus/proc_app_release_step_crate_version_update:active:stroke-violet-950
   edge_t_github_user_repo__t_github_user_repo__within: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_app_release_step_gh_actions_build:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_release_step_gh_actions_build:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_release_step_gh_actions_build:stroke-[2px]
     peer-focus/proc_app_release_step_gh_actions_build:visible
+    peer-focus/proc_app_release_step_gh_actions_build:hover:fill-violet-600
+    peer-focus/proc_app_release_step_gh_actions_build:fill-violet-700
+    peer-focus/proc_app_release_step_gh_actions_build:focus:fill-violet-800
+    peer-focus/proc_app_release_step_gh_actions_build:active:fill-violet-900
+    peer-focus/proc_app_release_step_gh_actions_build:hover:stroke-violet-700
+    peer-focus/proc_app_release_step_gh_actions_build:stroke-violet-800
+    peer-focus/proc_app_release_step_gh_actions_build:focus:stroke-violet-900
+    peer-focus/proc_app_release_step_gh_actions_build:active:stroke-violet-950
   edge_t_github_user_repo__t_aws_ecr_repo__push: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_app_release_step_gh_actions_publish:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_app_release_step_gh_actions_publish:stroke-[2px]
     peer-focus/proc_app_release_step_gh_actions_publish:visible
+    peer-focus/proc_app_release_step_gh_actions_publish:hover:fill-violet-600
+    peer-focus/proc_app_release_step_gh_actions_publish:fill-violet-700
+    peer-focus/proc_app_release_step_gh_actions_publish:focus:fill-violet-800
+    peer-focus/proc_app_release_step_gh_actions_publish:active:fill-violet-900
+    peer-focus/proc_app_release_step_gh_actions_publish:hover:stroke-violet-700
+    peer-focus/proc_app_release_step_gh_actions_publish:stroke-violet-800
+    peer-focus/proc_app_release_step_gh_actions_publish:focus:stroke-violet-900
+    peer-focus/proc_app_release_step_gh_actions_publish:active:stroke-violet-950
   edge_t_aws_ecr_repo__t_aws_ecs_service__push: >-
-    invisible
+    stroke-1
+    [stroke-dasharray:none]
+    visible
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-[dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-[2px]
     peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:visible
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:hover:fill-violet-600
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:fill-violet-700
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:focus:fill-violet-800
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:active:fill-violet-900
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:hover:stroke-violet-700
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-violet-800
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:focus:stroke-violet-900
+    peer-focus/proc_i12e_region_tier_app_deploy_step_ecs_service_update:active:stroke-violet-950
 
   # Styles for things are as follows:
   #
@@ -953,9 +1197,5 @@ css: >-
   @keyframes stroke-dashoffset-move-request {
     0%   { stroke-dashoffset: 0; }
     100% { stroke-dashoffset: 228; }
-  }
-  @keyframes stroke-dashoffset-move-response {
-    0%   { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: -248; }
   }
 ````
