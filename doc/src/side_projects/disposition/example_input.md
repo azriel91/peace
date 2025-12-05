@@ -132,10 +132,10 @@ thing_dependencies_descs:
     `git pull`
   edge_t_localhost__t_github_user_repo__push: |-
     `git push`
-  edge_t_localhost__t_localhost__within: ~
-  edge_t_github_user_repo__t_github_user_repo__within: ~
-  edge_t_github_user_repo__t_aws_ecr_repo__push: ~
-  edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
+  # edge_t_localhost__t_localhost__within: ~
+  # edge_t_github_user_repo__t_github_user_repo__within: ~
+  # edge_t_github_user_repo__t_aws_ecr_repo__push: ~
+  # edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
 
 # Interactions between things can be one way, or cyclic.
 #
@@ -217,7 +217,7 @@ processes:
 
         The build will push the new version to ECR automatically.
       proc_app_release_step_gh_actions_publish: |-
-          Github Actions will publish the image to AWS ECR.
+        Github Actions will publish the image to AWS ECR.
 
     step_thing_interactions:
       proc_app_release_step_crate_version_update: [edge_t_localhost__t_localhost__within]
@@ -240,7 +240,8 @@ processes:
       proc_i12e_region_tier_app_deploy_step_ecs_service_update: |-
         Deploy or update the existing ECS service with the new image.
     step_thing_interactions:
-      proc_i12e_region_tier_app_deploy_step_ecs_service_update: [edge_t_aws_ecr_repo__t_aws_ecs_service__push]
+      proc_i12e_region_tier_app_deploy_step_ecs_service_update:
+        [edge_t_aws_ecr_repo__t_aws_ecs_service__push]
 
 # Tags are labels that can be associated with things, so that the things can be highlighted when
 # the tag is focused.
@@ -296,29 +297,29 @@ tag_things:
 entity_types:
   t_aws: "type_organisation"
   t_aws_iam: "type_service"
-  t_aws_iam_ecs_policy: ~
+  # t_aws_iam_ecs_policy: ~
   t_aws_ecr: "type_service"
-  t_aws_ecr_repo: ~
+  # t_aws_ecr_repo: ~
   t_aws_ecr_repo_image_1: "type_docker_image"
   t_aws_ecr_repo_image_2: "type_docker_image"
   t_aws_ecs: "type_service"
-  t_aws_ecs_cluster_app: ~
-  t_aws_ecs_cluster_app_task: ~
+  # t_aws_ecs_cluster_app: ~
+  # t_aws_ecs_cluster_app_task: ~
   t_github: "type_organisation"
-  t_github_user_repo: ~
-  t_localhost: ~
-  t_localhost_repo: ~
-  t_localhost_repo_src: ~
-  t_localhost_repo_target: ~
-  t_localhost_repo_target_file_zip: ~
-  t_localhost_repo_target_dist_dir: ~
+  # t_github_user_repo: ~
+  # t_localhost: ~
+  # t_localhost_repo: ~
+  # t_localhost_repo_src: ~
+  # t_localhost_repo_target: ~
+  # t_localhost_repo_target_file_zip: ~
+  # t_localhost_repo_target_dist_dir: ~
 
-  edge_t_localhost__t_github_user_repo__pull: ~
-  edge_t_localhost__t_github_user_repo__push: ~
-  edge_t_localhost__t_localhost__within: ~
-  edge_t_github_user_repo__t_github_user_repo__within: ~
-  edge_t_github_user_repo__t_aws_ecr_repo__push: ~
-  edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
+  # edge_t_localhost__t_github_user_repo__pull: ~
+  # edge_t_localhost__t_github_user_repo__push: ~
+  # edge_t_localhost__t_localhost__within: ~
+  # edge_t_github_user_repo__t_github_user_repo__within: ~
+  # edge_t_github_user_repo__t_aws_ecr_repo__push: ~
+  # edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
 
   tag_app_development: tag_type_default
   tag_deployment: tag_type_default
@@ -480,7 +481,6 @@ theme_types_styles:
       shape_color: "violet"
       stroke_width: "2"
 
-
   # custom styles that users can provide
   type_organisation:
     node_defaults:
@@ -538,5 +538,9 @@ css: |-
   @keyframes stroke-dashoffset-move {
     0%   { stroke-dashoffset: 30; }
     100% { stroke-dashoffset: 0; }
+  }
+  @keyframes stroke-dashoffset-move-request {
+    0%   { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 228; }
   }
 ````
