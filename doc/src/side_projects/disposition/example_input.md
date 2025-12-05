@@ -335,25 +335,13 @@ theme_default:
   # i.e. a `StyleAlias` enum, with a final variant of `Custom(String)`.
   style_aliases:
     padding_none:
-      padding_top: "0"
-      padding_bottom: "0"
-      padding_left: "0"
-      padding_right: "0"
+      padding: "0"
     padding_tight:
-      padding_top: "2"
-      padding_bottom: "2"
-      padding_left: "2"
-      padding_right: "2"
+      padding: "2"
     padding_normal:
-      padding_top: "4"
-      padding_bottom: "4"
-      padding_left: "4"
-      padding_right: "4"
+      padding: "4"
     padding_wide:
-      padding_top: "6"
-      padding_bottom: "6"
-      padding_left: "6"
-      padding_right: "6"
+      padding: "6"
     shade_pale:
       fill_shade_hover: "50"
       fill_shade_normal: "100"
@@ -414,9 +402,11 @@ theme_default:
       shape_color: "slate"
       stroke_style: "solid"
       stroke_width: "1"
+      text_color: "neutral"
       visibility: "visible"
     edge_defaults:
       stroke_width: "1"
+      text_color: "neutral"
       visibility: "visible"
     edge_t_localhost__t_github_user_repo__pull:
       style_aliases_applied: [shade_light]
@@ -516,7 +506,7 @@ theme_thing_dependencies_styles:
     node_defaults:
       visibility: "hidden"
     edge_defaults:
-      visibility: "hidden
+      visibility: "hidden"
   things_included_styles:
     node_defaults:
       visibility: "visible"
@@ -533,10 +523,10 @@ theme_thing_dependencies_styles:
 theme_tag_things_focus:
   things_included_styles:
     node_defaults:
-      opacity: "0.5"
+      style_aliases_applied: [shade_pale, stroke_dashed_animated]
   things_excluded_styles:
     node_defaults:
-      style_aliases_applied: [stroke_dashed_animated]
+      opacity: "0.5"
 
 theme_tag_things_focus_specific:
   tag_app_development:
