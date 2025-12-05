@@ -295,7 +295,7 @@ tailwind_classes:
     stroke-emerald-600
     focus:stroke-emerald-700
     active:stroke-emerald-800
-    [&>text]:fill-emerald-950
+    [&>text]:fill-neutral-950
 
     peer/tag_app_development
 
@@ -310,7 +310,7 @@ tailwind_classes:
     stroke-emerald-600
     focus:stroke-emerald-700
     active:stroke-emerald-800
-    [&>text]:fill-emerald-950
+    [&>text]:fill-neutral-950
 
     peer/tag_deployment
 
@@ -699,7 +699,7 @@ tailwind_classes:
     stroke-yellow-200
     focus:stroke-yellow-300
     active:stroke-yellow-400
-    [&>text]:fill-yellow-800
+    [&>text]:fill-neutral-800
   t_aws_iam: >-
     [stroke-dasharray:3]
     stroke-1
@@ -712,7 +712,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_aws_iam_ecs_policy: >-
     stroke-1
     visible
@@ -724,7 +724,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_aws_ecr: >-
     [stroke-dasharray:3]
     stroke-1
@@ -737,7 +737,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_aws_ecr_repo: >-
     stroke-1
     visible
@@ -749,7 +749,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
 
     peer-focus/tag_deployment:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/tag_deployment:hover:fill-yellow-50
@@ -780,7 +780,7 @@ tailwind_classes:
     stroke-sky-400
     focus:stroke-sky-500
     active:stroke-sky-600
-    [&>text]:fill-sky-900
+    [&>text]:fill-neutral-900
   t_aws_ecr_repo_image_2: >-
     stroke-1
     visible
@@ -792,7 +792,7 @@ tailwind_classes:
     stroke-sky-400
     focus:stroke-sky-500
     active:stroke-sky-600
-    [&>text]:fill-sky-900
+    [&>text]:fill-neutral-900
   t_aws_ecs: >-
     [stroke-dasharray:3]
     stroke-1
@@ -805,7 +805,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_aws_ecs_cluster_app: >-
     stroke-1
     visible
@@ -817,7 +817,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_aws_ecs_cluster_app_task: >-
     stroke-1
     visible
@@ -829,7 +829,7 @@ tailwind_classes:
     stroke-yellow-400
     focus:stroke-yellow-500
     active:stroke-yellow-600
-    [&>text]:fill-yellow-900
+    [&>text]:fill-neutral-900
   t_github: >-
     [stroke-dasharray:3]
     stroke-1
@@ -907,7 +907,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
 
     peer-focus/tag_app_development:animate-[stroke-dashoffset-move_2s_linear_infinite]
     peer-focus/tag_app_development:hover:fill-slate-50
@@ -950,7 +950,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
   t_localhost_repo_src: >-
     stroke-1
     visible
@@ -962,7 +962,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
   t_localhost_repo_target: >-
     stroke-1
     visible
@@ -974,7 +974,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
   t_localhost_repo_target_file_zip: >-
     stroke-1
     visible
@@ -986,7 +986,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
   t_localhost_repo_target_dist_dir: >-
     stroke-1
     visible
@@ -998,7 +998,7 @@ tailwind_classes:
     stroke-slate-400
     focus:stroke-slate-500
     active:stroke-slate-600
-    [&>text]:fill-slate-900
+    [&>text]:fill-neutral-900
 
 
 # Layout configuration for each node.
