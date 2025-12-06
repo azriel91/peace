@@ -98,14 +98,14 @@ thing_hierarchy:
 # We want to make it easy to define dependencies between chains of things.
 thing_dependencies: &thing_dependencies
   edge_t_localhost__t_github_user_repo__pull:
-    # Last thing in the list has an edge back to first thing.
+    # Cyclic dependencies are where the last thing in the list has an edge back to first thing.
     #
     # Should have at least one `thing`.
     cyclic:
       - t_localhost
       - t_github_user_repo
   edge_t_localhost__t_github_user_repo__push:
-    # 2 or more things
+    # Can have 2 or more things
     sequence:
       - t_localhost
       - t_github_user_repo
@@ -124,18 +124,33 @@ thing_dependencies: &thing_dependencies
       - t_aws_ecr_repo
       - t_aws_ecs_service
 
-# Descriptions to render next to each arrow.
+# Descriptions to render next to each node, edge group, or edge.
 #
 # This is intended to take markdown text.
-thing_dependencies_descs:
+#
+# # Notes
+#
+# 1. Edge group IDs are from either `thing_dependencies` or `thing_interactions`.
+# 2. Edge IDs are their edge group IDs, suffixed with "__" and the zero-based index of that edge in its group.
+# 3. Descriptions for processes are not currently supported.
+# 4. Descriptions for process steps are defined within the `process`'s `step_descs`.
+entity_descs:
+  # things
+  t_localhost: "User's computer"
+
+  # edge groups
+  #
+  # Shown when any of the edges in this group are focused.
   edge_t_localhost__t_github_user_repo__pull: |-
-    `git pull`
+    Fetch from GitHub
   edge_t_localhost__t_github_user_repo__push: |-
+    Push to GitHub
+
+  # edges
+  edge_t_localhost__t_github_user_repo__pull__0: |-
+    `git pull`
+  edge_t_localhost__t_github_user_repo__push__0: |-
     `git push`
-  # edge_t_localhost__t_localhost__within: ~
-  # edge_t_github_user_repo__t_github_user_repo__within: ~
-  # edge_t_github_user_repo__t_aws_ecr_repo__push: ~
-  # edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
 
 # Interactions between things can be one way, or cyclic.
 #
@@ -261,7 +276,7 @@ tag_things:
     - t_aws_ecr_repo
     - t_github_user_repo
 
-# `Type`s that are automatically attached to each entity:
+# `Type`s are automatically attached to each entity:
 #
 # * `things`
 # * `thing_dependencies`
@@ -269,7 +284,8 @@ tag_things:
 # * `processes`
 # * `process_steps`
 #
-# These allow us to
+# These allow us to apply a common set of styles to the entities in the diagram with less
+# duplication.
 #
 # Note: these do not actually appear in the diagram schema, but are listed so we know what default
 # types are available.
@@ -287,13 +303,36 @@ tag_things:
 #   - type_edge_interaction_sequence_response_default
 #   - type_edge_interaction_cyclic_default
 # ```
-
+#
 # Additional `type`s we attach to `things` / `thing_dependencies` / `tags`, so they can be styled
 # in common.
 #
 # This is like a tag, but doesn't require the user to click on the tag to apply the style.
 #
-# Unlike tags, each `thing` / `thing_dependency` / `tag` can only have one `type`, so this map is keyed by the `thing` ID.
+# Built-in types that are automatically attached to entities unless overridden:
+#
+# * `type_thing_default`
+# * `type_tag_default`
+# * `type_process_default`
+# * `type_process_step_default`
+#
+# For edges, multiple edges are generated for each dependency / interaction,
+# and each edge is assigned a type from the following:
+#
+# * `type_edge_dependency_sequence_request_default`
+# * `type_edge_dependency_sequence_response_default`
+# * `type_edge_dependency_cyclic_default`
+# * `type_edge_interaction_sequence_request_default`
+# * `type_edge_interaction_sequence_response_default`
+# * `type_edge_interaction_cyclic_default`
+#
+# The edge ID will be the edge group ID specified in `thing_dependencies` /
+# `thing_interactions`, suffixed with the zero-based index of the edge like
+# so:
+#
+# ```text
+# edge_id = edge_group_id + "__" + edge_index
+# ```
 entity_types:
   t_aws: "type_organisation"
   t_aws_iam: "type_service"
@@ -314,15 +353,16 @@ entity_types:
   # t_localhost_repo_target_file_zip: ~
   # t_localhost_repo_target_dist_dir: ~
 
-  # edge_t_localhost__t_github_user_repo__pull: ~
+  # edge_t_localhost__t_github_user_repo__pull__0: "type_edge_dependency_sequence_request_default"
+  # edge_t_localhost__t_github_user_repo__pull__1: "type_edge_dependency_sequence_response_default"
   # edge_t_localhost__t_github_user_repo__push: ~
   # edge_t_localhost__t_localhost__within: ~
   # edge_t_github_user_repo__t_github_user_repo__within: ~
   # edge_t_github_user_repo__t_aws_ecr_repo__push: ~
   # edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
 
-  tag_app_development: tag_type_default
-  tag_deployment: tag_type_default
+  # tag_app_development: "tag_type_default"
+  # tag_deployment: "tag_type_default"
 
 # Styles when the diagram has no user interaction.
 #
