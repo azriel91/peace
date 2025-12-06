@@ -74,6 +74,8 @@
 - [Side Projects](side_projects.md)
     - [✒️ Dot IX](side_projects/dot_ix.md)
     - [📐 disposition](side_projects/disposition.md)
+        - [Example Input](side_projects/disposition/example_input.md)
+        - [Example Intermediate Representation](side_projects/disposition/example_intermediate_representation.md)
 
 ---
 

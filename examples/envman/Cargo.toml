@@ -69,7 +69,7 @@ console_log = { version = "1.0.0", features = ["color"] }
 log = "0.4.28"
 serde-wasm-bindgen = "0.6.5"
 tokio = "1.48.0"
-wasm-bindgen = "0.2.105"
+wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.55"
 js-sys = "0.3.82"
 web-sys = "0.3.82"

@@ -1,0 +1,409 @@
+<!--?xml version="1.0" encoding="UTF-8" standalone="no"?-->
+<svg viewBox="0 0 400 350" width="400" height="350" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text {
+            font-family: Arial, sans-serif;
+        }
+        *, ::after, ::before, ::backdrop, ::file-selector-button {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          border: 0 solid;
+        }
+
+        ::before, ::after {
+          --en-content: '';
+        }
+
+        html, :host {
+          line-height: 1.5;
+          -webkit-text-size-adjust: 100%;
+          tab-size: 4;
+          font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+          font-feature-settings: normal;
+          font-variation-settings: normal;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        hr {
+          height: 0;
+          color: inherit;
+          border-top-width: 1px;
+        }
+
+        abbr:where([title]) {
+          -webkit-text-decoration: underline dotted;
+          text-decoration: underline dotted;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+          font-size: inherit;
+          font-weight: inherit;
+        }
+
+        a {
+          color: inherit;
+          -webkit-text-decoration: inherit;
+          text-decoration: inherit;
+        }
+
+        b, strong {
+          font-weight: bolder;
+        }
+
+        code, kbd, samp, pre {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-feature-settings: normal;
+          font-variation-settings: normal;
+          font-size: 1em;
+        }
+
+        small {
+          font-size: 80%;
+        }
+
+        sub, sup {
+          font-size: 75%;
+          line-height: 0;
+          position: relative;
+          vertical-align: baseline;
+        }
+
+        sub {
+          bottom: -0.25em;
+        }
+
+        sup {
+          top: -0.5em;
+        }
+
+        table {
+          text-indent: 0;
+          border-color: inherit;
+          border-collapse: collapse;
+        }
+
+        :-moz-focusring {
+          outline: auto;
+        }
+
+        progress {
+          vertical-align: baseline;
+        }
+
+        summary {
+          display: list-item;
+        }
+
+        ol, ul, menu {
+          list-style: none;
+        }
+
+        img, svg, video, canvas, audio, iframe, embed, object {
+          display: block;
+          vertical-align: middle;
+        }
+
+        img, video {
+          max-width: 100%;
+          height: auto;
+        }
+
+        button, input, select, optgroup, textarea, ::file-selector-button {
+          font: inherit;
+          font-feature-settings: inherit;
+          font-variation-settings: inherit;
+          letter-spacing: inherit;
+          color: inherit;
+          border-radius: 0;
+          background-color: transparent;
+          opacity: 1;
+        }
+
+        :where(select:is([multiple], [size])) optgroup {
+          font-weight: bolder;
+        }
+
+        :where(select:is([multiple], [size])) optgroup option {
+          padding-inline-start: 20px;
+        }
+
+        ::file-selector-button {
+          margin-inline-end: 4px;
+        }
+
+        ::placeholder {
+          opacity: 1;
+        }
+
+        @supports (not (-webkit-appearance: -apple-pay-button)) /* Not Safari */ or (contain-intrinsic-size: 1px) /* Safari 17+ */ {
+          ::placeholder {
+            color: color-mix(in oklab, currentcolor 50%, transparent);
+          }
+        }
+
+        textarea {
+          resize: vertical;
+        }
+
+        ::-webkit-search-decoration {
+          -webkit-appearance: none;
+        }
+
+        ::-webkit-date-and-time-value {
+          min-height: 1lh;
+          text-align: inherit;
+        }
+
+        ::-webkit-datetime-edit {
+          display: inline-flex;
+        }
+
+        ::-webkit-datetime-edit-fields-wrapper {
+          padding: 0;
+        }
+
+        ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+          padding-block: 0;
+        }
+
+        :-moz-ui-invalid {
+          box-shadow: none;
+        }
+
+        button, input:where([type='button'], [type='reset'], [type='submit']), ::file-selector-button {
+          appearance: button;
+        }
+
+        ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+          height: auto;
+        }
+
+        [hidden]:where(:not([hidden='until-found'])) {
+          display: none !important;
+        }
+
+        *, ::before, ::after, ::backdrop, ::-webkit-backdrop {
+          --en-border-spacing-x: 0;
+          --en-border-spacing-y: 0;
+          --en-translate-x: 0;
+          --en-translate-y: 0;
+          --en-translate-z: 0;
+          --en-rotate-x: 0;
+          --en-rotate-y: 0;
+          --en-rotate-z: 0;
+          --en-skew-x: 0;
+          --en-skew-y: 0;
+          --en-scale-x: 1;
+          --en-scale-y: 1;
+          --en-scale-z: 1;
+          --en-pan-x: ;
+          --en-pan-y: ;
+          --en-pinch-zoom: ;
+          --en-scroll-snap-strictness: proximity;
+          --en-ordinal: ;
+          --en-slashed-zero: ;
+          --en-numeric-figure: ;
+          --en-numeric-spacing: ;
+          --en-numeric-fraction: ;
+          --en-ring-inset: ;
+          --en-ring-offset-width: 0px;
+          --en-ring-offset-color: #fff;
+          --en-ring-color: currentColor;
+          --en-ring-offset-shadow: 0 0 #0000;
+          --en-ring-shadow: 0 0 #0000;
+          --en-shadow: 0 0 #0000;
+          --en-shadow-colored: 0 0 #0000;
+          --en-blur: ;
+          --en-brightness: ;
+          --en-contrast: ;
+          --en-grayscale: ;
+          --en-hue-rotate: ;
+          --en-invert: ;
+          --en-saturate: ;
+          --en-sepia: ;
+          --en-drop-shadow: ;
+          --en-backdrop-blur: ;
+          --en-backdrop-brightness: ;
+          --en-backdrop-contrast: ;
+          --en-backdrop-grayscale: ;
+          --en-backdrop-hue-rotate: ;
+          --en-backdrop-invert: ;
+          --en-backdrop-opacity: ;
+          --en-backdrop-saturate: ;
+          --en-backdrop-sepia: ;
+        }
+
+        .fill-neutral-950 {
+          fill: oklch(14.5% 0 0);
+        }
+
+        .fill-slate-400 {
+          fill: oklch(70.4% .04 256.788);
+        }
+
+        .focus\:fill-red-400:focus {
+          fill: oklch(70.4% .191 22.216);
+        }
+
+        .focus\:fill-purple-400:focus {
+          fill: oklch(71.4% .203 305.504);
+        }
+
+        .focus\:fill-lime-400:focus {
+          fill: oklch(84.1% .238 128.85);
+        }
+
+        .focus\:fill-blue-400:focus {
+          fill: oklch(70.7% .165 254.624);
+        }
+
+        .focus\:border-red-500:focus {
+          border-color: oklch(63.7% .237 25.331);
+        }
+
+        .focus\:border-purple-500:focus {
+          border-color: oklch(62.7% .265 303.9);
+        }
+
+        .focus\:border-lime-500:focus {
+          border-color: oklch(76.8% .233 130.85);
+        }
+
+        .focus\:border-blue-500:focus {
+          border-color: oklch(62.3% .214 259.815);
+        }
+
+        .focus\:border-2:focus {
+          border-width: 2px;
+        }
+
+        .peer\/step_2:focus ~ .peer-focus\/step_2\:fill-red-400 {
+          fill: oklch(70.4% .191 22.216);
+        }
+
+        .peer\/step_1:focus ~ .peer-focus\/step_1\:fill-blue-400 {
+          fill: oklch(70.7% .165 254.624);
+        }
+    </style>
+    <text
+        x="20"
+        y="20"
+        font-size="18"
+        text-anchor="left"
+        class="fill-neutral-950"
+    >Peer focus using named groups works:</text>
+    <g
+        tabindex="0"
+        class="
+    fill-slate-400
+    peer/step_1
+    focus:border-2
+    focus:fill-blue-400
+    focus:border-blue-500
+    "
+    >
+        <rect x="25" y="40" width="60" height="40" rx="4" ry="4" />
+        <text
+            x="55"
+            y="70"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 1</text>
+    </g>
+    <g
+        tabindex="0"
+        class="
+    fill-slate-400
+    peer/step_2
+    focus:border-2
+    focus:fill-red-400
+    focus:border-red-500
+    "
+    >
+        <rect x="25" y="90" width="60" height="40" rx="4" ry="4" />
+        <text
+            x="55"
+            y="120"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 2</text>
+    </g>
+    <g
+        tabindex="0"
+        class="
+    fill-slate-400
+    peer-focus/step_1:fill-blue-400
+    peer-focus/step_2:fill-red-400
+    "
+    >
+        <rect x="100" y="60" width="60" height="50" />
+    </g>
+    <path d="M10 140 L160 140" stroke="black" stroke-width="2" />
+    <text
+        x="20"
+        y="160"
+        font-size="18"
+        text-anchor="left"
+        class="fill-neutral-950"
+    >Peer focus with data attribute:</text>
+    <text
+        x="20"
+        y="180"
+        font-size="14"
+        text-anchor="left"
+        class="fill-neutral-950"
+    >(works with tailwind, not with encrecss)</text>
+    <g
+        tabindex="0"
+        data-step="3"
+        class="
+            fill-slate-400
+            peer
+            focus:border-2
+            focus:fill-lime-400
+            focus:border-lime-500
+        "
+    >
+        <rect x="25" y="190" width="60" height="40" rx="4" ry="4" />
+        <text
+            x="55"
+            y="220"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 3</text>
+    </g>
+    <g
+        tabindex="0"
+        data-step="4"
+        class="
+            fill-slate-400
+            peer
+            focus:border-2
+            focus:fill-purple-400
+            focus:border-purple-500
+        "
+    >
+        <rect x="25" y="240" width="60" height="40" rx="4" ry="4" />
+        <text
+            x="55"
+            y="270"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 4</text>
+    </g>
+    <g
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer-[:where([data-step='3']):focus]:fill-lime-400
+            peer-[:where([data-step='4']):focus]:fill-purple-400
+        "
+    >
+        <rect x="100" y="210" width="60" height="50" />
+    </g>
+</svg>

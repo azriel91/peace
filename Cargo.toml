@@ -226,7 +226,7 @@ tynm = "0.2.0"
 type_reg = { version = "0.9.0", features = ["debug", "untagged", "ordered"] }
 typed-builder = "0.23.1"
 url = "2.5.7"
-wasm-bindgen = "0.2.105"
+wasm-bindgen = "0.2.106"
 web-sys = "0.3.82"
 yaml_error_context_hack = "0.1.0"
 

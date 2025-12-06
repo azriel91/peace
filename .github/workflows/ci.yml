@@ -233,9 +233,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/wasm-bindgen
-          key: ${{ runner.os }}-wasm-bindgen-0-2-105
+          key: ${{ runner.os }}-wasm-bindgen-0-2-106
 
-      - run: cargo install --locked wasm-bindgen-cli --version="=0.2.105"
+      - run: cargo install --locked wasm-bindgen-cli --version="=0.2.106"
         if: steps.wasm_bindgen_cache_restore.outputs.cache-hit != 'true'
 
       - name: wasm-bindgen cache save
@@ -244,7 +244,7 @@ jobs:
         if: always() && steps.wasm_bindgen_cache_restore.outputs.cache-hit != 'true'
         with:
           path: ~/.cargo/bin/wasm-bindgen
-          key: ${{ runner.os }}-wasm-bindgen-0-2-105
+          key: ${{ runner.os }}-wasm-bindgen-0-2-106
 
       - name: cargo-leptos cache restore
         id: cargo_leptos_cache_restore
