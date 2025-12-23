@@ -1,0 +1,66 @@
+<!--?xml version="1.0" encoding="UTF-8" standalone="no"?-->
+<svg viewBox="0 0 200 100" width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+    <style>
+    text {
+        font-family: Arial, sans-serif;
+    }
+
+    #on_button {
+        /* Set to pointer-events: none to make it unclickable */
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    #on_button:target {
+        /* The 'ON' button is now clickable */
+        pointer-events: auto;
+        visibility: visible;
+    }
+
+    #on_button:target ~ #off_button {
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    #menu rect {
+        fill: #ff9999;
+        opacity: 0.7;
+        transition: all 0.3s;
+    }
+    #on_button:target ~ #menu rect {
+        fill: #99bbff;
+    }
+    #on_button ~ #menu #on_text {
+        visibility: visible;
+        fill: #000000;
+        font-size: 1.2em;
+    }
+    #on_button:target ~ #menu #on_text {
+        visibility: hidden;
+    }
+    #on_button ~ #menu #off_text {
+        visibility: hidden;
+        fill: #000000;
+        font-size: 1.2em;
+    }
+    #on_button:target ~ #menu #off_text {
+        visibility: visible;
+    }
+    </style>
+
+    <a id="on_button" href="#">
+      <circle cx="35" cy="35" r="25" fill="#77aaff" />
+      <text x="50" y="40" font-size="18" text-anchor="middle">Turn on</text>
+    </a>
+
+    <a id="off_button" href="#on_button">
+      <circle cx="55" cy="35" r="25" fill="#77aaff" />
+      <text x="50" y="40" font-size="18" text-anchor="middle">Turn off</text>
+    </a>
+
+    <g id="menu">
+      <rect x="100" y="10" width="60" height="50" />
+      <text id="on_text" x="130" y="40" text-anchor="middle">on</text>
+      <text id="off_text" x="130" y="40" text-anchor="middle">off</text>
+    </g>
+</svg>

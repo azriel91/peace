@@ -1,0 +1,1838 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Example Intermediate Representation - The Peace Framework</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../src/css/layout.css">
+        <link rel="stylesheet" href="../../src/css/presentation.css">
+        <link rel="stylesheet" href="../../src/css/terminal.css">
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../background.html"><strong aria-hidden="true">2.</strong> Background</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../background/purpose.html"><strong aria-hidden="true">2.1.</strong> Purpose</a></li><li class="chapter-item "><a href="../../background/strategy.html"><strong aria-hidden="true">2.2.</strong> Strategy</a></li></ol></li><li class="chapter-item expanded "><a href="../../examples.html"><strong aria-hidden="true">3.</strong> Examples</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../examples/download.html"><strong aria-hidden="true">3.1.</strong> Download</a></li><li class="chapter-item "><a href="../../examples/envman.html"><strong aria-hidden="true">3.2.</strong> Env Man</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../examples/envman/walkthrough.html"><strong aria-hidden="true">3.2.1.</strong> Walkthrough</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../technical_concepts.html"><strong aria-hidden="true">4.</strong> Technical Concepts</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/resources.html"><strong aria-hidden="true">4.1.</strong> Resources</a></li><li class="chapter-item "><a href="../../technical_concepts/function_graph.html"><strong aria-hidden="true">4.2.</strong> Function Graph</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/function_graph/abstraction.html"><strong aria-hidden="true">4.2.1.</strong> Abstraction</a></li><li class="chapter-item "><a href="../../technical_concepts/function_graph/ordering.html"><strong aria-hidden="true">4.2.2.</strong> Ordering</a></li><li class="chapter-item "><a href="../../technical_concepts/function_graph/streaming.html"><strong aria-hidden="true">4.2.3.</strong> Streaming</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/item.html"><strong aria-hidden="true">4.3.</strong> Item</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/item/item_parameters.html"><strong aria-hidden="true">4.3.1.</strong> Item Parameters</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/item/item_parameters/value_specification.html"><strong aria-hidden="true">4.3.1.1.</strong> Value Specification</a></li><li class="chapter-item "><a href="../../technical_concepts/item/item_parameters/params_specification.html"><strong aria-hidden="true">4.3.1.2.</strong> Params Specification</a></li><li class="chapter-item "><a href="../../technical_concepts/item/item_parameters/params_framework_support.html"><strong aria-hidden="true">4.3.1.3.</strong> Params Framework Support</a></li><li class="chapter-item "><a href="../../technical_concepts/item/item_parameters/mapping_functions.html"><strong aria-hidden="true">4.3.1.4.</strong> Mapping Functions</a></li></ol></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/item_graph.html"><strong aria-hidden="true">4.4.</strong> Item Graph</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/item_graph/initialization.html"><strong aria-hidden="true">4.4.1.</strong> Initialization</a></li><li class="chapter-item "><a href="../../technical_concepts/item_graph/state_inspection.html"><strong aria-hidden="true">4.4.2.</strong> State Inspection</a></li><li class="chapter-item "><a href="../../technical_concepts/item_graph/state_ensure.html"><strong aria-hidden="true">4.4.3.</strong> State Ensure</a></li><li class="chapter-item "><a href="../../technical_concepts/item_graph/clean.html"><strong aria-hidden="true">4.4.4.</strong> Clean</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/state.html"><strong aria-hidden="true">4.5.</strong> State</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/state/logical_state.html"><strong aria-hidden="true">4.5.1.</strong> Logical State</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/output.html"><strong aria-hidden="true">4.6.</strong> Output</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/output/execution_progress.html"><strong aria-hidden="true">4.6.1.</strong> Execution Progress</a></li><li class="chapter-item "><a href="../../technical_concepts/output/presentation.html"><strong aria-hidden="true">4.6.2.</strong> Presentation</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/diagrams.html"><strong aria-hidden="true">4.7.</strong> Diagrams</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/diagrams/progress.html"><strong aria-hidden="true">4.7.1.</strong> Progress</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome.html"><strong aria-hidden="true">4.7.2.</strong> Outcome</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/render_technology.html"><strong aria-hidden="true">4.7.2.1.</strong> Render Technology</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/html_flexbox.html"><strong aria-hidden="true">4.7.2.2.</strong> HTML + Flexbox</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/div_diag.html"><strong aria-hidden="true">4.7.2.3.</strong> Div Diag</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/api_design.html"><strong aria-hidden="true">4.7.2.4.</strong> API Design</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/interaction_merging.html"><strong aria-hidden="true">4.7.2.5.</strong> Interaction Merging</a></li><li class="chapter-item "><a href="../../technical_concepts/diagrams/outcome/aesthetics_and_clarity.html"><strong aria-hidden="true">4.7.2.6.</strong> Aesthetics and Clarity</a></li></ol></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/endpoints_and_interaction.html"><strong aria-hidden="true">4.8.</strong> Endpoints and Interaction</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/endpoints_and_interaction/cmd_invocation.html"><strong aria-hidden="true">4.8.1.</strong> Cmd Invocation</a></li><li class="chapter-item "><a href="../../technical_concepts/endpoints_and_interaction/interruption.html"><strong aria-hidden="true">4.8.2.</strong> Interruption</a></li><li class="chapter-item "><a href="../../technical_concepts/endpoints_and_interaction/progress_output.html"><strong aria-hidden="true">4.8.3.</strong> Progress Output</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/workspace.html"><strong aria-hidden="true">4.9.</strong> Workspace</a></li><li class="chapter-item "><a href="../../technical_concepts/commands.html"><strong aria-hidden="true">4.10.</strong> Commands</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/commands/scopes.html"><strong aria-hidden="true">4.10.1.</strong> Scopes</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/commands/scopes/reborrowing.html"><strong aria-hidden="true">4.10.1.1.</strong> Reborrowing</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases.html"><strong aria-hidden="true">4.10.2.</strong> Use Cases</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/workspace_initialization.html"><strong aria-hidden="true">4.10.2.1.</strong> Workspace Initialization</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/profile_list.html"><strong aria-hidden="true">4.10.2.2.</strong> Profile List</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/workspace_stored_active_profile.html"><strong aria-hidden="true">4.10.2.3.</strong> Workspace Stored Active Profile</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/workspace_active_profile_switch.html"><strong aria-hidden="true">4.10.2.4.</strong> Workspace Active Profile Switch</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/state_discovery_and_display.html"><strong aria-hidden="true">4.10.2.5.</strong> State Discovery and Display</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/state_read_and_display.html"><strong aria-hidden="true">4.10.2.6.</strong> State Read and Display</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/state_diff.html"><strong aria-hidden="true">4.10.2.7.</strong> State Diff</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/state_apply.html"><strong aria-hidden="true">4.10.2.8.</strong> State Apply</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/use_cases/state_clean.html"><strong aria-hidden="true">4.10.2.9.</strong> State Clean</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/commands/cmd_execution.html"><strong aria-hidden="true">4.10.3.</strong> Cmd Execution</a></li><li class="chapter-item "><a href="../../technical_concepts/commands/interruptibility.html"><strong aria-hidden="true">4.10.4.</strong> Interruptibility</a></li></ol></li><li class="chapter-item "><a href="../../technical_concepts/flow_versioning.html"><strong aria-hidden="true">4.11.</strong> Flow Versioning</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../technical_concepts/flow_versioning/seamless_execution.html"><strong aria-hidden="true">4.11.1.</strong> Seamless Execution</a></li><li class="chapter-item "><a href="../../technical_concepts/flow_versioning/upgrade_actions.html"><strong aria-hidden="true">4.11.2.</strong> Upgrade Actions</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../side_projects.html"><strong aria-hidden="true">5.</strong> Side Projects</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../side_projects/dot_ix.html"><strong aria-hidden="true">5.1.</strong> ✒️ Dot IX</a></li><li class="chapter-item expanded "><a href="../../side_projects/disposition.html"><strong aria-hidden="true">5.2.</strong> 📐 disposition</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../side_projects/disposition/example_input.html"><strong aria-hidden="true">5.2.1.</strong> Example Input</a></li><li class="chapter-item expanded "><a href="../../side_projects/disposition/example_intermediate_representation.html" class="active"><strong aria-hidden="true">5.2.2.</strong> Example Intermediate Representation</a></li><li class="spacer"></li></ol></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Learning Material</div><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust.html"><strong aria-hidden="true">6.1.</strong> Why Rust</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/topics.html"><strong aria-hidden="true">6.1.1.</strong> Topics</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance.html"><strong aria-hidden="true">6.1.2.</strong> ⚡ Performance</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/performance/benchmarks.html"><strong aria-hidden="true">6.1.2.1.</strong> Benchmarks</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/how_is_rust_fast.html"><strong aria-hidden="true">6.1.2.2.</strong> How Is Rust Fast</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/compiled_vs_interpreted.html"><strong aria-hidden="true">6.1.2.3.</strong> Compiled vs Interpreted</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/native_code.html"><strong aria-hidden="true">6.1.2.4.</strong> Native Code</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/memory_usage.html"><strong aria-hidden="true">6.1.2.5.</strong> Memory Usage</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/memory_freeing.html"><strong aria-hidden="true">6.1.2.6.</strong> Memory Freeing</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/performance/performance_summary.html"><strong aria-hidden="true">6.1.2.7.</strong> Performance Summary</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints.html"><strong aria-hidden="true">6.1.3.</strong> 🚧 Constraints</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/correct_programs.html"><strong aria-hidden="true">6.1.3.1.</strong> Correct Programs</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/unconstrained.html"><strong aria-hidden="true">6.1.3.2.</strong> Unconstrained</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/constrained.html"><strong aria-hidden="true">6.1.3.3.</strong> Constrained</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/constrained_fixed.html"><strong aria-hidden="true">6.1.3.4.</strong> Constrained - Fixed</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/less_vs_more.html"><strong aria-hidden="true">6.1.3.5.</strong> Less vs More</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/nullability_js.html"><strong aria-hidden="true">6.1.3.6.</strong> Nullability - JS</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/nullability_cs.html"><strong aria-hidden="true">6.1.3.7.</strong> Nullability - C#</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/nullability_rust.html"><strong aria-hidden="true">6.1.3.8.</strong> Nullability - Rust</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/data_race_cs.html"><strong aria-hidden="true">6.1.3.9.</strong> Data Race - C#</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/data_race_rust_1.html"><strong aria-hidden="true">6.1.3.10.</strong> Data Race - Rust 1</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/data_race_rust_2.html"><strong aria-hidden="true">6.1.3.11.</strong> Data Race - Rust 2</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/constraints_in_rust.html"><strong aria-hidden="true">6.1.3.12.</strong> Constraints in Rust</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/constraints/constraints_summary.html"><strong aria-hidden="true">6.1.3.13.</strong> Constraints Summary</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive.html"><strong aria-hidden="true">6.1.4.</strong> 💬 Expressive</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/coco_mapping.html"><strong aria-hidden="true">6.1.4.1.</strong> Co/Co Mapping</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/traits.html"><strong aria-hidden="true">6.1.4.2.</strong> Traits</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/multiple_values_rust.html"><strong aria-hidden="true">6.1.4.3.</strong> Multiple Values</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/cloning.html"><strong aria-hidden="true">6.1.4.4.</strong> Cloning</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/cloning_others.html"><strong aria-hidden="true">6.1.4.5.</strong> Cloning - Others</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/cloning_rust.html"><strong aria-hidden="true">6.1.4.6.</strong> Cloning - Rust</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/expressive_summary.html"><strong aria-hidden="true">6.1.4.7.</strong> Expressive Summary</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous.html"><strong aria-hidden="true">6.1.5.</strong> 😵‍💫 Unambiguous</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/equality.html"><strong aria-hidden="true">6.1.5.1.</strong> Equality</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/equality_java.html"><strong aria-hidden="true">6.1.5.2.</strong> Equality - Java</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/equality_rust_1.html"><strong aria-hidden="true">6.1.5.3.</strong> Equality - Rust 1</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/equality_rust_2.html"><strong aria-hidden="true">6.1.5.4.</strong> Equality - Rust 2</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/control_flow.html"><strong aria-hidden="true">6.1.5.5.</strong> Control Flow</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/control_flow_java.html"><strong aria-hidden="true">6.1.5.6.</strong> Control Flow - Java</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/unambiguous/control_flow_rust.html"><strong aria-hidden="true">6.1.5.7.</strong> Control Flow - Rust</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/expressive/unambiguous_summary.html"><strong aria-hidden="true">6.1.5.8.</strong> Unambiguous Summary</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/tooling.html"><strong aria-hidden="true">6.1.6.</strong> 🛠️ Tooling</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/tooling/formatter.html"><strong aria-hidden="true">6.1.6.1.</strong> Formatter</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/tooling/linter.html"><strong aria-hidden="true">6.1.6.2.</strong> Linter</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/tooling/package_manager.html"><strong aria-hidden="true">6.1.6.3.</strong> Package Manager</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/tooling/others.html"><strong aria-hidden="true">6.1.6.4.</strong> Others</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/tooling/tooling_summary.html"><strong aria-hidden="true">6.1.6.5.</strong> Tooling Summary</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/ecosystem.html"><strong aria-hidden="true">6.1.7.</strong> 🚛 Ecosystem</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/variety.html"><strong aria-hidden="true">6.1.7.1.</strong> Variety</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/stable.html"><strong aria-hidden="true">6.1.7.2.</strong> Stable</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/second_order.html"><strong aria-hidden="true">6.1.8.</strong> 🦋 Second Order</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/why_rust/second_order/chain_of_events.html"><strong aria-hidden="true">6.1.8.1.</strong> Chain of Events</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/second_order/topics_again.html"><strong aria-hidden="true">6.1.8.2.</strong> Topics Again</a></li><li class="chapter-item "><a href="../../learning_material/why_rust/second_order/try_rust.html"><strong aria-hidden="true">6.1.8.3.</strong> Try Rust</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/why_rust/qna.html"><strong aria-hidden="true">6.1.9.</strong> Q & A</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/user_facing_automation_part_1.html"><strong aria-hidden="true">6.2.</strong> User Facing Automation - Part 1</a></li><li class="chapter-item "><a href="../../learning_material/user_facing_automation_part_2.html"><strong aria-hidden="true">6.3.</strong> User Facing Automation - Part 2</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design.html"><strong aria-hidden="true">6.4.</strong> Empathetic Code Design</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/background.html"><strong aria-hidden="true">6.4.1.</strong> Background</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/scenario.html"><strong aria-hidden="true">6.4.2.</strong> Scenario</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/flow_definition.html"><strong aria-hidden="true">6.4.3.</strong> Flow Definition</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/inputs_and_outputs.html"><strong aria-hidden="true">6.4.4.</strong> Inputs and Outputs</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/parameters_specification.html"><strong aria-hidden="true">6.4.5.</strong> Parameters Specification</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/output_and_presentation.html"><strong aria-hidden="true">6.4.6.</strong> Output and Presentation</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/command_invocation.html"><strong aria-hidden="true">6.4.7.</strong> Command Invocation</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/parameters_recall.html"><strong aria-hidden="true">6.4.8.</strong> Parameters Recall</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/workspace.html"><strong aria-hidden="true">6.4.9.</strong> Workspace</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/profiles.html"><strong aria-hidden="true">6.4.10.</strong> Profiles</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/summary.html"><strong aria-hidden="true">6.4.11.</strong> Summary</a></li><li class="chapter-item "><a href="../../learning_material/empathetic_code_design/qna.html"><strong aria-hidden="true">6.4.12.</strong> Q & A</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/interruptible_software.html"><strong aria-hidden="true">6.5.</strong> Interruptible Software</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/interruptible_software/processes.html"><strong aria-hidden="true">6.5.1.</strong> Processes</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/execution.html"><strong aria-hidden="true">6.5.2.</strong> Execution</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/bus_analogy.html"><strong aria-hidden="true">6.5.3.</strong> Bus Analogy</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility.html"><strong aria-hidden="true">6.5.4.</strong> Designing Interruptibility</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility/stop_button.html"><strong aria-hidden="true">6.5.4.1.</strong> Stop Button</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility/stopping_point.html"><strong aria-hidden="true">6.5.4.2.</strong> Stopping Point</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility/parallelism.html"><strong aria-hidden="true">6.5.4.3.</strong> Parallelism</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility/reporting.html"><strong aria-hidden="true">6.5.4.4.</strong> Reporting</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_interruptibility/strategy.html"><strong aria-hidden="true">6.5.4.5.</strong> Strategy</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/interruptible_implementation.html"><strong aria-hidden="true">6.5.5.</strong> Interruptible Implementation</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/resumability.html"><strong aria-hidden="true">6.5.6.</strong> Resumability</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_resumability.html"><strong aria-hidden="true">6.5.7.</strong> Designing Resumability</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_resumability/executor_resumability.html"><strong aria-hidden="true">6.5.7.1.</strong> Executor Resumability</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/designing_resumability/stepwise_resumability.html"><strong aria-hidden="true">6.5.7.2.</strong> Stepwise Resumability</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/resumable_implementation.html"><strong aria-hidden="true">6.5.8.</strong> Resumable Implementation</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/real_crates.html"><strong aria-hidden="true">6.5.9.</strong> Real Crates</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/summary.html"><strong aria-hidden="true">6.5.10.</strong> Summary</a></li><li class="chapter-item "><a href="../../learning_material/interruptible_software/qna.html"><strong aria-hidden="true">6.5.11.</strong> Q & A</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator.html"><strong aria-hidden="true">6.6.</strong> Dot IX: Diagram Generator</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/everyday_diagrams.html"><strong aria-hidden="true">6.6.1.</strong> Everyday Diagrams</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/problems.html"><strong aria-hidden="true">6.6.2.</strong> 🛑 Problems</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/problems/appearance.html"><strong aria-hidden="true">6.6.2.1.</strong> Appearance</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/problems/accuracy.html"><strong aria-hidden="true">6.6.2.2.</strong> Accuracy</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/problems/portability.html"><strong aria-hidden="true">6.6.2.3.</strong> Portability</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/problems/dynamics.html"><strong aria-hidden="true">6.6.2.4.</strong> Dynamics</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/ideation.html"><strong aria-hidden="true">6.6.3.</strong> 💡 Ideation</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/ideation/output_format.html"><strong aria-hidden="true">6.6.3.1.</strong> Output Format</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/ideation/input_format.html"><strong aria-hidden="true">6.6.3.2.</strong> Input Format</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/ideation/logistics.html"><strong aria-hidden="true">6.6.3.3.</strong> Logistics</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/demo.html"><strong aria-hidden="true">6.6.4.</strong> 🎨 Demo</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/solution.html"><strong aria-hidden="true">6.6.5.</strong> 🧪 Solution</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/solution/supported_usages.html"><strong aria-hidden="true">6.6.5.1.</strong> Supported Usages</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/solution/generation_process.html"><strong aria-hidden="true">6.6.5.2.</strong> Generation Process</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/solution/challenges.html"><strong aria-hidden="true">6.6.5.3.</strong> Challenges</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/whats_next.html"><strong aria-hidden="true">6.6.6.</strong> What's Next</a></li><li class="chapter-item "><a href="../../learning_material/dot_ix_diagram_generator/qna.html"><strong aria-hidden="true">6.6.7.</strong> Q & A</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation.html"><strong aria-hidden="true">6.7.</strong> Peace: Zero Stress Automation</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story.html"><strong aria-hidden="true">6.7.1.</strong> 🐉 Origin Story</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/manual_deployment.html"><strong aria-hidden="true">6.7.1.1.</strong> Manual Deployment</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/automation.html"><strong aria-hidden="true">6.7.1.2.</strong> Automation</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/engineering_eyes.html"><strong aria-hidden="true">6.7.1.3.</strong> Engineering Eyes</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/engineering_success.html"><strong aria-hidden="true">6.7.1.4.</strong> Engineering Success</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/automation_for_real.html"><strong aria-hidden="true">6.7.1.5.</strong> Automation (For Real)</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/origin_story/human_eyes.html"><strong aria-hidden="true">6.7.1.6.</strong> Human Eyes</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/peace_framework.html"><strong aria-hidden="true">6.7.2.</strong> 🕊️ Peace Framework</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/envman_example_tool.html"><strong aria-hidden="true">6.7.3.</strong> 🏗️ envman (example tool)</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/understandability.html"><strong aria-hidden="true">6.7.4.</strong> 💡 Understandability</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/understandability/demo.html"><strong aria-hidden="true">6.7.4.1.</strong> Demo</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/understandability/goldilocks_principle.html"><strong aria-hidden="true">6.7.4.2.</strong> Goldilocks Principle</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/control.html"><strong aria-hidden="true">6.7.5.</strong> 🎮 Control</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/control/minimal_control.html"><strong aria-hidden="true">6.7.5.1.</strong> Minimal Control</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/control/discovery.html"><strong aria-hidden="true">6.7.5.2.</strong> Discovery</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/control/interruption.html"><strong aria-hidden="true">6.7.5.3.</strong> Interruption</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/control/demo.html"><strong aria-hidden="true">6.7.5.4.</strong> Demo</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/morale.html"><strong aria-hidden="true">6.7.6.</strong> 💟 Morale</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/morale/aesthetics_outcome.html"><strong aria-hidden="true">6.7.6.1.</strong> Aesthetics: Outcome</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/morale/aesthetics_progress.html"><strong aria-hidden="true">6.7.6.2.</strong> Aesthetics: Progress</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/morale/aesthetics_errors.html"><strong aria-hidden="true">6.7.6.3.</strong> Aesthetics: Errors</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/morale/automation_clarified.html"><strong aria-hidden="true">6.7.6.4.</strong> Automation Clarified</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/how_does_it_work.html"><strong aria-hidden="true">6.7.7.</strong> ⚙️ How Does It Work</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture.html"><strong aria-hidden="true">6.7.8.</strong> 🏭 Architecture</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture/components.html"><strong aria-hidden="true">6.7.8.1.</strong> Components</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture/item.html"><strong aria-hidden="true">6.7.8.2.</strong> Item</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture/flow.html"><strong aria-hidden="true">6.7.8.3.</strong> Flow</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture/commands.html"><strong aria-hidden="true">6.7.8.4.</strong> Commands</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/architecture/tool.html"><strong aria-hidden="true">6.7.8.5.</strong> Tool</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/project_status.html"><strong aria-hidden="true">6.7.9.</strong> 🦖 Project Status</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/project_status/readiness.html"><strong aria-hidden="true">6.7.9.1.</strong> Readiness</a></li></ol></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/links.html"><strong aria-hidden="true">6.7.10.</strong> 🔗 Links</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/thank_you.html"><strong aria-hidden="true">6.7.11.</strong> 🙇‍♂️ Thank You</a></li><li class="chapter-item "><a href="../../learning_material/peace_zero_stress_automation/qna.html"><strong aria-hidden="true">6.7.12.</strong> ❓ Q & A</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../ideas.html"><strong aria-hidden="true">7.</strong> Ideas</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../ideas/feature_gated_incremental_functionality.html"><strong aria-hidden="true">7.1.</strong> Feature Gated Incremental Functionality</a></li></ol></li><li class="chapter-item expanded "><a href="../../licenses.html"><strong aria-hidden="true">8.</strong> Licenses</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Peace Framework</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/azriel91/peace" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/azriel91/peace/edit/main/doc/src/side_projects/disposition/example_intermediate_representation.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="example-intermediate-representation"><a class="header" href="#example-intermediate-representation">Example Intermediate Representation</a></h1>
+<p>This is the computed data structure from combining the layered values from the input data.</p>
+<pre><code class="language-yaml">---
+# Example Intermediate Representation
+#
+# This is the computed data from combining the layered values from
+# the example input.
+
+# Everything that needs to be represented as a `node` on the diagram, including:
+#
+# * `things`
+# * `tags`
+# * `processes`
+# * `process_steps`
+nodes: &amp;nodes
+  #
+  # things
+  t_aws: "☁️ Amazon Web Services"
+  t_aws_iam: "🖊️ Identity and Access Management"
+  t_aws_iam_ecs_policy: "🗒️ ECS IAM Policy"
+  t_aws_ecr: "🗄️ Elastic Container Registry"
+  t_aws_ecr_repo: "💽 web_app repo"
+  t_aws_ecr_repo_image_1: "💿 Image 1"
+  t_aws_ecr_repo_image_2: "💿 Image 2"
+  t_aws_ecs: "💻 Elastic Container Service"
+  t_aws_ecs_cluster_app: "🎛️ web_app cluster"
+  t_aws_ecs_cluster_app_task: "🖨️ web_app task version 1"
+  t_github: "🐙 GitHub"
+  t_github_user_repo: "azriel91/web_app"
+  t_localhost: "🧑‍💻 localhost"
+  t_localhost_repo: "📂 ~/work/web_app"
+  t_localhost_repo_src: "📝 src"
+  t_localhost_repo_target: "📂 target"
+  t_localhost_repo_target_file_zip: "📝 file.zip"
+  t_localhost_repo_target_dist_dir: "📁 dist"
+
+  # tags
+  tag_app_development: "Application Development"
+  tag_deployment: "Deployment"
+
+  # processes and process steps
+  proc_app_dev: "App Development"
+  proc_app_dev_step_repository_clone: "Clone repository"
+  proc_app_dev_step_project_build: "Build project"
+
+  proc_app_release: "App Release"
+  proc_app_release_step_crate_version_update: "Update crate versions"
+  proc_app_release_step_pull_request_open: "Open PR"
+  proc_app_release_step_tag_and_push: "Tag and push"
+  proc_app_release_step_gh_actions_build: "Github Actions build"
+  proc_app_release_step_gh_actions_publish: "Github Actions publish"
+
+  proc_i12e_region_tier_app_deploy: "Prod App Deploy"
+  proc_i12e_region_tier_app_deploy_step_ecs_service_update: "Update ECS service"
+
+# Text to copy to clipboard when a node's copy button is clicked.
+node_copy_text:
+  # the reordering is *probably* from serde-saphyr's implementation of merge keys.
+  t_localhost: "localhost"
+  t_localhost_repo: "~/work/web_app"
+  t_localhost_repo_src: "~/work/web_app/src"
+  t_localhost_repo_target: "~/work/web_app/target"
+  t_localhost_repo_target_file_zip: "~/work/web_app/target/file.zip"
+  t_localhost_repo_target_dist_dir: "~/work/web_app/target/dist"
+  t_aws: "☁️ Amazon Web Services"
+  t_aws_iam: "🖊️ Identity and Access Management"
+  t_aws_iam_ecs_policy: "🗒️ ECS IAM Policy"
+  t_aws_ecr: "🗄️ Elastic Container Registry"
+  t_aws_ecr_repo: "💽 web_app repo"
+  t_aws_ecr_repo_image_1: "💿 Image 1"
+  t_aws_ecr_repo_image_2: "💿 Image 2"
+  t_aws_ecs: "💻 Elastic Container Service"
+  t_aws_ecs_cluster_app: "🎛️ web_app cluster"
+  t_aws_ecs_cluster_app_task: "🖨️ web_app task version 1"
+  t_github: "🐙 GitHub"
+  t_github_user_repo: "azriel91/web_app"
+
+# Hierarchy of all nodes.
+node_hierarchy:
+  # Tags before everything else
+  tag_app_development: {}
+  tag_deployment: {}
+
+  # Processes before things/edges
+  proc_app_dev:
+    proc_app_dev_step_repository_clone: {}
+    proc_app_dev_step_project_build: {}
+  proc_app_release:
+    proc_app_release_step_crate_version_update: {}
+    proc_app_release_step_pull_request_open: {}
+    proc_app_release_step_tag_and_push: {}
+    proc_app_release_step_gh_actions_build: {}
+    proc_app_release_step_gh_actions_publish: {}
+  proc_i12e_region_tier_app_deploy:
+    proc_i12e_region_tier_app_deploy_step_ecs_service_update: {}
+
+  # Things
+  t_aws:
+    t_aws_iam:
+      t_aws_iam_ecs_policy: {}
+    t_aws_ecr:
+      t_aws_ecr_repo:
+        t_aws_ecr_repo_image_1: {}
+        t_aws_ecr_repo_image_2: {}
+    t_aws_ecs:
+      t_aws_ecs_cluster_app:
+        t_aws_ecs_cluster_app_task: {}
+  t_github:
+    t_github_user_repo: {}
+  t_localhost:
+    t_localhost_repo:
+      t_localhost_repo_src: {}
+      t_localhost_repo_target:
+        t_localhost_repo_target_file_zip: {}
+        t_localhost_repo_target_dist_dir: {}
+
+# Edge groups with explicit from/to edges.
+edge_groups:
+  # Dependency edge groups
+  edge_dep_t_localhost__t_github_user_repo__pull:
+    # cyclic: [t_localhost, t_github_user_repo]: A -&gt; B -&gt; A
+    - from: t_localhost
+      to: t_github_user_repo
+    - from: t_github_user_repo
+      to: t_localhost
+  edge_dep_t_localhost__t_github_user_repo__push:
+    # sequence: [t_localhost, t_github_user_repo]: A -&gt; B
+    - from: t_localhost
+      to: t_github_user_repo
+  edge_dep_t_localhost__t_localhost__within:
+    # cyclic: [t_localhost]: A -&gt; A
+    - from: t_localhost
+      to: t_localhost
+  edge_dep_t_github_user_repo__t_github_user_repo__within:
+    # symmetric: [t_github_user_repo] (1 thing special case): A -&gt; A (request), A -&gt; A (response)
+    - from: t_github_user_repo
+      to: t_github_user_repo
+    - from: t_github_user_repo
+      to: t_github_user_repo
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push:
+    # sequence: [t_github_user_repo, t_aws_ecr_repo]: A -&gt; B
+    - from: t_github_user_repo
+      to: t_aws_ecr_repo
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push:
+    # sequence: [t_aws_ecr_repo, t_aws_ecs_service]: A -&gt; B
+    - from: t_aws_ecr_repo
+      to: t_aws_ecs_service
+
+  # Interaction edge groups
+  edge_ix_t_localhost__t_github_user_repo__pull:
+    # symmetric: [t_localhost, t_github_user_repo]: A -&gt; B -&gt; B -&gt; A
+    - from: t_localhost
+      to: t_github_user_repo
+    - from: t_github_user_repo
+      to: t_localhost
+  edge_ix_t_localhost__t_github_user_repo__push:
+    # sequence: [t_localhost, t_github_user_repo]: A -&gt; B
+    - from: t_localhost
+      to: t_github_user_repo
+  edge_ix_t_localhost__t_localhost__within:
+    # cyclic: [t_localhost]: A -&gt; A
+    - from: t_localhost
+      to: t_localhost
+  edge_ix_t_github_user_repo__t_github_user_repo__within:
+    # symmetric: [t_github_user_repo] (1 thing special case): A -&gt; A (request), A -&gt; A (response)
+    - from: t_github_user_repo
+      to: t_github_user_repo
+    - from: t_github_user_repo
+      to: t_github_user_repo
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push:
+    # sequence: [t_github_user_repo, t_aws_ecr_repo]: A -&gt; B
+    - from: t_github_user_repo
+      to: t_aws_ecr_repo
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push:
+    # sequence: [t_aws_ecr_repo, t_aws_ecs_service]: A -&gt; B
+    - from: t_aws_ecr_repo
+      to: t_aws_ecs_service
+
+# Descriptions for entities.
+entity_descs:
+  # nodes
+  t_localhost: "User's computer"
+
+  # edge groups
+  edge_ix_t_localhost__t_github_user_repo__pull: "Fetch from GitHub"
+  edge_ix_t_localhost__t_github_user_repo__push: "Push to GitHub"
+
+  # edges
+  edge_ix_t_localhost__t_github_user_repo__pull__0: "`git pull`"
+  edge_ix_t_localhost__t_github_user_repo__push__0: "`git push`"
+
+  # process_steps
+  proc_app_dev_step_repository_clone: |-
+    ```bash
+    git clone https://github.com/azriel91/web_app.git
+    ```
+  proc_app_dev_step_project_build: |-
+    Develop the app:
+
+    * Always link to issue.
+    * Open PR.
+
+  proc_app_release_step_crate_version_update: |-
+    ```bash
+    sd -s 'version = "0.3.0"' 'version = "0.3.0"' $(fd -tf -F toml) README.md src/lib.rs
+    ```
+  proc_app_release_step_pull_request_open: |-
+    Create a pull request as usual.
+  proc_app_release_step_gh_actions_build: |-
+    Github Actions will build the image.
+  proc_app_release_step_tag_and_push: |-
+    When the PR is merged, tag the commit and push the tag to GitHub.
+
+    ```bash
+    git tag 0.3.0
+    git push origin 0.3.0
+    ```
+
+    The build will push the new version to ECR automatically.
+  proc_app_release_step_gh_actions_publish: |-
+    Github Actions will publish the image to AWS ECR.
+  proc_i12e_region_tier_app_deploy_step_ecs_service_update: |-
+    Deploy or update the existing ECS service with the new image.
+
+# Entity types for styling.
+entity_types:
+  # things
+  t_aws: [type_thing_default, type_organisation]
+  t_aws_iam: [type_thing_default, type_service]
+  t_aws_iam_ecs_policy: [type_thing_default]
+  t_aws_ecr: [type_thing_default, type_service]
+  t_aws_ecr_repo: [type_thing_default]
+  t_aws_ecr_repo_image_1: [type_thing_default, type_docker_image]
+  t_aws_ecr_repo_image_2: [type_thing_default, type_docker_image]
+  t_aws_ecs: [type_thing_default, type_service]
+  t_aws_ecs_cluster_app: [type_thing_default]
+  t_aws_ecs_cluster_app_task: [type_thing_default]
+  t_github: [type_thing_default, type_organisation]
+  t_github_user_repo: [type_thing_default]
+  t_localhost: [type_thing_default]
+  t_localhost_repo: [type_thing_default]
+  t_localhost_repo_src: [type_thing_default]
+  t_localhost_repo_target: [type_thing_default]
+  t_localhost_repo_target_file_zip: [type_thing_default]
+  t_localhost_repo_target_dist_dir: [type_thing_default]
+
+  # tags
+  tag_app_development: [type_tag_default]
+  tag_deployment: [type_tag_default]
+
+  # processes and process steps
+  proc_app_dev: [type_process_default]
+  proc_app_dev_step_repository_clone: [type_process_step_default]
+  proc_app_dev_step_project_build: [type_process_step_default]
+
+  proc_app_release: [type_process_default]
+  proc_app_release_step_crate_version_update: [type_process_step_default]
+  proc_app_release_step_pull_request_open: [type_process_step_default]
+  proc_app_release_step_tag_and_push: [type_process_step_default]
+  proc_app_release_step_gh_actions_build: [type_process_step_default]
+  proc_app_release_step_gh_actions_publish: [type_process_step_default]
+
+  proc_i12e_region_tier_app_deploy: [type_process_default]
+  proc_i12e_region_tier_app_deploy_step_ecs_service_update: [type_process_step_default]
+
+  # edge groups
+
+  # dependency edge groups and edges
+
+  # edge_dep_t_localhost__t_github_user_repo__pull: cyclic [t_localhost, t_github_user_repo]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_github_user_repo
+  #     - 1: t_github_user_repo -&gt; t_localhost
+  edge_dep_t_localhost__t_github_user_repo__pull: [type_dependency_edge_cyclic_default]
+  edge_dep_t_localhost__t_github_user_repo__pull__0: [type_dependency_edge_cyclic_forward_default]
+  edge_dep_t_localhost__t_github_user_repo__pull__1: [type_dependency_edge_cyclic_forward_default]
+
+  # edge_dep_t_localhost__t_github_user_repo__push: sequence [t_localhost, t_github_user_repo]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_github_user_repo
+  edge_dep_t_localhost__t_github_user_repo__push: [type_dependency_edge_sequence_default]
+  edge_dep_t_localhost__t_github_user_repo__push__0: [type_dependency_edge_sequence_forward_default]
+
+  # edge_dep_t_localhost__t_localhost__within: cyclic [t_localhost]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_localhost
+  edge_dep_t_localhost__t_localhost__within: [type_dependency_edge_cyclic_default]
+  edge_dep_t_localhost__t_localhost__within__0: [type_dependency_edge_cyclic_forward_default]
+
+  # edge_dep_t_github_user_repo__t_github_user_repo__within: symmetric [t_github_user_repo] (1 thing special case)
+  #   edges:
+  #     - 0: request
+  #     - 1: response
+  edge_dep_t_github_user_repo__t_github_user_repo__within: [type_dependency_edge_symmetric_default]
+  edge_dep_t_github_user_repo__t_github_user_repo__within__0:
+    [type_dependency_edge_symmetric_forward_default]
+  edge_dep_t_github_user_repo__t_github_user_repo__within__1:
+    [type_dependency_edge_symmetric_reverse_default]
+
+  # edge_dep_t_github_user_repo__t_aws_ecr_repo__push: sequence [t_github_user_repo, t_aws_ecr_repo]
+  #   edges:
+  #     - 0: t_github_user_repo -&gt; t_aws_ecr_repo
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push: [type_dependency_edge_sequence_default]
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push__0:
+    [type_dependency_edge_sequence_forward_default]
+
+  # edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push: sequence [t_aws_ecr_repo, t_aws_ecs_service]
+  #   edges:
+  #     - 0: t_aws_ecr_repo -&gt; t_aws_ecs_service
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push: [type_dependency_edge_sequence_default]
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push__0:
+    [type_dependency_edge_sequence_forward_default]
+
+  # interaction edge groups and edges
+
+  # edge_ix_t_localhost__t_github_user_repo__pull: symmetric [t_localhost, t_github_user_repo]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_github_user_repo (request)
+  #     - 1: t_github_user_repo -&gt; t_localhost (response)
+  edge_ix_t_localhost__t_github_user_repo__pull: [type_interaction_edge_symmetric_default]
+  edge_ix_t_localhost__t_github_user_repo__pull__0:
+    [type_interaction_edge_symmetric_forward_default]
+  edge_ix_t_localhost__t_github_user_repo__pull__1:
+    [type_interaction_edge_symmetric_reverse_default]
+
+  # edge_ix_t_localhost__t_github_user_repo__push: sequence [t_localhost, t_github_user_repo]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_github_user_repo
+  edge_ix_t_localhost__t_github_user_repo__push: [type_interaction_edge_sequence_default]
+  edge_ix_t_localhost__t_github_user_repo__push__0: [type_interaction_edge_sequence_forward_default]
+
+  # edge_ix_t_localhost__t_localhost__within: cyclic [t_localhost]
+  #   edges:
+  #     - 0: t_localhost -&gt; t_localhost
+  edge_ix_t_localhost__t_localhost__within: [type_interaction_edge_cyclic_default]
+  edge_ix_t_localhost__t_localhost__within__0: [type_interaction_edge_cyclic_forward_default]
+
+  # edge_ix_t_github_user_repo__t_github_user_repo__within: symmetric [t_github_user_repo] (1 thing special case)
+  #   edges:
+  #     - 0: request
+  #     - 1: response
+  edge_ix_t_github_user_repo__t_github_user_repo__within: [type_interaction_edge_symmetric_default]
+  edge_ix_t_github_user_repo__t_github_user_repo__within__0:
+    [type_interaction_edge_symmetric_forward_default]
+  edge_ix_t_github_user_repo__t_github_user_repo__within__1:
+    [type_interaction_edge_symmetric_reverse_default]
+
+  # edge_ix_t_github_user_repo__t_aws_ecr_repo__push: sequence [t_github_user_repo, t_aws_ecr_repo]
+  #   edges:
+  #     - 0: t_github_user_repo -&gt; t_aws_ecr_repo
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push: [type_interaction_edge_sequence_default]
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push__0:
+    [type_interaction_edge_sequence_forward_default]
+
+  # edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push: sequence [t_aws_ecr_repo, t_aws_ecs_service]
+  #   edges:
+  #     - 0: t_aws_ecr_repo -&gt; t_aws_ecs_service
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push: [type_interaction_edge_sequence_default]
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push__0:
+    [type_interaction_edge_sequence_forward_default]
+
+# Computed Tailwind CSS classes.
+tailwind_classes:
+  # Styles for things are as follows:
+  #
+  # For the inner `&lt;path&gt;` element:
+  #
+  # * `hover:stroke-{color}-{shade}` when hovered.
+  # * `stroke-{color}-{shade}` for normal state.
+  # * `focus:stroke-{color}-{shade}` when focused.
+  # * `active:stroke-{color}-{shade}` when pressed.
+  # * `hover:fill-{color}-{shade}` when hovered.
+  # * `fill-{color}-{shade}` for normal state.
+  # * `focus:fill-{color}-{shade}` when focused.
+  # * `active:fill-{color}-{shade}` when pressed.
+  #
+  # For the inner `&lt;text&gt;` element:
+  #
+  # * `[&amp;&gt;text]:fill-{color}-{shade}` for text in all states.
+  #
+  # The following classes are used to highlight the `thing`'s `&lt;path&gt;` when a related process step
+  # is focused:
+  #
+  # * `animate-[stroke-dashoffset-move_2s_linear_infinite]`
+  # * `stroke-{color}-{shade}` where `shade` is the "normal" shade, but brighter by one level.
+  # * `fill-{color}-{shade}` where `shade` is the "normal" shade, but brighter by one level.
+  #
+  # They are applied to each thing, just with the appropriate `peer-[:focus-within]/{process_step}` prefix.
+  #
+  # We could collapse the `stroke-dashoffset` into the animation, but we can't collapse the `shade`
+  # because they are part of the stroke and fill colors -- we have to choose between duplication
+  # either here, or in animations.
+  t_aws: |
+    visible
+    [stroke-dasharray:2]
+    stroke-1
+    hover:fill-yellow-50
+    fill-yellow-100
+    focus:fill-yellow-200
+    active:fill-yellow-300
+    hover:stroke-yellow-100
+    stroke-yellow-200
+    focus:stroke-yellow-300
+    active:stroke-yellow-400
+    [&amp;&gt;text]:fill-neutral-800
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_iam: |
+    visible
+    [stroke-dasharray:3]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_iam_ecs_policy: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecr: |
+    visible
+    [stroke-dasharray:3]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecr_repo: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:[stroke-dasharray:3]
+    peer-[:focus-within]/tag_deployment:stroke-2
+    peer-[:focus-within]/tag_deployment:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/tag_deployment:hover:fill-slate-50
+    peer-[:focus-within]/tag_deployment:fill-slate-100
+    peer-[:focus-within]/tag_deployment:focus:fill-slate-200
+    peer-[:focus-within]/tag_deployment:active:fill-slate-300
+    peer-[:focus-within]/tag_deployment:hover:stroke-slate-100
+    peer-[:focus-within]/tag_deployment:stroke-slate-200
+    peer-[:focus-within]/tag_deployment:focus:stroke-slate-300
+    peer-[:focus-within]/tag_deployment:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:stroke-2
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:active:stroke-slate-400
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-2
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:hover:fill-slate-50
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:fill-slate-100
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:focus:fill-slate-200
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:active:fill-slate-300
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:hover:stroke-slate-100
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:stroke-slate-200
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:focus:stroke-slate-300
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:active:stroke-slate-400
+
+  t_aws_ecr_repo_image_1: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecr_repo_image_2: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-200
+    fill-sky-300
+    focus:fill-sky-400
+    active:fill-sky-500
+    hover:stroke-sky-300
+    stroke-sky-400
+    focus:stroke-sky-500
+    active:stroke-sky-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecs: |
+    visible
+    [stroke-dasharray:3]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecs_cluster_app: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_aws_ecs_cluster_app_task: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_github: |
+    visible
+    [stroke-dasharray:2]
+    stroke-1
+    hover:fill-neutral-50
+    fill-neutral-100
+    focus:fill-neutral-200
+    active:fill-neutral-300
+    hover:stroke-neutral-100
+    stroke-neutral-200
+    focus:stroke-neutral-300
+    active:stroke-neutral-400
+    [&amp;&gt;text]:fill-neutral-800
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_github_user_repo: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:[stroke-dasharray:3]
+    peer-[:focus-within]/tag_app_development:stroke-2
+    peer-[:focus-within]/tag_app_development:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/tag_app_development:hover:fill-slate-50
+    peer-[:focus-within]/tag_app_development:fill-slate-100
+    peer-[:focus-within]/tag_app_development:focus:fill-slate-200
+    peer-[:focus-within]/tag_app_development:active:fill-slate-300
+    peer-[:focus-within]/tag_app_development:hover:stroke-slate-100
+    peer-[:focus-within]/tag_app_development:stroke-slate-200
+    peer-[:focus-within]/tag_app_development:focus:stroke-slate-300
+    peer-[:focus-within]/tag_app_development:active:stroke-slate-400
+    peer-[:focus-within]/tag_deployment:[stroke-dasharray:3]
+    peer-[:focus-within]/tag_deployment:stroke-2
+    peer-[:focus-within]/tag_deployment:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/tag_deployment:hover:fill-slate-50
+    peer-[:focus-within]/tag_deployment:fill-slate-100
+    peer-[:focus-within]/tag_deployment:focus:fill-slate-200
+    peer-[:focus-within]/tag_deployment:active:fill-slate-300
+    peer-[:focus-within]/tag_deployment:hover:stroke-slate-100
+    peer-[:focus-within]/tag_deployment:stroke-slate-200
+    peer-[:focus-within]/tag_deployment:focus:stroke-slate-300
+    peer-[:focus-within]/tag_deployment:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:stroke-2
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:fill-slate-100
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:active:fill-slate-300
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:stroke-slate-200
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:stroke-2
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:stroke-2
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:stroke-2
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:stroke-2
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:active:stroke-slate-400
+
+  t_localhost: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:[stroke-dasharray:3]
+    peer-[:focus-within]/tag_app_development:stroke-2
+    peer-[:focus-within]/tag_app_development:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/tag_app_development:hover:fill-slate-50
+    peer-[:focus-within]/tag_app_development:fill-slate-100
+    peer-[:focus-within]/tag_app_development:focus:fill-slate-200
+    peer-[:focus-within]/tag_app_development:active:fill-slate-300
+    peer-[:focus-within]/tag_app_development:hover:stroke-slate-100
+    peer-[:focus-within]/tag_app_development:stroke-slate-200
+    peer-[:focus-within]/tag_app_development:focus:stroke-slate-300
+    peer-[:focus-within]/tag_app_development:active:stroke-slate-400
+    peer-[:focus-within]/tag_deployment:opacity-75
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:stroke-2
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:fill-slate-100
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:active:fill-slate-300
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:stroke-slate-200
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_dev_step_project_build:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_dev_step_project_build:stroke-2
+    peer-[:focus-within]/proc_app_dev_step_project_build:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_dev_step_project_build:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_dev_step_project_build:fill-slate-100
+    peer-[:focus-within]/proc_app_dev_step_project_build:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_dev_step_project_build:active:fill-slate-300
+    peer-[:focus-within]/proc_app_dev_step_project_build:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_dev_step_project_build:stroke-slate-200
+    peer-[:focus-within]/proc_app_dev_step_project_build:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_dev_step_project_build:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:stroke-2
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:stroke-2
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:active:stroke-slate-400
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:[stroke-dasharray:3]
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:stroke-2
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:animate-[stroke-dashoffset-move_2s_linear_infinite]
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:hover:fill-slate-50
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:fill-slate-100
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:focus:fill-slate-200
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:active:fill-slate-300
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:hover:stroke-slate-100
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:stroke-slate-200
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:focus:stroke-slate-300
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:active:stroke-slate-400
+
+  t_localhost_repo: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_localhost_repo_src: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_localhost_repo_target: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_localhost_repo_target_file_zip: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+  t_localhost_repo_target_dist_dir: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-slate-200
+    fill-slate-300
+    focus:fill-slate-400
+    active:fill-slate-500
+    hover:stroke-slate-300
+    stroke-slate-400
+    focus:stroke-slate-500
+    active:stroke-slate-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/tag_app_development:opacity-50
+    peer-[:focus-within]/tag_deployment:opacity-75
+
+  # Tags - act as group containers for highlighting associated things
+  tag_app_development: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&amp;&gt;text]:fill-neutral-950
+    peer/tag_app_development
+
+  tag_deployment: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-emerald-400
+    fill-emerald-500
+    focus:fill-emerald-600
+    active:fill-emerald-700
+    hover:stroke-emerald-500
+    stroke-emerald-600
+    focus:stroke-emerald-700
+    active:stroke-emerald-800
+    [&amp;&gt;text]:fill-neutral-950
+    peer/tag_deployment
+
+  # Processes and process steps.
+  #
+  # Processes are group containers for their steps.
+  #
+  # Process steps are visible when parent process has focus, and are peers for things and edges
+  # that interact within that step.
+  #
+  # Note: `process` nodes contain their steps' peer classes. This is because the process nodes will
+  # be sibling elements to the `thing` / `edge_group` elements, whereas the process step nodes are
+  # not sibling elements, so the `thing` and `edge_group` elements can only react to the `process`
+  # nodes' state for the sibling selector to work.
+  proc_app_dev: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-blue-400
+    fill-blue-500
+    focus:fill-blue-600
+    active:fill-blue-700
+    hover:stroke-blue-500
+    stroke-blue-600
+    focus:stroke-blue-700
+    active:stroke-blue-800
+    [&amp;&gt;text]:fill-neutral-950
+    group/proc_app_dev
+    peer/proc_app_dev_step_repository_clone
+    peer/proc_app_dev_step_project_build
+  proc_app_dev_step_repository_clone: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_dev:visible
+  proc_app_dev_step_project_build: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_dev:visible
+
+  proc_app_release: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-blue-400
+    fill-blue-500
+    focus:fill-blue-600
+    active:fill-blue-700
+    hover:stroke-blue-500
+    stroke-blue-600
+    focus:stroke-blue-700
+    active:stroke-blue-800
+    [&amp;&gt;text]:fill-neutral-950
+    group/proc_app_release
+    peer/proc_app_release_step_crate_version_update
+    peer/proc_app_release_step_pull_request_open
+    peer/proc_app_release_step_tag_and_push
+    peer/proc_app_release_step_gh_actions_build
+    peer/proc_app_release_step_gh_actions_publish
+  proc_app_release_step_crate_version_update: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_release:visible
+  proc_app_release_step_pull_request_open: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_release:visible
+  proc_app_release_step_tag_and_push: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_release:visible
+  proc_app_release_step_gh_actions_build: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_release:visible
+  proc_app_release_step_gh_actions_publish: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_app_release:visible
+
+  proc_i12e_region_tier_app_deploy: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-blue-400
+    fill-blue-500
+    focus:fill-blue-600
+    active:fill-blue-700
+    hover:stroke-blue-500
+    stroke-blue-600
+    focus:stroke-blue-700
+    active:stroke-blue-800
+    [&amp;&gt;text]:fill-neutral-950
+    group/proc_i12e_region_tier_app_deploy
+    peer/proc_i12e_region_tier_app_deploy_step_ecs_service_update
+  proc_i12e_region_tier_app_deploy_step_ecs_service_update: |
+    invisible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-sky-400
+    fill-sky-500
+    focus:fill-sky-600
+    active:fill-sky-700
+    hover:stroke-sky-500
+    stroke-sky-600
+    focus:stroke-sky-700
+    active:stroke-sky-800
+    [&amp;&gt;text]:fill-neutral-950
+    group-focus-within/proc_i12e_region_tier_app_deploy:visible
+
+  # Edges - visible when their associated step has focus
+  #
+  # If an edge is used as a dependency, then the `dependency` set of tailwind classes are applied,
+  # and the edge is `visible` by default.
+  # If it is also used as an interaction, then the `interaction` set of tailwind classes are
+  # generated as peer classes to override the first set.
+  #
+  # If an edge is only used as an interaction, then the `interaction` set of tailwind classes are
+  # generated as regular tailwind classes, and the edge is `invisible` by default.
+  # The only peer class needed then is making the edge `visible` when the peer has focus.
+
+  # dependency edges
+  edge_dep_t_localhost__t_github_user_repo__pull: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_localhost__t_github_user_repo__pull__0: |
+    stroke-1
+  edge_dep_t_localhost__t_github_user_repo__pull__1: |
+    stroke-1
+
+  edge_dep_t_localhost__t_github_user_repo__push: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_localhost__t_github_user_repo__push__0: |
+    stroke-1
+
+  edge_dep_t_localhost__t_localhost__within: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_localhost__t_localhost__within__0: |
+    stroke-1
+
+  edge_dep_t_github_user_repo__t_github_user_repo__within: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_github_user_repo__t_github_user_repo__within__0: |
+    stroke-1
+  edge_dep_t_github_user_repo__t_github_user_repo__within__1: |
+    stroke-1
+
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push__0: |
+    stroke-1
+
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push: |
+    visible
+    [stroke-dasharray:none]
+    stroke-1
+    hover:fill-neutral-600
+    fill-neutral-700
+    focus:fill-neutral-800
+    active:fill-neutral-900
+    hover:stroke-neutral-700
+    stroke-neutral-800
+    focus:stroke-neutral-900
+    active:stroke-neutral-950
+    [&amp;&gt;text]:fill-neutral-950
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push__0: |
+    stroke-1
+
+  # interaction edges
+  edge_ix_t_localhost__t_github_user_repo__pull: |
+    invisible
+    stroke-2
+    hover:fill-blue-200
+    fill-blue-300
+    focus:fill-blue-400
+    active:fill-blue-500
+    hover:stroke-blue-300
+    stroke-blue-400
+    focus:stroke-blue-500
+    active:stroke-blue-600
+    [&amp;&gt;text]:fill-neutral-900
+    peer-[:focus-within]/proc_app_dev_step_repository_clone:visible
+    peer-[:focus-within]/proc_app_release_step_pull_request_open:visible
+  edge_ix_t_localhost__t_github_user_repo__pull__0: |
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+  edge_ix_t_localhost__t_github_user_repo__pull__1: |
+    [stroke-dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80]
+    animate-[stroke-dashoffset-move-response_2s_linear_infinite]
+
+  edge_ix_t_localhost__t_github_user_repo__push: |
+    invisible
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    stroke-2
+    hover:fill-violet-600
+    fill-violet-700
+    focus:fill-violet-800
+    active:fill-violet-900
+    hover:stroke-violet-700
+    stroke-violet-800
+    focus:stroke-violet-900
+    active:stroke-violet-950
+    [&amp;&gt;text]:fill-neutral-950
+    peer-[:focus-within]/proc_app_release_step_tag_and_push:visible
+  edge_ix_t_localhost__t_github_user_repo__push__0: |
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+
+  edge_ix_t_localhost__t_localhost__within: |
+    invisible
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    stroke-2
+    hover:fill-violet-600
+    fill-violet-700
+    focus:fill-violet-800
+    active:fill-violet-900
+    hover:stroke-violet-700
+    stroke-violet-800
+    focus:stroke-violet-900
+    active:stroke-violet-950
+    [&amp;&gt;text]:fill-neutral-950
+    peer-[:focus-within]/proc_app_dev_step_project_build:visible
+    peer-[:focus-within]/proc_app_release_step_crate_version_update:visible
+  edge_ix_t_localhost__t_localhost__within__0: |
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+
+  edge_ix_t_github_user_repo__t_github_user_repo__within: |
+    invisible
+    stroke-2
+    hover:fill-violet-600
+    fill-violet-700
+    focus:fill-violet-800
+    active:fill-violet-900
+    hover:stroke-violet-700
+    stroke-violet-800
+    focus:stroke-violet-900
+    active:stroke-violet-950
+    [&amp;&gt;text]:fill-neutral-950
+    peer-[:focus-within]/proc_app_release_step_gh_actions_build:visible
+  edge_ix_t_github_user_repo__t_github_user_repo__within__0: |
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+  edge_ix_t_github_user_repo__t_github_user_repo__within__1: |
+    [stroke-dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80]
+    animate-[stroke-dashoffset-move-response_2s_linear_infinite]
+
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push: |
+    invisible
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    stroke-2
+    hover:fill-violet-600
+    fill-violet-700
+    focus:fill-violet-800
+    active:fill-violet-900
+    hover:stroke-violet-700
+    stroke-violet-800
+    focus:stroke-violet-900
+    active:stroke-violet-950
+    [&amp;&gt;text]:fill-neutral-950
+    peer-[:focus-within]/proc_app_release_step_gh_actions_publish:visible
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push__0: |
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push: |
+    invisible
+    [stroke-dasharray:0,80,12,2,4,2,2,2,1,2,1,120]
+    stroke-2
+    hover:fill-violet-600
+    fill-violet-700
+    focus:fill-violet-800
+    active:fill-violet-900
+    hover:stroke-violet-700
+    stroke-violet-800
+    focus:stroke-violet-900
+    active:stroke-violet-950
+    [&amp;&gt;text]:fill-neutral-950
+    peer-[:focus-within]/proc_i12e_region_tier_app_deploy_step_ecs_service_update:visible
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push__0: |
+    animate-[stroke-dashoffset-move-request_2s_linear_infinite]
+
+# Layout configuration for nodes.
+node_layout:
+  # Root container
+  #
+  # This is in `column_reverse` order so tag node state controls `things` and `processes`:
+  #
+  # ```text
+  # .------------------------------------.
+  # | 1. _things_and_processes_container |
+  # | -----------------------------------|
+  # | 0. _tags_container                 |
+  # '------------------------------------'
+  # ```
+  _root:
+    flex:
+      direction: "column_reverse"
+      wrap: true
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+
+  # Things and Processes container.
+  #
+  # This is in `row_reverse` order so process node state controls `things`:
+  #
+  # ```text
+  # .------------------------------------------------.
+  # | 1. _things_container | 0. _processes_container |
+  # '------------------------------------------------'
+  # ```
+  _things_and_processes_container:
+    flex:
+      direction: "row_reverse"
+      wrap: true
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+
+  # Processes container (groups all processes horizontally)
+  #
+  # This is in `row` order so processes are laid out left to right:
+  #
+  # ```text
+  # .-----------------------------------------------------------------------------.
+  # | 0. proc_app_dev | 1. proc_app_release | 2. proc_i12e_region_tier_app_deploy |
+  # '-----------------------------------------------------------------------------'
+  # ```
+  _processes_container:
+    flex:
+      direction: "row"
+      wrap: true
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+
+  # Individual processes (steps stacked vertically)
+  #
+  # This is in `column` order so steps are laid out top to bottom:
+  #
+  # ```text
+  # .---------------------------------------.
+  # | 0. proc_app_dev_step_repository_clone |
+  # |---------------------------------------|
+  # | 1. proc_app_dev_step_project_build    |
+  # '---------------------------------------'
+  # ```
+  proc_app_dev:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  proc_app_dev_step_repository_clone: none
+  proc_app_dev_step_project_build: none
+
+  proc_app_release:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  proc_app_release_step_crate_version_update: none
+  proc_app_release_step_pull_request_open: none
+  proc_app_release_step_tag_and_push: none
+  proc_app_release_step_gh_actions_build: none
+  proc_app_release_step_gh_actions_publish: none
+
+  proc_i12e_region_tier_app_deploy:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  proc_i12e_region_tier_app_deploy_step_ecs_service_update: none
+
+  # Tags container
+  #
+  # This is in `row` order so tags are laid out left to right:
+  #
+  # ```text
+  # .--------------------------------------------.
+  # | 0. tag_app_development | 1. tag_deployment |
+  # '--------------------------------------------'
+  # ```
+  _tags_container:
+    flex:
+      direction: "row"
+      wrap: true
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+
+  # Tags are leaves
+  tag_app_development: none
+  tag_deployment: none
+
+  # Things container (top-level things arranged in a row)
+  _things_container:
+    flex:
+      direction: "row"
+      wrap: true
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+
+  # Top-level things (children alternate between columns and rows)
+  t_aws:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_iam:
+    flex:
+      direction: "row"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_iam_ecs_policy: none
+  t_aws_ecr:
+    flex:
+      direction: "row"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_ecr_repo:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_ecr_repo_image_1: none
+  t_aws_ecr_repo_image_2: none
+  t_aws_ecs:
+    flex:
+      direction: "row"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_ecs_cluster_app:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_aws_ecs_cluster_app_task: none
+
+  t_github:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_github_user_repo: none
+
+  t_localhost:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_localhost_repo:
+    flex:
+      direction: "row"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_localhost_repo_src: none
+  t_localhost_repo_target:
+    flex:
+      direction: "column"
+      wrap: false
+      padding_top: 4.0
+      padding_right: 4.0
+      padding_bottom: 4.0
+      padding_left: 4.0
+      margin_top: 0.0
+      margin_right: 0.0
+      margin_bottom: 0.0
+      margin_left: 0.0
+      gap: 4.0
+  t_localhost_repo_target_file_zip: none
+  t_localhost_repo_target_dist_dir: none
+
+# Additional CSS for animations.
+css: |-
+  @keyframes stroke-dashoffset-move {
+    0%   { stroke-dasharray: 3; stroke-dashoffset: 30; }
+    100% { stroke-dasharray: 3; stroke-dashoffset: 0; }
+  }
+  @keyframes stroke-dashoffset-move-request {
+    0%   { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 228; }
+  }
+  @keyframes stroke-dashoffset-move-response {
+    0%   { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -248; }
+  }
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../side_projects/disposition/example_input.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../learning_material/why_rust.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../side_projects/disposition/example_input.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../learning_material/why_rust.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
+
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../src/js/highlightjs-line-numbers.min.js"></script>
+
+
+    </div>
+    </body>
+</html>
