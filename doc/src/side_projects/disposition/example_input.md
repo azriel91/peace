@@ -18,7 +18,7 @@ things: &things
   t_aws_ecs_cluster_app_task: "🖨️ web_app task version 1"
   t_github: "🐙 GitHub"
   t_github_user_repo: "azriel91/web_app"
-  t_localhost: "🧑‍💻 Localhost"
+  t_localhost: "🧑‍💻 localhost"
   t_localhost_repo: "📂 ~/work/web_app"
   t_localhost_repo_src: "📝 src"
   t_localhost_repo_target: "📂 target"
@@ -28,6 +28,7 @@ things: &things
 # Render a copy text button, and, when clicked, what text to place on the clipboard.
 thing_copy_text:
   <<: *things
+  t_localhost: "localhost"
   t_localhost_repo: "~/work/web_app"
   t_localhost_repo_src: "~/work/web_app/src"
   t_localhost_repo_target: "~/work/web_app/target"
@@ -54,6 +55,9 @@ thing_hierarchy:
       t_aws_ecr_repo:
         t_aws_ecr_repo_image_1: {}
         t_aws_ecr_repo_image_2: {}
+    t_aws_ecs:
+      t_aws_ecs_cluster_app:
+        t_aws_ecs_cluster_app_task: {}
 
   t_github:
     t_github_user_repo: {}
@@ -81,7 +85,7 @@ thing_hierarchy:
 #   # rank: "vertical"
 # ```
 
-# Dependencies between things can be one way, or cyclic.
+# Dependencies between things can be one way, or symmetric.
 #
 # Dependencies are static relationships between things, and should be rendered as "on" or "off"
 # depending on whether a `thing` is focused / targeted, and whether the user wants to see:
@@ -97,29 +101,92 @@ thing_hierarchy:
 #
 # We want to make it easy to define dependencies between chains of things.
 thing_dependencies: &thing_dependencies
-  edge_t_localhost__t_github_user_repo__pull:
+  edge_dep_t_localhost__t_github_user_repo__pull:
     # Cyclic dependencies are where the last thing in the list has an edge back to first thing.
     #
-    # Should have at least one `thing`.
+    # Must have at least 1 thing.
     cyclic:
       - t_localhost
       - t_github_user_repo
-  edge_t_localhost__t_github_user_repo__push:
-    # Can have 2 or more things
+  edge_dep_t_localhost__t_github_user_repo__push:
+    # Sequential dependencies are where there is an edge from each `thing` in the list to the next,
+    # and no reverse edges.
+    #
+    # Must have at least 2 things.
     sequence:
       - t_localhost
       - t_github_user_repo
-  edge_t_localhost__t_localhost__within:
+  edge_dep_t_localhost__t_localhost__within:
     cyclic:
       - t_localhost
-  edge_t_github_user_repo__t_github_user_repo__within:
-    cyclic:
+  edge_dep_t_github_user_repo__t_github_user_repo__within:
+    symmetric:
       - t_github_user_repo
-  edge_t_github_user_repo__t_aws_ecr_repo__push:
+  edge_dep_t_github_user_repo__t_aws_ecr_repo__push:
     sequence:
       - t_github_user_repo
       - t_aws_ecr_repo
-  edge_t_aws_ecr_repo__t_aws_ecs_service__push:
+  edge_dep_t_aws_ecr_repo__t_aws_ecs_service__push:
+    sequence:
+      - t_aws_ecr_repo
+      - t_aws_ecs_service
+
+# Interactions between things can be cyclic, a sequence, or symmetric.
+#
+# IDs here must not be the same as the ones in `thing_dependencies`, because the `entity_type`s'
+# styling will collide.
+#
+# For 1 thing in a list, A, B, C, the following edges are added:
+#
+# * `cyclic`: `A -> A` (one edge from the node pointing back to itself).
+# * `sequence`: none.
+# * `symmetric`: `A -> A -> A` (two edges, one representing a request, one representing a response).
+#
+# For 3 things in a list, A, B, C, the following edges are added:
+#
+# * `cyclic`: `A -> B -> C -> A`.
+# * `sequence`: `A -> B -> C`.
+# * `symmetric`: `A -> B -> C -> B -> A`.
+#
+# Interactions have the same data structure as dependencies, but are conceptually different:
+# `thing_dependencies` is intended to represent dependencies between software libraries,
+# while interactions are communication between applications.
+#
+# There *are* ordering dependencies between interactions, but *when* it is useful to render
+# `thing_dependencies` and `thing_interactions` differ. Dependencies are static at a point in time,
+# so it is useful to render the links between multiple `thing`s; interactions are present when a
+# step in a process is executing, so they are rendered when the step is focused.
+#
+# We want to make it easy to define interactions between chains of things.
+thing_interactions:
+  edge_ix_t_localhost__t_github_user_repo__pull:
+    # Symmetric interactions are where there is an edge from each `thing` in the list to the next,
+    # and and reverse edges from the last thing in the list to the previous thing, until the first
+    # thing in the list.
+    #
+    # Must have at least 1 thing.
+    symmetric:
+      - t_localhost
+      - t_github_user_repo
+  edge_ix_t_localhost__t_github_user_repo__push:
+    # Sequential dependencies are where there is an edge from each `thing` in the list to the next,
+    # and no reverse edges.
+    #
+    # Must have at least 2 things.
+    sequence:
+      - t_localhost
+      - t_github_user_repo
+  edge_ix_t_localhost__t_localhost__within:
+    cyclic:
+      - t_localhost
+  edge_ix_t_github_user_repo__t_github_user_repo__within:
+    symmetric:
+      - t_github_user_repo
+  edge_ix_t_github_user_repo__t_aws_ecr_repo__push:
+    sequence:
+      - t_github_user_repo
+      - t_aws_ecr_repo
+  edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push:
     sequence:
       - t_aws_ecr_repo
       - t_aws_ecs_service
@@ -141,32 +208,16 @@ entity_descs:
   # edge groups
   #
   # Shown when any of the edges in this group are focused.
-  edge_t_localhost__t_github_user_repo__pull: |-
+  edge_ix_t_localhost__t_github_user_repo__pull: |-
     Fetch from GitHub
-  edge_t_localhost__t_github_user_repo__push: |-
+  edge_ix_t_localhost__t_github_user_repo__push: |-
     Push to GitHub
 
   # edges
-  edge_t_localhost__t_github_user_repo__pull__0: |-
+  edge_ix_t_localhost__t_github_user_repo__pull__0: |-
     `git pull`
-  edge_t_localhost__t_github_user_repo__push__0: |-
+  edge_ix_t_localhost__t_github_user_repo__push__0: |-
     `git push`
-
-# Interactions between things can be one way, or cyclic.
-#
-# Interactions have the same data structure as dependencies, but are conceptually different:
-# `thing_dependencies` is intended to represent dependencies between software libraries,
-# while interactions are communication between applications.
-#
-# There *are* ordering dependencies between interactions, but *when* it is useful to render
-# `thing_dependencies` and `thing_interactions` differ. Dependencies are static at a point in time,
-# so it is useful to render the links between multiple `thing`s; interactions are present when a
-# step in a process is executing, so they are rendered when the step is focused.
-#
-# IDs here can be the same as the ones in `thing_dependencies`.
-#
-# We want to make it easy to define interactions between chains of things.
-thing_interactions: *thing_dependencies # cheat and use yaml reference
 
 # Processes are groupings of interactions between things sequenced over time.
 #
@@ -201,8 +252,8 @@ processes:
     #
     # optional, references IDs in `thing_interactions` top level element.
     step_thing_interactions:
-      proc_app_dev_step_repository_clone: [edge_t_localhost__t_github_user_repo__pull]
-      proc_app_dev_step_project_build: [edge_t_localhost__t_localhost__within]
+      proc_app_dev_step_repository_clone: [edge_ix_t_localhost__t_github_user_repo__pull]
+      proc_app_dev_step_project_build: [edge_ix_t_localhost__t_localhost__within]
 
   proc_app_release:
     name: "App Release"
@@ -235,11 +286,12 @@ processes:
         Github Actions will publish the image to AWS ECR.
 
     step_thing_interactions:
-      proc_app_release_step_crate_version_update: [edge_t_localhost__t_localhost__within]
-      proc_app_release_step_pull_request_open: [edge_t_localhost__t_github_user_repo__pull]
-      proc_app_release_step_tag_and_push: [edge_t_localhost__t_github_user_repo__push]
-      proc_app_release_step_gh_actions_build: [edge_t_github_user_repo__t_github_user_repo__within]
-      proc_app_release_step_gh_actions_publish: [edge_t_github_user_repo__t_aws_ecr_repo__push]
+      proc_app_release_step_crate_version_update: [edge_ix_t_localhost__t_localhost__within]
+      proc_app_release_step_pull_request_open: [edge_ix_t_localhost__t_github_user_repo__pull]
+      proc_app_release_step_tag_and_push: [edge_ix_t_localhost__t_github_user_repo__push]
+      proc_app_release_step_gh_actions_build:
+        [edge_ix_t_github_user_repo__t_github_user_repo__within]
+      proc_app_release_step_gh_actions_publish: [edge_ix_t_github_user_repo__t_aws_ecr_repo__push]
 
   # Some processes not defined yet.
   #
@@ -256,7 +308,7 @@ processes:
         Deploy or update the existing ECS service with the new image.
     step_thing_interactions:
       proc_i12e_region_tier_app_deploy_step_ecs_service_update:
-        [edge_t_aws_ecr_repo__t_aws_ecs_service__push]
+        [edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push]
 
 # Tags are labels that can be associated with things, so that the things can be highlighted when
 # the tag is focused.
@@ -296,12 +348,20 @@ tag_things:
 #   - type_tag_default
 #   - type_process_default
 #   - type_process_step_default
-#   - type_edge_dependency_sequence_request_default
-#   - type_edge_dependency_sequence_response_default
-#   - type_edge_dependency_cyclic_default
-#   - type_edge_interaction_sequence_request_default
-#   - type_edge_interaction_sequence_response_default
-#   - type_edge_interaction_cyclic_default
+#   - type_dependency_edge_cyclic_default
+#   - type_dependency_edge_cyclic_forward_default
+#   - type_dependency_edge_sequence_default
+#   - type_dependency_edge_sequence_forward_default
+#   - type_dependency_edge_symmetric_default
+#   - type_dependency_edge_symmetric_forward_default
+#   - type_dependency_edge_symmetric_reverse_default
+#   - type_interaction_edge_cyclic_default
+#   - type_interaction_edge_cyclic_forward_default
+#   - type_interaction_edge_sequence_default
+#   - type_interaction_edge_sequence_forward_default
+#   - type_interaction_edge_symmetric_default
+#   - type_interaction_edge_symmetric_forward_default
+#   - type_interaction_edge_symmetric_reverse_default
 # ```
 #
 # Additional `type`s we attach to `things` / `thing_dependencies` / `tags`, so they can be styled
@@ -309,60 +369,96 @@ tag_things:
 #
 # This is like a tag, but doesn't require the user to click on the tag to apply the style.
 #
-# Built-in types that are automatically attached to entities unless overridden:
+# Built-in types that are automatically attached to entities unless
+# overridden:
 #
 # * `type_thing_default`
 # * `type_tag_default`
 # * `type_process_default`
 # * `type_process_step_default`
 #
-# For edges, multiple edges are generated for each dependency / interaction,
-# and each edge is assigned a type from the following:
+# For edges, an edge group is generated for each dependency / interaction:
 #
-# * `type_edge_dependency_sequence_request_default`
-# * `type_edge_dependency_sequence_response_default`
-# * `type_edge_dependency_cyclic_default`
-# * `type_edge_interaction_sequence_request_default`
-# * `type_edge_interaction_sequence_response_default`
-# * `type_edge_interaction_cyclic_default`
+# Each edge group is assigned a type from the following:
 #
-# The edge ID will be the edge group ID specified in `thing_dependencies` /
+# * `type_dependency_edge_sequence_default`
+# * `type_dependency_edge_cyclic_default`
+# * `type_dependency_edge_symmetric_default`
+# * `type_interaction_edge_sequence_default`
+# * `type_interaction_edge_cyclic_default`
+# * `type_interaction_edge_symmetric_default`
+#
+# and each edge within each edge group is assigned a type from the following:
+#
+# * `type_dependency_edge_sequence_forward_default`
+# * `type_dependency_edge_cyclic_forward_default`
+# * `type_dependency_edge_symmetric_forward_default`
+# * `type_dependency_edge_symmetric_reverse_default`
+# * `type_interaction_edge_sequence_forward_default`
+# * `type_interaction_edge_cyclic_forward_default`
+# * `type_interaction_edge_symmetric_forward_default`
+# * `type_interaction_edge_symmetric_reverse_default`
+#
+# The edge ID is the edge group ID specified in `thing_dependencies` /
 # `thing_interactions`, suffixed with the zero-based index of the edge like
 # so:
 #
 # ```text
 # edge_id = edge_group_id + "__" + edge_index
 # ```
+#
+# Additional entity types appended to each entity's default type.
+# Each entity can have multiple types, allowing styles to be stacked.
+#
+# These types are appended to the entity's computed default type:
+#
+# - Things: `type_thing_default`
+# - Tags: `type_tag_default`
+# - Processes: `type_process_default`
+# - Process steps: `type_process_step_default`
+# - Edge groups: `type_dependency_edge_*_default` or type_interaction_edge_*_default
+# - Edges: `type_dependency_edge_*_forward_default`, `type_interaction_edge_*_forward_default`, or `type_interaction_edge_*_reverse_default`
 entity_types:
-  t_aws: "type_organisation"
-  t_aws_iam: "type_service"
-  # t_aws_iam_ecs_policy: ~
-  t_aws_ecr: "type_service"
-  # t_aws_ecr_repo: ~
-  t_aws_ecr_repo_image_1: "type_docker_image"
-  t_aws_ecr_repo_image_2: "type_docker_image"
-  t_aws_ecs: "type_service"
-  # t_aws_ecs_cluster_app: ~
-  # t_aws_ecs_cluster_app_task: ~
-  t_github: "type_organisation"
-  # t_github_user_repo: ~
-  # t_localhost: ~
-  # t_localhost_repo: ~
-  # t_localhost_repo_src: ~
-  # t_localhost_repo_target: ~
-  # t_localhost_repo_target_file_zip: ~
-  # t_localhost_repo_target_dist_dir: ~
+  t_aws:
+    - type_organisation
+  t_aws_iam:
+    - type_service
+  # t_aws_iam_ecs_policy: []
+  t_aws_ecr:
+    - type_service
+  # t_aws_ecr_repo: []
+  t_aws_ecr_repo_image_1:
+    - type_docker_image
+  t_aws_ecr_repo_image_2:
+    - type_docker_image
+  t_aws_ecs:
+    - type_service
+  # t_aws_ecs_cluster_app: []
+  # t_aws_ecs_cluster_app_task: []
+  t_github:
+    - type_organisation
+  # t_github_user_repo: []
+  # t_localhost: []
+  # t_localhost_repo: []
+  # t_localhost_repo_src: []
+  # t_localhost_repo_target: []
+  # t_localhost_repo_target_file_zip: []
+  # t_localhost_repo_target_dist_dir: []
 
-  # edge_t_localhost__t_github_user_repo__pull__0: "type_edge_dependency_sequence_request_default"
-  # edge_t_localhost__t_github_user_repo__pull__1: "type_edge_dependency_sequence_response_default"
-  # edge_t_localhost__t_github_user_repo__push: ~
-  # edge_t_localhost__t_localhost__within: ~
-  # edge_t_github_user_repo__t_github_user_repo__within: ~
-  # edge_t_github_user_repo__t_aws_ecr_repo__push: ~
-  # edge_t_aws_ecr_repo__t_aws_ecs_service__push: ~
+  # edge_ix_t_localhost__t_github_user_repo__pull__0:
+  #   - type_interaction_edge_symmetric_forward_default
+  # edge_ix_t_localhost__t_github_user_repo__pull__1:
+  #   - type_interaction_edge_symmetric_reverse_default
+  # edge_ix_t_localhost__t_github_user_repo__push: []
+  # edge_ix_t_localhost__t_localhost__within: []
+  # edge_ix_t_github_user_repo__t_github_user_repo__within: []
+  # edge_ix_t_github_user_repo__t_aws_ecr_repo__push: []
+  # edge_ix_t_aws_ecr_repo__t_aws_ecs_service__push: []
 
-  # tag_app_development: "tag_type_default"
-  # tag_deployment: "tag_type_default"
+  # tag_app_development:
+  #   - tag_type_default
+  # tag_deployment:
+  #   - tag_type_default
 
 # Styles when the diagram has no user interaction.
 #
@@ -376,13 +472,17 @@ theme_default:
   # i.e. a `StyleAlias` enum, with a final variant of `Custom(String)`.
   style_aliases:
     padding_none:
-      padding: "0"
+      padding: "0.0"
+      gap: "0.0"
     padding_tight:
-      padding: "2"
+      padding: "2.0"
+      gap: "2.0"
     padding_normal:
-      padding: "4"
+      padding: "4.0"
+      gap: "4.0"
     padding_wide:
-      padding: "6"
+      padding: "6.0"
+      gap: "6.0"
     shade_pale:
       fill_shade_hover: "50"
       fill_shade_normal: "100"
@@ -422,11 +522,15 @@ theme_default:
       stroke_shade_normal: "800"
       stroke_shade_focus: "900"
       stroke_shade_active: "950"
-      text_shade: "50"
+      text_shade: "950"
     stroke_dashed_animated:
       stroke_style: "dashed"
       stroke_width: "2"
       animate: "[stroke-dashoffset-move_2s_linear_infinite]"
+    stroke_dashed_animated_request:
+      animate: "[stroke-dashoffset-move-request_2s_linear_infinite]"
+    stroke_dashed_animated_response:
+      animate: "[stroke-dashoffset-move-response_2s_linear_infinite]"
 
   # The keys in this map can be:
   #
@@ -438,7 +542,7 @@ theme_default:
   base_styles:
     node_defaults:
       # Vector of style aliases to apply.
-      style_aliases_applied: [shade_light]
+      style_aliases_applied: [shade_light, padding_normal]
       # Used for both fill and stroke colors.
       shape_color: "slate"
       stroke_style: "solid"
@@ -446,16 +550,20 @@ theme_default:
       text_color: "neutral"
       visibility: "visible"
     edge_defaults:
-      stroke_width: "1"
       text_color: "neutral"
-      visibility: "visible"
-    edge_t_localhost__t_github_user_repo__pull:
+    edge_ix_t_localhost__t_github_user_repo__pull:
       style_aliases_applied: [shade_light]
       shape_color: "blue"
     t_aws:
       shape_color: "yellow"
     t_github:
       shape_color: "neutral"
+
+  process_step_selected_styles:
+    node_defaults:
+      style_aliases_applied: [shade_pale, stroke_dashed_animated]
+    edge_defaults:
+      visibility: "visible"
 
 # Styles applied to things / edges of a particular `type` specified in `thing_types`.
 theme_types_styles:
@@ -484,42 +592,82 @@ theme_types_styles:
       stroke_style: "solid"
       shape_color: "sky"
       stroke_width: "1"
-  type_edge_dependency_sequence_request_default:
+      visibility: "invisible"
+
+  # thing_dependencies - edge groups
+  type_dependency_edge_sequence_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
       stroke_style: solid
       shape_color: "neutral"
       stroke_width: "1"
-  type_edge_dependency_sequence_response_default:
+      visibility: "visible"
+  type_dependency_edge_cyclic_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
       stroke_style: solid
       shape_color: "neutral"
       stroke_width: "1"
-  type_edge_dependency_cyclic_default:
+      visibility: "visible"
+  type_dependency_edge_symmetric_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
       stroke_style: solid
       shape_color: "neutral"
       stroke_width: "1"
-  type_edge_interaction_sequence_request_default:
+      visibility: "visible"
+
+  # thing_dependencies - edges
+  type_dependency_edge_sequence_forward_default:
+    edge_defaults:
+      stroke_width: "1"
+  type_dependency_edge_cyclic_forward_default:
+    edge_defaults:
+      stroke_width: "1"
+  type_dependency_edge_symmetric_forward_default:
+    edge_defaults:
+      stroke_width: "1"
+  type_dependency_edge_symmetric_reverse_default:
+    edge_defaults:
+      stroke_width: "1"
+
+  # thing_interactions - edge groups
+  type_interaction_edge_sequence_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
-      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
       shape_color: "violet"
       stroke_width: "2"
-  type_edge_interaction_sequence_response_default:
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      visibility: "invisible"
+  type_interaction_edge_cyclic_default:
     edge_defaults:
       style_aliases_applied: [shade_dark]
+      shape_color: "violet"
+      stroke_width: "2"
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+      visibility: "invisible"
+  type_interaction_edge_symmetric_default:
+    edge_defaults:
+      style_aliases_applied: [shade_dark]
+      shape_color: "violet"
+      stroke_width: "2"
+      visibility: "invisible"
+
+  # thing_interactions - edges
+  type_interaction_edge_sequence_forward_default:
+    edge_defaults:
+      style_aliases_applied: [stroke_dashed_animated_request]
+  type_interaction_edge_cyclic_forward_default:
+    edge_defaults:
+      style_aliases_applied: [stroke_dashed_animated_request]
+  type_interaction_edge_symmetric_forward_default:
+    edge_defaults:
+      style_aliases_applied: [stroke_dashed_animated_request]
+      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
+  type_interaction_edge_symmetric_reverse_default:
+    edge_defaults:
+      style_aliases_applied: [stroke_dashed_animated_response]
       stroke_style: "dasharray:0,120,1,2,1,2,2,2,4,2,8,2,20,80"
-      shape_color: "violet"
-      stroke_width: "2"
-  type_edge_interaction_cyclic_default:
-    edge_defaults:
-      style_aliases_applied: [shade_dark]
-      stroke_style: "dasharray:0,80,12,2,4,2,2,2,1,2,1,120"
-      shape_color: "violet"
-      stroke_width: "2"
 
   # custom styles that users can provide
   type_organisation:
@@ -557,30 +705,32 @@ theme_thing_dependencies_styles:
 # layer with the tag ID, and one layer of `things_included_styles` and `things_excluded_styles`
 # makes it one nesting level deeper than the other `theme_*` keys.
 #
-# So we have a `theme_tag_things_focus` map that applies to all tags' styles, and if the consumer
-# wants to style things differently per tag, they can do so in the
-# `theme_tag_things_focus_specific` map.
+# There is a `tag_defaults` key that applies to all tags' styles, and if the user wants to style things differently per tag, they can specify them per tag ID.
 theme_tag_things_focus:
-  things_included_styles:
+  tag_defaults:
     node_defaults:
       style_aliases_applied: [shade_pale, stroke_dashed_animated]
-  things_excluded_styles:
-    node_defaults:
-      opacity: "0.5"
+    node_excluded_defaults:
+      opacity: "75"
 
-theme_tag_things_focus_specific:
   tag_app_development:
+    node_excluded_defaults:
+      opacity: "50"
     node_defaults:
       style_aliases_applied: [stroke_dashed_animated]
 
 # Additional CSS to place in the SVG's inline `<styles>` section.
 css: |-
   @keyframes stroke-dashoffset-move {
-    0%   { stroke-dashoffset: 30; }
-    100% { stroke-dashoffset: 0; }
+    0%   { stroke-dasharray: 3; stroke-dashoffset: 30; }
+    100% { stroke-dasharray: 3; stroke-dashoffset: 0; }
   }
   @keyframes stroke-dashoffset-move-request {
     0%   { stroke-dashoffset: 0; }
     100% { stroke-dashoffset: 228; }
+  }
+  @keyframes stroke-dashoffset-move-response {
+    0%   { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -248; }
   }
 ````
