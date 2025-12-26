@@ -1,0 +1,780 @@
+<!--?xml version="1.0" encoding="UTF-8" standalone="no"?-->
+<svg
+    id="svg_root"
+    viewBox="0 0 400 350"
+    width="400"
+    height="350"
+    xmlns="http://www.w3.org/2000/svg"
+>
+    <style>
+        text {
+            font-family: Arial, sans-serif;
+        }
+        *, ::after, ::before, ::backdrop, ::file-selector-button {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          border: 0 solid;
+        }
+
+        ::before, ::after {
+          --en-content: '';
+        }
+
+        html, :host {
+          line-height: 1.5;
+          -webkit-text-size-adjust: 100%;
+          tab-size: 4;
+          font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+          font-feature-settings: normal;
+          font-variation-settings: normal;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        hr {
+          height: 0;
+          color: inherit;
+          border-top-width: 1px;
+        }
+
+        abbr:where([title]) {
+          -webkit-text-decoration: underline dotted;
+          text-decoration: underline dotted;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+          font-size: inherit;
+          font-weight: inherit;
+        }
+
+        a {
+          color: inherit;
+          -webkit-text-decoration: inherit;
+          text-decoration: inherit;
+        }
+
+        b, strong {
+          font-weight: bolder;
+        }
+
+        code, kbd, samp, pre {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-feature-settings: normal;
+          font-variation-settings: normal;
+          font-size: 1em;
+        }
+
+        small {
+          font-size: 80%;
+        }
+
+        sub, sup {
+          font-size: 75%;
+          line-height: 0;
+          position: relative;
+          vertical-align: baseline;
+        }
+
+        sub {
+          bottom: -0.25em;
+        }
+
+        sup {
+          top: -0.5em;
+        }
+
+        table {
+          text-indent: 0;
+          border-color: inherit;
+          border-collapse: collapse;
+        }
+
+        :-moz-focusring {
+          outline: auto;
+        }
+
+        progress {
+          vertical-align: baseline;
+        }
+
+        summary {
+          display: list-item;
+        }
+
+        ol, ul, menu {
+          list-style: none;
+        }
+
+        img, svg, video, canvas, audio, iframe, embed, object {
+          display: block;
+          vertical-align: middle;
+        }
+
+        img, video {
+          max-width: 100%;
+          height: auto;
+        }
+
+        button, input, select, optgroup, textarea, ::file-selector-button {
+          font: inherit;
+          font-feature-settings: inherit;
+          font-variation-settings: inherit;
+          letter-spacing: inherit;
+          color: inherit;
+          border-radius: 0;
+          background-color: transparent;
+          opacity: 1;
+        }
+
+        :where(select:is([multiple], [size])) optgroup {
+          font-weight: bolder;
+        }
+
+        :where(select:is([multiple], [size])) optgroup option {
+          padding-inline-start: 20px;
+        }
+
+        ::file-selector-button {
+          margin-inline-end: 4px;
+        }
+
+        ::placeholder {
+          opacity: 1;
+        }
+
+        @supports (not (-webkit-appearance: -apple-pay-button)) /* Not Safari */ or (contain-intrinsic-size: 1px) /* Safari 17+ */ {
+          ::placeholder {
+            color: color-mix(in oklab, currentcolor 50%, transparent);
+          }
+        }
+
+        textarea {
+          resize: vertical;
+        }
+
+        ::-webkit-search-decoration {
+          -webkit-appearance: none;
+        }
+
+        ::-webkit-date-and-time-value {
+          min-height: 1lh;
+          text-align: inherit;
+        }
+
+        ::-webkit-datetime-edit {
+          display: inline-flex;
+        }
+
+        ::-webkit-datetime-edit-fields-wrapper {
+          padding: 0;
+        }
+
+        ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+          padding-block: 0;
+        }
+
+        :-moz-ui-invalid {
+          box-shadow: none;
+        }
+
+        button, input:where([type='button'], [type='reset'], [type='submit']), ::file-selector-button {
+          appearance: button;
+        }
+
+        ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+          height: auto;
+        }
+
+        [hidden]:where(:not([hidden='until-found'])) {
+          display: none !important;
+        }
+
+        *, ::before, ::after, ::backdrop, ::-webkit-backdrop {
+          --en-border-spacing-x: 0;
+          --en-border-spacing-y: 0;
+          --en-translate-x: 0;
+          --en-translate-y: 0;
+          --en-translate-z: 0;
+          --en-rotate-x: 0;
+          --en-rotate-y: 0;
+          --en-rotate-z: 0;
+          --en-skew-x: 0;
+          --en-skew-y: 0;
+          --en-scale-x: 1;
+          --en-scale-y: 1;
+          --en-scale-z: 1;
+          --en-pan-x: ;
+          --en-pan-y: ;
+          --en-pinch-zoom: ;
+          --en-scroll-snap-strictness: proximity;
+          --en-ordinal: ;
+          --en-slashed-zero: ;
+          --en-numeric-figure: ;
+          --en-numeric-spacing: ;
+          --en-numeric-fraction: ;
+          --en-ring-inset: ;
+          --en-ring-offset-width: 0px;
+          --en-ring-offset-color: #fff;
+          --en-ring-color: currentColor;
+          --en-ring-offset-shadow: 0 0 #0000;
+          --en-ring-shadow: 0 0 #0000;
+          --en-shadow: 0 0 #0000;
+          --en-shadow-colored: 0 0 #0000;
+          --en-blur: ;
+          --en-brightness: ;
+          --en-contrast: ;
+          --en-grayscale: ;
+          --en-hue-rotate: ;
+          --en-invert: ;
+          --en-saturate: ;
+          --en-sepia: ;
+          --en-drop-shadow: ;
+          --en-backdrop-blur: ;
+          --en-backdrop-brightness: ;
+          --en-backdrop-contrast: ;
+          --en-backdrop-grayscale: ;
+          --en-backdrop-hue-rotate: ;
+          --en-backdrop-invert: ;
+          --en-backdrop-opacity: ;
+          --en-backdrop-saturate: ;
+          --en-backdrop-sepia: ;
+        }
+
+        .invisible {
+          visibility: hidden;
+        }
+
+        .visible {
+          visibility: visible;
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        .rounded-lg {
+          border-radius: 0.5rem;
+        }
+
+        .fill-blue-200 {
+          fill: oklch(88.2% .059 254.128);
+        }
+
+        .fill-blue-950 {
+          fill: oklch(28.2% .091 267.935);
+        }
+
+        .fill-neutral-950 {
+          fill: oklch(14.5% 0 0);
+        }
+
+        .fill-slate-200 {
+          fill: oklch(92.9% .013 255.508);
+        }
+
+        .fill-slate-300 {
+          fill: oklch(86.9% .022 252.894);
+        }
+
+        .fill-slate-400 {
+          fill: oklch(70.4% .04 256.788);
+        }
+
+        .fill-slate-900 {
+          fill: oklch(20.8% .042 265.755);
+        }
+
+        .stroke-slate-500 {
+          stroke: oklch(55.4% .046 257.417);
+        }
+
+        .stroke-\[2px\] {
+          stroke-width: 2px;
+        }
+
+        .font-normal {
+          font-weight: 400;
+        }
+
+        .content-\[attr\(href\)\] {
+          --en-content: attr(href);
+        }
+
+        .hover\:stroke-green-500:hover {
+          stroke: oklch(72.3% .219 149.579);
+        }
+
+        .hover\:fill-green-200:hover {
+          fill: oklch(92.5% .084 155.995);
+        }
+
+        .focus\:stroke-green-700:focus {
+          stroke: oklch(52.7% .154 150.069);
+        }
+
+        .focus\:fill-red-400:focus {
+          fill: oklch(70.4% .191 22.216);
+        }
+
+        .focus\:fill-green-400:focus {
+          fill: oklch(79.2% .209 151.711);
+        }
+
+        .focus\:fill-green-300:focus {
+          fill: oklch(87.1% .15 154.449);
+        }
+
+        .focus\:fill-blue-400:focus {
+          fill: oklch(70.7% .165 254.624);
+        }
+
+        .focus\:border-red-500:focus {
+          border-color: oklch(63.7% .237 25.331);
+        }
+
+        .focus\:border-green-500:focus {
+          border-color: oklch(72.3% .219 149.579);
+        }
+
+        .focus\:border-blue-500:focus {
+          border-color: oklch(62.3% .214 259.815);
+        }
+
+        .focus\:border-2:focus {
+          border-width: 2px;
+        }
+
+        .peer\/process_selector:has(.proc one selected) ~ .peer-\[\:has\(\.proc_one_selected\)\]\/process_selector\:visible {
+          visibility: visible;
+        }
+
+        .group:has(:first-child:focus-within) .group-\[\:has\(\:first-child\:focus-within\)\]\:visible {
+          visibility: visible;
+        }
+
+        .group:has(#process selector box:focus-within) .group-\[\:has\(\#process_selector_box\:focus-within\)\]\:visible {
+          visibility: visible;
+        }
+
+        .group:focus-within .group-\[\:focus-within\]\:visible {
+          visibility: visible;
+        }
+
+        .peer\/proc_3_step_2:focus ~ .peer-focus\/proc_3_step_2\:fill-green-500 {
+          fill: oklch(72.3% .219 149.579);
+        }
+
+        .peer\/proc_3_step_1:focus ~ .peer-focus\/proc_3_step_1\:fill-green-400 {
+          fill: oklch(79.2% .209 151.711);
+        }
+
+        .peer\/proc_2_step_2:focus ~ .peer-focus\/proc_2_step_2\:fill-blue-500 {
+          fill: oklch(62.3% .214 259.815);
+        }
+
+        .peer\/proc_2_step_1:focus ~ .peer-focus\/proc_2_step_1\:fill-blue-400 {
+          fill: oklch(70.7% .165 254.624);
+        }
+
+        .peer\/proc_1_step_2:focus ~ .peer-focus\/proc_1_step_2\:fill-red-500 {
+          fill: oklch(63.7% .237 25.331);
+        }
+
+        .peer\/proc_1_step_1:focus ~ .peer-focus\/proc_1_step_1\:fill-red-400 {
+          fill: oklch(70.4% .191 22.216);
+        }
+    </style>
+    <text x="20" y="20" font-size="18" text-anchor="left" class="fill-neutral-950">Processes:</text>
+
+    <!-- Main box -->
+    <rect
+        x="10"
+        y="30"
+        width="200"
+        height="300"
+        rx="4"
+        ry="4"
+        class="
+            stroke-[2px]
+            fill-slate-200
+            stroke-slate-500
+        "
+    />
+
+    <!--
+        List of process steps
+
+        These are placed before the list of processes so that they are rendered underneath the processes.
+
+        The `peer-[:has(.proc_one_selected)]/process_selector:visible` class doesn't work on `set` / animated values, because the animated class value is not readable by CSS.
+
+        So instead, we use `visibility="hidden"`, and `<set attributeName="visibility" to="visible" />` to show the element.
+    -->
+
+    <!-- proc 1 steps -->
+    <g
+        transform="translate(45 100)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_1_step_1
+            focus:border-2
+            focus:fill-red-400
+            focus:border-red-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_one.click"
+            end="proc_two.click; proc_three.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 1</text>
+    </g>
+    <g
+        transform="translate(45 150)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_1_step_2
+            focus:border-2
+            focus:fill-red-400
+            focus:border-red-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_one.click"
+            end="proc_two.click; proc_three.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 2</text>
+    </g>
+
+    <!-- proc 2 steps -->
+    <g
+        transform="translate(45 100)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_2_step_1
+            focus:border-2
+            focus:fill-blue-400
+            focus:border-blue-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_two.click"
+            end="proc_one.click; proc_three.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 1</text>
+    </g>
+    <g
+        transform="translate(45 150)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_2_step_2
+            focus:border-2
+            focus:fill-blue-400
+            focus:border-blue-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_two.click"
+            end="proc_one.click; proc_three.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 2</text>
+    </g>
+
+    <!-- proc 3 steps -->
+    <g
+        transform="translate(45 100)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_3_step_1
+            focus:border-2
+            focus:fill-green-400
+            focus:border-green-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_three.click"
+            end="proc_one.click; proc_two.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 1</text>
+    </g>
+    <g
+        transform="translate(45 150)"
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer/proc_3_step_2
+            focus:border-2
+            focus:fill-green-400
+            focus:border-green-500
+        "
+        visibility="hidden"
+    >
+        <set
+            attributeName="visibility"
+            to="visible"
+            begin="proc_three.click"
+            end="proc_one.click; proc_two.click;"
+        />
+        <rect width="60" height="40" rx="4" ry="4" />
+        <text
+            x="30"
+            y="30"
+            font-size="18"
+            text-anchor="middle"
+            class="fill-neutral-950"
+        >Step 2</text>
+    </g>
+
+    <!-- Rectangle that responds to steps being clicked -->
+    <g
+        tabindex="0"
+        class="
+            fill-slate-400
+            peer-focus/proc_1_step_1:fill-red-400
+            peer-focus/proc_1_step_2:fill-red-500
+            peer-focus/proc_2_step_1:fill-blue-400
+            peer-focus/proc_2_step_2:fill-blue-500
+            peer-focus/proc_3_step_1:fill-green-400
+            peer-focus/proc_3_step_2:fill-green-500
+        "
+    >
+        <rect x="250" y="60" width="60" height="50" />
+    </g>
+
+    <!-- Process input box -->
+    <g
+        transform="translate(35 50)"
+        class="
+            stroke-[2px]
+            fill-slate-300
+            stroke-slate-500
+            rounded-lg
+            group
+            peer/process_selector
+        "
+    >
+
+        <g
+            tabindex="0"
+            id="process_input_selector"
+            class="
+                stroke-[2px]
+                fill-slate-300
+                stroke-slate-500
+                hover:stroke-green-500
+                focus:fill-green-300
+                focus:stroke-green-700
+            "
+        >
+            <!-- input box -->
+            <rect width="150" height="30" rx="4" ry="4">
+            </rect>
+
+            <!-- text within input box -->
+            <text
+                x="30"
+                y="20"
+                id="process_one_selected_label"
+                href="none"
+                class="
+                    content-[attr(href)]
+                    fill-blue-950
+                    font-normal
+                "
+                visibility="hidden"
+            >
+                <set
+                    attributeName="visibility"
+                    to="visible"
+                    begin="proc_one.click"
+                    end="proc_two.click; proc_three.click;"
+                />
+                Process One
+            </text>
+            <text
+                x="30"
+                y="20"
+                id="process_two_selected_label"
+                href="none"
+                class="
+                    content-[attr(href)]
+                    fill-blue-950
+                    font-normal
+                "
+                visibility="hidden"
+            >
+                <set
+                    attributeName="visibility"
+                    to="visible"
+                    begin="proc_two.click"
+                    end="proc_one.click; proc_three.click;"
+                />
+                Process Two
+            </text>
+            <text
+                x="30"
+                y="20"
+                id="process_three_selected_label"
+                href="none"
+                class="
+                    content-[attr(href)]
+                    fill-blue-950
+                    font-normal
+                "
+                visibility="hidden"
+            >
+                <set
+                    attributeName="visibility"
+                    to="visible"
+                    begin="proc_three.click"
+                    end="proc_one.click; proc_two.click;"
+                />
+                Process Three
+            </text>
+            <rect
+                x="10"
+                y="5"
+                width="15"
+                height="15"
+                id="process_selected"
+                href="none"
+                fill="black"
+            >
+                <set attributeName="fill" to="red" begin="proc_one.click" />
+                <set attributeName="fill" to="blue" begin="proc_two.click" />
+                <set attributeName="fill" to="green" begin="proc_three.click" />
+                <set attributeName="fill" to="black" begin="proc_none.click" />
+            </rect>
+        </g>
+
+        <!--
+            List of processes
+
+            I've tried using `group-[:focus-within]:visible` in the classes to show the list of processes when the user clicks the process selector, but then there's no easy way to hide the list when the user clicks on a process, and still have the `click` event fire.
+
+            That is:
+
+            1. `group-[:has(#process_selector_box:focus-within)]:visible` does not work (`#process_selector_box` doesn't trigger the CSS selectors).
+            2. `group-[:has(:first-child:focus-within)]:visible` *does* trigger the CSS selectors, but then the `click` event doesn't fire.
+        -->
+
+        <!-- Process 1 -->
+        <g
+            id="proc_one"
+            tabindex="0"
+            class="
+                invisible
+                fill-blue-200
+                hover:fill-green-200
+                focus:fill-green-300
+            "
+            transform="translate(0 40)"
+            visibility="hidden"
+        >
+            <set
+                attributeName="visibility"
+                to="visible"
+                begin="process_input_selector.click"
+                end="svg_root.click;"
+            />
+            <rect width="100" height="30" />
+            <text x="10" y="15" class="fill-slate-900 font-normal">proc one</text>
+        </g>
+
+        <g
+            id="proc_two"
+            tabindex="0"
+            class="
+                invisible
+                fill-blue-200
+                hover:fill-green-200
+                focus:fill-green-300
+            "
+            transform="translate(0 80)"
+        >
+            <set
+                attributeName="visibility"
+                to="visible"
+                begin="process_input_selector.click"
+                end="svg_root.click;"
+            />
+            <rect width="100" height="30" />
+            <text x="10" y="15" class="fill-slate-900 font-normal">proc two</text>
+        </g>
+
+        <g
+            id="proc_three"
+            tabindex="0"
+            class="
+                invisible
+                fill-blue-200
+                hover:fill-green-200
+                focus:fill-green-300
+            "
+            transform="translate(0 120)"
+        >
+            <set
+                attributeName="visibility"
+                to="visible"
+                begin="process_input_selector.click"
+                end="svg_root.click;"
+            />
+            <rect width="100" height="30" />
+            <text x="10" y="15" class="fill-slate-900 font-normal">proc three</text>
+        </g>
+    </g>
+</svg>

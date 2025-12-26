@@ -94,7 +94,7 @@ Technically we can begin at this step instead of 1., and define the high level d
 
 Turn the diagram data structure into DOM elements.
 
-* **Input:** Diagram data structure.
+* **Input:** IR Diagram data structure.
 * **Output:** Layout DOM elements which are not viewport bound.
 
 We need to choose one or a combination of:
@@ -111,6 +111,8 @@ Placement of nodes, padding, reflowing text, etc.
 
 * **Input:** Layout DOM elements which are not viewport bound.
 * **Output:** DOM elements / text with XY coordinates in a fixed viewport, with tailwind classes.
+
+ℹ️ **Note:** To make markdown content calculations easier, we will render content as text (e.g. lists and tables are still rendered as `* description` and `| key | value |`). This is because rendering tables as proper elements is pretty much reinventing HTML.
 
 If we use:
 
@@ -144,7 +146,13 @@ Because we want node descriptions to be markdown, we need to convert them to an 
 
 #### 4.2. Images
 
-Images can be inlined in markdown, and based on the image data or a provided value, we can pass that to `taffy` to calculate the position. If we use [`comrak`][`comrak`], then we need to wait for [`comrak#586`][`comrak#586`] to be resolved to get the passed in dimensions of the image.
+Images can be inlined in markdown, and based on the image data or a provided value, we can pass that to `taffy` to calculate the position.
+
+If we use [`comrak`][`comrak`], then we need to wait for [`comrak#586`][`comrak#586`] to be resolved to get the passed in dimensions of the image.
+
+If we use [`pulldown-cmark`][`pulldown-cmark`], then we need to wait for [`pulldown-cmark#992`][`pulldown-cmark#992`] to be resolved to get the passed in dimensions of the image. Or, look at [`pulldown-cmark#462`][`pulldown-cmark#462`] to see if we can extract image dimensions from the URL.
+
+Side note, [`pulldown-cmark`][`pulldown-cmark`] was deemed 1.9x faster than [`comrak`][`comrak`] in 2017 ([source](https://users.rust-lang.org/t/release-comrak-commonmark-gfm-compatible-markdown-parser/10340)). [`pulldown-cmark`][`pulldown-cmark`] doesn't construct an AST, so it should be faster than [`comrak`][`comrak`], though it may not be as feature-rich.
 
 
 ### 5. Full Document Object Model (DOM)
@@ -181,24 +189,32 @@ Any browser could render HTML / SVG. If we want a non-browser solution, look at:
 
 Probably:
 
-1. Define high level diagram structure based on concepts we want to display.
-2. Define intermediate diagram structure based on `dot_ix`'s learnings.
-3. Map the structure to [`taffy`][`taffy`]'s elements.
-4. Use [`taffy`][`taffy`] to lay out the diagram.
-5. Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
-6. Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
+1. [x] Define high level diagram structure based on concepts we want to display.
+2. [x] Define intermediate diagram structure based on `dot_ix`'s learnings.
+3. [ ] Compute the rendered content text:
+
+    We'll render the text as monospace, but styled like [`syntect`][`syntect`]. It may be worth collapsing certain things:
+
+    - Links like `[something](url)` will only take up `something`'s space.
+    - Images like `![alt](url#w=320&h=240)` (syntax may differ) will take up 320 x 240.
+    - See [`pulldown-cmark/feature/attributes-extension`](https://github.com/azriel91/pulldown-cmark/tree/feature/attributes-extension) for a branch that adds support for attributes: `![](url){width=320 height=240}`.
+
+4. [ ] Map the structure to [`taffy`][`taffy`]'s elements.
+5. [ ] Use [`taffy`][`taffy`] to lay out the diagram.
+6. [ ] Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
+7. [ ] Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
 
 
 ## Ideas / Learnings from `dot_ix`
 
-1. Ability to combine both `Thing` diagrams and `Process` diagrams. i.e. a process diagram whose steps show what is happening on the things. Maybe we just have one kind of diagram that does both.
+1. ✅ Ability to combine both `Thing` diagrams and `Process` diagrams. i.e. a process diagram whose steps show what is happening on the things. Maybe we just have one kind of diagram that does both.
 
-    1. Maybe we just have one kind of diagram that does both.
-    2. What `dot_ix` has as tags can be distinguished as `Process`es or `TagGroup`s.
+    1. ✅ Maybe we just have one kind of diagram that does both.
+    2. ✅ What `dot_ix` has as tags can be distinguished as `Process`es or `TagGroup`s.
 
 2. When a node is styled with certain colours, apply it to all child nodes.
-3. Light / Medium / Dark presets for shading.
-4. Dependency diagrams: is it possible to select a node, and a menu appears, with buttons each to highlight:
+3. ✅ Light / Medium / Dark presets for shading.
+4. ✅ Dependency diagrams: is it possible to select a node, and a menu appears, with buttons each to highlight:
 
     1. All transitive dependencies this depends on.
     2. All transitive dependents that depend on this.
@@ -210,15 +226,58 @@ Probably:
 
     e.g. when an element is clicked on, it becomes the `:target` element in the document, and the css selector `#element-id:target ~ #other` allows you to style `#other` when `#element-id` was clicked, presumably when the focus is changed from  `#element-id` to something else.
 
+    Tried this, it works if we use `:target` -- see experiment 4.
+
+    Notes:
+
+    1. We must have a `group/root` top level element, so that we can use `group-[:has(#proc-three:target)]/root:visible` to set visibility based on the document containing a particular `:target`.
+    2. `z-index` has no effect on the stacking order of elements in SVGs, so process steps must be placed before the process nodes to be rendered below them.
+    3. That also means, `tabindex="0"` cannot be used on every element, because we want the process nodes to be tabbed to before process steps.
+    4. `encrecss` doesn't correctly handle IDs with underscores in class names -- it changes them to spaces. We can probably get this bug fixed.
+
 5. Use [`async-lsp`][`async-lsp`] to provide context-aware completions.
+6. ❌ SVG has the [`<set>`][`<set>`] element which allows you to change the value of an attribute over time, or on event. Try it with the [`end`][`end`] attribute, which lets you go `end="elementId.click"`. Maybe we can use `<set attributeName="class" to="round" begin="me.focus" end="me.blur" />`.
+
+    Tried this -- see experiment 3. It functionally could work, but github blocks SVG animations.
+
+    So the animation state *could* be used to store the selected process state, but we can't rely on it working in all cases.
+
+7. Render `taffy` trees for different screen sizes, and use CSS media queries to position the nodes instead of `x` and `y` coordinates.
+
+    ```svg
+    <svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        rect {
+        fill: black;
+        transform: translateX(10px);
+        }
+    </style>
+    <style media="(width >= 600px)">
+        rect {
+        fill: seagreen;
+        transform: translateX(50px);
+        }
+    </style>
+
+    <text y="15">Resize the window to see the effect</text>
+    <rect y="20" width="200" height="200" />
+    </svg>
+    ```
 
 [`async-lsp`]: https://github.com/oxalica/async-lsp
 [`blitz`]: https://github.com/DioxusLabs/blitz
 [`comrak`]: https://github.com/kivikakk/comrak
 [`comrak#586`]: https://github.com/kivikakk/comrak/issues/586
+[`end`]: https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/end
+[`pulldown-cmark`]: https://github.com/pulldown-cmark/pulldown-cmark
+[`pulldown-cmark#462`]: https://github.com/pulldown-cmark/pulldown-cmark/issues/462
+[`pulldown-cmark#992`]: https://github.com/pulldown-cmark/pulldown-cmark/issues/992
 [`dot_ix`]: https://azriel.im/dot_ix/
 [`kurbo`]: https://github.com/linebender/kurbo
+[`set`]: https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/set
+[`syntect`]: https://github.com/trishume/syntect
 [`taffy`]: https://github.com/DioxusLabs/taffy
+
 
 ## Example Input
 
@@ -232,7 +291,7 @@ See [`example_intermediate_representation.md`](example_intermediate_representati
 
 ## Experiments
 
-### Group Focus
+### 1. Group Focus
 
 <object
     type="image/svg+xml"
@@ -240,10 +299,30 @@ See [`example_intermediate_representation.md`](example_intermediate_representati
     /></object>
 <br/>
 
-### Peer Data Attribute
+### 2. Peer Data Attribute
 
 <object
     type="image/svg+xml"
     data="disposition/peer_data_attribute_experiment.svg"
+    /></object>
+<br/>
+
+### 3. Animation / `<set>` for selecting process
+
+The concept looks good using `<set>`, but in [`dot_ix#38 (comment)`](https://github.com/azriel91/dot_ix/pull/38#issuecomment-3691322557) we should that it doesn't work -- the rendered SVG's animations don't show the processes.
+
+<object
+    type="image/svg+xml"
+    data="disposition/process_input_set_experiment.svg"
+    /></object>
+<br/>
+
+### 4. `:target` for selecting process
+
+This works, as seen on [`dot_ix#38 (comment)`](https://github.com/azriel91/dot_ix/pull/38#issuecomment-3691322557). To not affect the document's bookmark, the SVG needs to be inside its own frame / opened in its own tab.
+
+<object
+    type="image/svg+xml"
+    data="disposition/process_input_target_experiment.svg"
     /></object>
 <br/>
