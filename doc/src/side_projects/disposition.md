@@ -199,8 +199,38 @@ Probably:
     - Images like `![alt](url#w=320&h=240)` (syntax may differ) will take up 320 x 240.
     - See [`pulldown-cmark/feature/attributes-extension`](https://github.com/azriel91/pulldown-cmark/tree/feature/attributes-extension) for a branch that adds support for attributes: `![](url){width=320 height=240}`.
 
-4. [ ] Map the structure to [`taffy`][`taffy`]'s elements.
+4. [ ] Map the IR to [`taffy`][`taffy`]'s nodes with `NodeContext`.
+
+    Taffy nodes know their `x/y/w/h/content_w/content_h/border/padding`.
+
+    `content_w` and `content_h` is the width and height of the content, which may exceed w/h when `taffy` is used in a UI that can scroll.
+
+    What we need in the `NodeContext` is then:
+
+    1. The IR entity ID (`node_id`, `edge_group_id`, `edge_id`).
+    2. What kind of entity it is (`Thing`, `Process`, `ProcessStep`, `Tag`, `EdgeGroup`, `Edge`).
+
+        With that, we can work out:
+
+        1. The text content of the node.
+        2. Any interaction buttons / menu (includes node copy text).
+
 5. [ ] Use [`taffy`][`taffy`] to lay out the diagram.
+
+    We need to compute measurements for a number of variations for the diagram in order to provide responsiveness.
+
+    1. The list of dimensions (small, medium, large) that the full diagram should be responsive to.
+    2. Whether zero, one, or many processes are included.
+    3. If one SVG diagram should be generated per step in the process.
+    4. Whether tags are included.
+
+    The `measure_function` for each node needs :
+
+    1. The text content.
+    2. Font metrics.
+    3. Image dimensions.
+    4. Whether an interaction menu button is present.
+
 6. [ ] Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
 7. [ ] Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
 
