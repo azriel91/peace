@@ -150,6 +150,8 @@ Images can be inlined in markdown, and based on the image data or a provided val
 
 If we use [`comrak`][`comrak`], then we need to wait for [`comrak#586`][`comrak#586`] to be resolved to get the passed in dimensions of the image.
 
+Note: [`comrak`][`comrak`] also supports [`syntect`][`syntect`] for highlighting code blocks.
+
 If we use [`pulldown-cmark`][`pulldown-cmark`], then we need to wait for [`pulldown-cmark#992`][`pulldown-cmark#992`] to be resolved to get the passed in dimensions of the image. Or, look at [`pulldown-cmark#462`][`pulldown-cmark#462`] to see if we can extract image dimensions from the URL.
 
 Side note, [`pulldown-cmark`][`pulldown-cmark`] was deemed 1.9x faster than [`comrak`][`comrak`] in 2017 ([source](https://users.rust-lang.org/t/release-comrak-commonmark-gfm-compatible-markdown-parser/10340)). [`pulldown-cmark`][`pulldown-cmark`] doesn't construct an AST, so it should be faster than [`comrak`][`comrak`], though it may not be as feature-rich.
@@ -191,15 +193,8 @@ Probably:
 
 1. [x] Define high level diagram structure based on concepts we want to display.
 2. [x] Define intermediate diagram structure based on `dot_ix`'s learnings.
-3. [ ] Compute the rendered content text:
-
-    We'll render the text as monospace, but styled like [`syntect`][`syntect`]. It may be worth collapsing certain things:
-
-    - Links like `[something](url)` will only take up `something`'s space.
-    - Images like `![alt](url#w=320&h=240)` (syntax may differ) will take up 320 x 240.
-    - See [`pulldown-cmark/feature/attributes-extension`](https://github.com/azriel91/pulldown-cmark/tree/feature/attributes-extension) for a branch that adds support for attributes: `![](url){width=320 height=240}`.
-
-4. [ ] Map the IR to [`taffy`][`taffy`]'s nodes with `NodeContext`.
+3. [ ] Compute the rendered content text.
+4. [x] Map the IR to [`taffy`][`taffy`]'s nodes with `NodeContext`.
 
     Taffy nodes know their `x/y/w/h/content_w/content_h/border/padding`.
 
@@ -215,7 +210,7 @@ Probably:
         1. The text content of the node.
         2. Any interaction buttons / menu (includes node copy text).
 
-5. [ ] Use [`taffy`][`taffy`] to lay out the diagram.
+5. [x] Use [`taffy`][`taffy`] to lay out the diagram.
 
     We need to compute measurements for a number of variations for the diagram in order to provide responsiveness.
 
@@ -224,7 +219,7 @@ Probably:
     3. If one SVG diagram should be generated per step in the process.
     4. Whether tags are included.
 
-    The `measure_function` for each node needs :
+    The `measure_function` for each node needs:
 
     1. The text content.
     2. Font metrics.
@@ -232,7 +227,106 @@ Probably:
     4. Whether an interaction menu button is present.
 
 6. [ ] Convert to SVG, adding edges and attributes from the input structure. [`kurbo`][`kurbo`] may be useful to compute the edge path coordinates.
+
+    Need:
+
+    1. The markdown events that lets us write out an svg element.
+    2. The text broken into lines.
+    3. But, the markdown events don't know that some text needs to move to the next line.
+    4. Also, the text broken into lines needs to have been measured based on the condensed / rendered text.
+    5. Need the coordinates of each line computed by `cosmic-text`.
+
 7. [ ] Return that to the caller -- SVG can be rendered in a browser. In the future, we might use [`blitz`][`blitz`] to render the SVG.
+
+Not yet implemented:
+
+1. [ ] Rendered text.
+2. [ ] Copy text.
+3. [ ] Node menu button.
+4. [ ] Images.
+5. [ ] Combine processes into a "drop down menu" (using `:target`), by finding the longest process name, and the one with the most steps.
+
+
+### Computing rendered text
+
+We'll render the text as monospace, but styled like [`syntect`][`syntect`]. It may be worth collapsing certain things:
+
+- Links like `[something](url)` will only take up `something`'s space.
+- Images like `![alt](url#w=320&h=240)` (syntax may differ) will take up 320 x 240.
+- See [`pulldown-cmark/feature/attributes-extension`](https://github.com/azriel91/pulldown-cmark/tree/feature/attributes-extension) for a branch that adds support for attributes: `![](url){width=320 height=240}`.
+- We probably will end up using `comrak` because it has `syntect` support.
+
+See the `taffy` [`cosmic_text`](https://github.com/DioxusLabs/taffy/blob/v0.9.2/examples/cosmic_text/src/main.rs) example for width and height.
+
+We should use [`cosmic_text::Buffer::set_rich_text`][`cosmic_text::Buffer::set_rich_text`] to calculate the width and height of the styled compressed text, though since we'd likely be using monospace font, the non-styled text may be the same as the styled text.
+
+What we can't avoid is determining the compressed text. i.e.
+
+1. `Some [link text](https://example.com)` will take up the space of `Some link text`.
+2. `![alt](https://example.com/image.png)` should be the image's width and height, and not measured by `cosmic-text`. Possibly place the image on its own line.
+
+So we need to compute a data structure holding:
+
+````yaml
+provided_desc: |
+  Some provided text:
+
+  - **Item 1:** Some description with [link](https://example.com).
+  - **Item 2:** Some description with ![image](https://example.com/image.png).
+  - **Item 3:** Some code:
+
+      ```yaml
+      key: value
+      ```
+rendered_desc:
+  # spans
+  - text:
+      value: "Some provided text:\n\n- "
+      attrs: { family: "Monospace" }
+  - text:
+      value: "Item 1:"
+      attrs: { family: "Monospace", weight: "Bold" }
+  - text:
+      value: " Some description with "
+      attrs: { family: "Monospace" }
+  - text:
+      value: " link"
+      attrs: { family: "Monospace", color: Color::rgb(0, 0, 255) }
+  - text:
+      value: ".\n- "
+      attrs: { family: "Monospace" }
+  - text:
+      value: "Item 2:"
+      attrs: { family: "Monospace", weight: "Bold" }
+  - text:
+      value: " Some description with "
+      attrs: { family: "Monospace" }
+  - image:
+      src: "https://example.com/image.png"
+      alt: "Image"
+  - text:
+      value: ".\n- "
+      attrs: { family: "Monospace" }
+  - text:
+      value: "Item 3:"
+      attrs: { family: "Monospace", weight: "Bold" }
+  - text:
+      value: " Some code:\n\n```yaml\n"
+      attrs: { family: "Monospace" }
+  # syntect highlighted
+  - text:
+      value: "key:"
+      attrs: { family: "Monospace", color: Color::rgb(0, 255, 100) }
+  - text:
+      value: " "
+      attrs: { family: "Monospace" }
+  - text:
+      value: "value"
+      attrs: { family: "Monospace", color: Color::rgb(0, 100, 255) }
+  - text:
+      value: "\n```\n"
+      attrs: { family: "Monospace" }
+````
 
 
 ## Ideas / Learnings from `dot_ix`
@@ -298,6 +392,7 @@ Probably:
 [`blitz`]: https://github.com/DioxusLabs/blitz
 [`comrak`]: https://github.com/kivikakk/comrak
 [`comrak#586`]: https://github.com/kivikakk/comrak/issues/586
+[`cosmic_text::Buffer::set_rich_text`]: https://docs.rs/cosmic-text/0.16.0/cosmic_text/struct.Buffer.html#method.set_rich_text
 [`end`]: https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/end
 [`pulldown-cmark`]: https://github.com/pulldown-cmark/pulldown-cmark
 [`pulldown-cmark#462`]: https://github.com/pulldown-cmark/pulldown-cmark/issues/462
