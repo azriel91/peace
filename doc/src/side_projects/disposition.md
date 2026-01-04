@@ -267,15 +267,66 @@ What we can't avoid is determining the compressed text. i.e.
 
 #### Option A: Supporting Inline Images
 
-1. Parse all markdown as a whole. This is needed to retain context, e.g. nested lists.
+1. Parse all markdown as a whole. This is needed so that markdown elements are parsed in context, i.e. if we parsed markdown in individual lines, nested lists will be parsed as code instead of nested lists.
 2. We can extract / capture the text / image to render from each markdown node event, e.g. the link text or the image path from a link.
-3. Create one taffy node per code block, noting the language for `syntect` highlighting. Later on, each of these will be split by `\n` lines and turned into SVG `<text>` elements.
-4. Create one taffy node per `\n` separated line with `flex-wrap: wrap` child nodes. Later on, each of the taffy nodes, as well as the `cosmic-text` chunks will be split by `\n` lines and turned into SVG `<text>` elements.
-5. Create one taffy node per text run / image within the line. This allows inlined images to wrap based on the flex layout.
-6. Use `cosmic-text` to measure text runs, and provided/loaded width/height for images.
-7. Within each text run, we still need to track the spans for normal text, bold text, etc.
+3. We need to map each markdown element into its plain text form for `cosmic-text` measurement. An example of some markdown elements:
 
-This is high complexity to support -- needing to interleave both `taffy` and `cosmic-text` span information together, before translating both into SVG nodes correctly, is high mental effort.
+    ```rust
+    pub enum MarkdownElement {
+        Text(String),
+        Image {
+            src: String,
+            alt: String,
+            width: Option<u32>,
+            height: Option<u32>,
+        },
+        Link {
+            text: String,
+            url: String,
+        },
+        Code {
+            language: String,
+            code: String,
+        },
+    }
+
+    impl MarkdownElement {
+        pub fn plain_text(&self) -> &str {
+            match self {
+                Self::Text(text) => text.as_str(),
+                Self::Image { alt, .. } => alt.as_str(),
+                Self::Link { text, .. } => text.as_str(),
+                Self::Code { code, .. } => code.as_str(),
+            }
+        }
+    }
+    ```
+
+    `pulldown-cmark::Event` / `comrak::nodes::NodeValue` already parse the markdown elements into their respective variants; we could implement a trait to extract the plain text form for each element that we support condensing.
+
+4. Start first line.
+5. For every markdown `Event::SoftBreak`, move to a new line.
+6. For every markdown `Event::HardBreak` or block element, move to a new line with an empty line in between.
+7. All other kinds of elements should be inline elements, which we need to track the `x` and `y` coordinates for, as well as measure the width and height.
+8. For each line:
+
+    1. For all consecutive non-image elements, combine the `plain_text`, then use `cosmic-text` to measure the size of each line.
+
+        1. Feed the combined text into a `cosmic_text::Buffer` using `buffer.set_text(..)`.
+        2. Run `buffer.shape_until_scroll(..)` for the chunked lines to be computed.
+        3. Run `buffer.layout_runs()` to iterate over the layout runs.
+
+    2. If there is an image within the line, determine its width and height, and if it will fit into the last `layout_run`. If it will, then the last layout run's height should be `max(layout_run.line_height, image.height())`; otherwise, place the image on the next line.
+
+        To determine the image's width and height, if its `dest_url` ends with a fragment which looks like query params for `w` and `h`, e.g. `#w=100&h=200`, then we parse the width and height from the fragment. Otherwise we default to width: 50 and height: 40.
+
+    3. Store each layout run against the markdown element, as each of these will be needed to specify the coordinates of the SVG element that will be rendered.
+    4. Repeat until all markdown elements have been measured.
+
+9. ?? How do we handle images that are too large to fit on a single line?
+10. ?? How do we handle nested lists -- do we track indentation level?
+
+This is high complexity to support -- we would end up writing a sub-par layout engine which may be best left to HTML.
 
 `comrak::nodes::NodeValue` and `pulldown_cmark::Event` provide the `LineBreak` variant which allows tracking of when nodes would break.
 
@@ -306,17 +357,17 @@ node_content_blocks:
   #
   # * flex_direction: row
   # * flex_wrap: wrap
-  taffy_nodes:
-    - # first line
-      - spans:
-        - text:
+  taffy_nodes:  # `NodeContentBlocks`, which is a `Vec<NodeContentBlock>` newtype
+    -           # `NodeContentBlock` for first line
+      spans:    # `Vec<NodeContentSpan>`
+        - text: # `NodeContentSpan::Text`
             value: "Some provided text:\n"
     - # second line
-      - spans:
+      spans:
         - text:
             value: "\n"
     - # third line
-      - spans:
+      spans:
         - text:
             value: "- "
         - text:
@@ -325,7 +376,7 @@ node_content_blocks:
         - text:
             value: " Some description with link.\n"
     - # fourth line
-      - spans:
+      spans:
         - text:
             value: "- "
         - text:
@@ -333,14 +384,14 @@ node_content_blocks:
             attrs: { family: "Monospace", weight: "Bold" }
         - text:
             value: " Some description with "
-        - image:
+        - image:  # `NodeContentSpan::Image`
             path: https://example.com/image.png
-            width: 100
+            width: 100  # TODO: either load the image
             height: 100
         - text:
             value: ".\n"
     - # fifth line
-      - spans:
+      spans:
         - text:
             value: "- "
         - text:
@@ -349,7 +400,7 @@ node_content_blocks:
         - text:
             value: " Some code:"
     - # code block, need to somehow indicate it is indented
-      - spans:
+      spans:
         - text:
             value: "```yaml\n"
         - text:
@@ -501,7 +552,13 @@ Arguably:
 
 It make sense to either go with option A (full markdown support) or option C: syntax highlighted markdown (simplest, common use case).
 
-Let's attempt option A first.
+1. [x] Let's attempt option A first.
+
+    After working through how we'd do layouting, it is clear it's not sensible to parse markdown for the links and images (which discards the original text, e.g. list nesting), and then trying to layout markdown elements without an HTML layout engine.
+
+    We should either fully implement markdown support (e.g. with `blitz`), or just syntax highlight the provided markdown (e.g. with `syntect`) without attempting to condense links or load images (option C).
+
+2. [ ] Attempt option C.
 
 
 ## Ideas / Learnings from `dot_ix`
