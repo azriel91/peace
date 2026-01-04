@@ -265,7 +265,21 @@ What we can't avoid is determining the compressed text. i.e.
 1. `Some [link text](https://example.com)` will take up the space of `Some link text`.
 2. `![alt](https://example.com/image.png)` should be the image's width and height, and not measured by `cosmic-text`. Possibly place the image on its own line.
 
-So we need to compute a data structure holding:
+#### Option A: Supporting Inline Images
+
+1. Parse all markdown as a whole. This is needed to retain context, e.g. nested lists.
+2. We can extract / capture the text / image to render from each markdown node event, e.g. the link text or the image path from a link.
+3. Create one taffy node per code block, noting the language for `syntect` highlighting. Later on, each of these will be split by `\n` lines and turned into SVG `<text>` elements.
+4. Create one taffy node per `\n` separated line with `flex-wrap: wrap` child nodes. Later on, each of the taffy nodes, as well as the `cosmic-text` chunks will be split by `\n` lines and turned into SVG `<text>` elements.
+5. Create one taffy node per text run / image within the line. This allows inlined images to wrap based on the flex layout.
+6. Use `cosmic-text` to measure text runs, and provided/loaded width/height for images.
+7. Within each text run, we still need to track the spans for normal text, bold text, etc.
+
+This is high complexity to support -- needing to interleave both `taffy` and `cosmic-text` span information together, before translating both into SVG nodes correctly, is high mental effort.
+
+`comrak::nodes::NodeValue` and `pulldown_cmark::Event` provide the `LineBreak` variant which allows tracking of when nodes would break.
+
+<details><summary>Possible data structure</summary>
 
 ````yaml
 provided_desc: |
@@ -278,55 +292,216 @@ provided_desc: |
       ```yaml
       key: value
       ```
-rendered_desc:
-  # spans
-  - text:
-      value: "Some provided text:\n\n- "
-      attrs: { family: "Monospace" }
-  - text:
-      value: "Item 1:"
-      attrs: { family: "Monospace", weight: "Bold" }
-  - text:
-      value: " Some description with "
-      attrs: { family: "Monospace" }
-  - text:
-      value: " link"
-      attrs: { family: "Monospace", color: Color::rgb(0, 0, 255) }
-  - text:
-      value: ".\n- "
-      attrs: { family: "Monospace" }
-  - text:
-      value: "Item 2:"
-      attrs: { family: "Monospace", weight: "Bold" }
-  - text:
-      value: " Some description with "
-      attrs: { family: "Monospace" }
-  - image:
-      src: "https://example.com/image.png"
-      alt: "Image"
-  - text:
-      value: ".\n- "
-      attrs: { family: "Monospace" }
-  - text:
-      value: "Item 3:"
-      attrs: { family: "Monospace", weight: "Bold" }
-  - text:
-      value: " Some code:\n\n```yaml\n"
-      attrs: { family: "Monospace" }
-  # syntect highlighted
-  - text:
-      value: "key:"
-      attrs: { family: "Monospace", color: Color::rgb(0, 255, 100) }
-  - text:
-      value: " "
-      attrs: { family: "Monospace" }
-  - text:
-      value: "value"
-      attrs: { family: "Monospace", color: Color::rgb(0, 100, 255) }
-  - text:
-      value: "\n```\n"
-      attrs: { family: "Monospace" }
+
+node_content_blocks:
+  rendered_text: "Some provided text:\n\n- **Item 1:** Some description with link.\n- **Item 2:** Some description with "
+  # first level (container) taffy nodes (containers of multiple lines) have:
+  #
+  # * flex_direction: row
+  # * flex_wrap: nowrap
+  #
+  # so that each line will be on its own row.
+  #
+  # second level taffy nodes (each line) have:
+  #
+  # * flex_direction: row
+  # * flex_wrap: wrap
+  taffy_nodes:
+    - # first line
+      - spans:
+        - text:
+            value: "Some provided text:\n"
+    - # second line
+      - spans:
+        - text:
+            value: "\n"
+    - # third line
+      - spans:
+        - text:
+            value: "- "
+        - text:
+            value: "**Item 1:**"
+            attrs: { family: "Monospace", weight: "Bold" }
+        - text:
+            value: " Some description with link.\n"
+    - # fourth line
+      - spans:
+        - text:
+            value: "- "
+        - text:
+            value: "**Item 2:**"
+            attrs: { family: "Monospace", weight: "Bold" }
+        - text:
+            value: " Some description with "
+        - image:
+            path: https://example.com/image.png
+            width: 100
+            height: 100
+        - text:
+            value: ".\n"
+    - # fifth line
+      - spans:
+        - text:
+            value: "- "
+        - text:
+            value: "**Item 2:**"
+            attrs: { family: "Monospace", weight: "Bold" }
+        - text:
+            value: " Some code:"
+    - # code block, need to somehow indicate it is indented
+      - spans:
+        - text:
+            value: "```yaml\n"
+        - text:
+            value: "key:"
+            attrs: { family: "Monospace", color: "blue" }
+        - text:
+            value: " "
+        - text:
+            value: "value\n"
+            attrs: { family: "Monospace", color: "green" }
+        - text:
+            value: "```\n"
 ````
+
+</details>
+
+
+#### Option B: No Images in Markdown
+
+1. Parse all markdown as a whole. This is needed to retain context, e.g. nested lists.
+2. We can extract / capture the text / image to render from each markdown node event, e.g. the link text or the image path from a link.
+3. Use `cosmic-text` to measure text runs.
+4. Within each text run, we still need to track the spans for normal text, bold text, etc.
+5. We may add support for including images with a separate taffy node next to the text, and the width and height can be provided/loaded width/height for each image.
+
+<details><summary>Possible data structure</summary>
+
+````yaml
+provided_desc: |
+  Some provided text:
+
+  - **Item 1:** Some description with [link](https://example.com).
+  - **Item 2:** Some description with ![image](https://example.com/image.png).
+  - **Item 3:** Some code:
+
+      ```yaml
+      key: value
+      ```
+
+node_content_blocks:
+  rendered_text: |
+    Some provided text:
+
+    - Item 1: Some description with link.
+    - Item 2: Some description with image.
+    - Item 3: Some code:
+
+        ```yaml
+        key: value
+        ```
+  spans: # we could store indices instead of duplicates of the text
+    - value: "Some provided text:\n"
+    - value: "\n"
+    - value: "- "
+    - value: "Item 1:"
+      attrs: { weight: "Bold" }
+    - value: " Some description with "
+    - value: "link"
+      attrs: { color: Color::rgb(0, 0, 255) }
+    - value: ".\n"
+    - value: "- "
+    - value: "Item 2:"
+      attrs: { weight: "Bold" }
+    - value: " Some description with "
+    - value: "image"
+      attrs: { color: Color::rgb(0, 0, 255) }
+    - value: ".\n"
+    - value: "- "
+    - value: "Item 3:"
+      attrs: { weight: "Bold" }
+    - value: " Some code:\n"
+    - value: "\n"
+    - value: "    ```yaml\n"
+    - value: "    "
+    - value: "key:"
+      attrs: { color: Color::rgb(0, 255, 100) }
+    - value: " "
+    - value: "value\n"
+      attrs: { color: Color::rgb(0, 100, 255) }
+    - value: "    ```\n"
+````
+
+</details>
+
+
+#### Option C: Syntax Highlighted Markdown
+
+Most straightforward -- don't condense text / load images, just use the description as is:
+
+1. Use `cosmic-text` to measure monospace text dimensions, and chunk the text into lines.
+2. Use `syntect` to style the text chunked by `cosmic-text`, as the chunked text is split correctly so that we can compute the SVG text positions. We don't need to parse markdown because `syntect` uses built-in grammars for highlighting.
+3. We need to store the syntect syntax highlighting data for each chunked line in the node context, because it is diagram dimension-dependent. If we compute it without the dimensions, we need to store range / span information per syntax highlight, and intersect words in each chunk spans, which is complicated.
+
+<details><summary>Possible data structure</summary>
+
+````yaml
+provided_desc: |
+  Some provided text:
+
+  - **Item 1:** Some description with [link](https://example.com).
+  - **Item 2:** Some description with ![image](https://example.com/image.png).
+  - **Item 3:** Some code:
+
+      ```yaml
+      key: value
+      ```
+
+node_content_spans: # we could store indices instead of duplicates of the text
+  - value: "Some provided text:\n"
+  - value: "\n"
+  - value: "- "
+  - value: "**Item 1:**"
+    attrs: { weight: "Bold" }
+  - value: " Some description with "
+  - value: "[link](https://example.com)"
+    attrs: { color: Color::rgb(0, 0, 255) }
+  - value: ".\n"
+  - value: "- "
+  - value: "**Item 2:**"
+    attrs: { weight: "Bold" }
+  - value: " Some description with "
+  - value: "![image](https://example.com/image.png)"
+    attrs: { color: Color::rgb(0, 0, 255) }
+  - value: ".\n"
+  - value: "- "
+  - value: "**Item 3:**"
+    attrs: { weight: "Bold" }
+  - value: " Some code:\n"
+  - value: "\n"
+  - value: "    ```yaml\n"
+  - value: "    "
+  - value: "key:"
+    attrs: { color: Color::rgb(0, 255, 100) }
+  - value: " "
+  - value: "value\n"
+    attrs: { color: Color::rgb(0, 100, 255) }
+  - value: "    ```\n"
+````
+
+</details>
+
+
+#### Thinking
+
+Arguably:
+
+* Most nodes would have zero or one image, and placing the image at a fixed position is sufficient.
+* However! It's very tempting to include images, and expect them to "just work" and render inside the node.
+
+It make sense to either go with option A (full markdown support) or option C: syntax highlighted markdown (simplest, common use case).
+
+Let's attempt option A first.
 
 
 ## Ideas / Learnings from `dot_ix`
