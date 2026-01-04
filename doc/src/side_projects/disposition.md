@@ -492,55 +492,42 @@ Most straightforward -- don't condense text / load images, just use the descript
 
 1. Use `cosmic-text` to measure monospace text dimensions, and chunk the text into lines.
 2. Use `syntect` to style the text chunked by `cosmic-text`, as the chunked text is split correctly so that we can compute the SVG text positions. We don't need to parse markdown because `syntect` uses built-in grammars for highlighting.
-3. We need to store the syntect syntax highlighting data for each chunked line in the node context, because it is diagram dimension-dependent. If we compute it without the dimensions, we need to store range / span information per syntax highlight, and intersect words in each chunk spans, which is complicated.
 
-<details><summary>Possible data structure</summary>
+    This means we:
 
-````yaml
-provided_desc: |
-  Some provided text:
+    1. Use `cosmic-text` to measure monospace text dimensions to get the `layout_runs`.
+    2. Compute the width of the taffy node based on the max width of each `layout_run`
+    3. Compute the height of the taffy node based on the number of layout_runs + 1 `* buffer.metrics().line_height`.
+    4. Compute the syntax highlighted spans by concatenating all `layout_run.text`s with `\n`.
+    5. `syntect` highlight it:
 
-  - **Item 1:** Some description with [link](https://example.com).
-  - **Item 2:** Some description with ![image](https://example.com/image.png).
-  - **Item 3:** Some code:
+        ```rust
+        use std::io::BufRead;
 
-      ```yaml
-      key: value
-      ```
+        use syntect::{
+            parsing::SyntaxSet,
+            highlighting::{ThemeSet, Style},
+            easy::HighlightFile,
+        };
 
-node_content_spans: # we could store indices instead of duplicates of the text
-  - value: "Some provided text:\n"
-  - value: "\n"
-  - value: "- "
-  - value: "**Item 1:**"
-    attrs: { weight: "Bold" }
-  - value: " Some description with "
-  - value: "[link](https://example.com)"
-    attrs: { color: Color::rgb(0, 0, 255) }
-  - value: ".\n"
-  - value: "- "
-  - value: "**Item 2:**"
-    attrs: { weight: "Bold" }
-  - value: " Some description with "
-  - value: "![image](https://example.com/image.png)"
-    attrs: { color: Color::rgb(0, 0, 255) }
-  - value: ".\n"
-  - value: "- "
-  - value: "**Item 3:**"
-    attrs: { weight: "Bold" }
-  - value: " Some code:\n"
-  - value: "\n"
-  - value: "    ```yaml\n"
-  - value: "    "
-  - value: "key:"
-    attrs: { color: Color::rgb(0, 255, 100) }
-  - value: " "
-  - value: "value\n"
-    attrs: { color: Color::rgb(0, 100, 255) }
-  - value: "    ```\n"
-````
+        let node_id = "example_node_id";
+        let syntax_set = SyntaxSet::load_defaults_newlines();
+        let theme_set = ThemeSet::load_defaults();
+        let mut highlighter = HighlightFile::new(node_id, &syntax_set, &theme_set.themes["InspiredGitHub"]).unwrap();
+        let mut line_buffer = String::new();
 
-</details>
+        while highlighter.reader.read_line(&mut line_buffer)? > 0 {
+            let highlighted_spans: Vec<(Style, &str)> = highlighter.highlight_lines.highlight_line(&line_buffer, &syntax_set).expect("Failed to highlight line.");
+
+            // TODO: store `highlighted_spans` against the node,
+            // e.g. add an `Option<Vec<(Style, &str)>>` field in `NodeContext`.
+            // That way, we can output the appropriate `<text>` element in the SVG with styling.
+
+            line_buffer.clear(); // read_line appends so we need to clear between lines
+        }
+        ```
+
+Note: We need to store the `syntect` syntax highlighting data for each chunked line in the node context, because it is dependent on the diagram dimensions. If we compute it without the dimensions, we need to store range / span information per syntax highlight, and intersect words in each chunk spans, which is complicated.
 
 
 #### Thinking
